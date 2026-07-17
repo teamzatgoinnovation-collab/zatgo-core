@@ -1,0 +1,335 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "identity_section",
+    "company",
+    "is_active",
+    "tax_section",
+    "default_tax_template",
+    "tax_id",
+    "enable_tax_inclusive",
+    "accounting_section",
+    "default_receivable_account",
+    "default_payable_account",
+    "default_cash_account",
+    "default_cost_center",
+    "inventory_section",
+    "default_warehouse",
+    "enable_negative_stock",
+    "stock_valuation_method",
+    "sales_section",
+    "default_customer_group",
+    "default_price_list",
+    "sales_terms",
+    "purchase_section",
+    "default_supplier_group",
+    "purchase_terms",
+    "pos_section",
+    "default_pos_profile",
+    "enable_pos",
+    "finance_section",
+    "credit_limit",
+    "payment_terms_template",
+    "email_section",
+    "company_email",
+    "email_footer",
+    "branding_section",
+    "logo",
+    "primary_color",
+    "secondary_color",
+    "defaults_section",
+    "default_currency",
+    "default_letter_head"
+  ],
+  "fields": [
+    {
+      "fieldname": "identity_section",
+      "fieldtype": "Section Break",
+      "label": "Identity"
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "tax_section",
+      "fieldtype": "Section Break",
+      "label": "Tax"
+    },
+    {
+      "fieldname": "default_tax_template",
+      "fieldtype": "Data",
+      "label": "Default Tax Template"
+    },
+    {
+      "fieldname": "tax_id",
+      "fieldtype": "Data",
+      "label": "Tax ID"
+    },
+    {
+      "fieldname": "enable_tax_inclusive",
+      "fieldtype": "Check",
+      "label": "Tax Inclusive Pricing",
+      "default": 0
+    },
+    {
+      "fieldname": "accounting_section",
+      "fieldtype": "Section Break",
+      "label": "Accounting"
+    },
+    {
+      "fieldname": "default_receivable_account",
+      "fieldtype": "Link",
+      "label": "Default Receivable Account",
+      "options": "Account"
+    },
+    {
+      "fieldname": "default_payable_account",
+      "fieldtype": "Link",
+      "label": "Default Payable Account",
+      "options": "Account"
+    },
+    {
+      "fieldname": "default_cash_account",
+      "fieldtype": "Link",
+      "label": "Default Cash Account",
+      "options": "Account"
+    },
+    {
+      "fieldname": "default_cost_center",
+      "fieldtype": "Link",
+      "label": "Default Cost Center",
+      "options": "Cost Center"
+    },
+    {
+      "fieldname": "inventory_section",
+      "fieldtype": "Section Break",
+      "label": "Inventory"
+    },
+    {
+      "fieldname": "default_warehouse",
+      "fieldtype": "Link",
+      "label": "Default Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "enable_negative_stock",
+      "fieldtype": "Check",
+      "label": "Allow Negative Stock",
+      "default": 0
+    },
+    {
+      "fieldname": "stock_valuation_method",
+      "fieldtype": "Select",
+      "label": "Stock Valuation Method",
+      "options": "FIFO\nMoving Average",
+      "default": "FIFO"
+    },
+    {
+      "fieldname": "sales_section",
+      "fieldtype": "Section Break",
+      "label": "Sales"
+    },
+    {
+      "fieldname": "default_customer_group",
+      "fieldtype": "Link",
+      "label": "Default Customer Group",
+      "options": "Customer Group"
+    },
+    {
+      "fieldname": "default_price_list",
+      "fieldtype": "Link",
+      "label": "Default Price List",
+      "options": "Price List"
+    },
+    {
+      "fieldname": "sales_terms",
+      "fieldtype": "Text Editor",
+      "label": "Sales Terms"
+    },
+    {
+      "fieldname": "purchase_section",
+      "fieldtype": "Section Break",
+      "label": "Purchase"
+    },
+    {
+      "fieldname": "default_supplier_group",
+      "fieldtype": "Link",
+      "label": "Default Supplier Group",
+      "options": "Supplier Group"
+    },
+    {
+      "fieldname": "purchase_terms",
+      "fieldtype": "Text Editor",
+      "label": "Purchase Terms"
+    },
+    {
+      "fieldname": "pos_section",
+      "fieldtype": "Section Break",
+      "label": "POS"
+    },
+    {
+      "fieldname": "default_pos_profile",
+      "fieldtype": "Data",
+      "label": "Default POS Profile"
+    },
+    {
+      "fieldname": "enable_pos",
+      "fieldtype": "Check",
+      "label": "Enable POS",
+      "default": 1
+    },
+    {
+      "fieldname": "finance_section",
+      "fieldtype": "Section Break",
+      "label": "Finance"
+    },
+    {
+      "fieldname": "credit_limit",
+      "fieldtype": "Currency",
+      "label": "Credit Limit"
+    },
+    {
+      "fieldname": "payment_terms_template",
+      "fieldtype": "Data",
+      "label": "Payment Terms Template"
+    },
+    {
+      "fieldname": "email_section",
+      "fieldtype": "Section Break",
+      "label": "Email"
+    },
+    {
+      "fieldname": "company_email",
+      "fieldtype": "Data",
+      "label": "Company Email"
+    },
+    {
+      "fieldname": "email_footer",
+      "fieldtype": "Small Text",
+      "label": "Email Footer"
+    },
+    {
+      "fieldname": "branding_section",
+      "fieldtype": "Section Break",
+      "label": "Branding"
+    },
+    {
+      "fieldname": "logo",
+      "fieldtype": "Attach Image",
+      "label": "Logo"
+    },
+    {
+      "fieldname": "primary_color",
+      "fieldtype": "Color",
+      "label": "Primary Color"
+    },
+    {
+      "fieldname": "secondary_color",
+      "fieldtype": "Color",
+      "label": "Secondary Color"
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Defaults"
+    },
+    {
+      "fieldname": "default_currency",
+      "fieldtype": "Link",
+      "label": "Default Currency",
+      "options": "Currency"
+    },
+    {
+      "fieldname": "default_letter_head",
+      "fieldtype": "Link",
+      "label": "Default Letter Head",
+      "options": "Letter Head"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Company Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "autoname": "field:company",
+  "naming_rule": "By fieldname",
+  "title_field": "company"
+}

@@ -1,0 +1,119 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "CFG-.YYYY.-.#####",
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "application",
+    "section_key",
+    "action",
+    "column_break_1",
+    "changed_by",
+    "changed_on",
+    "payload_section",
+    "old_payload",
+    "new_payload",
+    "note"
+  ],
+  "fields": [
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Application",
+      "options": "ZG Registered Application"
+    },
+    {
+      "fieldname": "section_key",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Section Key"
+    },
+    {
+      "fieldname": "action",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Action",
+      "options": "Update\nReset\nImport\nExport\nRegister"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "changed_by",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Changed By",
+      "options": "User"
+    },
+    {
+      "fieldname": "changed_on",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "label": "Changed On"
+    },
+    {
+      "fieldname": "payload_section",
+      "fieldtype": "Section Break",
+      "label": "Payload"
+    },
+    {
+      "fieldname": "old_payload",
+      "fieldtype": "Code",
+      "label": "Old Payload",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "new_payload",
+      "fieldtype": "Code",
+      "label": "New Payload",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Config History",
+  "naming_rule": "Expression (old style)",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 0
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Application Admin",
+      "write": 0
+    },
+    {
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Read Only"
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

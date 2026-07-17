@@ -1,0 +1,206 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "app_section",
+    "app_name",
+    "module_name",
+    "version",
+    "enabled",
+    "app_status",
+    "ui_section",
+    "menu_icon",
+    "workspace",
+    "description",
+    "meta_section",
+    "developer",
+    "depends_on",
+    "minimum_version",
+    "maximum_version",
+    "license",
+    "column_break_3",
+    "install_date",
+    "last_update"
+  ],
+  "fields": [
+    {
+      "fieldname": "app_section",
+      "fieldtype": "Section Break",
+      "label": "Application"
+    },
+    {
+      "fieldname": "app_name",
+      "fieldtype": "Data",
+      "label": "App Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "module_name",
+      "fieldtype": "Data",
+      "label": "Module Name",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Data",
+      "label": "Version",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "Enabled",
+      "default": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "app_status",
+      "fieldtype": "Select",
+      "label": "App Status",
+      "options": "Installed\nDisabled\nDeprecated\nPending Update\nError",
+      "default": "Installed",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "ui_section",
+      "fieldtype": "Section Break",
+      "label": "UI"
+    },
+    {
+      "fieldname": "menu_icon",
+      "fieldtype": "Data",
+      "label": "Menu Icon"
+    },
+    {
+      "fieldname": "workspace",
+      "fieldtype": "Data",
+      "label": "Workspace"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "meta_section",
+      "fieldtype": "Section Break",
+      "label": "Metadata"
+    },
+    {
+      "fieldname": "developer",
+      "fieldtype": "Data",
+      "label": "Developer",
+      "default": "ZatGo Innovation"
+    },
+    {
+      "fieldname": "depends_on",
+      "fieldtype": "Small Text",
+      "label": "Depends On",
+      "description": "Comma-separated app names"
+    },
+    {
+      "fieldname": "minimum_version",
+      "fieldtype": "Data",
+      "label": "Minimum Version"
+    },
+    {
+      "fieldname": "maximum_version",
+      "fieldtype": "Data",
+      "label": "Maximum Version"
+    },
+    {
+      "fieldname": "license",
+      "fieldtype": "Data",
+      "label": "License",
+      "default": "MIT"
+    },
+    {
+      "fieldname": "column_break_3",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "install_date",
+      "fieldtype": "Datetime",
+      "label": "Install Date"
+    },
+    {
+      "fieldname": "last_update",
+      "fieldtype": "Datetime",
+      "label": "Last Update"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Application Registry",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "autoname": "field:app_name",
+  "naming_rule": "By fieldname",
+  "title_field": "app_name"
+}

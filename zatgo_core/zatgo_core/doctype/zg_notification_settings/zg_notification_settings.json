@@ -1,0 +1,165 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "channels_section",
+    "desktop_enabled",
+    "push_enabled",
+    "email_enabled",
+    "sms_enabled",
+    "whatsapp_enabled",
+    "telegram_enabled",
+    "slack_enabled",
+    "in_app_enabled",
+    "defaults_section",
+    "default_channel",
+    "quiet_hours_start",
+    "quiet_hours_end"
+  ],
+  "fields": [
+    {
+      "fieldname": "channels_section",
+      "fieldtype": "Section Break",
+      "label": "Channels"
+    },
+    {
+      "fieldname": "desktop_enabled",
+      "fieldtype": "Check",
+      "label": "Desktop",
+      "default": 1
+    },
+    {
+      "fieldname": "push_enabled",
+      "fieldtype": "Check",
+      "label": "Push",
+      "default": 0
+    },
+    {
+      "fieldname": "email_enabled",
+      "fieldtype": "Check",
+      "label": "Email",
+      "default": 1
+    },
+    {
+      "fieldname": "sms_enabled",
+      "fieldtype": "Check",
+      "label": "SMS",
+      "default": 0
+    },
+    {
+      "fieldname": "whatsapp_enabled",
+      "fieldtype": "Check",
+      "label": "WhatsApp",
+      "default": 0
+    },
+    {
+      "fieldname": "telegram_enabled",
+      "fieldtype": "Check",
+      "label": "Telegram",
+      "default": 0
+    },
+    {
+      "fieldname": "slack_enabled",
+      "fieldtype": "Check",
+      "label": "Slack",
+      "default": 0
+    },
+    {
+      "fieldname": "in_app_enabled",
+      "fieldtype": "Check",
+      "label": "In-App",
+      "default": 1
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Defaults"
+    },
+    {
+      "fieldname": "default_channel",
+      "fieldtype": "Select",
+      "label": "Default Channel",
+      "options": "Desktop\nEmail\nPush\nIn-App",
+      "default": "In-App"
+    },
+    {
+      "fieldname": "quiet_hours_start",
+      "fieldtype": "Time",
+      "label": "Quiet Hours Start"
+    },
+    {
+      "fieldname": "quiet_hours_end",
+      "fieldtype": "Time",
+      "label": "Quiet Hours End"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Notification Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

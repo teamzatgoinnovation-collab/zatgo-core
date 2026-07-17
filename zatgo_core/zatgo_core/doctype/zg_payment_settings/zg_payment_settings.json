@@ -1,0 +1,178 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "methods_section",
+    "cash_enabled",
+    "card_enabled",
+    "bank_enabled",
+    "wallet_enabled",
+    "gift_card_enabled",
+    "credit_sale_enabled",
+    "advanced_section",
+    "split_payment_enabled",
+    "tips_enabled",
+    "default_tip_percent",
+    "service_charge_enabled",
+    "service_charge_percent",
+    "round_off_enabled",
+    "round_off_account"
+  ],
+  "fields": [
+    {
+      "fieldname": "methods_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Methods"
+    },
+    {
+      "fieldname": "cash_enabled",
+      "fieldtype": "Check",
+      "label": "Cash",
+      "default": 1
+    },
+    {
+      "fieldname": "card_enabled",
+      "fieldtype": "Check",
+      "label": "Card",
+      "default": 1
+    },
+    {
+      "fieldname": "bank_enabled",
+      "fieldtype": "Check",
+      "label": "Bank",
+      "default": 1
+    },
+    {
+      "fieldname": "wallet_enabled",
+      "fieldtype": "Check",
+      "label": "Wallet",
+      "default": 0
+    },
+    {
+      "fieldname": "gift_card_enabled",
+      "fieldtype": "Check",
+      "label": "Gift Card",
+      "default": 0
+    },
+    {
+      "fieldname": "credit_sale_enabled",
+      "fieldtype": "Check",
+      "label": "Credit Sale",
+      "default": 1
+    },
+    {
+      "fieldname": "advanced_section",
+      "fieldtype": "Section Break",
+      "label": "Advanced"
+    },
+    {
+      "fieldname": "split_payment_enabled",
+      "fieldtype": "Check",
+      "label": "Split Payment",
+      "default": 1
+    },
+    {
+      "fieldname": "tips_enabled",
+      "fieldtype": "Check",
+      "label": "Tips",
+      "default": 0
+    },
+    {
+      "fieldname": "default_tip_percent",
+      "fieldtype": "Percent",
+      "label": "Default Tip Percent"
+    },
+    {
+      "fieldname": "service_charge_enabled",
+      "fieldtype": "Check",
+      "label": "Service Charge",
+      "default": 0
+    },
+    {
+      "fieldname": "service_charge_percent",
+      "fieldtype": "Percent",
+      "label": "Service Charge Percent"
+    },
+    {
+      "fieldname": "round_off_enabled",
+      "fieldtype": "Check",
+      "label": "Round Off",
+      "default": 1
+    },
+    {
+      "fieldname": "round_off_account",
+      "fieldtype": "Link",
+      "label": "Round Off Account",
+      "options": "Account"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Payment Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

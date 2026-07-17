@@ -1,0 +1,112 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "app_key",
+    "title",
+    "platform",
+    "enabled",
+    "api_product",
+    "minimum_version",
+    "maximum_version",
+    "force_update",
+    "maintenance_mode",
+    "icon",
+    "description",
+    "config_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "app_key",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "App Key",
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Title",
+      "reqd": 1
+    },
+    {
+      "fieldname": "platform",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Platform",
+      "options": "Electron\nFlutter\nWeb\nAll",
+      "reqd": 1,
+      "default": "All"
+    },
+    {
+      "default": "1",
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Enabled"
+    },
+    {
+      "description": "zatgo_core.api.v1 product namespace, e.g. resto_pos, delivery, project_tracker",
+      "fieldname": "api_product",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "API Product"
+    },
+    {
+      "fieldname": "minimum_version",
+      "fieldtype": "Data",
+      "label": "Minimum Client Version"
+    },
+    {
+      "fieldname": "maximum_version",
+      "fieldtype": "Data",
+      "label": "Maximum Client Version"
+    },
+    {
+      "default": "0",
+      "fieldname": "force_update",
+      "fieldtype": "Check",
+      "label": "Force Update"
+    },
+    {
+      "default": "0",
+      "fieldname": "maintenance_mode",
+      "fieldtype": "Check",
+      "label": "App Maintenance Mode"
+    },
+    {
+      "fieldname": "icon",
+      "fieldtype": "Data",
+      "label": "Icon"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "config_json",
+      "fieldtype": "Code",
+      "label": "App Config JSON",
+      "options": "JSON"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Client Application",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

@@ -1,0 +1,218 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "identity_section",
+    "branch_name",
+    "company",
+    "erp_branch",
+    "is_active",
+    "ops_section",
+    "warehouse",
+    "pos_profile",
+    "kitchen_enabled",
+    "cash_counter",
+    "manager",
+    "printers_section",
+    "receipt_printer",
+    "kitchen_printer",
+    "shift_section",
+    "shift_start",
+    "shift_end",
+    "working_days",
+    "delivery_section",
+    "delivery_zone",
+    "delivery_radius_km"
+  ],
+  "fields": [
+    {
+      "fieldname": "identity_section",
+      "fieldtype": "Section Break",
+      "label": "Identity"
+    },
+    {
+      "fieldname": "branch_name",
+      "fieldtype": "Data",
+      "label": "Branch Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "erp_branch",
+      "fieldtype": "Data",
+      "label": "ERPNext Branch",
+      "description": "Optional ERPNext Branch name (HR Branch) when available"
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "ops_section",
+      "fieldtype": "Section Break",
+      "label": "Operations"
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "pos_profile",
+      "fieldtype": "Data",
+      "label": "POS Profile"
+    },
+    {
+      "fieldname": "kitchen_enabled",
+      "fieldtype": "Check",
+      "label": "Kitchen Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "cash_counter",
+      "fieldtype": "Data",
+      "label": "Cash Counter"
+    },
+    {
+      "fieldname": "manager",
+      "fieldtype": "Link",
+      "label": "Manager",
+      "options": "User"
+    },
+    {
+      "fieldname": "printers_section",
+      "fieldtype": "Section Break",
+      "label": "Printers"
+    },
+    {
+      "fieldname": "receipt_printer",
+      "fieldtype": "Data",
+      "label": "Receipt Printer"
+    },
+    {
+      "fieldname": "kitchen_printer",
+      "fieldtype": "Data",
+      "label": "Kitchen Printer"
+    },
+    {
+      "fieldname": "shift_section",
+      "fieldtype": "Section Break",
+      "label": "Shift Timing"
+    },
+    {
+      "fieldname": "shift_start",
+      "fieldtype": "Time",
+      "label": "Shift Start"
+    },
+    {
+      "fieldname": "shift_end",
+      "fieldtype": "Time",
+      "label": "Shift End"
+    },
+    {
+      "fieldname": "working_days",
+      "fieldtype": "Data",
+      "label": "Working Days",
+      "default": "Mon,Tue,Wed,Thu,Fri,Sat"
+    },
+    {
+      "fieldname": "delivery_section",
+      "fieldtype": "Section Break",
+      "label": "Delivery"
+    },
+    {
+      "fieldname": "delivery_zone",
+      "fieldtype": "Small Text",
+      "label": "Delivery Zone"
+    },
+    {
+      "fieldname": "delivery_radius_km",
+      "fieldtype": "Float",
+      "label": "Delivery Radius (km)"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Branch Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "autoname": "format:BR-{company}-{#####}",
+  "naming_rule": "Expression",
+  "title_field": "branch_name"
+}

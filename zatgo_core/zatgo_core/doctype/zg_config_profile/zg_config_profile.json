@@ -1,0 +1,94 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "field:profile_name",
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "profile_name",
+    "environment",
+    "is_active",
+    "column_break_1",
+    "description",
+    "payload_section",
+    "payload_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "profile_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Profile Name",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "default": "Development",
+      "fieldname": "environment",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Environment",
+      "options": "Development\nStaging\nProduction\nCustom"
+    },
+    {
+      "default": "0",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Is Active"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "payload_section",
+      "fieldtype": "Section Break",
+      "label": "Exported Settings"
+    },
+    {
+      "fieldname": "payload_json",
+      "fieldtype": "Code",
+      "label": "Payload JSON",
+      "options": "JSON"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Config Profile",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "export": 1,
+      "read": 1,
+      "role": "ZG Application Admin",
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "profile_name",
+  "track_changes": 1
+}

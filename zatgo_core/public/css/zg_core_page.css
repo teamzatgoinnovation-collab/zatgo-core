@@ -1,0 +1,132 @@
+/* ZatGo Core configuration center page */
+.zg-core-shell {
+	display: flex;
+	min-height: calc(100vh - 120px);
+	gap: 0;
+	background: var(--bg-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	overflow: hidden;
+}
+
+.zg-core-nav {
+	width: 220px;
+	flex-shrink: 0;
+	border-right: 1px solid var(--border-color);
+	background: var(--fg-color);
+	padding: 12px 0;
+}
+
+.zg-core-nav.collapsed {
+	width: 56px;
+}
+
+.zg-core-nav-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 16px;
+	cursor: pointer;
+	color: var(--text-color);
+	font-size: var(--text-md);
+}
+
+.zg-core-nav-item:hover,
+.zg-core-nav-item.active {
+	background: var(--bg-color);
+	color: var(--primary);
+}
+
+.zg-core-main {
+	flex: 1;
+	display: flex;
+	min-width: 0;
+}
+
+.zg-core-apps {
+	width: 260px;
+	flex-shrink: 0;
+	border-right: 1px solid var(--border-color);
+	background: var(--fg-color);
+	overflow: auto;
+}
+
+.zg-core-content {
+	flex: 1;
+	padding: 16px 20px;
+	overflow: auto;
+}
+
+.zg-core-app-row {
+	padding: 10px 14px;
+	cursor: pointer;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.zg-core-app-row.active {
+	background: var(--bg-color);
+	border-left: 3px solid var(--primary);
+}
+
+.zg-core-section {
+	padding: 6px 14px 6px 28px;
+	cursor: pointer;
+	font-size: var(--text-sm);
+	color: var(--text-muted);
+}
+
+.zg-core-section:hover,
+.zg-core-section.active {
+	color: var(--primary);
+}
+
+.zg-core-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.zg-core-card {
+	background: var(--fg-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	padding: 14px;
+}
+
+.zg-core-card .value {
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+
+.zg-core-toolbar {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.zg-core-pending {
+	padding: 24px;
+	border: 1px dashed var(--border-color);
+	border-radius: var(--border-radius);
+	color: var(--text-muted);
+	text-align: center;
+}
+
+.zg-core-pref-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 10px;
+}
+
+.zg-core-pref-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background: var(--fg-color);
+}

@@ -1,0 +1,359 @@
+{
+  "charts": [],
+  "content": "[{\"id\":\"hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Core Administration</b></span>\",\"col\":12}},{\"id\":\"sc1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"System Settings\",\"col\":3}},{\"id\":\"sc2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Companies\",\"col\":3}},{\"id\":\"sc3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Branches\",\"col\":3}},{\"id\":\"sc4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Applications\",\"col\":3}},{\"id\":\"sc5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Security\",\"col\":3}},{\"id\":\"sc6\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Printing\",\"col\":3}},{\"id\":\"sc7\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Storage\",\"col\":3}},{\"id\":\"sc8\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Integrations\",\"col\":3}},{\"id\":\"sc9\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Features\",\"col\":3}},{\"id\":\"sc10\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Audit\",\"col\":3}},{\"id\":\"nc1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"ZG Installed Apps\",\"col\":3}},{\"id\":\"nc2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"ZG Feature Flags\",\"col\":3}},{\"id\":\"nc3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"ZG Audit Events\",\"col\":3}},{\"id\":\"nc4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"ZG Active Branches\",\"col\":3}}]",
+  "creation": "2026-07-16 00:00:00.000000",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": "",
+  "hide_custom": 0,
+  "icon": "setting-gear",
+  "idx": 0,
+  "is_hidden": 0,
+  "label": "Core Administration",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "System",
+      "link_count": 2,
+      "link_type": "DocType",
+      "onboard": 0,
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG System Settings",
+      "link_to": "ZG System Settings",
+      "link_type": "DocType",
+      "onboard": 1,
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Sync Settings",
+      "link_to": "ZG Sync Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Companies",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Company Settings",
+      "link_to": "ZG Company Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Branches",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Branch Settings",
+      "link_to": "ZG Branch Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Applications",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Application Settings",
+      "link_to": "ZG Application Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Security",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Security Settings",
+      "link_to": "ZG Security Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Printing",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Printer Settings",
+      "link_to": "ZG Printer Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Storage",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Storage Settings",
+      "link_to": "ZG Storage Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Integrations",
+      "link_count": 2,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Integration Settings",
+      "link_to": "ZG Integration Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Notification Settings",
+      "link_to": "ZG Notification Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Features",
+      "link_count": 2,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Feature Flag",
+      "link_to": "ZG Feature Flag",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Payment Settings",
+      "link_to": "ZG Payment Settings",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Audit",
+      "link_count": 1,
+      "link_type": "DocType",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZG Audit Log",
+      "link_to": "ZG Audit Log",
+      "link_type": "DocType",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 1,
+      "label": "Reports",
+      "link_count": 4,
+      "link_type": "Report",
+      "type": "Card Break"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 1,
+      "label": "ZG Installed Apps",
+      "link_to": "ZG Installed Apps",
+      "link_type": "Report",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 1,
+      "label": "ZG Feature Flags",
+      "link_to": "ZG Feature Flags",
+      "link_type": "Report",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 1,
+      "label": "ZG Audit History",
+      "link_to": "ZG Audit History",
+      "link_type": "Report",
+      "type": "Link"
+    },
+    {
+      "hidden": 0,
+      "is_query_report": 1,
+      "label": "ZG API Usage",
+      "link_to": "ZG API Usage",
+      "link_type": "Report",
+      "type": "Link"
+    }
+  ],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "Core Administration",
+  "number_cards": [
+    {
+      "label": "ZG Installed Apps",
+      "number_card_name": "ZG Installed Apps"
+    },
+    {
+      "label": "ZG Feature Flags",
+      "number_card_name": "ZG Feature Flags"
+    },
+    {
+      "label": "ZG Audit Events",
+      "number_card_name": "ZG Audit Events"
+    },
+    {
+      "label": "ZG Active Branches",
+      "number_card_name": "ZG Active Branches"
+    }
+  ],
+  "owner": "Administrator",
+  "public": 1,
+  "quick_lists": [],
+  "restrict_to_domain": "",
+  "roles": [
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "ZG Application Admin"
+    },
+    {
+      "role": "ZG Company Admin"
+    },
+    {
+      "role": "ZG Branch Admin"
+    },
+    {
+      "role": "ZG Read Only"
+    }
+  ],
+  "sequence_id": 5,
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "",
+      "label": "System Settings",
+      "link_to": "ZG System Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Green",
+      "doc_view": "List",
+      "label": "Companies",
+      "link_to": "ZG Company Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Orange",
+      "doc_view": "List",
+      "label": "Branches",
+      "link_to": "ZG Branch Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Cyan",
+      "doc_view": "",
+      "label": "Applications",
+      "link_to": "ZG Application Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Red",
+      "doc_view": "",
+      "label": "Security",
+      "link_to": "ZG Security Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Gray",
+      "doc_view": "",
+      "label": "Printing",
+      "link_to": "ZG Printer Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Purple",
+      "doc_view": "",
+      "label": "Storage",
+      "link_to": "ZG Storage Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Yellow",
+      "doc_view": "",
+      "label": "Integrations",
+      "link_to": "ZG Integration Settings",
+      "type": "DocType"
+    },
+    {
+      "color": "Pink",
+      "doc_view": "List",
+      "label": "Features",
+      "link_to": "ZG Feature Flag",
+      "type": "DocType"
+    },
+    {
+      "color": "Gray",
+      "doc_view": "List",
+      "label": "Audit",
+      "link_to": "ZG Audit Log",
+      "type": "DocType"
+    }
+  ],
+  "title": "Core Administration"
+}

@@ -1,0 +1,198 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "local_section",
+    "public_files_path",
+    "private_files_path",
+    "cloud_section",
+    "provider",
+    "s3_enabled",
+    "s3_bucket",
+    "s3_region",
+    "s3_access_key",
+    "s3_secret_key",
+    "r2_enabled",
+    "r2_account_id",
+    "r2_bucket",
+    "r2_access_key",
+    "r2_secret_key",
+    "gdrive_enabled",
+    "dropbox_enabled",
+    "azure_enabled",
+    "azure_connection_string",
+    "backup_section",
+    "backup_enabled",
+    "backup_retention_days"
+  ],
+  "fields": [
+    {
+      "fieldname": "local_section",
+      "fieldtype": "Section Break",
+      "label": "Local Files"
+    },
+    {
+      "fieldname": "public_files_path",
+      "fieldtype": "Data",
+      "label": "Public Files Path"
+    },
+    {
+      "fieldname": "private_files_path",
+      "fieldtype": "Data",
+      "label": "Private Files Path"
+    },
+    {
+      "fieldname": "cloud_section",
+      "fieldtype": "Section Break",
+      "label": "Cloud Providers"
+    },
+    {
+      "fieldname": "provider",
+      "fieldtype": "Select",
+      "label": "Active Provider",
+      "options": "Local\nS3\nCloudflare R2\nGoogle Drive\nDropbox\nAzure Blob",
+      "default": "Local"
+    },
+    {
+      "fieldname": "s3_enabled",
+      "fieldtype": "Check",
+      "label": "S3 Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "s3_bucket",
+      "fieldtype": "Data",
+      "label": "S3 Bucket"
+    },
+    {
+      "fieldname": "s3_region",
+      "fieldtype": "Data",
+      "label": "S3 Region"
+    },
+    {
+      "fieldname": "s3_access_key",
+      "fieldtype": "Password",
+      "label": "S3 Access Key"
+    },
+    {
+      "fieldname": "s3_secret_key",
+      "fieldtype": "Password",
+      "label": "S3 Secret Key"
+    },
+    {
+      "fieldname": "r2_enabled",
+      "fieldtype": "Check",
+      "label": "Cloudflare R2 Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "r2_account_id",
+      "fieldtype": "Data",
+      "label": "R2 Account ID"
+    },
+    {
+      "fieldname": "r2_bucket",
+      "fieldtype": "Data",
+      "label": "R2 Bucket"
+    },
+    {
+      "fieldname": "r2_access_key",
+      "fieldtype": "Password",
+      "label": "R2 Access Key"
+    },
+    {
+      "fieldname": "r2_secret_key",
+      "fieldtype": "Password",
+      "label": "R2 Secret Key"
+    },
+    {
+      "fieldname": "gdrive_enabled",
+      "fieldtype": "Check",
+      "label": "Google Drive Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "dropbox_enabled",
+      "fieldtype": "Check",
+      "label": "Dropbox Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "azure_enabled",
+      "fieldtype": "Check",
+      "label": "Azure Blob Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "azure_connection_string",
+      "fieldtype": "Password",
+      "label": "Azure Connection String"
+    },
+    {
+      "fieldname": "backup_section",
+      "fieldtype": "Section Break",
+      "label": "Backups"
+    },
+    {
+      "fieldname": "backup_enabled",
+      "fieldtype": "Check",
+      "label": "Backups Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "backup_retention_days",
+      "fieldtype": "Int",
+      "label": "Backup Retention Days",
+      "default": 30
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Storage Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

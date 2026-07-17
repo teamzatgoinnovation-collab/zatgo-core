@@ -1,0 +1,187 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "devices_section",
+    "receipt_printer",
+    "kitchen_printer",
+    "barcode_printer",
+    "label_printer",
+    "a4_printer",
+    "layout_section",
+    "paper_width_mm",
+    "copies",
+    "margin_top",
+    "margin_bottom",
+    "margin_left",
+    "margin_right",
+    "logo",
+    "behaviour_section",
+    "auto_print",
+    "silent_print"
+  ],
+  "fields": [
+    {
+      "fieldname": "devices_section",
+      "fieldtype": "Section Break",
+      "label": "Devices"
+    },
+    {
+      "fieldname": "receipt_printer",
+      "fieldtype": "Data",
+      "label": "Receipt Printer"
+    },
+    {
+      "fieldname": "kitchen_printer",
+      "fieldtype": "Data",
+      "label": "Kitchen Printer"
+    },
+    {
+      "fieldname": "barcode_printer",
+      "fieldtype": "Data",
+      "label": "Barcode Printer"
+    },
+    {
+      "fieldname": "label_printer",
+      "fieldtype": "Data",
+      "label": "Label Printer"
+    },
+    {
+      "fieldname": "a4_printer",
+      "fieldtype": "Data",
+      "label": "A4 Printer"
+    },
+    {
+      "fieldname": "layout_section",
+      "fieldtype": "Section Break",
+      "label": "Layout"
+    },
+    {
+      "fieldname": "paper_width_mm",
+      "fieldtype": "Int",
+      "label": "Paper Width (mm)",
+      "default": 80
+    },
+    {
+      "fieldname": "copies",
+      "fieldtype": "Int",
+      "label": "Copies",
+      "default": 1
+    },
+    {
+      "fieldname": "margin_top",
+      "fieldtype": "Int",
+      "label": "Margin Top",
+      "default": 0
+    },
+    {
+      "fieldname": "margin_bottom",
+      "fieldtype": "Int",
+      "label": "Margin Bottom",
+      "default": 0
+    },
+    {
+      "fieldname": "margin_left",
+      "fieldtype": "Int",
+      "label": "Margin Left",
+      "default": 0
+    },
+    {
+      "fieldname": "margin_right",
+      "fieldtype": "Int",
+      "label": "Margin Right",
+      "default": 0
+    },
+    {
+      "fieldname": "logo",
+      "fieldtype": "Attach Image",
+      "label": "Logo"
+    },
+    {
+      "fieldname": "behaviour_section",
+      "fieldtype": "Section Break",
+      "label": "Behaviour"
+    },
+    {
+      "fieldname": "auto_print",
+      "fieldtype": "Check",
+      "label": "Auto Print",
+      "default": 0
+    },
+    {
+      "fieldname": "silent_print",
+      "fieldtype": "Check",
+      "label": "Silent Print",
+      "default": 0
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Printer Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

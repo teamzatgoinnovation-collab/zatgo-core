@@ -1,0 +1,24 @@
+{
+  "cards": [],
+  "charts": [
+    {
+      "chart": "ZG Feature Flag Status",
+      "width": "Half"
+    },
+    {
+      "chart": "ZG Audit Activity",
+      "width": "Half"
+    }
+  ],
+  "creation": "2026-07-16 00:00:00.000000",
+  "dashboard_name": "ZG System Health",
+  "docstatus": 0,
+  "doctype": "Dashboard",
+  "is_default": 0,
+  "is_standard": 1,
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG System Health",
+  "owner": "Administrator"
+}

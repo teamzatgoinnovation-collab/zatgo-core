@@ -1,0 +1,117 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "site_section",
+    "site_label",
+    "default_client_app",
+    "allow_unknown_clients",
+    "column_break_1",
+    "clients_require_auth",
+    "block_disabled_clients",
+    "client_apps_section",
+    "client_apps"
+  ],
+  "fields": [
+    {
+      "fieldname": "site_section",
+      "fieldtype": "Section Break",
+      "label": "Site Application Settings"
+    },
+    {
+      "default": "ZatGo",
+      "description": "Label shown to Electron / Flutter / Web clients for this site",
+      "fieldname": "site_label",
+      "fieldtype": "Data",
+      "label": "Site Label"
+    },
+    {
+      "description": "Default app_key clients may open after login",
+      "fieldname": "default_client_app",
+      "fieldtype": "Data",
+      "label": "Default Client App"
+    },
+    {
+      "default": "0",
+      "description": "If disabled, only app keys listed below may connect",
+      "fieldname": "allow_unknown_clients",
+      "fieldtype": "Check",
+      "label": "Allow Unknown Clients"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "1",
+      "fieldname": "clients_require_auth",
+      "fieldtype": "Check",
+      "label": "Clients Require Auth"
+    },
+    {
+      "default": "1",
+      "description": "Reject API/boot for client apps marked disabled on this site",
+      "fieldname": "block_disabled_clients",
+      "fieldtype": "Check",
+      "label": "Block Disabled Clients"
+    },
+    {
+      "fieldname": "client_apps_section",
+      "fieldtype": "Section Break",
+      "label": "Client Applications (Electron / Flutter / Web)"
+    },
+    {
+      "description": "One row per product client for this site. Not Frappe custom apps.",
+      "fieldname": "client_apps",
+      "fieldtype": "Table",
+      "label": "Client Applications",
+      "options": "ZG Client Application"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Application Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Application Admin",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Read Only"
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

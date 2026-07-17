@@ -1,0 +1,133 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "offline_section",
+    "offline_mode_enabled",
+    "sync_interval_seconds",
+    "retry_count",
+    "conflict_strategy",
+    "compression_enabled",
+    "encryption_enabled",
+    "redis_queue"
+  ],
+  "fields": [
+    {
+      "fieldname": "offline_section",
+      "fieldtype": "Section Break",
+      "label": "Offline / Sync"
+    },
+    {
+      "fieldname": "offline_mode_enabled",
+      "fieldtype": "Check",
+      "label": "Offline Mode",
+      "default": 0
+    },
+    {
+      "fieldname": "sync_interval_seconds",
+      "fieldtype": "Int",
+      "label": "Sync Interval (seconds)",
+      "default": 60
+    },
+    {
+      "fieldname": "retry_count",
+      "fieldtype": "Int",
+      "label": "Retry Count",
+      "default": 3
+    },
+    {
+      "fieldname": "conflict_strategy",
+      "fieldtype": "Select",
+      "label": "Conflict Strategy",
+      "options": "Server Wins\nClient Wins\nLast Write Wins\nManual",
+      "default": "Server Wins"
+    },
+    {
+      "fieldname": "compression_enabled",
+      "fieldtype": "Check",
+      "label": "Compression",
+      "default": 1
+    },
+    {
+      "fieldname": "encryption_enabled",
+      "fieldtype": "Check",
+      "label": "Encryption",
+      "default": 1
+    },
+    {
+      "fieldname": "redis_queue",
+      "fieldtype": "Data",
+      "label": "Redis Queue",
+      "default": "default"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Sync Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

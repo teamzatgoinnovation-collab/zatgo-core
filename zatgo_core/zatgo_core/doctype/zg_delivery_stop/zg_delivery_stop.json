@@ -1,0 +1,266 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-07-16 00:00:00.000000",
+  "default_view": "List",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "title",
+    "order_number",
+    "invoice_number",
+    "customer",
+    "address",
+    "city",
+    "area",
+    "window_label",
+    "items_summary",
+    "sequence",
+    "phone",
+    "status",
+    "priority",
+    "delivery_boy",
+    "assigned_at",
+    "expected_at",
+    "remarks",
+    "payment_method",
+    "cod_amount",
+    "paid_amount",
+    "balance",
+    "delivery_charges",
+    "lat",
+    "lng",
+    "pod_method",
+    "pod_signed_by",
+    "pod_otp",
+    "pod_note",
+    "pod_captured_at",
+    "pod_photo",
+    "pod_signature_file"
+  ],
+  "fields": [
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "Title",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "order_number",
+      "fieldtype": "Data",
+      "label": "Order Number",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "invoice_number",
+      "fieldtype": "Data",
+      "label": "Invoice Number"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Data",
+      "label": "Customer",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "address",
+      "fieldtype": "Small Text",
+      "label": "Address"
+    },
+    {
+      "fieldname": "city",
+      "fieldtype": "Data",
+      "label": "City"
+    },
+    {
+      "fieldname": "area",
+      "fieldtype": "Data",
+      "label": "Area"
+    },
+    {
+      "fieldname": "window_label",
+      "fieldtype": "Data",
+      "label": "Window"
+    },
+    {
+      "fieldname": "items_summary",
+      "fieldtype": "Data",
+      "label": "Items"
+    },
+    {
+      "fieldname": "sequence",
+      "fieldtype": "Int",
+      "label": "Sequence",
+      "default": "1"
+    },
+    {
+      "fieldname": "phone",
+      "fieldtype": "Data",
+      "label": "Phone"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Assigned\nAccepted\nRejected\nReached Restaurant\nPicked Up\nOut For Delivery\nDelivered\nFailed\nCancelled\nReturned",
+      "default": "Assigned",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "priority",
+      "fieldtype": "Select",
+      "label": "Priority",
+      "options": "\nNormal\nHigh\nUrgent",
+      "default": "Normal"
+    },
+    {
+      "fieldname": "delivery_boy",
+      "fieldtype": "Link",
+      "label": "Delivery Boy",
+      "options": "ZG Delivery Boy",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "assigned_at",
+      "fieldtype": "Datetime",
+      "label": "Assigned At"
+    },
+    {
+      "fieldname": "expected_at",
+      "fieldtype": "Datetime",
+      "label": "Expected At"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "payment_method",
+      "fieldtype": "Select",
+      "label": "Payment Method",
+      "options": "\nCash\nCOD\nCard\nOnline\nWallet"
+    },
+    {
+      "fieldname": "cod_amount",
+      "fieldtype": "Currency",
+      "label": "COD Amount",
+      "default": "0"
+    },
+    {
+      "fieldname": "paid_amount",
+      "fieldtype": "Currency",
+      "label": "Paid Amount",
+      "default": "0"
+    },
+    {
+      "fieldname": "balance",
+      "fieldtype": "Currency",
+      "label": "Balance",
+      "default": "0"
+    },
+    {
+      "fieldname": "delivery_charges",
+      "fieldtype": "Currency",
+      "label": "Delivery Charges",
+      "default": "0"
+    },
+    {
+      "fieldname": "lat",
+      "fieldtype": "Float",
+      "label": "Latitude"
+    },
+    {
+      "fieldname": "lng",
+      "fieldtype": "Float",
+      "label": "Longitude"
+    },
+    {
+      "fieldname": "pod_method",
+      "fieldtype": "Select",
+      "label": "POD Method",
+      "options": "\nOTP\nSignature\nPhoto"
+    },
+    {
+      "fieldname": "pod_signed_by",
+      "fieldtype": "Data",
+      "label": "POD Signed By"
+    },
+    {
+      "fieldname": "pod_otp",
+      "fieldtype": "Data",
+      "label": "POD OTP"
+    },
+    {
+      "fieldname": "pod_note",
+      "fieldtype": "Small Text",
+      "label": "POD Note"
+    },
+    {
+      "fieldname": "pod_captured_at",
+      "fieldtype": "Datetime",
+      "label": "POD Captured At"
+    },
+    {
+      "fieldname": "pod_photo",
+      "fieldtype": "Attach",
+      "label": "POD Photo"
+    },
+    {
+      "fieldname": "pod_signature_file",
+      "fieldtype": "Attach Image",
+      "label": "POD Signature"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Delivery Stop",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "All",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 0,
+      "role": "Delivery",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

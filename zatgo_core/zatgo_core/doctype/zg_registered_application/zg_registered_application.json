@@ -1,0 +1,162 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "field:app_key",
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "app_key",
+    "title",
+    "version",
+    "enabled",
+    "visible",
+    "column_break_1",
+    "icon",
+    "category",
+    "menu_order",
+    "settings_route",
+    "meta_section",
+    "roles",
+    "depends_on",
+    "description",
+    "manifest_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "app_key",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "App Key",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Title",
+      "reqd": 1
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Version",
+      "default": "0.1.0"
+    },
+    {
+      "default": "1",
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Enabled"
+    },
+    {
+      "default": "1",
+      "fieldname": "visible",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Visible"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "folder",
+      "fieldname": "icon",
+      "fieldtype": "Data",
+      "label": "Icon"
+    },
+    {
+      "default": "Operations",
+      "fieldname": "category",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Category",
+      "options": "Operations\nSales\nInventory\nHR\nFinance\nPlatform\nOther"
+    },
+    {
+      "default": "100",
+      "fieldname": "menu_order",
+      "fieldtype": "Int",
+      "label": "Menu Order"
+    },
+    {
+      "description": "Optional Desk page or route hint",
+      "fieldname": "settings_route",
+      "fieldtype": "Data",
+      "label": "Settings Route"
+    },
+    {
+      "fieldname": "meta_section",
+      "fieldtype": "Section Break",
+      "label": "Access"
+    },
+    {
+      "description": "Comma-separated roles that may see this app (empty = all Desk users with Core access)",
+      "fieldname": "roles",
+      "fieldtype": "Small Text",
+      "label": "Roles"
+    },
+    {
+      "description": "Comma-separated app_key dependencies",
+      "fieldname": "depends_on",
+      "fieldtype": "Small Text",
+      "label": "Depends On"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "manifest_json",
+      "fieldtype": "Code",
+      "label": "Manifest JSON",
+      "options": "JSON"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Registered Application",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Application Admin",
+      "write": 1
+    },
+    {
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Read Only"
+    }
+  ],
+  "sort_field": "menu_order",
+  "sort_order": "ASC",
+  "states": [],
+  "title_field": "title",
+  "track_changes": 1
+}

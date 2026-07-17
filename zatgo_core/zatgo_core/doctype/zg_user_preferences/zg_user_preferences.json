@@ -1,0 +1,121 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "user_section",
+    "user",
+    "theme",
+    "language",
+    "sidebar_collapsed",
+    "navigation_section",
+    "landing_page",
+    "default_dashboard",
+    "shortcuts",
+    "favorite_apps",
+    "recent_documents"
+  ],
+  "fields": [
+    {
+      "fieldname": "user_section",
+      "fieldtype": "Section Break",
+      "label": "User"
+    },
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "User",
+      "options": "User",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "theme",
+      "fieldtype": "Select",
+      "label": "Theme",
+      "options": "Light\nDark\nSystem",
+      "default": "System",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "language",
+      "fieldtype": "Link",
+      "label": "Language",
+      "options": "Language"
+    },
+    {
+      "fieldname": "sidebar_collapsed",
+      "fieldtype": "Check",
+      "label": "Sidebar Collapsed",
+      "default": 0
+    },
+    {
+      "fieldname": "navigation_section",
+      "fieldtype": "Section Break",
+      "label": "Navigation"
+    },
+    {
+      "fieldname": "landing_page",
+      "fieldtype": "Data",
+      "label": "Landing Page"
+    },
+    {
+      "fieldname": "default_dashboard",
+      "fieldtype": "Data",
+      "label": "Dashboard"
+    },
+    {
+      "fieldname": "shortcuts",
+      "fieldtype": "Small Text",
+      "label": "Shortcuts",
+      "description": "Comma-separated route names"
+    },
+    {
+      "fieldname": "favorite_apps",
+      "fieldtype": "Small Text",
+      "label": "Favorite Apps"
+    },
+    {
+      "fieldname": "recent_documents",
+      "fieldtype": "Small Text",
+      "label": "Recent Documents"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG User Preferences",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "export": 1
+    },
+    {
+      "role": "All",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "export": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "autoname": "field:user",
+  "naming_rule": "By fieldname",
+  "title_field": "user"
+}

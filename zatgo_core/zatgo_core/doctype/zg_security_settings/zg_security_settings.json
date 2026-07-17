@@ -1,0 +1,167 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "password_section",
+    "min_password_length",
+    "require_uppercase",
+    "require_number",
+    "require_special_char",
+    "password_expiry_days",
+    "auth_section",
+    "otp_enabled",
+    "two_fa_enabled",
+    "session_timeout_minutes",
+    "login_limit",
+    "login_lockout_minutes",
+    "access_section",
+    "allowed_devices",
+    "allowed_ip",
+    "audit_enabled",
+    "encryption_enabled",
+    "api_keys_enabled"
+  ],
+  "fields": [
+    {
+      "fieldname": "password_section",
+      "fieldtype": "Section Break",
+      "label": "Password Policy"
+    },
+    {
+      "fieldname": "min_password_length",
+      "fieldtype": "Int",
+      "label": "Min Password Length",
+      "default": 10
+    },
+    {
+      "fieldname": "require_uppercase",
+      "fieldtype": "Check",
+      "label": "Require Uppercase",
+      "default": 1
+    },
+    {
+      "fieldname": "require_number",
+      "fieldtype": "Check",
+      "label": "Require Number",
+      "default": 1
+    },
+    {
+      "fieldname": "require_special_char",
+      "fieldtype": "Check",
+      "label": "Require Special Character",
+      "default": 1
+    },
+    {
+      "fieldname": "password_expiry_days",
+      "fieldtype": "Int",
+      "label": "Password Expiry Days",
+      "default": 90
+    },
+    {
+      "fieldname": "auth_section",
+      "fieldtype": "Section Break",
+      "label": "Authentication"
+    },
+    {
+      "fieldname": "otp_enabled",
+      "fieldtype": "Check",
+      "label": "OTP Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "two_fa_enabled",
+      "fieldtype": "Check",
+      "label": "2FA Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "session_timeout_minutes",
+      "fieldtype": "Int",
+      "label": "Session Timeout (minutes)",
+      "default": 480
+    },
+    {
+      "fieldname": "login_limit",
+      "fieldtype": "Int",
+      "label": "Login Limit",
+      "default": 5
+    },
+    {
+      "fieldname": "login_lockout_minutes",
+      "fieldtype": "Int",
+      "label": "Login Lockout Minutes",
+      "default": 15
+    },
+    {
+      "fieldname": "access_section",
+      "fieldtype": "Section Break",
+      "label": "Access Control"
+    },
+    {
+      "fieldname": "allowed_devices",
+      "fieldtype": "Small Text",
+      "label": "Allowed Devices"
+    },
+    {
+      "fieldname": "allowed_ip",
+      "fieldtype": "Small Text",
+      "label": "Allowed IP"
+    },
+    {
+      "fieldname": "audit_enabled",
+      "fieldtype": "Check",
+      "label": "Audit Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "encryption_enabled",
+      "fieldtype": "Check",
+      "label": "Encryption Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "api_keys_enabled",
+      "fieldtype": "Check",
+      "label": "API Keys Enabled",
+      "default": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Security Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

@@ -1,0 +1,15 @@
+[project]
+name = "zatgo_core"
+version = "0.1.0"
+description = "ZatGo Core — foundation settings, flags, integrations, and registry for the ZatGo ERP ecosystem"
+authors = [{ name = "ZatGo Innovation" }]
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["zatgo_core*"]

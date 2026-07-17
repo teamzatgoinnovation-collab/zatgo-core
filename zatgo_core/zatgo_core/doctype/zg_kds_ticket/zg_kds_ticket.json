@@ -1,0 +1,70 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-07-16 00:00:00.000000",
+  "default_view": "List",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "title",
+    "order_number",
+    "table_name",
+    "item_name",
+    "qty",
+    "station",
+    "status",
+    "opened_at",
+    "server",
+    "note",
+    "extras"
+  ],
+  "fields": [
+    {"fieldname": "title", "fieldtype": "Data", "label": "Title", "reqd": 1, "in_list_view": 1},
+    {"fieldname": "order_number", "fieldtype": "Data", "label": "Order Number", "in_list_view": 1},
+    {"fieldname": "table_name", "fieldtype": "Data", "label": "Table"},
+    {"fieldname": "item_name", "fieldtype": "Data", "label": "Item", "reqd": 1},
+    {"fieldname": "qty", "fieldtype": "Int", "label": "Qty", "default": "1", "reqd": 1},
+    {
+      "fieldname": "station",
+      "fieldtype": "Select",
+      "label": "Station",
+      "options": "grill\ncold\nbar\ndessert\ncounter",
+      "default": "grill",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Queued\nPreparing\nReady\nServed",
+      "default": "Queued",
+      "in_list_view": 1
+    },
+    {"fieldname": "opened_at", "fieldtype": "Datetime", "label": "Opened At"},
+    {"fieldname": "server", "fieldtype": "Data", "label": "Server"},
+    {"fieldname": "note", "fieldtype": "Small Text", "label": "Note"},
+    {"fieldname": "extras", "fieldtype": "Small Text", "label": "Extras"}
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG KDS Ticket",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1,
+      "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1
+    },
+    {
+      "create": 1, "delete": 0, "email": 1, "export": 1, "print": 1,
+      "read": 1, "report": 1, "role": "All", "share": 0, "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

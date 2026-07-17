@@ -1,0 +1,291 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "messaging_section",
+    "whatsapp_enabled",
+    "whatsapp_api_url",
+    "whatsapp_api_key",
+    "sms_enabled",
+    "sms_gateway",
+    "sms_api_key",
+    "email_enabled",
+    "default_email_account",
+    "push_section",
+    "firebase_enabled",
+    "firebase_project_id",
+    "firebase_credentials_json",
+    "telegram_enabled",
+    "telegram_bot_token",
+    "slack_enabled",
+    "slack_webhook_url",
+    "maps_section",
+    "google_maps_enabled",
+    "google_maps_api_key",
+    "ai_section",
+    "openai_enabled",
+    "openai_api_key",
+    "gemini_enabled",
+    "gemini_api_key",
+    "claude_enabled",
+    "claude_api_key",
+    "deepseek_enabled",
+    "deepseek_api_key",
+    "api_section",
+    "webhooks_enabled",
+    "rest_api_enabled",
+    "graphql_enabled",
+    "oauth_enabled",
+    "jwt_enabled",
+    "jwt_secret"
+  ],
+  "fields": [
+    {
+      "fieldname": "messaging_section",
+      "fieldtype": "Section Break",
+      "label": "Messaging"
+    },
+    {
+      "fieldname": "whatsapp_enabled",
+      "fieldtype": "Check",
+      "label": "WhatsApp Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "whatsapp_api_url",
+      "fieldtype": "Data",
+      "label": "WhatsApp API URL"
+    },
+    {
+      "fieldname": "whatsapp_api_key",
+      "fieldtype": "Password",
+      "label": "WhatsApp API Key"
+    },
+    {
+      "fieldname": "sms_enabled",
+      "fieldtype": "Check",
+      "label": "SMS Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "sms_gateway",
+      "fieldtype": "Data",
+      "label": "SMS Gateway"
+    },
+    {
+      "fieldname": "sms_api_key",
+      "fieldtype": "Password",
+      "label": "SMS API Key"
+    },
+    {
+      "fieldname": "email_enabled",
+      "fieldtype": "Check",
+      "label": "Email Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "default_email_account",
+      "fieldtype": "Link",
+      "label": "Default Email Account",
+      "options": "Email Account"
+    },
+    {
+      "fieldname": "push_section",
+      "fieldtype": "Section Break",
+      "label": "Push / Chat"
+    },
+    {
+      "fieldname": "firebase_enabled",
+      "fieldtype": "Check",
+      "label": "Firebase Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "firebase_project_id",
+      "fieldtype": "Data",
+      "label": "Firebase Project ID"
+    },
+    {
+      "fieldname": "firebase_credentials_json",
+      "fieldtype": "Code",
+      "label": "Firebase Credentials JSON",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "telegram_enabled",
+      "fieldtype": "Check",
+      "label": "Telegram Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "telegram_bot_token",
+      "fieldtype": "Password",
+      "label": "Telegram Bot Token"
+    },
+    {
+      "fieldname": "slack_enabled",
+      "fieldtype": "Check",
+      "label": "Slack Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "slack_webhook_url",
+      "fieldtype": "Password",
+      "label": "Slack Webhook URL"
+    },
+    {
+      "fieldname": "maps_section",
+      "fieldtype": "Section Break",
+      "label": "Maps"
+    },
+    {
+      "fieldname": "google_maps_enabled",
+      "fieldtype": "Check",
+      "label": "Google Maps Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "google_maps_api_key",
+      "fieldtype": "Password",
+      "label": "Google Maps API Key"
+    },
+    {
+      "fieldname": "ai_section",
+      "fieldtype": "Section Break",
+      "label": "AI Providers"
+    },
+    {
+      "fieldname": "openai_enabled",
+      "fieldtype": "Check",
+      "label": "OpenAI Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "openai_api_key",
+      "fieldtype": "Password",
+      "label": "OpenAI API Key"
+    },
+    {
+      "fieldname": "gemini_enabled",
+      "fieldtype": "Check",
+      "label": "Gemini Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "gemini_api_key",
+      "fieldtype": "Password",
+      "label": "Gemini API Key"
+    },
+    {
+      "fieldname": "claude_enabled",
+      "fieldtype": "Check",
+      "label": "Claude Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "claude_api_key",
+      "fieldtype": "Password",
+      "label": "Claude API Key"
+    },
+    {
+      "fieldname": "deepseek_enabled",
+      "fieldtype": "Check",
+      "label": "DeepSeek Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "deepseek_api_key",
+      "fieldtype": "Password",
+      "label": "DeepSeek API Key"
+    },
+    {
+      "fieldname": "api_section",
+      "fieldtype": "Section Break",
+      "label": "API / Auth"
+    },
+    {
+      "fieldname": "webhooks_enabled",
+      "fieldtype": "Check",
+      "label": "Webhooks Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "rest_api_enabled",
+      "fieldtype": "Check",
+      "label": "REST API Enabled",
+      "default": 1
+    },
+    {
+      "fieldname": "graphql_enabled",
+      "fieldtype": "Check",
+      "label": "GraphQL Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "oauth_enabled",
+      "fieldtype": "Check",
+      "label": "OAuth Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "jwt_enabled",
+      "fieldtype": "Check",
+      "label": "JWT Enabled",
+      "default": 0
+    },
+    {
+      "fieldname": "jwt_secret",
+      "fieldtype": "Password",
+      "label": "JWT Secret"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Integration Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

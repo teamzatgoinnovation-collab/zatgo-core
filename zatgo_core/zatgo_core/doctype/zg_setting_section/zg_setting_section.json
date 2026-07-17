@@ -1,0 +1,159 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "application",
+    "section_key",
+    "label",
+    "parent_section",
+    "is_group",
+    "column_break_1",
+    "icon",
+    "sort_order",
+    "enabled",
+    "host_section",
+    "link_doctype",
+    "component",
+    "roles",
+    "description",
+    "defaults_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Application",
+      "options": "ZG Registered Application",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_key",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Section Key",
+      "reqd": 1
+    },
+    {
+      "fieldname": "label",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Label",
+      "reqd": 1
+    },
+    {
+      "fieldname": "parent_section",
+      "fieldtype": "Link",
+      "label": "Parent Section",
+      "options": "ZG Setting Section"
+    },
+    {
+      "default": "0",
+      "fieldname": "is_group",
+      "fieldtype": "Check",
+      "label": "Is Group"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "icon",
+      "fieldtype": "Data",
+      "label": "Icon"
+    },
+    {
+      "default": "100",
+      "fieldname": "sort_order",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "Sort Order"
+    },
+    {
+      "default": "1",
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "Enabled"
+    },
+    {
+      "fieldname": "host_section",
+      "fieldtype": "Section Break",
+      "label": "Host"
+    },
+    {
+      "description": "Open this Desk DocType when section is selected",
+      "fieldname": "link_doctype",
+      "fieldtype": "Link",
+      "label": "Link DocType",
+      "options": "DocType"
+    },
+    {
+      "description": "Vue panel key when not linking a DocType (e.g. module_preferences, about, pending)",
+      "fieldname": "component",
+      "fieldtype": "Data",
+      "label": "Component"
+    },
+    {
+      "description": "Comma-separated roles; empty inherits application roles",
+      "fieldname": "roles",
+      "fieldtype": "Small Text",
+      "label": "Roles"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "defaults_json",
+      "fieldtype": "Code",
+      "label": "Defaults JSON",
+      "options": "JSON"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Setting Section",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Application Admin",
+      "write": 1
+    },
+    {
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "role": "ZG Read Only"
+    }
+  ],
+  "sort_field": "sort_order",
+  "sort_order": "ASC",
+  "states": [],
+  "title_field": "label",
+  "track_changes": 1
+}

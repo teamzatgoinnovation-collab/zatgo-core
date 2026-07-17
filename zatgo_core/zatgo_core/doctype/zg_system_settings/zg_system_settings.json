@@ -1,0 +1,225 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-07-16 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "general_section",
+    "brand_name",
+    "company_logo",
+    "theme",
+    "column_break_1",
+    "language",
+    "timezone",
+    "country",
+    "currency",
+    "date_format",
+    "defaults_section",
+    "default_company",
+    "default_warehouse",
+    "default_cost_center",
+    "column_break_2",
+    "fiscal_year",
+    "rounding_method",
+    "rounding_precision",
+    "erp_section",
+    "enable_multi_company",
+    "enable_branch_mode",
+    "maintenance_mode"
+  ],
+  "fields": [
+    {
+      "fieldname": "general_section",
+      "fieldtype": "Section Break",
+      "label": "General"
+    },
+    {
+      "fieldname": "brand_name",
+      "fieldtype": "Data",
+      "label": "Brand Name",
+      "default": "ZatGo"
+    },
+    {
+      "fieldname": "company_logo",
+      "fieldtype": "Attach Image",
+      "label": "Company Logo"
+    },
+    {
+      "fieldname": "theme",
+      "fieldtype": "Select",
+      "label": "Theme",
+      "options": "Light\nDark\nSystem",
+      "default": "System"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "language",
+      "fieldtype": "Link",
+      "label": "Language",
+      "options": "Language"
+    },
+    {
+      "fieldname": "timezone",
+      "fieldtype": "Data",
+      "label": "Timezone"
+    },
+    {
+      "fieldname": "country",
+      "fieldtype": "Link",
+      "label": "Country",
+      "options": "Country"
+    },
+    {
+      "fieldname": "currency",
+      "fieldtype": "Link",
+      "label": "Currency",
+      "options": "Currency"
+    },
+    {
+      "fieldname": "date_format",
+      "fieldtype": "Select",
+      "label": "Date Format",
+      "options": "yyyy-mm-dd\ndd-mm-yyyy\nmm-dd-yyyy\ndd/mm/yyyy\nmm/dd/yyyy",
+      "default": "yyyy-mm-dd"
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Defaults"
+    },
+    {
+      "fieldname": "default_company",
+      "fieldtype": "Link",
+      "label": "Default Company",
+      "options": "Company"
+    },
+    {
+      "fieldname": "default_warehouse",
+      "fieldtype": "Link",
+      "label": "Default Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "default_cost_center",
+      "fieldtype": "Link",
+      "label": "Default Cost Center",
+      "options": "Cost Center"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "fiscal_year",
+      "fieldtype": "Link",
+      "label": "Fiscal Year",
+      "options": "Fiscal Year"
+    },
+    {
+      "fieldname": "rounding_method",
+      "fieldtype": "Select",
+      "label": "Rounding",
+      "options": "Banker's Rounding\nCommercial Rounding\nCash Rounding",
+      "default": "Banker's Rounding"
+    },
+    {
+      "fieldname": "rounding_precision",
+      "fieldtype": "Int",
+      "label": "Rounding Precision",
+      "default": 2
+    },
+    {
+      "fieldname": "erp_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Behaviour"
+    },
+    {
+      "fieldname": "enable_multi_company",
+      "fieldtype": "Check",
+      "label": "Enable Multi Company",
+      "default": 1
+    },
+    {
+      "fieldname": "enable_branch_mode",
+      "fieldtype": "Check",
+      "label": "Enable Branch Mode",
+      "default": 1
+    },
+    {
+      "fieldname": "maintenance_mode",
+      "fieldtype": "Check",
+      "label": "Maintenance Mode",
+      "default": 0
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-07-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG System Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "share": 1,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 1,
+      "export": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "share": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1
+    },
+    {
+      "role": "ZG Branch Admin",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 0
+    },
+    {
+      "role": "ZG Read Only",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "export": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

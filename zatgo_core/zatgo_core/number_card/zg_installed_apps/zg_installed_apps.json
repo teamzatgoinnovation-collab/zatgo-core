@@ -1,0 +1,20 @@
+{
+  "aggregate_function_based_on": "",
+  "creation": "2026-07-16 00:00:00.000000",
+  "docstatus": 0,
+  "doctype": "Number Card",
+  "document_type": "ZG Feature Flag",
+  "filters_json": "[[\"ZG Feature Flag\",\"status\",\"=\",\"Enabled\"]]",
+  "function": "Count",
+  "is_public": 1,
+  "is_standard": 1,
+  "label": "ZG Enabled Features",
+  "modified": "2026-07-16 18:50:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Installed Apps",
+  "owner": "Administrator",
+  "show_percentage_stats": 0,
+  "stats_time_interval": "Daily",
+  "type": "Document Type"
+}
