@@ -13,7 +13,7 @@ Flutter / Electron / Desk / Web clients
    │  settings + api/v1/<product> RPC   │
    └────────────────────────────────────┘
             │
-            ├── project_tracker (optional domain app)
+            ├── optional product domain apps
             └── ERPNext / Frappe
 ```
 

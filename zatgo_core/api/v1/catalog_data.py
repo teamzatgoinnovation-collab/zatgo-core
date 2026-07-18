@@ -2,13 +2,6 @@
 
 PRODUCT_CATALOG = [
     {
-        "product": "project_tracker",
-        "title": "Project Tracker",
-        "status": "live",
-        "namespace": "project_tracker.api.v1",
-        "hub": "zatgo_core.api.v1.project_tracker"
-    },
-    {
         "product": "go_van",
         "title": "Go Van",
         "status": "stub",

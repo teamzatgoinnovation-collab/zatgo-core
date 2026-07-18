@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: zatgo_core
-Version: 0.1.0
-Summary: ZatGo Core — foundation settings, flags, integrations, and registry for the ZatGo ERP ecosystem
-Author: ZatGo Innovation
-License: MIT
-Requires-Python: >=3.11

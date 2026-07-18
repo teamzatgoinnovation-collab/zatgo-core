@@ -104,7 +104,7 @@ Examples:
 | `zatgo_core.api.v1.resto_pos.kds_tickets.list` | Kitchen tickets |
 | `zatgo_core.api.v1.go_van.trips.list` | Go Van trips |
 
-Products: `delivery`, `resto_pos`, `go_van`, `service`, `warehouse`, `crm`, `hr`, `fleet`, `accounting`, `admin`, `bi`, `customer_portal`, `vendor_portal`, `documentation`, `project_tracker`.
+Products: `delivery`, `resto_pos`, `go_van`, `service`, `warehouse`, `crm`, `hr`, `fleet`, `accounting`, `admin`, `bi`, `customer_portal`, `vendor_portal`, `documentation`.
 
 ## Client helper
 

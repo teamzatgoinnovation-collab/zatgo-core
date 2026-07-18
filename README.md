@@ -24,10 +24,14 @@ This is the **single ZatGo platform app** on ERPNext:
 - [Deployment](docs/deployment.md)
 - [Changelog](docs/CHANGELOG.md)
 
-## Install (development)
+## Install
+
+Push this app to its own git remote, then on a stock frappe_docker bench ([`ERPNEXT/README.md`](../../ERPNEXT/README.md)):
 
 ```bash
-./scripts/install_custom_apps.sh development <site> zatgo_core
+bench get-app https://github.com/<org>/zatgo_core.git
+bench --site <site> install-app zatgo_core
+bench --site <site> migrate
 ```
 
 ## Workspace / Config Center

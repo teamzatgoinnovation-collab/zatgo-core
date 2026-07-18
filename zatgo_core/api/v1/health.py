@@ -37,10 +37,7 @@ def status() -> dict[str, Any]:
     products = []
     for entry in PRODUCT_CATALOG:
         row = dict(entry)
-        if entry["product"] == "project_tracker":
-            row["installed"] = "project_tracker" in installed
-        else:
-            row["installed"] = "zatgo_core" in installed
+        row["installed"] = "zatgo_core" in installed
         products.append(row)
     return ok(
         {

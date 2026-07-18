@@ -37,7 +37,7 @@ bench --site <site> clear-cache
 ## Install order for dependent apps
 
 ```text
-frappe → erpnext → zatgo_core → optional product apps (e.g. project_tracker)
+frappe → erpnext → zatgo_core → optional product apps
 ```
 
 Do **not** install `zatgo_api` (merged into `zatgo_core`).

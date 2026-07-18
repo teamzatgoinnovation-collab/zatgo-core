@@ -51,7 +51,7 @@
       "label": "Enabled"
     },
     {
-      "description": "zatgo_core.api.v1 product namespace, e.g. resto_pos, delivery, project_tracker",
+      "description": "zatgo_core.api.v1 product namespace, e.g. resto_pos, delivery",
       "fieldname": "api_product",
       "fieldtype": "Data",
       "in_list_view": 1,

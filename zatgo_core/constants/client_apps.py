@@ -21,14 +21,6 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "description": "Site administration desktop client",
     },
     {
-        "app_key": "project_tracker_desktop",
-        "title": "Project Tracker Desktop",
-        "platform": "Electron",
-        "enabled": 1,
-        "api_product": "project_tracker",
-        "description": "Project Tracker Electron client",
-    },
-    {
         "app_key": "accounting_desktop",
         "title": "Accounting Desktop",
         "platform": "Electron",
@@ -85,14 +77,6 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "description": "Service Flutter app",
     },
     {
-        "app_key": "project_tracker_mobile",
-        "title": "Project Tracker Mobile",
-        "platform": "Flutter",
-        "enabled": 0,
-        "api_product": "project_tracker",
-        "description": "Project Tracker Flutter app",
-    },
-    {
         "app_key": "admin_portal",
         "title": "Admin Portal",
         "platform": "Web",
@@ -131,13 +115,5 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "enabled": 0,
         "api_product": "bi",
         "description": "BI dashboard web client",
-    },
-    {
-        "app_key": "project_tracker_web",
-        "title": "Project Tracker Web",
-        "platform": "Web",
-        "enabled": 0,
-        "api_product": "project_tracker",
-        "description": "Project Tracker web client",
     },
 )
