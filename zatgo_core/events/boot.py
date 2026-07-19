@@ -6,6 +6,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 
 
@@ -37,7 +38,7 @@ def boot_session(bootinfo: Any) -> None:
         bootinfo.zatgo_core = {
             "system": system,
             "feature_flags": flags,
-            "version": "0.1.0",
+            "version": __version__,
         }
     except Exception:
         frappe.logger("zatgo_core").exception("boot_session enrichment failed")

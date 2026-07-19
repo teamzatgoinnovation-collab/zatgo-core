@@ -6,6 +6,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core import __version__
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.api.v1.catalog_data import PRODUCT_CATALOG
@@ -16,7 +17,7 @@ from zatgo_core.utils.logging import log_api
 @frappe.whitelist(allow_guest=True)
 def ping() -> dict[str, Any]:
     """Lightweight liveness check (guest allowed for site smoke tests)."""
-    return ok({"app": "zatgo_core", "version": "0.1.0", "ok": True})
+    return ok({"app": "zatgo_core", "version": __version__, "ok": True})
 
 
 @frappe.whitelist()

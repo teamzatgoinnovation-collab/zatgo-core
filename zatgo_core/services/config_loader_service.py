@@ -7,6 +7,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.permissions.guards import assert_can_write_settings
 from zatgo_core.permissions.settings_visibility import can_see_roles
@@ -224,7 +225,7 @@ class ConfigLoaderService:
             "applications": visible,
             "health": health,
             "recent_changes": recent,
-            "version": "0.1.0",
+            "version": __version__,
         }
 
     @classmethod

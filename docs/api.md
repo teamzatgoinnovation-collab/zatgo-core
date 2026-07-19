@@ -54,10 +54,26 @@ Base path: `/api/method/<dotted.path>`
 
 | Method | Description |
 |--------|-------------|
-| `zatgo_core.api.v1.health.ping` | Liveness (guest allowed) |
+| `zatgo_core.api.v1.health.ping` | Liveness (guest allowed); returns app version |
 | `zatgo_core.api.v1.health.catalog` | Product API catalog |
 | `zatgo_core.api.v1.health.status` | Hub + installed products |
 | `zatgo_core.api.v1.health.get_system_health` | Redis, queues, users online, counts |
+
+### Catalog `status` values
+
+| Status | Meaning |
+|--------|---------|
+| `active` | Full domain workflows (delivery stops/boys/tracking, resto_pos catalog + KDS) |
+| `thin` | ERPNext- or ZG-backed list/get (+ ping/status); safe for client wiring |
+| `stub` | Placeholder helpers only |
+
+### Devices (FCM / push)
+
+| Method | Args | Description |
+|--------|------|-------------|
+| `zatgo_core.api.v1.devices.register_token` | `token`, `platform?`, `app_key?` | Register device token for user |
+| `zatgo_core.api.v1.devices.unregister_token` | `token` | Remove device token |
+| `zatgo_core.api.v1.devices.send_to_user` | `user`, `title`, `body`, … | Send push to user's devices |
 
 ## Configuration center (plugin registry)
 

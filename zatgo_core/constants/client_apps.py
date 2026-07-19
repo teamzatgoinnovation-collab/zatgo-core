@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 # Site-scoped client products (NOT Frappe custom apps).
+# api_product maps to zatgo_core.api.v1.<product> when set.
+# Tracker clients use tracker.api.v1.* (domain app); api_product is empty.
 DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
     {
         "app_key": "zatgo_pos",
@@ -45,6 +47,22 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "description": "Fleet desktop client",
     },
     {
+        "app_key": "tracker_desktop",
+        "title": "Tracker Desktop",
+        "platform": "Electron",
+        "enabled": 1,
+        "api_product": "",
+        "description": "Project Tracker desktop (tracker.api.v1.*)",
+    },
+    {
+        "app_key": "report_studio",
+        "title": "Report Studio",
+        "platform": "Electron",
+        "enabled": 0,
+        "api_product": "bi",
+        "description": "BI / report studio desktop client",
+    },
+    {
         "app_key": "kitchen",
         "title": "Kitchen",
         "platform": "Flutter",
@@ -59,6 +77,14 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "enabled": 1,
         "api_product": "delivery",
         "description": "Delivery Flutter app",
+    },
+    {
+        "app_key": "tracker",
+        "title": "Tracker",
+        "platform": "Flutter",
+        "enabled": 1,
+        "api_product": "",
+        "description": "Project Tracker Flutter app (tracker.api.v1.*)",
     },
     {
         "app_key": "go_van",
@@ -77,12 +103,44 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "description": "Service Flutter app",
     },
     {
+        "app_key": "crm",
+        "title": "CRM",
+        "platform": "Flutter",
+        "enabled": 0,
+        "api_product": "crm",
+        "description": "CRM Flutter scaffold",
+    },
+    {
+        "app_key": "hr",
+        "title": "HR",
+        "platform": "Flutter",
+        "enabled": 0,
+        "api_product": "hr",
+        "description": "HR Flutter scaffold",
+    },
+    {
+        "app_key": "warehouse",
+        "title": "Warehouse",
+        "platform": "Flutter",
+        "enabled": 0,
+        "api_product": "warehouse",
+        "description": "Warehouse Flutter scaffold",
+    },
+    {
         "app_key": "admin_portal",
         "title": "Admin Portal",
         "platform": "Web",
         "enabled": 1,
         "api_product": "admin",
         "description": "Admin Next.js portal",
+    },
+    {
+        "app_key": "tracker_web",
+        "title": "Tracker Web",
+        "platform": "Web",
+        "enabled": 1,
+        "api_product": "",
+        "description": "Project Tracker web (tracker.api.v1.*)",
     },
     {
         "app_key": "customer_portal",
@@ -115,5 +173,13 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "enabled": 0,
         "api_product": "bi",
         "description": "BI dashboard web client",
+    },
+    {
+        "app_key": "documentation",
+        "title": "Documentation",
+        "platform": "Web",
+        "enabled": 0,
+        "api_product": "documentation",
+        "description": "Documentation Next.js site",
     },
 )
