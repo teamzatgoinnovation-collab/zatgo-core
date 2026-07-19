@@ -1,0 +1,94 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "hash",
+  "creation": "2026-07-19 03:20:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "user",
+    "token",
+    "platform",
+    "app_id",
+    "last_seen"
+  ],
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "User",
+      "options": "User",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "token",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Token",
+      "length": 512,
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "platform",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Platform",
+      "options": "android\nios\nweb\ndesktop\nother"
+    },
+    {
+      "default": "tracker_mobile",
+      "fieldname": "app_id",
+      "fieldtype": "Data",
+      "in_standard_filter": 1,
+      "label": "App Id"
+    },
+    {
+      "fieldname": "last_seen",
+      "fieldtype": "Datetime",
+      "label": "Last Seen"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-07-19 03:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Device Token",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 0,
+      "export": 1,
+      "print": 0,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "All",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

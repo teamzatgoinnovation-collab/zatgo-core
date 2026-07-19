@@ -17,7 +17,9 @@
     "defaults_section",
     "default_channel",
     "quiet_hours_start",
-    "quiet_hours_end"
+    "quiet_hours_end",
+    "push_credentials_section",
+    "fcm_server_key"
   ],
   "fields": [
     {
@@ -94,6 +96,17 @@
       "fieldname": "quiet_hours_end",
       "fieldtype": "Time",
       "label": "Quiet Hours End"
+    },
+    {
+      "fieldname": "push_credentials_section",
+      "fieldtype": "Section Break",
+      "label": "Push Credentials"
+    },
+    {
+      "fieldname": "fcm_server_key",
+      "fieldtype": "Password",
+      "label": "FCM Server Key",
+      "description": "Legacy FCM server key for hub push. Also accepts site_config fcm_server_key."
     }
   ],
   "index_web_pages_for_search": 0,
