@@ -5,10 +5,38 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
-from frappe.utils import flt, getdate, today
+from frappe.utils import date_diff, flt, getdate, today
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
+
+
+def _empty_aging() -> dict[str, float]:
+    return {
+        "bucket_0_30": 0.0,
+        "bucket_31_60": 0.0,
+        "bucket_61_90": 0.0,
+        "bucket_90_plus": 0.0,
+    }
+
+
+def _aging_from_rows(rows: list[Any], today_d: Any) -> dict[str, float]:
+    aging = _empty_aging()
+    for row in rows:
+        amt = flt(row.outstanding_amount)
+        if amt <= 0:
+            continue
+        due = getdate(row.due_date) if row.due_date else today_d
+        days = max(0, date_diff(today_d, due))
+        if days <= 30:
+            aging["bucket_0_30"] += amt
+        elif days <= 60:
+            aging["bucket_31_60"] += amt
+        elif days <= 90:
+            aging["bucket_61_90"] += amt
+        else:
+            aging["bucket_90_plus"] += amt
+    return aging
 
 
 @frappe.whitelist()
@@ -66,6 +94,18 @@ def summary() -> dict[str, Any]:
     ):
         overdue_ap += flt(row.outstanding_amount)
 
+    # Aging over all open invoices (not limited to the top-10 lists).
+    ar_aging_rows = frappe.get_all(
+        "Sales Invoice",
+        filters={"docstatus": 1, "outstanding_amount": [">", 0]},
+        fields=["outstanding_amount", "due_date"],
+    )
+    ap_aging_rows = frappe.get_all(
+        "Purchase Invoice",
+        filters={"docstatus": 1, "outstanding_amount": [">", 0]},
+        fields=["outstanding_amount", "due_date"],
+    )
+
     recent_si = frappe.get_all(
         "Sales Invoice",
         fields=["name", "customer_name", "customer", "status", "grand_total", "posting_date"],
@@ -87,6 +127,8 @@ def summary() -> dict[str, Any]:
             "ap_overdue": overdue_ap,
             "sales_invoice_count": frappe.db.count("Sales Invoice"),
             "purchase_invoice_count": frappe.db.count("Purchase Invoice"),
+            "ar_aging": _aging_from_rows(ar_aging_rows, today_d),
+            "ap_aging": _aging_from_rows(ap_aging_rows, today_d),
             "open_receivables": [
                 {
                     "id": r.name,
