@@ -2,10 +2,12 @@
 
 ## Role in the ecosystem
 
-`zatgo_core` is the foundation layer of the ZatGo ERP platform.
+`zatgo_core` is the **API-only platform hub** of the ZatGo ERP platform
+(settings + client RPC). It has no Desk module UI; product Desk lives in
+domain apps under `CustomApps/erpnext/<Product>/`.
 
 ```text
-Flutter / Electron / Desk / Web clients
+Flutter / Electron / Web clients (+ Desk via domain apps)
             │
             ▼
    ┌────────────────────────────────────┐

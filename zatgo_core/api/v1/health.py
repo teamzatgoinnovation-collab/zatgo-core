@@ -51,6 +51,6 @@ def status() -> dict[str, Any]:
 
 @frappe.whitelist()
 def get_system_health() -> dict[str, Any]:
-    """Return system health snapshot for Core Administration dashboards."""
+    """Return system health snapshot for clients / operators."""
     log_api("get_system_health", user=frappe.session.user)
     return ok(HealthService.get_system_health())

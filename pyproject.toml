@@ -1,7 +1,7 @@
 [project]
 name = "zatgo_core"
-version = "0.2.0"
-description = "ZatGo Core — foundation settings, flags, integrations, and registry for the ZatGo ERP ecosystem"
+version = "0.2.1"
+description = "ZatGo Core — API-only platform hub: settings, flags, integrations, and client RPC"
 authors = [{ name = "ZatGo Innovation" }]
 requires-python = ">=3.11"
 license = { text = "MIT" }

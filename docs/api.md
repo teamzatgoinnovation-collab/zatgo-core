@@ -92,7 +92,7 @@ Base path: `/api/method/<dotted.path>`
 | `zatgo_core.api.v1.config.validate_configuration` | `app_key` | Pending / missing checks |
 | `zatgo_core.api.v1.config.search_settings` | `query` | Cross-app section search |
 
-Desk page: `/app/zg-core`
+Config is API-only (no Desk page). Call the methods above from clients or `bench execute`.
 
 ## Product clients (former zatgo_api)
 

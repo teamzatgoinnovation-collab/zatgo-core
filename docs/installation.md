@@ -27,12 +27,14 @@ bench --site <site> clear-cache
 
 ## Post-install checklist
 
-1. Open Desk → **Core Administration**
-2. Configure **ZG System Settings** (brand, default company, timezone)
-3. Open **ZG Application Settings** → Seed Default Clients
-4. Review **ZG Feature Flag** defaults
-5. Set **ZG Security Settings** password / session policy
-6. Assign roles: ZG Company Admin / Branch Admin / Application Admin / Read Only
+ZatGo Core has **no Desk module**. Use AwesomeBar / List, or client APIs:
+
+1. Configure **ZG System Settings** (brand, default company, timezone)
+2. Open **ZG Application Settings** → Seed Default Clients (or call apps API)
+3. Review **ZG Feature Flag** defaults
+4. Set **ZG Security Settings** password / session policy
+5. Assign roles: ZG Company Admin / Branch Admin / Application Admin / Read Only
+6. Confirm `bench --site <site> list-apps` includes `zatgo_core`; hard-refresh Desk if an old Core icon remains
 
 ## Install order for dependent apps
 

@@ -1,4 +1,4 @@
-"""ZG Registered Application — plugin registry row for the config center."""
+"""ZG Registered Application — plugin registry row for client/config APIs."""
 
 from __future__ import annotations
 

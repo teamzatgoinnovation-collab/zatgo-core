@@ -1,7 +1,7 @@
 # Folder Structure — ZatGo Core
 
 ```text
-CustomApps/ZatGoCore/
+CustomApps/api/ZatGoCore/
 ├── README.md
 ├── pyproject.toml
 ├── setup.py
@@ -16,6 +16,7 @@ CustomApps/ZatGoCore/
 │   ├── upgrade.md
 │   ├── developer.md
 │   ├── deployment.md
+│   ├── plugin_guide.md
 │   └── CHANGELOG.md
 ├── scripts/
 │   ├── generate_doctypes.py
@@ -24,46 +25,38 @@ CustomApps/ZatGoCore/
 └── zatgo_core/                      # Python package / Frappe app
     ├── hooks.py
     ├── modules.txt                  # "ZatGo Core"
-    ├── install.py
+    ├── install.py                   # seeds + Desk leftover purge
     ├── patches.txt
     ├── api/
     │   ├── response.py
     │   ├── validators.py
-    │   └── v1/
-    │       ├── settings.py
-    │       ├── features.py
-    │       ├── apps.py
-    │       ├── integrations.py
-    │       └── health.py
+    │   └── v1/                      # whitelist RPC (platform + product hubs)
     ├── services/
     ├── repositories/
     ├── cache/
     ├── validation/
     ├── permissions/
+    ├── plugins/
     ├── constants/
     ├── mixins/
     ├── events/
-    ├── setup/
+    ├── setup/                       # roles + seed defaults (no Desk ensure)
     ├── utils/
     ├── config/
     ├── patches/
-    ├── public/js|css/
-    ├── number_card/
-    ├── dashboard/
-    ├── dashboard_chart/
     ├── fixtures/
     ├── tests/
     └── zatgo_core/                  # nested module (modules.txt scrub)
-        ├── doctype/
-        ├── workspace/core_administration/
-        ├── report/
-        ├── number_card/
-        ├── dashboard/
-        └── dashboard_chart/
+        └── doctype/                 # platform + interim product DocTypes
 ```
 
 ## Why nested `zatgo_core/zatgo_core/`?
 
 `modules.txt` contains `ZatGo Core`, which Frappe scrubs to `zatgo_core`.
-When the scrubbed module name equals the app package name, DocTypes / Workspace /
-Reports must live under the nested package path.
+When the scrubbed module name equals the app package name, DocTypes must live
+under the nested package path.
+
+## Explicitly not in this app
+
+Desk pages, workspaces, desktop icons, script reports, number cards, and
+dashboards were removed. Product Desk UI belongs in `CustomApps/erpnext/<Product>/`.

@@ -1,8 +1,8 @@
 # Plugin Author Guide — ZatGo Core
 
 ZatGo Core never hardcodes product menus. Applications register a **manifest**;
-Core persists it as `ZG Registered Application` + `ZG Setting Section` rows and
-renders them in the **zg-core** Desk page.
+Core persists it as `ZG Registered Application` + `ZG Setting Section` rows.
+Clients and future domain Desk UIs consume these via `zatgo_core.api.v1.config.*`.
 
 ## Manifest shape
 
@@ -19,7 +19,7 @@ MANIFEST = {
     "roles": "System Manager,ZG Application Admin",  # empty = all
     "depends_on": "zatgo_pos",    # optional comma-separated app_keys
     "description": "…",
-    "settings_route": "zg-core",
+    "settings_route": "",         # optional; domain app Desk route if any
     "sections": [
         {
             "section_key": "general",
@@ -52,12 +52,12 @@ zatgo_core.api.v1.config.register_application
 
 ## Section host types
 
-| Host | Behaviour in zg-core |
-|------|----------------------|
-| `link_doctype` | Opens Desk Form (Single) or List |
+| Host | Behaviour |
+|------|-----------|
+| `link_doctype` | Points at a DocType (Single or List) for clients / operators |
 | `component=module_preferences` | Toggle grid; saved via `update_settings` |
 | `component=about` | Read-only app meta |
-| `component=pending` | Placeholder / Phase 2 |
+| `component=pending` | Placeholder until domain UI exists |
 
 ## Visibility
 
@@ -72,7 +72,7 @@ Shipped under `zatgo_core/plugins/manifests/`:
 - `delivery`
 - `kitchen`
 
-Re-seed: Desk button **Seed Manifests** or
+Re-seed:
 
 ```bash
 bench --site <site> execute zatgo_core.plugins.discover.discover_and_register_manifests

@@ -1,15 +1,26 @@
 # Changelog — ZatGo Core
 
+## 0.2.1 — 2026-07-21
+
+### Removed
+
+- Desk UI: page `zg-core`, Core Administration workspace, desktop icon / sidebar,
+  script reports, number cards, dashboards, and Desk `app_include` JS/CSS
+- `setup/ensure_desktop.py` and `config/desktop.py`
+
+### Changed
+
+- Hub is **API + settings DocTypes only** (client RPC / platform framework)
+- Install / migrate purge legacy Desktop Icon, Workspace Sidebar, Page leftovers
+
 ## 0.2.0 — 2026-07-16
 
 ### Added
 
-- Plugin configuration center: `ZG Registered Application`, `ZG Setting Section`,
+- Plugin registry DocTypes: `ZG Registered Application`, `ZG Setting Section`,
   `ZG Config Profile`, `ZG Config History`
 - Manifest registration + bundled POS / Delivery / Kitchen samples
 - APIs under `zatgo_core.api.v1.config.*`
-- Desk page `zg-core` (Vue 3 shell) with dashboard, applications tree, section host
-- Desktop sidebar Home → `zg-core`
 - [Plugin author guide](plugin_guide.md)
 
 ## 0.1.0 — 2026-07-16
@@ -19,7 +30,6 @@
 - Foundation DocTypes (`ZG *` settings, registry, flags, audit, preferences)
 - Clean architecture packages: api / services / repositories / cache / validation / permissions
 - Whitelisted REST-style methods for settings, flags, apps, integrations, health
-- Core Administration workspace, number cards, system health dashboard, script reports
 - Roles: ZG Company Admin, Branch Admin, Application Admin, Read Only
 - Install / migrate seeds, hourly app registry sync, boot_session payload
 - Unit / API contract / permission matrix tests

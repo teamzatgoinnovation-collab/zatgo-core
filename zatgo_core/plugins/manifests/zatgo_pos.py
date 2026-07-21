@@ -14,7 +14,7 @@ MANIFEST = {
     "roles": "System Manager,ZG Application Admin,ZG Company Admin",
     "depends_on": "",
     "description": "Point of sale configuration",
-    "settings_route": "zg-core",
+    "settings_route": "",
     "sections": [
         {
             "section_key": "general",

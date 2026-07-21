@@ -1,13 +1,15 @@
 # ZatGo Core
 
-ERPNext / Frappe foundation application (`zatgo_core`).
+ERPNext / Frappe **API-only platform hub** (`zatgo_core`).
 
-This is the **single ZatGo platform app** on ERPNext:
+This app is the shared backend for client apps (Flutter / Electron / Web):
 
 - Settings foundation (system / company / branch, flags, integrations, security)
-- Site Application Settings for Electron / Flutter / Web clients
+- Site Application Settings + application registry for clients
 - Product client RPC hub: `zatgo_core.api.v1.<product>.*`
-- Shared ZG DocTypes (delivery, KDS, fleet stubs, …)
+- Shared ZG DocTypes (delivery, KDS, fleet stubs, …) until each product owns a domain app under `CustomApps/erpnext/<Product>/`
+
+**No Desk module UI** — no pages, workspaces, desktop icons, reports, or dashboards. Operators edit settings DocTypes via AwesomeBar / List when needed. Domain apps own product Desk surfaces.
 
 `zatgo_api` was merged into this app — do not install it separately.
 
@@ -34,15 +36,9 @@ bench --site <site> install-app zatgo_core
 bench --site <site> migrate
 ```
 
-## Workspace / Config Center
-
-Desk → **ZatGo Core** icon → sidebar **Home** opens page **`zg-core`**
-(plugin configuration center).
-
-See [Plugin author guide](docs/plugin_guide.md).
+See [Plugin author guide](docs/plugin_guide.md) for registering client/plugin manifests via API.
 
 ## Naming note
 
 DocTypes use the `ZG` prefix (for example `ZG System Settings`) to avoid
 colliding with Frappe / ERPNext built-ins such as `System Settings`.
-# zatgo-core

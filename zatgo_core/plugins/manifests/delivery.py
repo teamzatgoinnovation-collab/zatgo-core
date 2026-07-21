@@ -14,7 +14,7 @@ MANIFEST = {
     "roles": "System Manager,ZG Application Admin,ZG Company Admin,ZG Branch Admin",
     "depends_on": "",
     "description": "Delivery zones, drivers, and notifications",
-    "settings_route": "zg-core",
+    "settings_route": "",
     "sections": [
         {
             "section_key": "general",

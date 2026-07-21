@@ -11,7 +11,7 @@ from zatgo_core.permissions.guards import assert_can_read_settings
 
 
 class HealthService:
-    """Collect lightweight health indicators for Core Administration."""
+    """Collect lightweight health indicators for the platform hub."""
 
     @staticmethod
     def get_system_health() -> dict[str, Any]:

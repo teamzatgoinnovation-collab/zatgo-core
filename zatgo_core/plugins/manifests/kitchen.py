@@ -14,7 +14,7 @@ MANIFEST = {
     "roles": "System Manager,ZG Application Admin,ZG Company Admin,ZG Branch Admin",
     "depends_on": "zatgo_pos",
     "description": "Kitchen display and station configuration",
-    "settings_route": "zg-core",
+    "settings_route": "",
     "sections": [
         {
             "section_key": "general",
