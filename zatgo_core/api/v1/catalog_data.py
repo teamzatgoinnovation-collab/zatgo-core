@@ -66,7 +66,7 @@ PRODUCT_CATALOG = [
     {
         "product": "accounting",
         "title": "Accounting",
-        "status": "thin",
+        "status": "active",
         "namespace": "zatgo_core.api.v1.accounting",
         "hub": "zatgo_core.api.v1.accounting",
     },

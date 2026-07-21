@@ -1,4 +1,4 @@
-"""Accounting — ERPNext Sales Invoice."""
+"""Accounting — Purchase Invoice (bills)."""
 
 from __future__ import annotations
 
@@ -6,31 +6,31 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_sales_invoice, list_items, list_sales_invoices
-from zatgo_core.services.erpnext_writes import create_sales_invoice, submit_sales_invoice
+from zatgo_core.services.erpnext_reads import get_purchase_invoice, list_purchase_invoices
+from zatgo_core.services.erpnext_writes import create_purchase_invoice, submit_purchase_invoice
 
 
 @frappe.whitelist()
 def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
-    return list_sales_invoices(page=page, page_size=page_size)
+    return list_purchase_invoices(page=page, page_size=page_size)
 
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_sales_invoice(name)
+    return get_purchase_invoice(name)
 
 
 @frappe.whitelist()
 def create(
-    customer: str,
+    supplier: str,
     items: str | list | None = None,
     company: str | None = None,
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
 ) -> dict[str, Any]:
-    return create_sales_invoice(
-        customer=customer,
+    return create_purchase_invoice(
+        supplier=supplier,
         items=items,
         company=company,
         posting_date=posting_date,
@@ -41,10 +41,4 @@ def create(
 
 @frappe.whitelist()
 def submit(name: str) -> dict[str, Any]:
-    return submit_sales_invoice(name)
-
-
-@frappe.whitelist()
-def list_items_catalog(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    """Items for invoice line pickers."""
-    return list_items(page=page, page_size=page_size)
+    return submit_purchase_invoice(name)

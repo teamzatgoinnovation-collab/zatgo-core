@@ -120,6 +120,23 @@ Examples:
 | `zatgo_core.api.v1.resto_pos.kds_tickets.list` | Kitchen tickets |
 | `zatgo_core.api.v1.go_van.trips.list` | Go Van trips |
 
+### Accounting (AR/AP)
+
+| Method | Args | Description |
+|--------|------|-------------|
+| `zatgo_core.api.v1.accounting.health.ping` | — | Liveness |
+| `zatgo_core.api.v1.accounting.dashboard.summary` | — | AR/AP open, overdue, recent |
+| `zatgo_core.api.v1.accounting.customers.list/get/create/update` | party fields | Customers |
+| `zatgo_core.api.v1.accounting.suppliers.list/get/create/update` | party fields | Suppliers |
+| `zatgo_core.api.v1.accounting.invoices.list/get/create/submit` | customer, items | Sales Invoice |
+| `zatgo_core.api.v1.accounting.purchase_invoices.list/get/create/submit` | supplier, items | Purchase Invoice |
+| `zatgo_core.api.v1.accounting.payments.list/get/create_receive/create_pay/submit` | invoice refs | Payment Entry |
+| `zatgo_core.api.v1.accounting.journals.list/get/create/submit` | accounts lines | Journal Entry |
+| `zatgo_core.api.v1.accounting.reports.outstanding_receivable` | page? | Open AR |
+| `zatgo_core.api.v1.accounting.reports.outstanding_payable` | page? | Open AP |
+| `zatgo_core.api.v1.accounting.reports.general_ledger` | from_date?, to_date?, account? | GL lines |
+| `zatgo_core.api.v1.accounting.reports.profit_and_loss` | from_date?, to_date? | Income vs expense |
+
 Products: `delivery`, `resto_pos`, `go_van`, `service`, `warehouse`, `crm`, `hr`, `fleet`, `accounting`, `admin`, `bi`, `customer_portal`, `vendor_portal`, `documentation`.
 
 ## Client helper
