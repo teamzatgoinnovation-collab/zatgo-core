@@ -585,6 +585,7 @@ def seed() -> dict[str, Any]:
     ]
 
     frappe.db.commit()
+    van = _seed_van_sale_enrichment(items=items, customers=customers, group=group)
     summary = {
         "items": items,
         "customers": customers,
@@ -597,6 +598,318 @@ def seed() -> dict[str, Any]:
         "tickets": [t for t in tickets if t],
         "kds_tickets": [k for k in kds_tickets if k],
         "vehicles": [v for v in vehicles if v],
+        "van_sale": van,
     }
     frappe.logger("zatgo_core").info("seed_demo_data complete: %s", summary)
     return summary
+
+
+def _ensure_item_price(item_code: str, rate: float, price_list: str = "Standard Selling") -> None:
+    if not frappe.db.exists("Price List", price_list):
+        return
+    existing = frappe.db.exists(
+        "Item Price",
+        {"item_code": item_code, "price_list": price_list, "selling": 1},
+    )
+    if existing:
+        frappe.db.set_value("Item Price", existing, "price_list_rate", rate, update_modified=False)
+        return
+    frappe.get_doc(
+        {
+            "doctype": "Item Price",
+            "item_code": item_code,
+            "price_list": price_list,
+            "selling": 1,
+            "buying": 0,
+            "price_list_rate": rate,
+        }
+    ).insert(ignore_permissions=True)
+
+
+def _ensure_warehouse(warehouse_name: str, company: str) -> str | None:
+    if not company:
+        return None
+    existing = frappe.db.exists("Warehouse", warehouse_name)
+    if existing:
+        return existing
+    # Prefer under All Warehouses - <abbr> when present
+    parent = frappe.db.get_value(
+        "Warehouse",
+        {"company": company, "is_group": 1, "warehouse_name": ("like", "All Warehouses%")},
+        "name",
+    )
+    payload: dict[str, Any] = {
+        "doctype": "Warehouse",
+        "warehouse_name": warehouse_name.split(" - ")[0] if " - " in warehouse_name else warehouse_name,
+        "company": company,
+        "is_group": 0,
+    }
+    if parent:
+        payload["parent_warehouse"] = parent
+    try:
+        doc = frappe.get_doc(payload)
+        doc.insert(ignore_permissions=True)
+        return doc.name
+    except Exception as exc:  # noqa: BLE001
+        frappe.log_error(f"Warehouse seed skipped: {exc}", "zatgo_core.seed")
+        # Fall back to first non-group warehouse for the company
+        return frappe.db.get_value(
+            "Warehouse",
+            {"company": company, "is_group": 0},
+            "name",
+            order_by="creation asc",
+        )
+
+
+def _ensure_opening_stock(warehouse: str, lines: list[tuple[str, float, float]], company: str) -> str | None:
+    """Material Receipt into van warehouse when Bin qty is zero."""
+    if not warehouse or not company or not lines:
+        return None
+    need: list[tuple[str, float, float]] = []
+    for item_code, qty, rate in lines:
+        if not frappe.db.exists("Item", item_code):
+            continue
+        bal = frappe.db.get_value(
+            "Bin",
+            {"item_code": item_code, "warehouse": warehouse},
+            "actual_qty",
+        )
+        if float(bal or 0) <= 0:
+            need.append((item_code, qty, rate))
+    if not need:
+        return None
+
+    # Find stock entry type / purpose compatible with this ERPNext version
+    purpose = "Material Receipt"
+    se = frappe.get_doc(
+        {
+            "doctype": "Stock Entry",
+            "stock_entry_type": purpose,
+            "purpose": purpose,
+            "company": company,
+            "to_warehouse": warehouse,
+            "items": [
+                {
+                    "item_code": code,
+                    "qty": qty,
+                    "t_warehouse": warehouse,
+                    "basic_rate": rate,
+                    "allow_zero_valuation_rate": 0,
+                }
+                for code, qty, rate in need
+            ],
+        }
+    )
+    try:
+        se.insert(ignore_permissions=True)
+        se.submit()
+        return se.name
+    except Exception as exc:  # noqa: BLE001
+        frappe.log_error(f"Opening stock seed skipped: {exc}", "zatgo_core.seed")
+        try:
+            if se.name:
+                se.reload()
+                if se.docstatus == 0:
+                    se.delete(ignore_permissions=True)
+        except Exception:  # noqa: BLE001
+            pass
+        return None
+
+
+def _seed_van_sale_enrichment(
+    *,
+    items: list[str],
+    customers: list[str],
+    group: str,
+) -> dict[str, Any]:
+    """Extra masters/stock tailored for Flutter Van Sale on demo sites."""
+    company = _company()
+    extra_items = [
+        _ensure_item("ZG-RICE-5KG", item_name="Basmati Rice 5kg", rate=42.0, group=group, uom="Nos"),
+        _ensure_item("ZG-OIL-1L", item_name="Cooking Oil 1L", rate=12.0, group=group, uom="Nos"),
+        _ensure_item("ZG-SUGAR-1KG", item_name="White Sugar 1kg", rate=6.5, group=group, uom="Nos"),
+        _ensure_item("ZG-TEA-200", item_name="Black Tea 200g", rate=9.75, group=group, uom="Pack"),
+        _ensure_item("ZG-BREAD", item_name="Arabic Bread Pack", rate=3.0, group=group, uom="Pack"),
+        _ensure_item("ZG-YOGURT", item_name="Yogurt Cup", rate=2.25, group=group, uom="Nos"),
+        _ensure_item("ZG-CHIPS", item_name="Potato Chips 150g", rate=4.5, group=group, uom="Nos"),
+        _ensure_item("ZG-SODA-330", item_name="Cola Can 330ml", rate=2.0, group=group, uom="Nos"),
+        _ensure_item("ZG-DATES-500", item_name="Dates Box 500g", rate=15.0, group=group, uom="Box"),
+        _ensure_item("ZG-HONEY-250", item_name="Honey Jar 250g", rate=22.0, group=group, uom="Nos"),
+    ]
+    all_items = list(dict.fromkeys([*items, *extra_items]))
+
+    extra_customers = [
+        _ensure_customer(
+            "Najd Corner Store",
+            customer_group="Commercial",
+            territory="Riyadh",
+        ),
+        _ensure_customer(
+            "Wadi Superette",
+            customer_group="Commercial",
+            territory="Riyadh",
+        ),
+        _ensure_customer(
+            "Souq Express",
+            customer_group="Commercial",
+            territory="Riyadh",
+        ),
+        _ensure_customer(
+            "Palm Grove Mart",
+            customer_group="Commercial",
+            territory="Riyadh",
+        ),
+        _ensure_customer(
+            "Highway Stop Shop",
+            customer_group="Commercial",
+            territory="Riyadh",
+        ),
+    ]
+    all_customers = list(dict.fromkeys([*customers, *extra_customers]))
+
+    # Item prices on Standard Selling
+    rates = {
+        "ZG-WATER-15": 5.0,
+        "ZG-SNACK-MIX": 18.5,
+        "ZG-MILK-1L": 4.25,
+        "ZG-JUICE-200": 2.5,
+        "ZG-BURGER": 16.0,
+        "ZG-FRIES": 5.0,
+        "ZG-SALAD": 8.0,
+        "ZG-COFFEE": 3.5,
+        "ZG-RICE-5KG": 42.0,
+        "ZG-OIL-1L": 12.0,
+        "ZG-SUGAR-1KG": 6.5,
+        "ZG-TEA-200": 9.75,
+        "ZG-BREAD": 3.0,
+        "ZG-YOGURT": 2.25,
+        "ZG-CHIPS": 4.5,
+        "ZG-SODA-330": 2.0,
+        "ZG-DATES-500": 15.0,
+        "ZG-HONEY-250": 22.0,
+    }
+    for code, rate in rates.items():
+        if frappe.db.exists("Item", code):
+            _ensure_item_price(code, rate)
+            frappe.db.set_value("Item", code, "standard_rate", rate, update_modified=False)
+
+    warehouse = _ensure_warehouse("Van 07", company) if company else None
+    # Prefer exact name if ERPNext appended company abbr
+    if warehouse and company:
+        abbr = frappe.db.get_value("Company", company, "abbr") or ""
+        preferred = f"Van 07 - {abbr}" if abbr else warehouse
+        if frappe.db.exists("Warehouse", preferred):
+            warehouse = preferred
+
+    stock_lines = [
+        ("ZG-WATER-15", 120, 5.0),
+        ("ZG-SNACK-MIX", 40, 18.5),
+        ("ZG-MILK-1L", 80, 4.25),
+        ("ZG-JUICE-200", 100, 2.5),
+        ("ZG-RICE-5KG", 35, 42.0),
+        ("ZG-OIL-1L", 50, 12.0),
+        ("ZG-SUGAR-1KG", 60, 6.5),
+        ("ZG-TEA-200", 45, 9.75),
+        ("ZG-BREAD", 70, 3.0),
+        ("ZG-YOGURT", 55, 2.25),
+        ("ZG-CHIPS", 90, 4.5),
+        ("ZG-SODA-330", 150, 2.0),
+        ("ZG-DATES-500", 30, 15.0),
+        ("ZG-HONEY-250", 25, 22.0),
+        ("ZG-BURGER", 20, 16.0),
+        ("ZG-FRIES", 40, 5.0),
+        ("ZG-SALAD", 25, 8.0),
+        ("ZG-COFFEE", 60, 3.5),
+    ]
+    stock_entry = None
+    if warehouse and company:
+        stock_entry = _ensure_opening_stock(warehouse, stock_lines, company)
+
+    now = now_datetime()
+    more_trips = [
+        _ensure_zg(
+            "ZG Trip",
+            {"title": "Stop 4 — Najd Corner"},
+            {
+                "title": "Stop 4 — Najd Corner",
+                "customer": "Najd Corner Store",
+                "address": "Exit 10 Service Rd",
+                "sequence": 4,
+                "lat": 24.72,
+                "lng": 46.66,
+                "status": "Planned",
+                "planned_at": add_to_date(now, hours=2),
+            },
+        ),
+        _ensure_zg(
+            "ZG Trip",
+            {"title": "Stop 5 — Wadi Superette"},
+            {
+                "title": "Stop 5 — Wadi Superette",
+                "customer": "Wadi Superette",
+                "address": "Wadi Hanifa District",
+                "sequence": 5,
+                "lat": 24.68,
+                "lng": 46.70,
+                "status": "Planned",
+                "planned_at": add_to_date(now, hours=3),
+            },
+        ),
+        _ensure_zg(
+            "ZG Trip",
+            {"title": "Stop 6 — Souq Express"},
+            {
+                "title": "Stop 6 — Souq Express",
+                "customer": "Souq Express",
+                "address": "Diriyah Gate Retail",
+                "sequence": 6,
+                "lat": 24.74,
+                "lng": 46.58,
+                "status": "Planned",
+                "planned_at": add_to_date(now, hours=4),
+            },
+        ),
+        _ensure_zg(
+            "ZG Trip",
+            {"title": "Stop 7 — Palm Grove"},
+            {
+                "title": "Stop 7 — Palm Grove",
+                "customer": "Palm Grove Mart",
+                "address": "Northern Ring Rd",
+                "sequence": 7,
+                "lat": 24.78,
+                "lng": 46.69,
+                "status": "Planned",
+                "planned_at": add_to_date(now, hours=5),
+            },
+        ),
+        _ensure_zg(
+            "ZG Trip",
+            {"title": "Stop 8 — Highway Stop"},
+            {
+                "title": "Stop 8 — Highway Stop",
+                "customer": "Highway Stop Shop",
+                "address": "Dammam Hwy km 18",
+                "sequence": 8,
+                "lat": 24.64,
+                "lng": 46.80,
+                "status": "Planned",
+                "planned_at": add_to_date(now, hours=6),
+            },
+        ),
+    ]
+
+    frappe.db.commit()
+    return {
+        "company": company,
+        "warehouse": warehouse,
+        "items": all_items,
+        "customers": all_customers,
+        "stock_entry": stock_entry,
+        "extra_trips": [t for t in more_trips if t],
+        "prefs_hint": {
+            "site": "https://demo.zatgo.online",
+            "company": company,
+            "warehouse": warehouse,
+        },
+    }
