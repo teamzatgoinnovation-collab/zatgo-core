@@ -5,4 +5,5 @@
 zatgo_core.patches.v0_1_0.seed_core_defaults
 zatgo_core.patches.v0_1_0.migrate_delivery_stop_statuses
 zatgo_core.patches.v0_1_0.add_zatgo_client_id_fields
+zatgo_core.patches.v0_1_0.add_customer_sync_fields
 zatgo_core.patches.v0_1_0.add_zatca_qr_field
