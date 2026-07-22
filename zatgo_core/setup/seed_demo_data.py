@@ -235,9 +235,13 @@ def _ensure_zg(doctype: str, filters: dict[str, Any], values: dict[str, Any]) ->
     name = frappe.db.exists(doctype, filters)
     if name:
         return name
-    doc = frappe.get_doc({"doctype": doctype, **values})
-    doc.insert(ignore_permissions=True)
-    return doc.name
+    try:
+        doc = frappe.get_doc({"doctype": doctype, **values})
+        doc.insert(ignore_permissions=True)
+        return doc.name
+    except Exception as exc:  # noqa: BLE001
+        frappe.log_error(f"{doctype} seed skipped: {exc}", "zatgo_core.seed")
+        return None
 
 
 def seed() -> dict[str, Any]:
@@ -388,7 +392,7 @@ def seed() -> dict[str, Any]:
                 "items_summary": "Foodservice · 8 trays",
                 "sequence": 1,
                 "phone": "+966 50 100 2001",
-                "status": "Pending",
+                "status": "Assigned",
                 "delivery_boy": delivery_boy,
                 "lat": 24.71,
                 "lng": 46.67,
@@ -407,7 +411,7 @@ def seed() -> dict[str, Any]:
                 "items_summary": "Grocery · 12 cases",
                 "sequence": 2,
                 "phone": "+966 50 100 2002",
-                "status": "En Route",
+                "status": "Out For Delivery",
                 "delivery_boy": delivery_boy,
                 "lat": 24.69,
                 "lng": 46.68,
