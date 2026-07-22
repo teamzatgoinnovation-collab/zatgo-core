@@ -63,6 +63,23 @@ def _invoice_timestamp(doc: Any) -> str:
     return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
+def tlv_to_png_data_uri(tlv_b64: str | None) -> str:
+    """Encode ZATCA TLV base64 string as a PNG QR data URI for print formats."""
+    if not tlv_b64:
+        return ""
+    try:
+        import qrcode
+        from io import BytesIO
+
+        img = qrcode.make(str(tlv_b64))
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception:
+        frappe.log_error(title="ZATCA QR PNG render failed", message=frappe.get_traceback())
+        return ""
+
+
 def generate_and_store_zatca_qr(doc: Any) -> str:
     """Build simplified ZATCA QR for a Sales Invoice and persist custom field."""
     company = doc.company

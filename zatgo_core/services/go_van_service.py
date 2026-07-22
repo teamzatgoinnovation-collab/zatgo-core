@@ -44,6 +44,55 @@ def _resolve_customer(customer: str) -> str:
     frappe.throw(f"Customer not found: {name}")
 
 
+def _company_tax_settings(company: str) -> tuple[str | None, bool]:
+    """Return (default_tax_template, tax_inclusive) for company."""
+    if not frappe.db.exists("DocType", "ZG Company Settings"):
+        return None, False
+    row = frappe.db.get_value(
+        "ZG Company Settings",
+        {"company": company},
+        ["default_tax_template", "enable_tax_inclusive"],
+        as_dict=True,
+    )
+    if not row:
+        return None, False
+    template = (row.get("default_tax_template") or "").strip() or None
+    inclusive = bool(int(row.get("enable_tax_inclusive") or 0))
+    return template, inclusive
+
+
+def _apply_sales_taxes(doc: Any, company: str) -> None:
+    template, inclusive = _company_tax_settings(company)
+    if not template:
+        # Fallback: first enabled Sales Taxes and Charges Template for company
+        if frappe.db.exists("DocType", "Sales Taxes and Charges Template"):
+            template = frappe.db.get_value(
+                "Sales Taxes and Charges Template",
+                {"company": company, "disabled": 0},
+                "name",
+            )
+    if not template or not frappe.db.exists("Sales Taxes and Charges Template", template):
+        return
+    doc.taxes_and_charges = template
+    if inclusive and frappe.get_meta("Sales Invoice").has_field("taxes_and_charges"):
+        # Prefer inclusive pricing when company setting says so.
+        for item in doc.items:
+            if hasattr(item, "is_free_item"):
+                pass
+    try:
+        from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+        doc.set("taxes", [])
+        for tax in get_taxes_and_charges("Sales Taxes and Charges Template", template):
+            doc.append("taxes", tax)
+    except Exception:
+        # Older / alternate API
+        try:
+            doc.append_taxes_from_master()
+        except Exception:
+            frappe.log_error(title="VanSale tax template apply failed", message=frappe.get_traceback())
+
+
 def create_order(
     client_id: str,
     customer: str,
@@ -51,6 +100,9 @@ def create_order(
     warehouse: str | None = None,
     company: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
+
     require_login()
     cid = require_str(client_id, "client_id")
     existing = _find_by_client_id("Sales Invoice", cid)
@@ -79,11 +131,12 @@ def create_order(
         items = normalized
     rows = _parse_items(items)
 
+    company_name = _default_company(company)
     doc = frappe.get_doc(
         {
             "doctype": "Sales Invoice",
             "customer": party,
-            "company": _default_company(company),
+            "company": company_name,
             "posting_date": today(),
             "items": rows,
             "zatgo_client_id": cid,
@@ -96,13 +149,29 @@ def create_order(
         doc.update_stock = 1
         doc.set_warehouse = wh
 
+    _apply_sales_taxes(doc, company_name)
+
     doc.insert()
     doc.submit()
     frappe.db.commit()
+
+    try:
+        generate_and_store_zatca_qr(doc)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+
+    doc.reload()
     return ok(
-        {**map_sales_invoice_doc(doc), "client_id": cid, "erp_name": doc.name},
+        {
+            **map_sales_invoice_doc(doc),
+            "client_id": cid,
+            "erp_name": doc.name,
+            "print_format": PRINT_FORMAT_NAME,
+        },
         meta={"stub": False, "created": True, "submitted": True, "source": "Sales Invoice"},
     )
+
 
 
 def create_collection(

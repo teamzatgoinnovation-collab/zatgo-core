@@ -98,3 +98,43 @@ def list(
     payload = paginated(data, page=page_i, page_size=size_i, total=total)
     payload["meta"] = {**payload.get("meta", {}), "source": "Sales Invoice"}
     return payload
+
+
+@frappe.whitelist()
+def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
+    """Return Sales Invoice PDF (base64) using VanSale Tax Invoice format."""
+    import base64
+
+    from zatgo_core.api.response import ok
+    from zatgo_core.api.validators import require_str
+    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
+
+    require_login()
+    invoice = require_str(name, "name")
+    if not frappe.db.exists("Sales Invoice", invoice):
+        frappe.throw(f"Sales Invoice not found: {invoice}", frappe.DoesNotExistError)
+    frappe.has_permission("Sales Invoice", "read", doc=invoice, throw=True)
+
+    fmt = (print_format or "").strip() or PRINT_FORMAT_NAME
+    if not frappe.db.exists("Print Format", fmt):
+        fmt = "Standard"
+
+    pdf_bytes = frappe.get_print(
+        "Sales Invoice",
+        invoice,
+        print_format=fmt,
+        as_pdf=True,
+    )
+    if isinstance(pdf_bytes, str):
+        pdf_bytes = pdf_bytes.encode("utf-8")
+
+    return ok(
+        {
+            "name": invoice,
+            "print_format": fmt,
+            "content_type": "application/pdf",
+            "filename": f"{invoice}.pdf",
+            "pdf_base64": base64.b64encode(pdf_bytes).decode("ascii"),
+        },
+        meta={"source": "go_van.orders.pdf"},
+    )
