@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.services.erpnext_reads import get_item, list_items
 from zatgo_core.services.erpnext_writes import create_item, update_item
+from zatgo_core.services.item_sync_ops import sync_item_op
 from zatgo_core.services.item_sync_service import get_item_defaults, sync_item_bundle
 
 
@@ -81,9 +82,19 @@ def sync(
     client_id: str,
     item: str | dict | None = None,
     attachments: str | dict | None = None,
+    op: str = "create",
+    base_modified: str | None = None,
+    force: int | str | bool | None = 0,
 ) -> dict[str, Any]:
-    """Idempotent Item create with images / opening stock / Item Price."""
-    return sync_item_bundle(client_id=client_id, item=item, attachments=attachments)
+    """Idempotent Item sync with optional update/delete + conflict check."""
+    return sync_item_op(
+        client_id=client_id,
+        op=op,
+        item=item,
+        attachments=attachments,
+        base_modified=base_modified,
+        force=force,
+    )
 
 
 @frappe.whitelist()

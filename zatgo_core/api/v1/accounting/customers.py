@@ -6,6 +6,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core.services.customer_sync_ops import sync_customer_op
 from zatgo_core.services.customer_sync_service import get_customer_defaults, sync_customer_bundle
 from zatgo_core.services.erpnext_reads import get_customer, list_customers
 from zatgo_core.services.erpnext_writes import create_customer, update_customer
@@ -83,14 +84,20 @@ def sync(
     contact: str | dict | None = None,
     address: str | dict | None = None,
     attachments: str | dict | None = None,
+    op: str = "create",
+    base_modified: str | None = None,
+    force: int | str | bool | None = 0,
 ) -> dict[str, Any]:
-    """Idempotent Customer + Contact + Address + attachments sync."""
-    return sync_customer_bundle(
+    """Idempotent Customer sync with optional update/delete + conflict check."""
+    return sync_customer_op(
         client_id=client_id,
+        op=op,
         customer=customer,
         contact=contact,
         address=address,
         attachments=attachments,
+        base_modified=base_modified,
+        force=force,
     )
 
 
