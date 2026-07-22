@@ -49,11 +49,31 @@ def get_system_settings() -> dict[str, Any]:
 
 
 @frappe.whitelist()
-def get_company_settings(company: str) -> dict[str, Any]:
-    """Return ZG Company Settings for a company."""
-    company = require_str(company, "company")
-    log_api("get_company_settings", user=frappe.session.user, company=company)
-    return ok(SettingsService.get_company_settings(company))
+def get_company_settings(company: str | None = None) -> dict[str, Any]:
+    """Return ZG Company Settings for a company (defaults to session/default company)."""
+    from zatgo_core.constants.settings import DOCTYPES
+    from zatgo_core.services.erpnext_writes import _default_company
+
+    company_name = (company or "").strip() or _default_company()
+    company_name = require_str(company_name, "company")
+    log_api("get_company_settings", user=frappe.session.user, company=company_name)
+    data = SettingsService.get_company_settings(company_name)
+    if not data and frappe.db.exists("DocType", DOCTYPES["COMPANY_SETTINGS"]):
+        if not frappe.db.exists(DOCTYPES["COMPANY_SETTINGS"], {"company": company_name}):
+            doc = frappe.get_doc(
+                {
+                    "doctype": DOCTYPES["COMPANY_SETTINGS"],
+                    "company": company_name,
+                }
+            )
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        from zatgo_core.constants.settings import CACHE_KEYS
+        from zatgo_core.cache.manager import cache_manager
+
+        cache_manager.delete(CACHE_KEYS["COMPANY"].format(company=company_name))
+        data = SettingsService.get_company_settings(company_name)
+    return ok(data)
 
 
 @frappe.whitelist()

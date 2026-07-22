@@ -119,6 +119,7 @@ def enrich_customer_doc(d: Any) -> dict[str, Any]:
         "email": getattr(d, "email_id", None),
         "phone": getattr(d, "mobile_no", None),
         "customer_group": getattr(d, "customer_group", None),
+        "disabled": int(getattr(d, "disabled", 0) or 0),
     }
 
 
@@ -412,6 +413,9 @@ def map_sales_invoice_doc(d: Any) -> dict[str, Any]:
     row["items"] = _invoice_items(d)
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["docstatus"] = int(d.docstatus or 0)
+    row["total_taxes_and_charges"] = float(getattr(d, "total_taxes_and_charges", None) or 0)
+    row["zatca_qr_base64"] = getattr(d, "zatca_qr_base64", None)
     return row
 
 

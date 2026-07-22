@@ -115,6 +115,7 @@ def update_customer(name: str, values: Any = None) -> dict[str, Any]:
         "phone": "mobile_no",
         "email_id": "email_id",
         "mobile_no": "mobile_no",
+        "disabled": "disabled",
     }
     for key, field in mapping.items():
         if key in data and data[key] is not None:
@@ -124,6 +125,128 @@ def update_customer(name: str, values: Any = None) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import enrich_customer_doc
 
     return ok(enrich_customer_doc(doc), meta={"stub": False, "updated": True, "source": "Customer"})
+
+
+def create_item(
+    item_code: str,
+    item_name: str | None = None,
+    item_group: str | None = None,
+    stock_uom: str | None = None,
+    standard_rate: float | int | str | None = None,
+    is_stock_item: int | str | bool | None = 1,
+) -> dict[str, Any]:
+    require_login()
+    frappe.has_permission("Item", "create", throw=True)
+    code = require_str(item_code, "item_code")
+    doc = frappe.get_doc(
+        {
+            "doctype": "Item",
+            "item_code": code,
+            "item_name": (item_name or code).strip() or code,
+            "item_group": (item_group or "").strip() or "All Item Groups",
+            "stock_uom": (stock_uom or "").strip() or "Nos",
+            "standard_rate": flt(standard_rate or 0),
+            "is_stock_item": 1 if str(is_stock_item) not in ("0", "false", "False", "") else 0,
+        }
+    )
+    doc.insert()
+    frappe.db.commit()
+    from zatgo_core.services.erpnext_reads import get_item
+
+    return get_item(doc.name)
+
+
+def update_item(name: str, values: Any = None) -> dict[str, Any]:
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Item", "write", doc=name, throw=True)
+    data = parse_json_dict(values, "values")
+    doc = frappe.get_doc("Item", name)
+    mapping = {
+        "item_name": "item_name",
+        "item_group": "item_group",
+        "stock_uom": "stock_uom",
+        "standard_rate": "standard_rate",
+        "is_stock_item": "is_stock_item",
+        "disabled": "disabled",
+    }
+    for key, field in mapping.items():
+        if key in data and data[key] is not None:
+            value = data[key]
+            if field == "standard_rate":
+                value = flt(value)
+            elif field in ("is_stock_item", "disabled"):
+                value = 1 if str(value) not in ("0", "false", "False", "") else 0
+            setattr(doc, field, value)
+    doc.save()
+    frappe.db.commit()
+    from zatgo_core.services.erpnext_reads import get_item
+
+    return get_item(doc.name)
+
+
+def create_warehouse(
+    warehouse_name: str,
+    company: str | None = None,
+    parent_warehouse: str | None = None,
+) -> dict[str, Any]:
+    require_login()
+    frappe.has_permission("Warehouse", "create", throw=True)
+    label = require_str(warehouse_name, "warehouse_name")
+    company_name = _default_company(company)
+    doc = frappe.get_doc(
+        {
+            "doctype": "Warehouse",
+            "warehouse_name": label,
+            "company": company_name,
+            "is_group": 0,
+            "parent_warehouse": (parent_warehouse or "").strip() or None,
+        }
+    )
+    doc.insert()
+    frappe.db.commit()
+    return ok(
+        {
+            "id": doc.name,
+            "name": doc.warehouse_name or doc.name,
+            "company": doc.company,
+            "parent_warehouse": getattr(doc, "parent_warehouse", None),
+            "disabled": int(doc.disabled or 0),
+        },
+        meta={"stub": False, "created": True, "source": "Warehouse"},
+    )
+
+
+def update_warehouse(name: str, values: Any = None) -> dict[str, Any]:
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Warehouse", "write", doc=name, throw=True)
+    data = parse_json_dict(values, "values")
+    doc = frappe.get_doc("Warehouse", name)
+    mapping = {
+        "warehouse_name": "warehouse_name",
+        "company": "company",
+        "parent_warehouse": "parent_warehouse",
+        "disabled": "disabled",
+    }
+    for key, field in mapping.items():
+        if key in data and data[key] is not None:
+            value = data[key]
+            if field == "disabled":
+                value = 1 if str(value) not in ("0", "false", "False", "") else 0
+            setattr(doc, field, value)
+    doc.save()
+    frappe.db.commit()
+    return ok(
+        {
+            "id": doc.name,
+            "name": doc.warehouse_name or doc.name,
+            "company": doc.company,
+            "parent_warehouse": getattr(doc, "parent_warehouse", None),
+            "disabled": int(doc.disabled or 0),
+        },
+        meta={"stub": False, "updated": True, "source": "Warehouse"},
+    )
 
 
 def create_supplier(
@@ -214,8 +337,23 @@ def create_sales_invoice(
 
 def submit_sales_invoice(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
-    return _submit_doc("Sales Invoice", name, map_sales_invoice_doc)
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Sales Invoice", "submit", doc=name, throw=True)
+    doc = frappe.get_doc("Sales Invoice", name)
+    if int(doc.docstatus or 0) == 2:
+        frappe.throw(f"Sales Invoice {name} is cancelled")
+    if int(doc.docstatus or 0) != 1:
+        doc.submit()
+        frappe.db.commit()
+    try:
+        generate_and_store_zatca_qr(doc)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(title="ZATCA QR generation failed", message=frappe.get_traceback())
+    return ok(map_sales_invoice_doc(doc), meta={"stub": False, "submitted": True, "source": "Sales Invoice"})
 
 
 def create_purchase_invoice(

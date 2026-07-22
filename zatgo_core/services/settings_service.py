@@ -100,6 +100,19 @@ class SettingsService:
         else:
             doc = SettingsRepository.save_doc(doctype, name, values)
         logger.info("Saved settings doctype=%s name=%s", doctype, doc.name)
+
+        # Keep ERPNext Stock Settings in sync with ZG company negative-stock flag.
+        if doctype == DOCTYPES["COMPANY_SETTINGS"] and "enable_negative_stock" in values:
+            allow = 1 if values.get("enable_negative_stock") else 0
+            try:
+                frappe.db.set_single_value("Stock Settings", "allow_negative_stock", allow)
+                frappe.db.commit()
+            except Exception:
+                frappe.log_error(
+                    title="Failed syncing allow_negative_stock",
+                    message=frappe.get_traceback(),
+                )
+
         return doc.as_dict()
 
     @staticmethod

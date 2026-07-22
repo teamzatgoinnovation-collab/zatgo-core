@@ -45,6 +45,37 @@ def submit(name: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
+def get_zatca_qr(name: str) -> dict[str, Any]:
+    """Return Phase 2 simplified ZATCA QR payload for a Sales Invoice."""
+    from zatgo_core.api.response import ok
+    from zatgo_core.api.validators import require_login, require_str
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr, zatca_fields_from_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Sales Invoice", "read", doc=name, throw=True)
+    doc = frappe.get_doc("Sales Invoice", name)
+    fields = zatca_fields_from_doc(doc)
+    qr = fields.get("qr_base64")
+    if not qr and int(doc.docstatus or 0) == 1:
+        qr = generate_and_store_zatca_qr(doc)
+        frappe.db.commit()
+        fields["qr_base64"] = qr
+    elif not qr:
+        # Draft preview — do not persist
+        from zatgo_core.services.zatca_qr import build_zatca_tlv_base64
+
+        fields["qr_base64"] = build_zatca_tlv_base64(
+            seller_name=str(fields["seller_name"]),
+            vat_number=str(fields["vat_number"] or "000000000000000"),
+            timestamp=str(fields["timestamp"]),
+            invoice_total=fields["invoice_total"],
+            vat_amount=fields["vat_amount"],
+        )
+    return ok(fields, meta={"stub": False, "source": "Sales Invoice"})
+
+
+@frappe.whitelist()
 def list_items_catalog(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
     """Items for invoice line pickers."""
     return list_items(page=page, page_size=page_size)
