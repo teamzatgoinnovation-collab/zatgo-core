@@ -59,29 +59,42 @@ def map_item_row(row: dict[str, Any]) -> dict[str, Any]:
         "name": row.get("item_name") or row.get("name"),
         "item_code": row.get("name"),
         "item_name": row.get("item_name"),
+        "item_group": row.get("item_group"),
         "category": row.get("item_group"),
+        "brand": row.get("brand") or "",
+        "image": row.get("image") or "",
         "price": float(row.get("standard_rate") or 0),
         "rate": float(row.get("standard_rate") or 0),
+        "standard_rate": float(row.get("standard_rate") or 0),
         "station": "counter",
         "available": 1 if row.get("disabled") in (0, "0", None, False) else 0,
-        "sku": row.get("name"),
+        "sku": row.get("sku") or row.get("name"),
         "barcode": row.get("barcode") or "",
         "uom": row.get("stock_uom"),
+        "stock_uom": row.get("stock_uom"),
+        "disabled": row.get("disabled"),
+        "modified": row.get("modified"),
         "verticals": [],
     }
 
 
 def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+    fields = [
+        "name",
+        "item_name",
+        "item_group",
+        "standard_rate",
+        "stock_uom",
+        "disabled",
+        "brand",
+        "image",
+        "modified",
+    ]
+    if frappe.db.has_column("Item", "sku"):
+        fields.append("sku")
     return _list_doctype(
         "Item",
-        fields=[
-            "name",
-            "item_name",
-            "item_group",
-            "standard_rate",
-            "stock_uom",
-            "disabled",
-        ],
+        fields=fields,
         page=page,
         page_size=page_size,
         filters={"disabled": 0},
