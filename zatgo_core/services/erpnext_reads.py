@@ -124,27 +124,57 @@ def enrich_customer_doc(d: Any) -> dict[str, Any]:
 
 
 def list_customers(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+    fields = [
+        "name",
+        "customer_name",
+        "customer_type",
+        "territory",
+        "customer_group",
+        "disabled",
+        "mobile_no",
+        "email_id",
+        "tax_id",
+        "modified",
+    ]
+    # Optional custom / extended columns when present on Customer
+    for col in (
+        "zatgo_customer_name_ar",
+        "zatgo_cr_number",
+        "zatgo_customer_code",
+        "zatgo_barcode",
+        "customer_primary_contact",
+    ):
+        if frappe.db.has_column("Customer", col):
+            fields.append(col)
+
+    def _map(r: Any) -> dict[str, Any]:
+        row = dict(r) if not isinstance(r, dict) else r
+        return {
+            "id": row.get("name"),
+            "name": row.get("customer_name") or row.get("name"),
+            "customer_name": row.get("customer_name"),
+            "customer_name_ar": row.get("zatgo_customer_name_ar"),
+            "customer_type": row.get("customer_type"),
+            "territory": row.get("territory"),
+            "customer_group": row.get("customer_group"),
+            "mobile_no": row.get("mobile_no"),
+            "phone": row.get("mobile_no"),
+            "email": row.get("email_id"),
+            "email_id": row.get("email_id"),
+            "tax_id": row.get("tax_id"),
+            "cr_number": row.get("zatgo_cr_number"),
+            "customer_code": row.get("zatgo_customer_code") or row.get("name"),
+            "barcode": row.get("zatgo_barcode") or "",
+            "modified": row.get("modified"),
+        }
+
     return _list_doctype(
         "Customer",
-        fields=[
-            "name",
-            "customer_name",
-            "customer_type",
-            "territory",
-            "customer_group",
-            "disabled",
-        ],
+        fields=fields,
         page=page,
         page_size=page_size,
         filters={"disabled": 0},
-        map_row=lambda r: {
-            "id": r.name,
-            "name": r.customer_name or r.name,
-            "customer_name": r.customer_name,
-            "customer_type": r.customer_type,
-            "territory": r.territory,
-            "customer_group": r.customer_group,
-        },
+        map_row=_map,
     )
 
 
