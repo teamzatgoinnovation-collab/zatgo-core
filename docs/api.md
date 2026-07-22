@@ -98,6 +98,8 @@ Config is API-only (no Desk page). Call the methods above from clients or `bench
 
 Pattern: `zatgo_core.api.v1.<product>.<module>.<method>`
 
+**Not on this hub:** Tracker → `tracker.api.v1.*`; Chat AI → `chat_ai.api.*`.
+
 Examples:
 
 | Method | Description |

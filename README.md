@@ -1,15 +1,25 @@
 # ZatGo Core
 
-ERPNext / Frappe **API-only platform hub** (`zatgo_core`).
-
-This app is the shared backend for client apps (Flutter / Electron / Web):
+ERPNext / Frappe **API-only platform hub** (`zatgo_core`) for client apps
+(Flutter / Electron / Web):
 
 - Settings foundation (system / company / branch, flags, integrations, security)
 - Site Application Settings + application registry for clients
 - Product client RPC hub: `zatgo_core.api.v1.<product>.*`
 - Shared ZG DocTypes (delivery, KDS, fleet stubs, …) until each product owns a domain app under `CustomApps/erpnext/<Product>/`
 
-**No Desk module UI** — no pages, workspaces, desktop icons, reports, or dashboards. Operators edit settings DocTypes via AwesomeBar / List when needed. Domain apps own product Desk surfaces.
+**Exceptions — own domain APIs (not this hub):**
+
+| Product | Package | Client RPC |
+|---------|---------|------------|
+| Tracker | `tracker` (`CustomApps/erpnext/Tracker`) | `tracker.api.v1.*` |
+| Chat AI | `chat_ai` (`CustomApps/erpnext/ChatAI`) | `chat_ai.api.*` |
+
+Those apps live on ERPNext with their own DocTypes + Desk + whitelist APIs.
+Clients for Tracker / Chat AI call those packages directly; do not add
+`zatgo_core.api.v1.tracker` or `zatgo_core.api.v1.chat_ai` facades.
+
+**No Desk module UI** — no pages, workspaces, desktop icons, reports, or dashboards. Operators edit settings DocTypes via AwesomeBar / List when needed.
 
 `zatgo_api` was merged into this app — do not install it separately.
 

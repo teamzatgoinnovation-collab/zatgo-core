@@ -1,5 +1,17 @@
 # Changelog — ZatGo Core
 
+## 0.2.2 — 2026-07-22
+
+### Removed
+
+- Hub facade `zatgo_core.api.v1.chat_ai.*` — Chat AI clients use `chat_ai.api.*`
+  on the `chat_ai` domain app
+
+### Changed
+
+- Docs: hub is for client apps **except** Tracker (`tracker.api.v1.*`) and
+  Chat AI (`chat_ai.api.*`), which own ERPNext domain APIs
+
 ## 0.2.1 — 2026-07-21
 
 ### Removed

@@ -2,12 +2,15 @@
 
 ## Role in the ecosystem
 
-`zatgo_core` is the **API-only platform hub** of the ZatGo ERP platform
-(settings + client RPC). It has no Desk module UI; product Desk lives in
-domain apps under `CustomApps/erpnext/<Product>/`.
+`zatgo_core` is the **API-only platform hub** for most client apps
+(settings + `zatgo_core.api.v1.<product>.*` RPC). It has no Desk module UI.
+
+**Not routed through this hub:** Tracker (`tracker.api.v1.*`) and Chat AI
+(`chat_ai.api.*`) — full domain apps under `CustomApps/erpnext/` with their
+own DocTypes, Desk, and APIs.
 
 ```text
-Flutter / Electron / Web clients (+ Desk via domain apps)
+Most Flutter / Electron / Web clients
             │
             ▼
    ┌────────────────────────────────────┐
@@ -15,16 +18,17 @@ Flutter / Electron / Web clients (+ Desk via domain apps)
    │  settings + api/v1/<product> RPC   │
    └────────────────────────────────────┘
             │
-            ├── optional product domain apps
             └── ERPNext / Frappe
+
+Tracker / Chat AI clients ──► tracker / chat_ai domain apps ──► ERPNext
 ```
 
-`zatgo_api` was merged into `zatgo_core`. Client RPC paths are
-`zatgo_core.api.v1.<product>.*`.
+`zatgo_api` was merged into `zatgo_core`. Prefer hub paths for products that
+do not yet own a domain package; never duplicate Tracker or Chat AI RPC here.
 
 No product app should duplicate global/company/branch settings, feature flags,
 integration credentials, printer defaults, or number series. They must read from
-`zatgo_core` services / APIs.
+`zatgo_core` services / APIs (including Tracker / Chat AI for shared settings).
 
 ## Clean architecture layers
 

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 # Site-scoped client products (NOT Frappe custom apps).
 # api_product maps to zatgo_core.api.v1.<product> when set.
-# Tracker clients use tracker.api.v1.* (domain app); api_product is empty.
+# Domain exceptions (own APIs; leave api_product empty):
+#   Tracker → tracker.api.v1.*
+#   Chat AI → chat_ai.api.*
 DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
     {
         "app_key": "zatgo_pos",

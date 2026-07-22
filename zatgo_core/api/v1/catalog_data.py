@@ -1,5 +1,8 @@
 """Product API catalog for zatgo_core.api.v1.health.catalog.
 
+Hub products only. Tracker (`tracker.api.v1.*`) and Chat AI (`chat_ai.api.*`)
+are domain apps — they are intentionally omitted from this catalog.
+
 Status values:
   active — full domain workflows on ZG DocTypes (or rich KDS/catalog)
   thin   — ERPNext-backed list/get (+ ping/status); clients may wire now
@@ -104,12 +107,5 @@ PRODUCT_CATALOG = [
         "status": "stub",
         "namespace": "zatgo_core.api.v1.documentation",
         "hub": "zatgo_core.api.v1.documentation",
-    },
-    {
-        "product": "chat_ai",
-        "title": "Chat AI",
-        "status": "active",
-        "namespace": "zatgo_core.api.v1.chat_ai",
-        "hub": "zatgo_core.api.v1.chat_ai",
     },
 ]
