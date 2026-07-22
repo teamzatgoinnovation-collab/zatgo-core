@@ -16,6 +16,7 @@ def company_permission_query(user: str | None = None) -> str:
         pluck="for_value",
     )
     if not companies:
-        return ""
+        # Safe default: no company User Permissions ⇒ no rows (not unrestricted).
+        return "1=0"
     escaped = ", ".join(frappe.db.escape(c) for c in companies)
     return f"`tabZG Company Settings`.company in ({escaped})"
