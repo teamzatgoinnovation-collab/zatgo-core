@@ -14,7 +14,12 @@
     "lat",
     "lng",
     "status",
-    "planned_at"
+    "planned_at",
+    "section_assignment",
+    "sales_user",
+    "warehouse",
+    "vehicle",
+    "route_title"
   ],
   "fields": [
     {
@@ -63,11 +68,44 @@
       "fieldname": "planned_at",
       "fieldtype": "Datetime",
       "label": "Planned At"
+    },
+    {
+      "fieldname": "section_assignment",
+      "fieldtype": "Section Break",
+      "label": "Van Assignment"
+    },
+    {
+      "fieldname": "sales_user",
+      "fieldtype": "Link",
+      "label": "Sales User",
+      "options": "User",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "vehicle",
+      "fieldtype": "Link",
+      "label": "Vehicle",
+      "options": "ZG Vehicle",
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "route_title",
+      "fieldtype": "Data",
+      "label": "Route Title",
+      "in_standard_filter": 1
     }
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-07-16 00:00:00.000000",
+  "modified": "2026-07-23 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Trip",
@@ -83,6 +121,30 @@
       "report": 1,
       "role": "System Manager",
       "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "VanSale Admin",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 1,
+      "role": "VanSale User",
+      "share": 0,
       "write": 1
     },
     {
