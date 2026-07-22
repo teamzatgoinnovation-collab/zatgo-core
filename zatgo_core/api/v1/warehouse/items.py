@@ -1,4 +1,4 @@
-"""Warehouse items — ERPNext Item catalog."""
+"""Warehouse items — ERPNext Item catalog + offline sync."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.services.erpnext_reads import get_item, list_items
 from zatgo_core.services.erpnext_writes import create_item, update_item
+from zatgo_core.services.item_sync_service import get_item_defaults, sync_item_bundle
 
 
 @frappe.whitelist()
@@ -25,22 +26,64 @@ def get(name: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
+def defaults() -> dict[str, Any]:
+    """Stock/Selling defaults + pick lists for product forms."""
+    return get_item_defaults()
+
+
+@frappe.whitelist()
 def create(
-    item_code: str,
+    item_code: str | None = None,
     item_name: str | None = None,
     item_group: str | None = None,
     stock_uom: str | None = None,
     standard_rate: float | int | str | None = None,
     is_stock_item: int | str | bool | None = 1,
+    client_id: str | None = None,
+    item: str | dict | None = None,
+    attachments: str | dict | None = None,
 ) -> dict[str, Any]:
+    """
+    Backward-compatible create.
+
+    - Simple args → legacy create_item
+    - client_id + item payload → full offline sync bundle
+    """
+    if client_id or item:
+        payload = item
+        if payload is None:
+            payload = {
+                "item_code": item_code,
+                "item_name": item_name,
+                "item_group": item_group,
+                "stock_uom": stock_uom,
+                "selling_rate": standard_rate,
+                "is_stock_item": is_stock_item,
+            }
+        return sync_item_bundle(
+            client_id=client_id or frappe.generate_hash(length=20),
+            item=payload,
+            attachments=attachments,
+        )
+
     return create_item(
-        item_code=item_code,
+        item_code=item_code or "",
         item_name=item_name,
         item_group=item_group,
         stock_uom=stock_uom,
         standard_rate=standard_rate,
         is_stock_item=is_stock_item,
     )
+
+
+@frappe.whitelist()
+def sync(
+    client_id: str,
+    item: str | dict | None = None,
+    attachments: str | dict | None = None,
+) -> dict[str, Any]:
+    """Idempotent Item create with images / opening stock / Item Price."""
+    return sync_item_bundle(client_id=client_id, item=item, attachments=attachments)
 
 
 @frappe.whitelist()
