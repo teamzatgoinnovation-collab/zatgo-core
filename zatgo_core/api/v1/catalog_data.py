@@ -105,4 +105,11 @@ PRODUCT_CATALOG = [
         "namespace": "zatgo_core.api.v1.documentation",
         "hub": "zatgo_core.api.v1.documentation",
     },
+    {
+        "product": "chat_ai",
+        "title": "Chat AI",
+        "status": "active",
+        "namespace": "zatgo_core.api.v1.chat_ai",
+        "hub": "zatgo_core.api.v1.chat_ai",
+    },
 ]
