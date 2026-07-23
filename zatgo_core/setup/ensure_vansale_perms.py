@@ -34,6 +34,13 @@ _PERMS: list[tuple[str, str, dict]] = [
     ("Bin", ROLE_ADMIN, {"read": 1}),
     ("ZG Vehicle", ROLE_USER, {"read": 1}),
     ("ZG Vehicle", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1}),
+    # ZG VanSale DocTypes
+    ("ZG Trip", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
+    ("ZG Trip", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
+    ("ZG Delivery Stop", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
+    ("ZG Delivery Stop", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
+    ("ZG Van Sale Profile", ROLE_USER, {"read": 1}),
+    ("ZG Van Sale Profile", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
 ]
 
 
@@ -50,9 +57,6 @@ def _ensure_perm(doctype: str, role: str, flags: dict) -> None:
                 changed = True
         if changed:
             doc.save(ignore_permissions=True)
-        return
-    # Also check standard DocPerm on the DocType itself
-    if frappe.db.exists("DocPerm", {"parent": doctype, "role": role}):
         return
     row = {
         "doctype": "Custom DocPerm",
