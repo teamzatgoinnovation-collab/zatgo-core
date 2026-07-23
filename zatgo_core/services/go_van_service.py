@@ -169,8 +169,43 @@ def create_order(
     _apply_sales_taxes(doc, company_name)
 
     doc.insert()
-    doc.submit()
-    frappe.db.commit()
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception as submit_err:
+        # If submit fails due to insufficient stock (common on vans), retry without
+        # stock deduction so the invoice is always created. A separate Stock Entry
+        # (Material Issue) can reconcile the van stock later.
+        err_msg = str(submit_err)
+        is_stock_err = any(
+            k in err_msg for k in ("NegativeStockError", "Insufficient Stock", "stock ledger", "units of")
+        )
+        if is_stock_err and wh:
+            frappe.log_error(
+                title="VanSale stock deduction skipped",
+                message=f"Warehouse {wh} had insufficient stock — invoice submitted without stock deduction.\n{frappe.get_traceback()}",
+            )
+            # Reload draft doc and resubmit without stock deduction
+            doc.reload()
+            if doc.docstatus == 0:
+                doc.update_stock = 0
+                doc.set_warehouse = ""
+                doc.submit()
+                frappe.db.commit()
+            elif doc.docstatus == 1:
+                frappe.db.commit()  # already submitted
+            else:
+                frappe.throw(f"Invoice creation failed: {submit_err}")
+        else:
+            # Other errors: delete the draft and re-raise
+            try:
+                doc.reload()
+                if doc.docstatus == 0:
+                    doc.delete()
+                    frappe.db.commit()
+            except Exception:
+                pass
+            raise
 
     try:
         generate_and_store_zatca_qr(doc)

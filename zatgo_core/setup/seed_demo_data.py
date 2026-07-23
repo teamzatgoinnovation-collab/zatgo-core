@@ -870,21 +870,34 @@ def _seed_van_sale_enrichment(
     v2 = _ensure_vehicle("KSA-102", "Isuzu", "ELF Cold Van")
 
 
-    # Van Sale Profile
+    # Van Sale Profile — upsert so warehouse is always set even if profile already exists
     if warehouse:
-        _ensure_zg(
-            "ZG Van Sale Profile",
-            {"user": "Administrator"},
-            {
-                "user": "Administrator",
+        existing_profile = frappe.db.get_value("ZG Van Sale Profile", {"user": "Administrator"}, "name")
+        if existing_profile:
+            # Update existing profile to ensure warehouse, vehicle, route_title are set
+            frappe.db.set_value("ZG Van Sale Profile", existing_profile, {
+                "warehouse": warehouse,
+                "vehicle": v1 or "",
+                "route_title": "Riyadh Central Route",
                 "user_type": "Admin",
                 "enabled": 1,
-                "warehouse": warehouse,
-                "vehicle": v1 or "VAN-01",
-                "route_title": "Riyadh Central Route",
-                "notes": "System Administrator VanSale Profile",
-            },
-        )
+            }, update_modified=False)
+            frappe.db.commit()
+        else:
+            _ensure_zg(
+                "ZG Van Sale Profile",
+                {"user": "Administrator"},
+                {
+                    "user": "Administrator",
+                    "user_type": "Admin",
+                    "enabled": 1,
+                    "warehouse": warehouse,
+                    "vehicle": v1 or "",
+                    "route_title": "Riyadh Central Route",
+                    "notes": "System Administrator VanSale Profile",
+                },
+            )
+
 
     now = now_datetime()
     more_trips = [
