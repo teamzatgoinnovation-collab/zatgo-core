@@ -37,9 +37,11 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
     if not name:
         return None
     doc = frappe.get_doc("ZG Van Sale Profile", name)
+    user_type = getattr(doc, "user_type", None) or ("Admin" if is_vansale_admin(uid) else "Field User")
     return {
         "id": doc.name,
         "user": doc.user,
+        "user_type": user_type,
         "warehouse": doc.warehouse,
         "vehicle": doc.vehicle,
         "route_title": doc.route_title,
@@ -51,10 +53,12 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
 def map_profile_row(row: Any) -> dict[str, Any]:
     r = row.as_dict() if callable(getattr(row, "as_dict", None)) else dict(row)
     full_name = frappe.db.get_value("User", r.get("user"), "full_name") or r.get("user")
+    user_type = r.get("user_type") or ("Admin" if is_vansale_admin(r.get("user")) else "Field User")
     return {
         "id": r.get("name"),
         "user": r.get("user"),
         "full_name": full_name,
+        "user_type": user_type,
         "warehouse": r.get("warehouse"),
         "vehicle": r.get("vehicle"),
         "route_title": r.get("route_title") or "",

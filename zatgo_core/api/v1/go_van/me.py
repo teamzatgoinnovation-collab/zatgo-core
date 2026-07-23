@@ -22,18 +22,25 @@ def context() -> dict[str, Any]:
     require_login()
     user = frappe.session.user
     roles = user_roles(user)
-    admin = is_vansale_admin(user)
-    user_role = is_vansale_user(user)
     profile = get_profile(user)
+
+    user_type = profile.get("user_type") if profile else None
+    if not user_type:
+        user_type = "Admin" if is_vansale_admin(user) else "Field User"
+
+    is_admin = user_type == "Admin"
+    is_user = user_type == "Field User"
+
     full_name = frappe.db.get_value("User", user, "full_name") or user
     return ok(
         {
             "user": user,
             "full_name": full_name,
             "roles": roles,
-            "vansale_roles": [],
-            "is_admin": admin,
-            "is_user": user_role,
+            "user_type": user_type,
+            "vansale_roles": [user_type],
+            "is_admin": is_admin,
+            "is_user": is_user,
             "has_vansale_access": True,
             "profile": profile,
         },
