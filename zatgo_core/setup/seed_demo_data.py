@@ -842,6 +842,10 @@ def _seed_van_sale_enrichment(
     def _ensure_vehicle(plate: str, make: str, model: str) -> str | None:
         if not frappe.db.exists("DocType", "Vehicle"):
             return None
+        # Ensure UOM for odometer
+        uom_name = "Kilometer"
+        if not frappe.db.exists("UOM", uom_name):
+            frappe.get_doc({"doctype": "UOM", "uom_name": uom_name}).insert(ignore_permissions=True)
         # ERPNext Vehicle is named by license_plate field
         existing = frappe.db.get_value("Vehicle", {"license_plate": plate}, "name")
         if existing:
@@ -852,6 +856,9 @@ def _seed_van_sale_enrichment(
                 "license_plate": plate,
                 "make": make,
                 "model": model,
+                "last_odometer": 0,
+                "fuel_type": "Diesel",
+                "uom": uom_name,
             })
             vdoc.insert(ignore_permissions=True)
             return vdoc.name

@@ -30,13 +30,20 @@ def execute() -> None:
         title = v.get("title") or plate
 
         # ERPNext Vehicle uses license_plate as the natural key
+        # Ensure UOM exists
+        uom_name = "Kilometer"
+        if not frappe.db.exists("UOM", uom_name):
+            frappe.get_doc({"doctype": "UOM", "uom_name": uom_name}).insert(ignore_permissions=True)
+
         if not frappe.db.exists("Vehicle", {"license_plate": plate}):
             vehicle_doc = frappe.get_doc({
                 "doctype": "Vehicle",
                 "license_plate": plate,
                 "make": title,
                 "model": v.get("vehicle_type") or "Van",
-                "location": "",
+                "last_odometer": 0,
+                "fuel_type": "Diesel",
+                "uom": uom_name,
             })
             vehicle_doc.insert(ignore_permissions=True)
             new_name = vehicle_doc.name
