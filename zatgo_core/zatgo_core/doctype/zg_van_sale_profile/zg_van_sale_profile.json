@@ -23,7 +23,7 @@
       "reqd": 1,
       "unique": 1,
       "in_list_view": 1,
-      "description": "ERPNext login with role VanSale User"
+      "description": "ERPNext user account for VanSale"
     },
     {
       "fieldname": "enabled",
@@ -38,20 +38,21 @@
       "label": "Van Warehouse",
       "options": "Warehouse",
       "reqd": 1,
-      "in_list_view": 1
+      "in_list_view": 1,
+      "description": "Van warehouse for stock and invoice posting"
     },
     {
       "fieldname": "vehicle",
       "fieldtype": "Link",
-      "label": "Vehicle",
+      "label": "Assigned Vehicle",
       "options": "ZG Vehicle",
-      "in_list_view": 1
+      "description": "Optional assigned vehicle for route planning"
     },
     {
       "fieldname": "route_title",
       "fieldtype": "Data",
       "label": "Route Title",
-      "in_list_view": 1
+      "description": "Primary sales route name (e.g. Dammam North)"
     },
     {
       "fieldname": "notes",
@@ -78,30 +79,6 @@
       "role": "System Manager",
       "share": 1,
       "write": 1
-    },
-    {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "VanSale Admin",
-      "share": 0,
-      "write": 1
-    },
-    {
-      "create": 0,
-      "delete": 0,
-      "email": 0,
-      "export": 0,
-      "print": 0,
-      "read": 1,
-      "report": 0,
-      "role": "VanSale User",
-      "share": 0,
-      "write": 0
     }
   ],
   "sort_field": "modified",

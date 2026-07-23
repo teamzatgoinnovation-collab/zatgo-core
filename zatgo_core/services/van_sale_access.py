@@ -6,13 +6,6 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.constants.roles import ROLES
-
-
-ROLE_USER = ROLES["VANSALE_USER"]
-ROLE_ADMIN = ROLES["VANSALE_ADMIN"]
-
-
 def user_roles(user: str | None = None) -> list[str]:
     return list(frappe.get_roles(user or frappe.session.user))
 
@@ -20,15 +13,16 @@ def user_roles(user: str | None = None) -> list[str]:
 def is_vansale_admin(user: str | None = None) -> bool:
     roles = set(user_roles(user))
     return (
-        ROLE_ADMIN in roles
-        or "System Manager" in roles
+        "System Manager" in roles
         or "Administrator" in roles
+        or "ZG Company Admin" in roles
         or (user or frappe.session.user) == "Administrator"
     )
 
 
 def is_vansale_user(user: str | None = None) -> bool:
-    return ROLE_USER in set(user_roles(user))
+    uid = user or frappe.session.user
+    return bool(uid and uid != "Guest")
 
 
 def get_profile(user: str | None = None) -> dict[str, Any] | None:

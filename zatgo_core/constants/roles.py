@@ -10,8 +10,6 @@ ROLES = {
     "APPLICATION_ADMIN": "ZG Application Admin",
     "READ_ONLY": "ZG Read Only",
     "DELIVERY": "Delivery",
-    "VANSALE_USER": "VanSale User",
-    "VANSALE_ADMIN": "VanSale Admin",
 }
 
 # Which roles may write which settings categories.

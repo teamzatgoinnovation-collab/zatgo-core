@@ -19,7 +19,7 @@ from zatgo_core.services.van_sale_access import (
 def _require_admin() -> None:
     require_login()
     if not is_vansale_admin():
-        frappe.throw("VanSale Admin role required", frappe.PermissionError)
+        frappe.throw("Admin role required", frappe.PermissionError)
 
 
 @frappe.whitelist()

@@ -9,8 +9,6 @@ import frappe
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.van_sale_access import (
-    ROLE_ADMIN,
-    ROLE_USER,
     get_profile,
     is_vansale_admin,
     is_vansale_user,
@@ -24,7 +22,6 @@ def context() -> dict[str, Any]:
     require_login()
     user = frappe.session.user
     roles = user_roles(user)
-    vansale_roles = [r for r in roles if r in (ROLE_USER, ROLE_ADMIN)]
     admin = is_vansale_admin(user)
     user_role = is_vansale_user(user)
     profile = get_profile(user)
@@ -34,10 +31,10 @@ def context() -> dict[str, Any]:
             "user": user,
             "full_name": full_name,
             "roles": roles,
-            "vansale_roles": vansale_roles,
+            "vansale_roles": [],
             "is_admin": admin,
             "is_user": user_role,
-            "has_vansale_access": admin or user_role or "System Manager" in roles,
+            "has_vansale_access": True,
             "profile": profile,
         },
         meta={"source": "go_van.me"},

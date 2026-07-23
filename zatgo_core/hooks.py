@@ -52,8 +52,6 @@ fixtures = [
                     "ZG Branch Admin",
                     "ZG Application Admin",
                     "ZG Read Only",
-                    "VanSale User",
-                    "VanSale Admin",
                 ],
             ]
         ],
