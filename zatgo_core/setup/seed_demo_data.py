@@ -838,28 +838,30 @@ def _seed_van_sale_enrichment(
     if warehouse and company:
         stock_entry = _ensure_opening_stock(warehouse, stock_lines, company)
 
-    # Vehicles
-    v1 = _ensure_zg(
-        "ZG Vehicle",
-        {"license_plate": "KSA-101"},
-        {
-            "title": "VAN-01 (HiAce)",
-            "license_plate": "KSA-101",
-            "make_model": "Toyota HiAce 2024",
-            "status": "Active",
-            "assigned_user": "Administrator",
-        },
-    )
-    v2 = _ensure_zg(
-        "ZG Vehicle",
-        {"license_plate": "KSA-102"},
-        {
-            "title": "VAN-02 (ELF)",
-            "license_plate": "KSA-102",
-            "make_model": "Isuzu ELF Cold Van",
-            "status": "Active",
-        },
-    )
+    # Vehicles — use ERPNext built-in Vehicle DocType
+    def _ensure_vehicle(plate: str, make: str, model: str) -> str | None:
+        if not frappe.db.exists("DocType", "Vehicle"):
+            return None
+        # ERPNext Vehicle is named by license_plate field
+        existing = frappe.db.get_value("Vehicle", {"license_plate": plate}, "name")
+        if existing:
+            return existing
+        try:
+            vdoc = frappe.get_doc({
+                "doctype": "Vehicle",
+                "license_plate": plate,
+                "make": make,
+                "model": model,
+            })
+            vdoc.insert(ignore_permissions=True)
+            return vdoc.name
+        except Exception as exc:  # noqa: BLE001
+            frappe.log_error(f"Vehicle seed skipped: {exc}", "zatgo_core.seed")
+            return None
+
+    v1 = _ensure_vehicle("KSA-101", "Toyota", "HiAce 2024")
+    v2 = _ensure_vehicle("KSA-102", "Isuzu", "ELF Cold Van")
+
 
     # Van Sale Profile
     if warehouse:

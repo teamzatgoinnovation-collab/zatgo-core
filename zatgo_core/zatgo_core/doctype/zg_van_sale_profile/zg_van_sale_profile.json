@@ -57,8 +57,8 @@
       "fieldname": "vehicle",
       "fieldtype": "Link",
       "label": "Assigned Vehicle",
-      "options": "ZG Vehicle",
-      "description": "Optional assigned vehicle for route planning"
+      "options": "Vehicle",
+      "description": "Optional assigned vehicle for route planning (ERPNext Vehicle)"
     },
     {
       "fieldname": "route_title",

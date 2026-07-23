@@ -62,7 +62,7 @@
       "fieldname": "vehicle",
       "fieldtype": "Link",
       "label": "Vehicle",
-      "options": "ZG Vehicle"
+      "options": "Vehicle"
     },
     {
       "fieldname": "points",

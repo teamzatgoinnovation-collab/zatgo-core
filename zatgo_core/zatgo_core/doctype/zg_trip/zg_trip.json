@@ -139,7 +139,7 @@
       "fieldname": "vehicle",
       "fieldtype": "Link",
       "label": "Vehicle",
-      "options": "ZG Vehicle",
+      "options": "Vehicle",
       "in_standard_filter": 1
     },
     {
