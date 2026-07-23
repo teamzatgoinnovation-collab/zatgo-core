@@ -18,7 +18,7 @@ from zatgo_core.services.van_sale_access import (
 )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["GET", "POST"])
 def context() -> dict[str, Any]:
     """Bootstrap payload for VanSale Flutter (roles + profile)."""
     require_login()
