@@ -62,15 +62,13 @@ def _scope_filters(
         uid = frappe.session.user
         profile = get_profile(uid)
         filters["sales_user"] = uid
-        if profile and profile.get("warehouse"):
-            # Prefer sales_user; warehouse is additional when set on trips
-            pass
-        if warehouse and profile and warehouse == profile.get("warehouse"):
-            filters["warehouse"] = warehouse
-        if vehicle and profile and vehicle == profile.get("vehicle"):
-            filters["vehicle"] = vehicle
-        if route_title and profile and route_title == profile.get("route_title"):
-            filters["route_title"] = route_title
+        if profile:
+            if profile.get("warehouse"):
+                filters["warehouse"] = profile["warehouse"]
+            if profile.get("vehicle"):
+                filters["vehicle"] = profile["vehicle"]
+            if profile.get("route_title"):
+                filters["route_title"] = profile["route_title"]
 
     if date and frappe.db.has_column("ZG Trip", "planned_at"):
         day = getdate(date)
@@ -142,4 +140,10 @@ def list(
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_zg("ZG Trip", name, map_doc=lambda d: _map(d))
+    doc_res = get_zg("ZG Trip", name, map_doc=lambda d: _map(d))
+    if not is_vansale_admin():
+        trip_data = doc_res.get("data") if isinstance(doc_res, dict) and "data" in doc_res else doc_res
+        sales_u = trip_data.get("sales_user") if isinstance(trip_data, dict) else None
+        if sales_u and sales_u != frappe.session.user:
+            frappe.throw("Access denied: You can only view your own assigned trip.", frappe.PermissionError)
+    return doc_res
