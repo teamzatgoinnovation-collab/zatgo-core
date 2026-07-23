@@ -74,23 +74,97 @@ def _apply_sales_taxes(doc: Any, company: str) -> None:
     if not template or not frappe.db.exists("Sales Taxes and Charges Template", template):
         return
     doc.taxes_and_charges = template
-    if inclusive and frappe.get_meta("Sales Invoice").has_field("taxes_and_charges"):
-        # Prefer inclusive pricing when company setting says so.
-        for item in doc.items:
-            if hasattr(item, "is_free_item"):
-                pass
     try:
         from erpnext.controllers.accounts_controller import get_taxes_and_charges
 
         doc.set("taxes", [])
         for tax in get_taxes_and_charges("Sales Taxes and Charges Template", template):
-            doc.append("taxes", tax)
+            row = dict(tax)
+            # When company prices are tax-inclusive, force included_in_print_rate
+            # so ERPNext does not add VAT on top of already-inclusive rates.
+            if inclusive:
+                row["included_in_print_rate"] = 1
+            doc.append("taxes", row)
     except Exception:
         # Older / alternate API
         try:
             doc.append_taxes_from_master()
+            if inclusive:
+                for tax in doc.taxes or []:
+                    tax.included_in_print_rate = 1
         except Exception:
             frappe.log_error(title="VanSale tax template apply failed", message=frappe.get_traceback())
+
+
+def _ack_sales_invoice(doc: Any, cid: str, *, idempotent: bool, created: bool) -> dict[str, Any]:
+    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
+
+    return ok(
+        {
+            **map_sales_invoice_doc(doc),
+            "client_id": cid,
+            "erp_name": doc.name,
+            "print_format": PRINT_FORMAT_NAME,
+            "docstatus": int(doc.docstatus or 0),
+        },
+        meta={
+            "stub": False,
+            "idempotent": idempotent,
+            "created": created,
+            "submitted": int(doc.docstatus or 0) == 1,
+            "source": "Sales Invoice",
+        },
+    )
+
+
+def _ensure_submitted_sales_invoice(
+    doc: Any,
+    *,
+    warehouse: str | None = None,
+) -> Any:
+    """Submit draft SI from a prior failed attempt; only succeed when docstatus=1."""
+    status = int(doc.docstatus or 0)
+    if status == 2:
+        frappe.throw(
+            f"Sales Invoice {doc.name} was cancelled. Create a new sale with a new client_id.",
+            frappe.ValidationError,
+        )
+    if status == 1:
+        return doc
+
+    wh = (warehouse or "").strip()
+    if wh:
+        if not frappe.db.exists("Warehouse", wh):
+            frappe.throw(f"Warehouse not found: {wh}")
+        if not doc.set_warehouse:
+            doc.update_stock = 1
+            doc.set_warehouse = wh
+            doc.save()
+
+    if not doc.update_stock or not (doc.set_warehouse or "").strip():
+        frappe.throw(
+            f"Sales Invoice {doc.name} is still a draft without van warehouse / update_stock. "
+            "Set warehouse on the van profile and retry sync.",
+            frappe.ValidationError,
+        )
+
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            f"Sales Invoice {doc.name} exists as draft but could not be submitted. "
+            "Fix stock/accounts, then retry sync.",
+            frappe.ValidationError,
+        )
+    doc.reload()
+    if int(doc.docstatus or 0) != 1:
+        frappe.throw(
+            f"Sales Invoice {doc.name} is not submitted (docstatus={doc.docstatus}).",
+            frappe.ValidationError,
+        )
+    return doc
 
 
 def create_order(
@@ -101,18 +175,31 @@ def create_order(
     company: str | None = None,
     trip_id: str | None = None,
 ) -> dict[str, Any]:
-    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
     require_login()
     cid = require_str(client_id, "client_id")
+    wh = (warehouse or "").strip()
+
     existing = _find_by_client_id("Sales Invoice", cid)
     if existing:
         doc = frappe.get_doc("Sales Invoice", existing)
-        return ok(
-            {**map_sales_invoice_doc(doc), "client_id": cid, "erp_name": doc.name},
-            meta={"stub": False, "idempotent": True, "source": "Sales Invoice"},
+        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh or None)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+
+    if not wh:
+        frappe.throw(
+            "Van warehouse is required to create a stock-updating Sales Invoice.",
+            frappe.ValidationError,
         )
+    if not frappe.db.exists("Warehouse", wh):
+        frappe.throw(f"Warehouse not found: {wh}")
 
     frappe.has_permission("Sales Invoice", "create", throw=True)
     party = _resolve_customer(customer)
@@ -154,17 +241,12 @@ def create_order(
             "posting_date": today(),
             "items": rows,
             "zatgo_client_id": cid,
+            "update_stock": 1,
+            "set_warehouse": wh,
         }
     )
     if pl and frappe.get_meta("Sales Invoice").has_field("selling_price_list"):
         doc.selling_price_list = pl
-
-    wh = (warehouse or "").strip()
-    if wh:
-        if not frappe.db.exists("Warehouse", wh):
-            frappe.throw(f"Warehouse not found: {wh}")
-        doc.update_stock = 1
-        doc.set_warehouse = wh
 
     _apply_sales_taxes(doc, company_name)
 
@@ -172,40 +254,12 @@ def create_order(
     try:
         doc.submit()
         frappe.db.commit()
-    except Exception as submit_err:
-        # If submit fails due to insufficient stock (common on vans), retry without
-        # stock deduction so the invoice is always created. A separate Stock Entry
-        # (Material Issue) can reconcile the van stock later.
-        err_msg = str(submit_err)
-        is_stock_err = any(
-            k in err_msg for k in ("NegativeStockError", "Insufficient Stock", "stock ledger", "units of")
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not create and submit Sales Invoice. Fix stock/accounts, then retry sync.",
+            frappe.ValidationError,
         )
-        if is_stock_err and wh:
-            frappe.log_error(
-                title="VanSale stock deduction skipped",
-                message=f"Warehouse {wh} had insufficient stock — invoice submitted without stock deduction.\n{frappe.get_traceback()}",
-            )
-            # Reload draft doc and resubmit without stock deduction
-            doc.reload()
-            if doc.docstatus == 0:
-                doc.update_stock = 0
-                doc.set_warehouse = ""
-                doc.submit()
-                frappe.db.commit()
-            elif doc.docstatus == 1:
-                frappe.db.commit()  # already submitted
-            else:
-                frappe.throw(f"Invoice creation failed: {submit_err}")
-        else:
-            # Other errors: delete the draft and re-raise
-            try:
-                doc.reload()
-                if doc.docstatus == 0:
-                    doc.delete()
-                    frappe.db.commit()
-            except Exception:
-                pass
-            raise
 
     try:
         generate_and_store_zatca_qr(doc)
@@ -222,16 +276,9 @@ def create_order(
             frappe.log_error(title="VanSale trip-SI link failed", message=frappe.get_traceback())
 
     doc.reload()
-    return ok(
-        {
-            **map_sales_invoice_doc(doc),
-            "client_id": cid,
-            "erp_name": doc.name,
-            "print_format": PRINT_FORMAT_NAME,
-            "trip_id": trip or None,
-        },
-        meta={"stub": False, "created": True, "submitted": True, "source": "Sales Invoice"},
-    )
+    payload = _ack_sales_invoice(doc, cid, idempotent=False, created=True)
+    payload["data"]["trip_id"] = trip or None
+    return payload
 
 
 

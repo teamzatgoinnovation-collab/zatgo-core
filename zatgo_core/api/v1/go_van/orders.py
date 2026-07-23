@@ -27,12 +27,17 @@ def create(
     if not wh:
         profile = get_profile()
         if profile and profile.get("warehouse"):
-            wh = profile["warehouse"]
+            wh = str(profile["warehouse"]).strip()
+    if not wh:
+        frappe.throw(
+            "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
+            frappe.ValidationError,
+        )
     return create_order(
         client_id=client_id,
         customer=customer,
         items=items,
-        warehouse=wh or None,
+        warehouse=wh,
         company=company,
         trip_id=trip_id,
     )
@@ -116,6 +121,13 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     if not frappe.db.exists("Sales Invoice", invoice):
         frappe.throw(f"Sales Invoice not found: {invoice}", frappe.DoesNotExistError)
     frappe.has_permission("Sales Invoice", "read", doc=invoice, throw=True)
+
+    docstatus = int(frappe.db.get_value("Sales Invoice", invoice, "docstatus") or 0)
+    if docstatus != 1:
+        frappe.throw(
+            f"Sales Invoice {invoice} is not submitted yet (docstatus={docstatus}).",
+            frappe.ValidationError,
+        )
 
     fmt = (print_format or "").strip() or PRINT_FORMAT_NAME
     if not frappe.db.exists("Print Format", fmt):
