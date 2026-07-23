@@ -346,6 +346,9 @@ def seed() -> dict[str, Any]:
                 "lng": 46.6753,
                 "status": "Completed",
                 "planned_at": add_to_date(now, hours=-4),
+                "sales_user": "Administrator",
+                "route_title": "Riyadh Central Route",
+                "vehicle": "VAN-01",
             },
         ),
         _ensure_zg(
@@ -360,6 +363,9 @@ def seed() -> dict[str, Any]:
                 "lng": 46.685,
                 "status": "Checked In",
                 "planned_at": add_to_date(now, hours=-2),
+                "sales_user": "Administrator",
+                "route_title": "Riyadh Central Route",
+                "vehicle": "VAN-01",
             },
         ),
         _ensure_zg(
@@ -374,6 +380,9 @@ def seed() -> dict[str, Any]:
                 "lng": 46.72,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=1),
+                "sales_user": "Administrator",
+                "route_title": "Riyadh Central Route",
+                "vehicle": "VAN-01",
             },
         ),
     ]
@@ -829,6 +838,45 @@ def _seed_van_sale_enrichment(
     if warehouse and company:
         stock_entry = _ensure_opening_stock(warehouse, stock_lines, company)
 
+    # Vehicles
+    v1 = _ensure_zg(
+        "ZG Vehicle",
+        {"license_plate": "KSA-101"},
+        {
+            "title": "VAN-01 (HiAce)",
+            "license_plate": "KSA-101",
+            "make_model": "Toyota HiAce 2024",
+            "status": "Active",
+            "assigned_user": "Administrator",
+        },
+    )
+    v2 = _ensure_zg(
+        "ZG Vehicle",
+        {"license_plate": "KSA-102"},
+        {
+            "title": "VAN-02 (ELF)",
+            "license_plate": "KSA-102",
+            "make_model": "Isuzu ELF Cold Van",
+            "status": "Active",
+        },
+    )
+
+    # Van Sale Profile
+    if warehouse:
+        _ensure_zg(
+            "ZG Van Sale Profile",
+            {"user": "Administrator"},
+            {
+                "user": "Administrator",
+                "user_type": "Admin",
+                "enabled": 1,
+                "warehouse": warehouse,
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
+                "notes": "System Administrator VanSale Profile",
+            },
+        )
+
     now = now_datetime()
     more_trips = [
         _ensure_zg(
@@ -843,6 +891,10 @@ def _seed_van_sale_enrichment(
                 "lng": 46.66,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=2),
+                "sales_user": "Administrator",
+                "warehouse": warehouse or "",
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
             },
         ),
         _ensure_zg(
@@ -857,6 +909,10 @@ def _seed_van_sale_enrichment(
                 "lng": 46.70,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=3),
+                "sales_user": "Administrator",
+                "warehouse": warehouse or "",
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
             },
         ),
         _ensure_zg(
@@ -871,6 +927,10 @@ def _seed_van_sale_enrichment(
                 "lng": 46.58,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=4),
+                "sales_user": "Administrator",
+                "warehouse": warehouse or "",
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
             },
         ),
         _ensure_zg(
@@ -885,6 +945,10 @@ def _seed_van_sale_enrichment(
                 "lng": 46.69,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=5),
+                "sales_user": "Administrator",
+                "warehouse": warehouse or "",
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
             },
         ),
         _ensure_zg(
@@ -899,6 +963,10 @@ def _seed_van_sale_enrichment(
                 "lng": 46.80,
                 "status": "Planned",
                 "planned_at": add_to_date(now, hours=6),
+                "sales_user": "Administrator",
+                "warehouse": warehouse or "",
+                "vehicle": v1 or "VAN-01",
+                "route_title": "Riyadh Central Route",
             },
         ),
     ]
@@ -907,12 +975,13 @@ def _seed_van_sale_enrichment(
     return {
         "company": company,
         "warehouse": warehouse,
+        "vehicles": [v1, v2],
         "items": all_items,
         "customers": all_customers,
         "stock_entry": stock_entry,
         "extra_trips": [t for t in more_trips if t],
         "prefs_hint": {
-            "site": "https://demo.zatgo.online",
+            "site": "https://erp.zatgo.online",
             "company": company,
             "warehouse": warehouse,
         },
