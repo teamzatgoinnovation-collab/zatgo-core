@@ -6,6 +6,13 @@ from typing import Any
 
 import frappe
 
+from zatgo_core.constants.roles import ROLES
+
+
+ROLE_USER = ROLES["VANSALE_USER"]
+ROLE_ADMIN = ROLES["VANSALE_ADMIN"]
+
+
 def user_roles(user: str | None = None) -> list[str]:
     return list(frappe.get_roles(user or frappe.session.user))
 
@@ -13,16 +20,15 @@ def user_roles(user: str | None = None) -> list[str]:
 def is_vansale_admin(user: str | None = None) -> bool:
     roles = set(user_roles(user))
     return (
-        "System Manager" in roles
+        ROLE_ADMIN in roles
+        or "System Manager" in roles
         or "Administrator" in roles
-        or "ZG Company Admin" in roles
         or (user or frappe.session.user) == "Administrator"
     )
 
 
 def is_vansale_user(user: str | None = None) -> bool:
-    uid = user or frappe.session.user
-    return bool(uid and uid != "Guest")
+    return ROLE_USER in set(user_roles(user))
 
 
 def get_profile(user: str | None = None) -> dict[str, Any] | None:
@@ -37,28 +43,29 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
     if not name:
         return None
     doc = frappe.get_doc("ZG Van Sale Profile", name)
-    user_type = getattr(doc, "user_type", None) or ("Admin" if is_vansale_admin(uid) else "Field User")
+    series = ""
+    if hasattr(doc, "sales_invoice_naming_series"):
+        series = (doc.sales_invoice_naming_series or "").strip()
     return {
         "id": doc.name,
         "user": doc.user,
-        "user_type": user_type,
         "warehouse": doc.warehouse,
         "vehicle": doc.vehicle,
         "route_title": doc.route_title,
         "enabled": int(doc.enabled or 0),
         "notes": doc.notes or "",
+        "sales_invoice_naming_series": series,
+        "user_type": getattr(doc, "user_type", None) or "Field User",
     }
 
 
 def map_profile_row(row: Any) -> dict[str, Any]:
     r = row.as_dict() if callable(getattr(row, "as_dict", None)) else dict(row)
     full_name = frappe.db.get_value("User", r.get("user"), "full_name") or r.get("user")
-    user_type = r.get("user_type") or ("Admin" if is_vansale_admin(r.get("user")) else "Field User")
     return {
         "id": r.get("name"),
         "user": r.get("user"),
         "full_name": full_name,
-        "user_type": user_type,
         "warehouse": r.get("warehouse"),
         "vehicle": r.get("vehicle"),
         "route_title": r.get("route_title") or "",

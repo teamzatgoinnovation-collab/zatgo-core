@@ -11,6 +11,7 @@ from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
 from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_invoice_doc
 from zatgo_core.services.erpnext_writes import _default_company, _parse_items
+from zatgo_core.services.van_sale_access import get_profile
 
 
 _STATUS_MAP = {
@@ -233,18 +234,26 @@ def create_order(
                 if rate is not None:
                     row["rate"] = flt(rate)
 
-    doc = frappe.get_doc(
-        {
-            "doctype": "Sales Invoice",
-            "customer": party,
-            "company": company_name,
-            "posting_date": today(),
-            "items": rows,
-            "zatgo_client_id": cid,
-            "update_stock": 1,
-            "set_warehouse": wh,
-        }
-    )
+    # Invoice number series: ZG Van Sale Profile → ERPNext Sales Invoice default.
+    naming_series = ""
+    profile = get_profile()
+    if profile:
+        naming_series = (profile.get("sales_invoice_naming_series") or "").strip()
+
+    doc_payload: dict[str, Any] = {
+        "doctype": "Sales Invoice",
+        "customer": party,
+        "company": company_name,
+        "posting_date": today(),
+        "items": rows,
+        "zatgo_client_id": cid,
+        "update_stock": 1,
+        "set_warehouse": wh,
+    }
+    if naming_series:
+        doc_payload["naming_series"] = naming_series
+
+    doc = frappe.get_doc(doc_payload)
     if pl and frappe.get_meta("Sales Invoice").has_field("selling_price_list"):
         doc.selling_price_list = pl
 

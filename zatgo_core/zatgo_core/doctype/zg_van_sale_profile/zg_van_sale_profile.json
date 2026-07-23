@@ -13,6 +13,8 @@
     "warehouse",
     "vehicle",
     "route_title",
+    "invoice_section",
+    "sales_invoice_naming_series",
     "notes"
   ],
   "fields": [
@@ -24,7 +26,7 @@
       "reqd": 1,
       "unique": 1,
       "in_list_view": 1,
-      "description": "ERPNext user account for VanSale"
+      "description": "ERPNext login with role VanSale User"
     },
     {
       "fieldname": "enabled",
@@ -38,11 +40,7 @@
       "fieldtype": "Select",
       "label": "User Type",
       "options": "Field User\nAdmin",
-      "default": "Field User",
-      "reqd": 1,
-      "in_list_view": 1,
-      "in_standard_filter": 1,
-      "description": "Admin = Admin Overview mode; Field User = Van Sale Field mode"
+      "default": "Field User"
     },
     {
       "fieldname": "warehouse",
@@ -50,21 +48,32 @@
       "label": "Van Warehouse",
       "options": "Warehouse",
       "reqd": 1,
-      "in_list_view": 1,
-      "description": "Van warehouse for stock and invoice posting"
+      "in_list_view": 1
     },
     {
       "fieldname": "vehicle",
       "fieldtype": "Link",
       "label": "Assigned Vehicle",
       "options": "Vehicle",
-      "description": "Optional assigned vehicle for route planning (ERPNext Vehicle)"
+      "in_list_view": 1
     },
     {
       "fieldname": "route_title",
       "fieldtype": "Data",
       "label": "Route Title",
-      "description": "Primary sales route name (e.g. Dammam North)"
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "invoice_section",
+      "fieldtype": "Section Break",
+      "label": "Invoice Settings (ERPNext)"
+    },
+    {
+      "fieldname": "sales_invoice_naming_series",
+      "fieldtype": "Select",
+      "label": "Sales Invoice Naming Series",
+      "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
+      "description": "Invoice number series from ERPNext Sales Invoice. Leave empty to use the Sales Invoice DocType default (Selling → Sales Invoice naming)."
     },
     {
       "fieldname": "notes",
@@ -74,7 +83,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-07-23 00:00:00.000000",
+  "modified": "2026-07-23 19:40:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Van Sale Profile",
@@ -91,6 +100,30 @@
       "role": "System Manager",
       "share": 1,
       "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "VanSale Admin",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "VanSale User",
+      "share": 0,
+      "write": 0
     }
   ],
   "sort_field": "modified",
