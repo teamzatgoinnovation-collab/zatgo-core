@@ -15,6 +15,13 @@
     "lng",
     "status",
     "planned_at",
+    "sales_invoice",
+    "section_visit",
+    "check_in_lat",
+    "check_in_lng",
+    "check_in_at",
+    "no_sale_reason",
+    "visit_notes",
     "section_assignment",
     "sales_user",
     "warehouse",
@@ -31,9 +38,11 @@
     },
     {
       "fieldname": "customer",
-      "fieldtype": "Data",
+      "fieldtype": "Link",
       "label": "Customer",
-      "in_list_view": 1
+      "options": "Customer",
+      "in_list_view": 1,
+      "in_standard_filter": 1
     },
     {
       "fieldname": "address",
@@ -68,6 +77,43 @@
       "fieldname": "planned_at",
       "fieldtype": "Datetime",
       "label": "Planned At"
+    },
+    {
+      "fieldname": "sales_invoice",
+      "fieldtype": "Link",
+      "label": "Sales Invoice",
+      "options": "Sales Invoice",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_visit",
+      "fieldtype": "Section Break",
+      "label": "Visit Capture"
+    },
+    {
+      "fieldname": "check_in_lat",
+      "fieldtype": "Float",
+      "label": "Check-in Latitude"
+    },
+    {
+      "fieldname": "check_in_lng",
+      "fieldtype": "Float",
+      "label": "Check-in Longitude"
+    },
+    {
+      "fieldname": "check_in_at",
+      "fieldtype": "Datetime",
+      "label": "Check-in At"
+    },
+    {
+      "fieldname": "no_sale_reason",
+      "fieldtype": "Data",
+      "label": "No Sale Reason"
+    },
+    {
+      "fieldname": "visit_notes",
+      "fieldtype": "Small Text",
+      "label": "Visit Notes"
     },
     {
       "fieldname": "section_assignment",
@@ -105,7 +151,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-07-23 00:00:00.000000",
+  "modified": "2026-07-23 02:20:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Trip",
@@ -144,18 +190,6 @@
       "read": 1,
       "report": 1,
       "role": "VanSale User",
-      "share": 0,
-      "write": 1
-    },
-    {
-      "create": 1,
-      "delete": 0,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "All",
       "share": 0,
       "write": 1
     }

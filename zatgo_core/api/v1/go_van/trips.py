@@ -28,6 +28,12 @@ def _map(row: Any) -> dict[str, Any]:
         "warehouse": r.get("warehouse"),
         "vehicle": r.get("vehicle"),
         "route_title": r.get("route_title") or "",
+        "sales_invoice": r.get("sales_invoice"),
+        "check_in_lat": r.get("check_in_lat"),
+        "check_in_lng": r.get("check_in_lng"),
+        "check_in_at": str(r.get("check_in_at") or ""),
+        "visit_notes": r.get("visit_notes") or "",
+        "no_sale_reason": r.get("no_sale_reason") or "",
     }
 
 
@@ -94,7 +100,18 @@ def list(
         "status",
         "planned_at",
     ]
-    for col in ("sales_user", "warehouse", "vehicle", "route_title"):
+    for col in (
+        "sales_user",
+        "warehouse",
+        "vehicle",
+        "route_title",
+        "sales_invoice",
+        "check_in_lat",
+        "check_in_lng",
+        "check_in_at",
+        "visit_notes",
+        "no_sale_reason",
+    ):
         if frappe.db.has_column("ZG Trip", col):
             fields.append(col)
 

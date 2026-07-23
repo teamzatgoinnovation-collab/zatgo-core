@@ -8,3 +8,4 @@ zatgo_core.patches.v0_1_0.add_zatgo_client_id_fields
 zatgo_core.patches.v0_1_0.add_customer_sync_fields
 zatgo_core.patches.v0_1_0.add_item_sync_fields
 zatgo_core.patches.v0_1_0.add_zatca_qr_field
+zatgo_core.patches.v0_1_0.migrate_trip_customer_link

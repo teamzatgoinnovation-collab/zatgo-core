@@ -21,6 +21,7 @@ def create(
     items: str | list | None = None,
     warehouse: str | None = None,
     company: str | None = None,
+    trip_id: str | None = None,
 ) -> dict[str, Any]:
     wh = (warehouse or "").strip()
     if not wh:
@@ -33,6 +34,7 @@ def create(
         items=items,
         warehouse=wh or None,
         company=company,
+        trip_id=trip_id,
     )
 
 

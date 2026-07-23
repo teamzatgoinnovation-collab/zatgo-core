@@ -99,6 +99,7 @@ def create_order(
     items: Any,
     warehouse: str | None = None,
     company: str | None = None,
+    trip_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
@@ -132,6 +133,19 @@ def create_order(
     rows = _parse_items(items)
 
     company_name = _default_company(company)
+    # Prefer customer default price list when item rates missing
+    pl = frappe.db.get_value("Customer", party, "default_price_list")
+    if pl:
+        for row in rows:
+            if flt(row.get("rate") or 0) <= 0:
+                rate = frappe.db.get_value(
+                    "Item Price",
+                    {"item_code": row.get("item_code"), "price_list": pl},
+                    "price_list_rate",
+                )
+                if rate is not None:
+                    row["rate"] = flt(rate)
+
     doc = frappe.get_doc(
         {
             "doctype": "Sales Invoice",
@@ -142,6 +156,9 @@ def create_order(
             "zatgo_client_id": cid,
         }
     )
+    if pl and frappe.get_meta("Sales Invoice").has_field("selling_price_list"):
+        doc.selling_price_list = pl
+
     wh = (warehouse or "").strip()
     if wh:
         if not frappe.db.exists("Warehouse", wh):
@@ -161,6 +178,14 @@ def create_order(
     except Exception:
         frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
 
+    trip = (trip_id or "").strip()
+    if trip and frappe.db.exists("ZG Trip", trip) and frappe.db.has_column("ZG Trip", "sales_invoice"):
+        try:
+            frappe.db.set_value("ZG Trip", trip, "sales_invoice", doc.name, update_modified=False)
+            frappe.db.commit()
+        except Exception:
+            frappe.log_error(title="VanSale trip-SI link failed", message=frappe.get_traceback())
+
     doc.reload()
     return ok(
         {
@@ -168,6 +193,7 @@ def create_order(
             "client_id": cid,
             "erp_name": doc.name,
             "print_format": PRINT_FORMAT_NAME,
+            "trip_id": trip or None,
         },
         meta={"stub": False, "created": True, "submitted": True, "source": "Sales Invoice"},
     )
@@ -351,10 +377,91 @@ def adjust_stock(
     )
 
 
+def transfer_stock(
+    client_id: str,
+    item_code: str,
+    qty: float | str,
+    from_warehouse: str,
+    to_warehouse: str,
+    company: str | None = None,
+) -> dict[str, Any]:
+    """Material Transfer between warehouses (e.g. main WH → van WH)."""
+    require_login()
+    cid = require_str(client_id, "client_id")
+    existing = _find_by_client_id("Stock Entry", cid)
+    if existing:
+        se = frappe.get_doc("Stock Entry", existing)
+        return ok(
+            {
+                "name": se.name,
+                "erp_name": se.name,
+                "client_id": cid,
+                "item_code": item_code,
+                "qty": flt(qty),
+                "from_warehouse": from_warehouse,
+                "to_warehouse": to_warehouse,
+            },
+            meta={"stub": False, "idempotent": True, "source": "Stock Entry"},
+        )
+
+    frappe.has_permission("Stock Entry", "create", throw=True)
+    code = require_str(item_code, "item_code")
+    src = require_str(from_warehouse, "from_warehouse")
+    dst = require_str(to_warehouse, "to_warehouse")
+    amount = flt(qty)
+    if amount <= 0:
+        frappe.throw("qty must be greater than zero")
+    if src == dst:
+        frappe.throw("from_warehouse and to_warehouse must differ")
+    if not frappe.db.exists("Item", code):
+        frappe.throw(f"Item not found: {code}")
+    if not frappe.db.exists("Warehouse", src):
+        frappe.throw(f"Warehouse not found: {src}")
+    if not frappe.db.exists("Warehouse", dst):
+        frappe.throw(f"Warehouse not found: {dst}")
+
+    se = frappe.get_doc(
+        {
+            "doctype": "Stock Entry",
+            "stock_entry_type": "Material Transfer",
+            "purpose": "Material Transfer",
+            "company": _default_company(company),
+            "items": [
+                {
+                    "item_code": code,
+                    "qty": amount,
+                    "s_warehouse": src,
+                    "t_warehouse": dst,
+                }
+            ],
+            "zatgo_client_id": cid,
+        }
+    )
+    se.insert()
+    se.submit()
+    frappe.db.commit()
+    return ok(
+        {
+            "name": se.name,
+            "erp_name": se.name,
+            "client_id": cid,
+            "item_code": code,
+            "qty": amount,
+            "from_warehouse": src,
+            "to_warehouse": dst,
+        },
+        meta={"stub": False, "created": True, "submitted": True, "source": "Stock Entry"},
+    )
+
+
 def update_visit(
     client_id: str,
     stop_id: str,
     visit_status: str,
+    lat: float | str | None = None,
+    lng: float | str | None = None,
+    notes: str | None = None,
+    no_sale_reason: str | None = None,
 ) -> dict[str, Any]:
     require_login()
     cid = require_str(client_id, "client_id")
@@ -370,6 +477,18 @@ def update_visit(
     doc.status = status
     if frappe.db.has_column("ZG Trip", "zatgo_client_id"):
         doc.zatgo_client_id = cid
+    if lat is not None and str(lat) != "" and frappe.db.has_column("ZG Trip", "check_in_lat"):
+        doc.check_in_lat = flt(lat)
+    if lng is not None and str(lng) != "" and frappe.db.has_column("ZG Trip", "check_in_lng"):
+        doc.check_in_lng = flt(lng)
+    if status == "Checked In" and frappe.db.has_column("ZG Trip", "check_in_at"):
+        from frappe.utils import now_datetime
+
+        doc.check_in_at = now_datetime()
+    if notes is not None and frappe.db.has_column("ZG Trip", "visit_notes"):
+        doc.visit_notes = notes
+    if no_sale_reason is not None and frappe.db.has_column("ZG Trip", "no_sale_reason"):
+        doc.no_sale_reason = no_sale_reason
     doc.save()
     frappe.db.commit()
     return ok(
@@ -384,6 +503,9 @@ def update_visit(
             "sequence": doc.sequence,
             "lat": doc.lat,
             "lng": doc.lng,
+            "check_in_lat": getattr(doc, "check_in_lat", None),
+            "check_in_lng": getattr(doc, "check_in_lng", None),
+            "sales_invoice": getattr(doc, "sales_invoice", None),
         },
         meta={"stub": False, "updated": True, "source": "ZG Trip"},
     )

@@ -7,6 +7,7 @@ import frappe
 from zatgo_core.plugins.discover import discover_and_register_manifests
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
+from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.seed_defaults import (
     seed_application_settings,
     seed_feature_flags,
@@ -38,6 +39,10 @@ def after_install() -> None:
     except Exception:
         logger.exception("Print format seed failed")
     try:
+        ensure_vansale_perms()
+    except Exception:
+        logger.exception("VanSale DocPerm seed failed")
+    try:
         discover_and_register_manifests()
     except Exception:
         logger.exception("Plugin manifest registration failed")
@@ -62,6 +67,10 @@ def after_migrate() -> None:
         ensure_print_formats()
     except Exception:
         logger.exception("Print format seed failed")
+    try:
+        ensure_vansale_perms()
+    except Exception:
+        logger.exception("VanSale DocPerm seed failed")
     try:
         discover_and_register_manifests()
     except Exception:
