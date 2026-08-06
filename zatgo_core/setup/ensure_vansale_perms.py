@@ -32,6 +32,11 @@ _PERMS: list[tuple[str, str, dict]] = [
     ("Warehouse", ROLE_ADMIN, {"read": 1}),
     ("Bin", ROLE_USER, {"read": 1}),
     ("Bin", ROLE_ADMIN, {"read": 1}),
+    # Account — ERPNext's Sales Invoice/Payment Entry resolve the customer's
+    # receivable account internally on every save; without read access here,
+    # every order/collection a non-admin VanSale User makes fails.
+    ("Account", ROLE_USER, {"read": 1}),
+    ("Account", ROLE_ADMIN, {"read": 1}),
     ("ZG Vehicle", ROLE_USER, {"read": 1}),
     ("ZG Vehicle", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1}),
     # ZG Trip — go_van/trips.py, go_van_service.update_visit() require read/write
