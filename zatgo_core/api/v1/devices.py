@@ -80,6 +80,9 @@ def send_to_user(
 	data: Any = None,
 ) -> dict[str, Any]:
 	"""Notify a user: Notification Log + optional FCM. Never raises to callers."""
+	caller = frappe.session.user
+	if caller != user and "System Manager" not in frappe.get_roles(caller):
+		return fail("forbidden", "Not allowed to notify other users")
 	try:
 		user = require_str(user, "user")
 		title = require_str(title, "title")

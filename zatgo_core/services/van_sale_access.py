@@ -59,6 +59,29 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
     }
 
 
+def require_own_warehouse(requested: str | None = None) -> str:
+    """Resolve the warehouse a non-admin caller may act on.
+
+    Admins may pass any warehouse (or none). Non-admins must have a
+    warehouse on their VanSale profile, and may not request a different
+    one — this is the single source of truth for the "can this caller
+    touch this warehouse" check used across go_van stock/orders/collections.
+    """
+    wh = (requested or "").strip()
+    if is_vansale_admin():
+        return wh
+    profile = get_profile()
+    user_wh = (profile.get("warehouse") if profile else "") or ""
+    if not user_wh:
+        frappe.throw("No van warehouse assigned to your profile.", frappe.ValidationError)
+    if wh and wh != user_wh:
+        frappe.throw(
+            "Access denied: You can only act on your assigned warehouse.",
+            frappe.PermissionError,
+        )
+    return user_wh
+
+
 def map_profile_row(row: Any) -> dict[str, Any]:
     r = row.as_dict() if callable(getattr(row, "as_dict", None)) else dict(row)
     full_name = frappe.db.get_value("User", r.get("user"), "full_name") or r.get("user")

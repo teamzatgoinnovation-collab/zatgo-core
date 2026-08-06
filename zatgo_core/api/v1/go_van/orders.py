@@ -11,7 +11,7 @@ from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
 from zatgo_core.services.go_van_service import create_order
-from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
+from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 
 
 @frappe.whitelist()
@@ -23,11 +23,8 @@ def create(
     company: str | None = None,
     trip_id: str | None = None,
 ) -> dict[str, Any]:
-    wh = (warehouse or "").strip()
-    if not wh:
-        profile = get_profile()
-        if profile and profile.get("warehouse"):
-            wh = str(profile["warehouse"]).strip()
+    require_login()
+    wh = require_own_warehouse(warehouse)
     if not wh:
         frappe.throw(
             "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",

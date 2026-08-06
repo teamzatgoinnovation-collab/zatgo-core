@@ -11,7 +11,7 @@ from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
 from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_invoice_doc
 from zatgo_core.services.erpnext_writes import _default_company, _parse_items
-from zatgo_core.services.van_sale_access import get_profile
+from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
 
 
 _STATUS_MAP = {
@@ -311,6 +311,15 @@ def create_collection(
 
     frappe.has_permission("Payment Entry", "create", throw=True)
     party = _resolve_customer(customer)
+    if not is_vansale_admin():
+        on_own_route = frappe.db.exists(
+            "ZG Trip", {"customer": party, "sales_user": frappe.session.user}
+        )
+        if not on_own_route:
+            frappe.throw(
+                "Access denied: you can only collect from customers on your own route.",
+                frappe.PermissionError,
+            )
     paid = flt(amount)
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
