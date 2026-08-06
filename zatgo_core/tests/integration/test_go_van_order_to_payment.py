@@ -12,6 +12,7 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
+from zatgo_core.api.v1.go_van.orders import create as api_create_order
 from zatgo_core.services.go_van_service import create_collection, create_order
 
 
@@ -157,19 +158,20 @@ class TestGoVanOrderToPayment(IntegrationTestCase):
         )
         self.assertEqual(remaining_qty, 48)  # 50 received - 2 sold
 
+        outstanding = frappe.db.get_value("Sales Invoice", si_name, "outstanding_amount")
         collection = create_collection(
             client_id=f"test-collect-{random_string(8)}",
             customer=self.own_customer,
-            amount=20,
+            amount=outstanding,
             sales_invoice=si_name,
         )
         self.assertTrue(collection["success"], collection.get("error"))
         self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "outstanding_amount"), 0)
 
     def test_order_rejects_warehouse_not_owned_by_caller(self) -> None:
-        """A non-admin cannot create an order against a warehouse that isn't theirs."""
+        """A non-admin cannot create an order against a warehouse that isn't theirs (API layer check)."""
         with self.assertRaises(frappe.PermissionError):
-            create_order(
+            api_create_order(
                 client_id=f"test-order-{random_string(8)}",
                 customer=self.own_customer,
                 items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
