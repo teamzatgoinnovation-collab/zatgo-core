@@ -15,6 +15,7 @@
     "route_title",
     "invoice_section",
     "sales_invoice_naming_series",
+    "sales_return_naming_series",
     "notes"
   ],
   "fields": [
@@ -74,6 +75,13 @@
       "label": "Sales Invoice Naming Series",
       "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
       "description": "Invoice number series from ERPNext Sales Invoice. Leave empty to use the Sales Invoice DocType default (Selling → Sales Invoice naming)."
+    },
+    {
+      "fieldname": "sales_return_naming_series",
+      "fieldtype": "Select",
+      "label": "Sales Return Naming Series",
+      "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
+      "description": "Number series used for Sales Returns (credit notes). Leave empty to use ACC-SINV-RET-.YYYY.-."
     },
     {
       "fieldname": "notes",

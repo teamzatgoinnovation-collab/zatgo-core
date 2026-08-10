@@ -206,31 +206,116 @@ _HTML = r"""
 """
 
 
-def ensure_print_formats() -> None:
-    """Create or update the VanSale Tax Invoice print format."""
-    if frappe.db.exists("Print Format", PRINT_FORMAT_NAME):
-        doc = frappe.get_doc("Print Format", PRINT_FORMAT_NAME)
-        doc.html = _HTML
-        doc.custom_format = 1
-        doc.raw_printing = 0
-        doc.disabled = 0
-        doc.print_format_type = "Jinja"
-        doc.doc_type = "Sales Invoice"
-        doc.standard = "No"
-        doc.module = "ZatGo Core"
-        doc.save(ignore_permissions=True)
+PRINT_FORMAT_80MM_NAME = "VanSale Tax Invoice 80mm"
+
+# @page CSS is the standard Frappe/wkhtmltopdf mechanism for a thermal page
+# size — there's no dedicated Print Format doctype field for it.
+_CSS_80MM = "@page { size: 80mm auto; margin: 2mm; }"
+
+# Compact stacked layout (no wide item table) for a ~72mm printable width.
+_HTML_80MM = r"""
+<style>
+  .vt80 { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; color: #111; width: 100%; }
+  .vt80 .c { text-align: center; }
+  .vt80 .title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+  .vt80 .title-ar { font-size: 11px; font-weight: 700; direction: rtl; margin: 0 0 6px; }
+  .vt80 hr { border: none; border-top: 1px dashed #333; margin: 4px 0; }
+  .vt80 .row { display: flex; justify-content: space-between; }
+  .vt80 .item { margin: 3px 0; }
+  .vt80 .item .name { font-size: 9px; }
+  .vt80 .item .sub { font-size: 9px; color: #333; display: flex; justify-content: space-between; }
+  .vt80 .totals td { padding: 1px 0; font-size: 10px; }
+  .vt80 .totals .v { text-align: right; }
+  .vt80 .grand { font-size: 11px; font-weight: 700; }
+  .vt80 .qr { text-align: center; margin-top: 6px; }
+  .vt80 .qr img { width: 90px; height: 90px; }
+  .vt80 .foot { text-align: center; font-size: 8px; margin-top: 4px; }
+</style>
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set settings = None -%}
+{%- if frappe.db.exists("DocType", "ZG Company Settings") -%}
+  {%- set sname = frappe.db.get_value("ZG Company Settings", {"company": doc.company}, "name") -%}
+  {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
+{%- endif -%}
+{%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
+{%- set qr_uri = frappe.get_attr("zatgo_core.services.zatca_qr.tlv_to_png_data_uri")(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
+
+<div class="vt80">
+  <div class="title c">{{ company.company_name }}</div>
+  <div class="c" style="font-size:9px">VAT: {{ vat_no or "—" }}</div>
+  <div class="title-ar c">{{ "فاتورة ضريبية مبسطة" if not doc.get("is_return") else "إشعار دائن" }}</div>
+  <div class="c" style="font-size:9px;font-weight:700">
+    {{ "CREDIT NOTE" if doc.get("is_return") else "SIMPLIFIED TAX INVOICE" }}
+  </div>
+  <hr/>
+  <div style="font-size:9px">Invoice: {{ doc.name }}</div>
+  <div style="font-size:9px">Date: {{ frappe.utils.formatdate(doc.posting_date, "dd-MM-yyyy") }}</div>
+  <div style="font-size:9px">Customer: {{ doc.customer_name or doc.customer }}</div>
+  {% if doc.get("return_against") %}<div style="font-size:9px">Against: {{ doc.return_against }}</div>{% endif %}
+  <hr/>
+  {% for item in doc.items %}
+  <div class="item">
+    <div class="name">{{ item.item_name or item.item_code }}</div>
+    <div class="sub">
+      <span>{{ "%.2f"|format(frappe.utils.flt(item.qty)) }} x {{ "%.2f"|format(frappe.utils.flt(item.rate)) }}</span>
+      <span>{{ "%.2f"|format(frappe.utils.flt(item.amount)) }}</span>
+    </div>
+  </div>
+  {% endfor %}
+  <hr/>
+  <table class="totals" style="width:100%">
+    <tr><td>Total VAT</td><td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.total_taxes_and_charges)) }}</td></tr>
+    <tr class="grand"><td>GRAND TOTAL</td><td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.grand_total)) }}</td></tr>
+  </table>
+  {% if qr_uri %}
+  <div class="qr"><img src="{{ qr_uri }}" alt="QR"/></div>
+  {% endif %}
+  <div class="foot">ZATCA Compliant E-Invoice</div>
+</div>
+"""
+
+
+def _upsert_print_format(
+    name: str,
+    *,
+    html: str,
+    css: str | None = None,
+    margins: float | None = None,
+) -> None:
+    if frappe.db.exists("Print Format", name):
+        doc = frappe.get_doc("Print Format", name)
     else:
-        frappe.get_doc(
-            {
-                "doctype": "Print Format",
-                "name": PRINT_FORMAT_NAME,
-                "doc_type": "Sales Invoice",
-                "module": "ZatGo Core",
-                "standard": "No",
-                "custom_format": 1,
-                "print_format_type": "Jinja",
-                "html": _HTML,
-                "disabled": 0,
-            }
-        ).insert(ignore_permissions=True)
+        doc = frappe.new_doc("Print Format")
+        doc.name = name
+        doc.doc_type = "Sales Invoice"
+        doc.module = "ZatGo Core"
+        doc.standard = "No"
+        doc.custom_format = 1
+        doc.print_format_type = "Jinja"
+        doc.disabled = 0
+    doc.html = html
+    doc.custom_format = 1
+    doc.raw_printing = 0
+    doc.disabled = 0
+    doc.print_format_type = "Jinja"
+    doc.doc_type = "Sales Invoice"
+    doc.standard = "No"
+    doc.module = "ZatGo Core"
+    if css is not None:
+        doc.css = css
+    if margins is not None:
+        doc.margin_top = margins
+        doc.margin_bottom = margins
+        doc.margin_left = margins
+        doc.margin_right = margins
+    if doc.is_new():
+        doc.insert(ignore_permissions=True)
+    else:
+        doc.save(ignore_permissions=True)
+
+
+def ensure_print_formats() -> None:
+    """Create or update the VanSale Tax Invoice print formats (A4 + 80mm thermal)."""
+    _upsert_print_format(PRINT_FORMAT_NAME, html=_HTML)
+    _upsert_print_format(PRINT_FORMAT_80MM_NAME, html=_HTML_80MM, css=_CSS_80MM, margins=2)
     frappe.db.commit()

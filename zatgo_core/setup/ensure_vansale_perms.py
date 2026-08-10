@@ -28,6 +28,13 @@ _PERMS: list[tuple[str, str, dict]] = [
     ("Customer", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1, "delete": 1}),
     ("Item", ROLE_USER, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1}),
     ("Item", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1, "delete": 1}),
+    # Item Price — ERPNext's Item.after_insert() auto-creates an Item Price
+    # for the default selling price list whenever a new Item has a selling
+    # rate. Without create/write here, that insert throws PermissionError
+    # from inside the Item insert itself, so the whole product (and every
+    # order that references it) fails to sync.
+    ("Item Price", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
+    ("Item Price", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
     ("Warehouse", ROLE_USER, {"read": 1}),
     ("Warehouse", ROLE_ADMIN, {"read": 1}),
     ("Bin", ROLE_USER, {"read": 1}),

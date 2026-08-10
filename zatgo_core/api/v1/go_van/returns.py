@@ -1,4 +1,4 @@
-"""Go Van orders — Sales Invoice with client_id idempotency."""
+"""Go Van sales returns — credit-note Sales Invoice (is_return=1) with client_id idempotency."""
 
 from __future__ import annotations
 
@@ -10,18 +10,18 @@ from frappe.utils import getdate
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
-from zatgo_core.services.go_van_service import create_order
+from zatgo_core.services.go_van_service import create_sales_return
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 
 
 @frappe.whitelist()
 def create(
     client_id: str,
-    customer: str,
+    return_against: str,
     items: str | list | None = None,
     warehouse: str | None = None,
     company: str | None = None,
-    trip_id: str | None = None,
+    reason: str | None = None,
 ) -> dict[str, Any]:
     require_login()
     wh = require_own_warehouse(warehouse)
@@ -30,13 +30,13 @@ def create(
             "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
             frappe.ValidationError,
         )
-    return create_order(
+    return create_sales_return(
         client_id=client_id,
-        customer=customer,
+        return_against=return_against,
         items=items,
         warehouse=wh,
         company=company,
-        trip_id=trip_id,
+        reason=reason,
     )
 
 
@@ -48,10 +48,10 @@ def list(
     warehouse: str | None = None,
     date: str | None = None,
 ) -> dict[str, Any]:
-    """List Sales Invoices for VanSale (admin: filterable; user: own)."""
+    """List Sales Returns for VanSale (admin: filterable; user: own)."""
     require_login()
     page_i, size_i, start = parse_pagination(page, page_size)
-    filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 0}
+    filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 1}
     admin = is_vansale_admin()
     if admin:
         if sales_user:
@@ -86,6 +86,8 @@ def list(
             "docstatus",
             "owner",
             "set_warehouse",
+            "is_return",
+            "return_against",
             "net_total",
             "total_taxes_and_charges",
             "modified",
@@ -100,6 +102,7 @@ def list(
         mapped["owner"] = r.get("owner")
         mapped["warehouse"] = r.get("set_warehouse")
         mapped["posting_date"] = str(r.get("posting_date") or "")
+        mapped["return_against"] = r.get("return_against")
         data.append(mapped)
     payload = paginated(data, page=page_i, page_size=size_i, total=total)
     payload["meta"] = {**payload.get("meta", {}), "source": "Sales Invoice"}
@@ -108,46 +111,7 @@ def list(
 
 @frappe.whitelist()
 def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
-    """Return Sales Invoice PDF (base64) using VanSale Tax Invoice format."""
-    import base64
+    """Return the Sales Return PDF — delegates to go_van.orders.pdf (generic to any Sales Invoice)."""
+    from zatgo_core.api.v1.go_van.orders import pdf as orders_pdf
 
-    from zatgo_core.api.response import ok
-    from zatgo_core.api.validators import require_str
-    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
-
-    require_login()
-    invoice = require_str(name, "name")
-    if not frappe.db.exists("Sales Invoice", invoice):
-        frappe.throw(f"Sales Invoice not found: {invoice}", frappe.DoesNotExistError)
-    frappe.has_permission("Sales Invoice", "read", doc=invoice, throw=True)
-
-    docstatus = int(frappe.db.get_value("Sales Invoice", invoice, "docstatus") or 0)
-    if docstatus != 1:
-        frappe.throw(
-            f"Sales Invoice {invoice} is not submitted yet (docstatus={docstatus}).",
-            frappe.ValidationError,
-        )
-
-    fmt = (print_format or "").strip() or PRINT_FORMAT_NAME
-    if not frappe.db.exists("Print Format", fmt):
-        fmt = "Standard"
-
-    pdf_bytes = frappe.get_print(
-        "Sales Invoice",
-        invoice,
-        print_format=fmt,
-        as_pdf=True,
-    )
-    if isinstance(pdf_bytes, str):
-        pdf_bytes = pdf_bytes.encode("utf-8")
-
-    return ok(
-        {
-            "name": invoice,
-            "print_format": fmt,
-            "content_type": "application/pdf",
-            "filename": f"{invoice}.pdf",
-            "pdf_base64": base64.b64encode(pdf_bytes).decode("ascii"),
-        },
-        meta={"source": "go_van.orders.pdf"},
-    )
+    return orders_pdf(name=name, print_format=print_format)

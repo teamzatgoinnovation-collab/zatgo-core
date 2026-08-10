@@ -46,6 +46,9 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
     series = ""
     if hasattr(doc, "sales_invoice_naming_series"):
         series = (doc.sales_invoice_naming_series or "").strip()
+    return_series = ""
+    if hasattr(doc, "sales_return_naming_series"):
+        return_series = (doc.sales_return_naming_series or "").strip()
     return {
         "id": doc.name,
         "user": doc.user,
@@ -55,6 +58,7 @@ def get_profile(user: str | None = None) -> dict[str, Any] | None:
         "enabled": int(doc.enabled or 0),
         "notes": doc.notes or "",
         "sales_invoice_naming_series": series,
+        "sales_return_naming_series": return_series,
         "user_type": getattr(doc, "user_type", None) or "Field User",
     }
 

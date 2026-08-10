@@ -448,6 +448,10 @@ def map_sales_invoice_row(r: Any) -> dict[str, Any]:
         "date": str(r.posting_date) if r.posting_date else None,
         "due_date": str(r.due_date) if getattr(r, "due_date", None) else None,
         "currency": getattr(r, "currency", None),
+        "is_return": bool(int(getattr(r, "is_return", 0) or 0)),
+        "return_against": getattr(r, "return_against", None),
+        "net_total": float(getattr(r, "net_total", None) or 0),
+        "total_taxes_and_charges": float(getattr(r, "total_taxes_and_charges", None) or 0),
     }
 
 
@@ -475,6 +479,8 @@ def list_sales_invoices(page: int | str = 1, page_size: int | str = 20) -> dict[
             "posting_date",
             "due_date",
             "currency",
+            "is_return",
+            "return_against",
         ],
         page=page,
         page_size=page_size,

@@ -23,21 +23,22 @@ def sales_invoice_naming_series_options() -> str:
 class ZGVanSaleProfile(Document):
     def validate(self):
         # Keep Select options aligned with ERPNext Sales Invoice.
-        meta_field = self.meta.get_field("sales_invoice_naming_series")
-        if meta_field:
-            meta_field.options = sales_invoice_naming_series_options()
-
-        series = (self.sales_invoice_naming_series or "").strip()
-        if not series:
-            return
         allowed = {
             o.strip()
             for o in sales_invoice_naming_series_options().split("\n")
             if o.strip()
         }
-        if series not in allowed:
-            frappe.throw(
-                f"Naming series '{series}' is not configured on Sales Invoice. "
-                "Add it under Selling → Sales Invoice (Naming Series) in ERPNext.",
-                frappe.ValidationError,
-            )
+        for fieldname in ("sales_invoice_naming_series", "sales_return_naming_series"):
+            meta_field = self.meta.get_field(fieldname)
+            if meta_field:
+                meta_field.options = sales_invoice_naming_series_options()
+
+            series = (self.get(fieldname) or "").strip()
+            if not series:
+                continue
+            if series not in allowed:
+                frappe.throw(
+                    f"Naming series '{series}' is not configured on Sales Invoice. "
+                    "Add it under Selling → Sales Invoice (Naming Series) in ERPNext.",
+                    frappe.ValidationError,
+                )

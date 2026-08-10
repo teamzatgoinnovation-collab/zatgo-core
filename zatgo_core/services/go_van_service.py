@@ -290,6 +290,133 @@ def create_order(
     return payload
 
 
+def create_sales_return(
+    client_id: str,
+    return_against: str,
+    items: Any,
+    warehouse: str | None = None,
+    company: str | None = None,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Partial/full Sales Return (credit-note Sales Invoice) against a submitted sale."""
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
+
+    require_login()
+    cid = require_str(client_id, "client_id")
+    wh = (warehouse or "").strip()
+
+    existing = _find_by_client_id("Sales Invoice", cid)
+    if existing:
+        doc = frappe.get_doc("Sales Invoice", existing)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+
+    if not wh:
+        frappe.throw(
+            "Van warehouse is required to create a stock-updating Sales Return.",
+            frappe.ValidationError,
+        )
+    if not frappe.db.exists("Warehouse", wh):
+        frappe.throw(f"Warehouse not found: {wh}")
+
+    original_name = require_str(return_against, "return_against")
+    if not frappe.db.exists("Sales Invoice", original_name):
+        frappe.throw(f"Sales Invoice not found: {original_name}")
+    original = frappe.get_doc("Sales Invoice", original_name)
+    if int(original.docstatus or 0) != 1:
+        frappe.throw(f"Sales Invoice {original_name} is not submitted.", frappe.ValidationError)
+    if int(getattr(original, "is_return", 0) or 0):
+        frappe.throw(f"Sales Invoice {original_name} is itself a return.", frappe.ValidationError)
+    if not is_vansale_admin():
+        profile = get_profile()
+        user_wh = (profile.get("warehouse") if profile else "") or ""
+        if not user_wh or (original.set_warehouse or "") != user_wh:
+            frappe.throw(
+                "Access denied: you can only return items against your own van's sales.",
+                frappe.PermissionError,
+            )
+
+    frappe.has_permission("Sales Invoice", "create", throw=True)
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list) or not items:
+        frappe.throw("At least one line item is required")
+
+    original_qty_by_item: dict[str, float] = {}
+    for row in original.items or []:
+        original_qty_by_item[row.item_code] = original_qty_by_item.get(row.item_code, 0) + flt(row.qty)
+
+    requested_qty_by_item: dict[str, float] = {}
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        code = require_str(raw.get("item_code") or raw.get("item"), "item_code")
+        qty = flt(raw.get("qty") or 0)
+        if qty <= 0:
+            frappe.throw("Return qty must be greater than zero")
+        if code not in original_qty_by_item:
+            frappe.throw(f"Item {code} was not sold on {original_name}")
+        if qty > original_qty_by_item[code] + 1e-6:
+            frappe.throw(
+                f"Cannot return {qty} of {code} — only {original_qty_by_item[code]} was sold on {original_name}.",
+                frappe.ValidationError,
+            )
+        requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
+
+    doc = make_return_doc("Sales Invoice", original_name)
+    kept_items = []
+    for row in doc.items or []:
+        return_qty = requested_qty_by_item.get(row.item_code)
+        if not return_qty:
+            continue
+        row.qty = -abs(return_qty)
+        row.amount = row.qty * flt(row.rate)
+        kept_items.append(row)
+    if not kept_items:
+        frappe.throw("None of the requested items match the original invoice")
+    doc.items = kept_items
+    doc.update_stock = 1
+    doc.set_warehouse = wh
+    doc.zatgo_client_id = cid
+    if reason:
+        doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+
+    profile = get_profile()
+    return_series = ""
+    if profile:
+        return_series = (profile.get("sales_return_naming_series") or "").strip()
+    doc.naming_series = return_series or "ACC-SINV-RET-.YYYY.-"
+
+    doc.run_method("calculate_taxes_and_totals")
+    doc.insert()
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not create and submit Sales Return. Fix stock/accounts, then retry sync.",
+            frappe.ValidationError,
+        )
+
+    try:
+        generate_and_store_zatca_qr(doc)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+
+    doc.reload()
+    return _ack_sales_invoice(doc, cid, idempotent=False, created=True)
+
 
 def create_collection(
     client_id: str,
