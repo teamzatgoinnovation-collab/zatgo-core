@@ -48,7 +48,7 @@ _HTML = r"""
   {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
 {%- endif -%}
 {%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
-{%- set phone = company.phone or company.mobile_no or "" -%}
+{%- set phone = company.phone_no or "" -%}
 {%- set cr = company.get("company_registration") or company.get("registration_details") or "" -%}
 {%- set cust = frappe.get_doc("Customer", doc.customer) -%}
 {%- set cust_tax = cust.tax_id or "" -%}
