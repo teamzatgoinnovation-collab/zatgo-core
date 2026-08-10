@@ -354,7 +354,7 @@ def sync_item_bundle(
             client_id=f"{cid}:opening",
             item_code=item_doc.name,
             warehouse=default_warehouse,
-            qty_delta=opening_qty,
+            delta=opening_qty,
             company=company,
         )
 
