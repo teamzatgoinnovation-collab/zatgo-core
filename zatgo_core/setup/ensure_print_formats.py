@@ -54,7 +54,7 @@ _HTML = r"""
 {%- set cust_tax = cust.tax_id or "" -%}
 {%- set cust_phone = cust.mobile_no or cust.get("phone") or "" -%}
 {%- set cust_addr = doc.address_display or "—" -%}
-{%- set qr_uri = frappe.get_attr("zatgo_core.services.zatca_qr.tlv_to_png_data_uri")(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
+{%- set qr_uri = tlv_to_png_data_uri(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
 {%- set salesman = frappe.db.get_value("User", doc.owner, "full_name") or doc.owner -%}
 {%- set paid_by = doc.get("mode_of_payment") or "" -%}
 {%- if not paid_by -%}
@@ -238,7 +238,7 @@ _HTML_80MM = r"""
   {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
 {%- endif -%}
 {%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
-{%- set qr_uri = frappe.get_attr("zatgo_core.services.zatca_qr.tlv_to_png_data_uri")(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
+{%- set qr_uri = tlv_to_png_data_uri(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
 
 <div class="vt80">
   <div class="title c">{{ company.company_name }}</div>

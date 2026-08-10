@@ -23,6 +23,16 @@ before_uninstall = "zatgo_core.install.before_uninstall"
 
 boot_session = "zatgo_core.events.boot.boot_session"
 
+# Exposes tlv_to_png_data_uri() to print-format Jinja templates. Calling it
+# via frappe.get_attr(...) from inside a template works under bench execute
+# but is blocked by the sandboxed Jinja environment print formats actually
+# render in (frappe.www.printview) — the standard fix is a real jinja method.
+jinja = {
+    "methods": [
+        "zatgo_core.services.zatca_qr.tlv_to_png_data_uri",
+    ],
+}
+
 doc_events = {
     "Company": {
         "after_insert": "zatgo_core.events.company.on_company_update",
