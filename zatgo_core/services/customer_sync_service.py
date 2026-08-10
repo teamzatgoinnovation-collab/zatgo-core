@@ -45,11 +45,22 @@ def _map_customer_type(raw: str | None) -> str:
 
 
 def _default_customer_group() -> str:
-    return frappe.db.get_single_value("Selling Settings", "customer_group") or "All Customer Groups"
+    configured = frappe.db.get_single_value("Selling Settings", "customer_group")
+    if configured:
+        return configured
+    # "All Customer Groups" is the group-type root of the tree and cannot be
+    # assigned to a Customer — fall back to an actual leaf node instead.
+    leaf = frappe.db.get_value("Customer Group", {"is_group": 0}, "name", order_by="name asc")
+    return leaf or "All Customer Groups"
 
 
 def _default_territory() -> str:
-    return frappe.db.get_single_value("Selling Settings", "territory") or "All Territories"
+    configured = frappe.db.get_single_value("Selling Settings", "territory")
+    if configured:
+        return configured
+    # Same issue as customer group: "All Territories" is the tree root.
+    leaf = frappe.db.get_value("Territory", {"is_group": 0}, "name", order_by="name asc")
+    return leaf or "All Territories"
 
 
 def _default_price_list() -> str | None:
