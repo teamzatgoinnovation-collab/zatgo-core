@@ -915,6 +915,72 @@ def create_pay_payment(
     )
 
 
+def create_contra_entry(
+    from_account: str,
+    to_account: str,
+    amount: float | str,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    remarks: str | None = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    """Cash<->Bank / Bank<->Bank transfer — ERPNext's native Internal Transfer
+    Payment Entry, not a separate accounting mechanism."""
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
+    require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Payment Entry", cid)
+        if existing:
+            return ok(
+                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+            )
+    frappe.has_permission("Payment Entry", "create", throw=True)
+    from_acc = require_str(from_account, "from_account")
+    to_acc = require_str(to_account, "to_account")
+    if from_acc == to_acc:
+        frappe.throw("From and To accounts cannot be the same")
+    if not frappe.db.exists("Account", from_acc):
+        frappe.throw(f"Account {from_acc} not found")
+    if not frappe.db.exists("Account", to_acc):
+        frappe.throw(f"Account {to_acc} not found")
+    amt = flt(amount)
+    if amt <= 0:
+        frappe.throw("Amount must be greater than zero")
+
+    date = getdate(posting_date) if posting_date else getdate(nowdate())
+    doc = frappe.get_doc(
+        {
+            "doctype": "Payment Entry",
+            "payment_type": "Internal Transfer",
+            "company": _default_company(company),
+            "posting_date": date,
+            "paid_from": from_acc,
+            "paid_to": to_acc,
+            "paid_amount": amt,
+            "received_amount": amt,
+            "reference_no": (reference_no or "").strip() or f"Contra-{frappe.generate_hash(length=8)}",
+            "reference_date": date,
+            "remarks": (remarks or "").strip() or None,
+            "zatgo_client_id": cid,
+        }
+    )
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Payment Entry", client_id=cid)
+    else:
+        doc.insert()
+        created = True
+    frappe.db.commit()
+    return ok(
+        map_payment_entry_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
+    )
+
+
 def submit_payment_entry(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
 

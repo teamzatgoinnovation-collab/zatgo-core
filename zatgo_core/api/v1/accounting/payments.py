@@ -9,6 +9,7 @@ import frappe
 from zatgo_core.services.erpnext_reads import get_payment_entry, list_payment_entries
 from zatgo_core.services.erpnext_writes import (
     cancel_payment_entry,
+    create_contra_entry,
     create_pay_payment,
     create_receive_payment,
     submit_payment_entry,
@@ -64,6 +65,29 @@ def create_pay(
         mode_of_payment=mode_of_payment,
         posting_date=posting_date,
         reference_no=reference_no,
+        client_id=client_id,
+    )
+
+
+@frappe.whitelist()
+def create_contra(
+    from_account: str,
+    to_account: str,
+    amount: float | str,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    remarks: str | None = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    return create_contra_entry(
+        from_account=from_account,
+        to_account=to_account,
+        amount=amount,
+        posting_date=posting_date,
+        reference_no=reference_no,
+        remarks=remarks,
+        company=company,
         client_id=client_id,
     )
 
