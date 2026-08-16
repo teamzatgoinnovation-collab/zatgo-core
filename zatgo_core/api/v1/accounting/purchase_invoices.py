@@ -32,6 +32,7 @@ def create(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_purchase_invoice(
         supplier=supplier,
@@ -40,6 +41,7 @@ def create(
         posting_date=posting_date,
         due_date=due_date,
         remarks=remarks,
+        client_id=client_id,
     )
 
 
@@ -53,5 +55,8 @@ def create_return(
     return_against: str,
     items: str | list | None = None,
     reason: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
-    return create_purchase_return(return_against=return_against, items=items, reason=reason)
+    return create_purchase_return(
+        return_against=return_against, items=items, reason=reason, client_id=client_id
+    )

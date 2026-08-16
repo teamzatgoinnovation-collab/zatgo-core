@@ -74,8 +74,20 @@ def create_customer(
     territory: str | None = None,
     email: str | None = None,
     phone: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import enrich_customer_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Customer", cid)
+        if existing:
+            return ok(
+                enrich_customer_doc(frappe.get_doc("Customer", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Customer"},
+            )
     frappe.has_permission("Customer", "create", throw=True)
     name = require_str(customer_name, "customer_name")
     doc = frappe.get_doc(
@@ -87,17 +99,24 @@ def create_customer(
             "territory": (territory or "").strip() or None,
             "email_id": (email or "").strip() or None,
             "mobile_no": (phone or "").strip() or None,
+            "zatgo_client_id": cid,
         }
     )
     if not doc.customer_group:
         doc.customer_group = frappe.db.get_single_value("Selling Settings", "customer_group") or "All Customer Groups"
     if not doc.territory:
         doc.territory = frappe.db.get_single_value("Selling Settings", "territory") or "All Territories"
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Customer", client_id=cid)
+    else:
+        doc.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import enrich_customer_doc
 
-    return ok(enrich_customer_doc(doc), meta={"stub": False, "created": True, "source": "Customer"})
+    return ok(
+        enrich_customer_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Customer"},
+    )
 
 
 def update_customer(name: str, values: Any = None) -> dict[str, Any]:
@@ -255,8 +274,17 @@ def create_supplier(
     supplier_group: str | None = None,
     email: str | None = None,
     phone: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import get_supplier
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Supplier", cid)
+        if existing:
+            return get_supplier(existing)
     frappe.has_permission("Supplier", "create", throw=True)
     name = require_str(supplier_name, "supplier_name")
     doc = frappe.get_doc(
@@ -267,15 +295,18 @@ def create_supplier(
             "supplier_group": (supplier_group or "").strip() or None,
             "email_id": (email or "").strip() or None,
             "mobile_no": (phone or "").strip() or None,
+            "zatgo_client_id": cid,
         }
     )
     if not doc.supplier_group:
         doc.supplier_group = (
             frappe.db.get_single_value("Buying Settings", "supplier_group") or "All Supplier Groups"
         )
-    doc.insert()
+    if cid:
+        doc, _created = insert_idempotent(doc, doctype="Supplier", client_id=cid)
+    else:
+        doc.insert()
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import get_supplier
 
     return get_supplier(doc.name)
 
@@ -312,8 +343,20 @@ def create_sales_invoice(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Sales Invoice", cid)
+        if existing:
+            return ok(
+                map_sales_invoice_doc(frappe.get_doc("Sales Invoice", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Sales Invoice"},
+            )
     frappe.has_permission("Sales Invoice", "create", throw=True)
     party = require_str(customer, "customer")
     rows = _parse_items(items)
@@ -326,13 +369,20 @@ def create_sales_invoice(
             "due_date": getdate(due_date) if due_date else None,
             "remarks": (remarks or "").strip() or None,
             "items": rows,
+            "zatgo_client_id": cid,
         }
     )
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
+    else:
+        doc.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
 
-    return ok(map_sales_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Sales Invoice"})
+    return ok(
+        map_sales_invoice_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Sales Invoice"},
+    )
 
 
 def submit_sales_invoice(name: str) -> dict[str, Any]:
@@ -360,13 +410,23 @@ def create_sales_return(
     return_against: str,
     items: Any,
     reason: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     """Partial/full Sales Return (credit note) against a submitted Sales Invoice."""
     from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
 
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Sales Invoice", cid)
+        if existing:
+            return ok(
+                map_sales_invoice_doc(frappe.get_doc("Sales Invoice", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Sales Invoice"},
+            )
     original_name = require_str(return_against, "return_against")
     if not frappe.db.exists("Sales Invoice", original_name):
         frappe.throw(f"Sales Invoice not found: {original_name}")
@@ -419,9 +479,21 @@ def create_sales_return(
     doc.items = kept_items
     if reason:
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+    # make_return_doc copies most fields from the original — the original's
+    # own zatgo_client_id must not carry over onto the return (it would
+    # collide with the unique constraint), so always overwrite it here.
+    doc.zatgo_client_id = cid
 
     doc.run_method("calculate_taxes_and_totals")
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
+        if not created:
+            return ok(
+                map_sales_invoice_doc(doc),
+                meta={"stub": False, "idempotent": True, "source": "Sales Invoice"},
+            )
+    else:
+        doc.insert()
     try:
         doc.submit()
         frappe.db.commit()
@@ -442,8 +514,20 @@ def create_purchase_invoice(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Purchase Invoice", cid)
+        if existing:
+            return ok(
+                map_purchase_invoice_doc(frappe.get_doc("Purchase Invoice", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Purchase Invoice"},
+            )
     frappe.has_permission("Purchase Invoice", "create", throw=True)
     party = require_str(supplier, "supplier")
     rows = _parse_items(items)
@@ -456,13 +540,20 @@ def create_purchase_invoice(
             "due_date": getdate(due_date) if due_date else None,
             "remarks": (remarks or "").strip() or None,
             "items": rows,
+            "zatgo_client_id": cid,
         }
     )
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Purchase Invoice", client_id=cid)
+    else:
+        doc.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
 
-    return ok(map_purchase_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Purchase Invoice"})
+    return ok(
+        map_purchase_invoice_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Purchase Invoice"},
+    )
 
 
 def submit_purchase_invoice(name: str) -> dict[str, Any]:
@@ -475,13 +566,23 @@ def create_purchase_return(
     return_against: str,
     items: Any,
     reason: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     """Partial/full Purchase Return (debit note) against a submitted Purchase Invoice."""
     from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
 
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Purchase Invoice", cid)
+        if existing:
+            return ok(
+                map_purchase_invoice_doc(frappe.get_doc("Purchase Invoice", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Purchase Invoice"},
+            )
     original_name = require_str(return_against, "return_against")
     if not frappe.db.exists("Purchase Invoice", original_name):
         frappe.throw(f"Purchase Invoice not found: {original_name}")
@@ -534,9 +635,18 @@ def create_purchase_return(
     doc.items = kept_items
     if reason:
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+    doc.zatgo_client_id = cid
 
     doc.run_method("calculate_taxes_and_totals")
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Purchase Invoice", client_id=cid)
+        if not created:
+            return ok(
+                map_purchase_invoice_doc(doc),
+                meta={"stub": False, "idempotent": True, "source": "Purchase Invoice"},
+            )
+    else:
+        doc.insert()
     try:
         doc.submit()
         frappe.db.commit()
@@ -556,8 +666,20 @@ def create_receive_payment(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Payment Entry", cid)
+        if existing:
+            return ok(
+                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+            )
     frappe.has_permission("Payment Entry", "create", throw=True)
     si_name = require_str(sales_invoice, "sales_invoice")
     if not frappe.db.exists("Sales Invoice", si_name):
@@ -578,11 +700,18 @@ def create_receive_payment(
     if reference_no:
         pe.reference_no = reference_no
         pe.reference_date = pe.posting_date
-    pe.insert()
+    pe.zatgo_client_id = cid
+    if cid:
+        pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
+    else:
+        pe.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
 
-    return ok(map_payment_entry_doc(pe), meta={"stub": False, "created": True, "source": "Payment Entry"})
+    return ok(
+        map_payment_entry_doc(pe),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
+    )
 
 
 def create_pay_payment(
@@ -591,8 +720,20 @@ def create_pay_payment(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Payment Entry", cid)
+        if existing:
+            return ok(
+                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+            )
     frappe.has_permission("Payment Entry", "create", throw=True)
     pi_name = require_str(purchase_invoice, "purchase_invoice")
     if not frappe.db.exists("Purchase Invoice", pi_name):
@@ -613,11 +754,18 @@ def create_pay_payment(
     if reference_no:
         pe.reference_no = reference_no
         pe.reference_date = pe.posting_date
-    pe.insert()
+    pe.zatgo_client_id = cid
+    if cid:
+        pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
+    else:
+        pe.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
 
-    return ok(map_payment_entry_doc(pe), meta={"stub": False, "created": True, "source": "Payment Entry"})
+    return ok(
+        map_payment_entry_doc(pe),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
+    )
 
 
 def submit_payment_entry(name: str) -> dict[str, Any]:
@@ -632,8 +780,20 @@ def create_journal_entry(
     posting_date: str | None = None,
     user_remark: str | None = None,
     voucher_type: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Journal Entry", cid)
+        if existing:
+            return ok(
+                map_journal_entry_doc(frappe.get_doc("Journal Entry", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Journal Entry"},
+            )
     frappe.has_permission("Journal Entry", "create", throw=True)
     if isinstance(accounts, str):
         import json
@@ -683,13 +843,20 @@ def create_journal_entry(
             "posting_date": getdate(posting_date) if posting_date else today(),
             "user_remark": (user_remark or "").strip() or None,
             "accounts": rows,
+            "zatgo_client_id": cid,
         }
     )
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Journal Entry", client_id=cid)
+    else:
+        doc.insert()
+        created = True
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
 
-    return ok(map_journal_entry_doc(doc), meta={"stub": False, "created": True, "source": "Journal Entry"})
+    return ok(
+        map_journal_entry_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Journal Entry"},
+    )
 
 
 def submit_journal_entry(name: str) -> dict[str, Any]:

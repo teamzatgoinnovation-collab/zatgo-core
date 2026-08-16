@@ -27,6 +27,7 @@ def create(
     supplier_group: str | None = None,
     email: str | None = None,
     phone: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_supplier(
         supplier_name=supplier_name,
@@ -34,6 +35,7 @@ def create(
         supplier_group=supplier_group,
         email=email,
         phone=phone,
+        client_id=client_id,
     )
 
 

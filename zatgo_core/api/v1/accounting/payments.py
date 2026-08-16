@@ -31,6 +31,7 @@ def create_receive(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_receive_payment(
         sales_invoice=sales_invoice,
@@ -38,6 +39,7 @@ def create_receive(
         mode_of_payment=mode_of_payment,
         posting_date=posting_date,
         reference_no=reference_no,
+        client_id=client_id,
     )
 
 
@@ -48,6 +50,7 @@ def create_pay(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_pay_payment(
         purchase_invoice=purchase_invoice,
@@ -55,6 +58,7 @@ def create_pay(
         mode_of_payment=mode_of_payment,
         posting_date=posting_date,
         reference_no=reference_no,
+        client_id=client_id,
     )
 
 

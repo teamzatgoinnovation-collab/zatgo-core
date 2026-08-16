@@ -13,3 +13,4 @@ zatgo_core.patches.v0_1_0.add_user_type_to_van_sale_profile
 zatgo_core.patches.v0_1_0.migrate_zg_vehicle_to_vehicle
 zatgo_core.patches.v0_1_1.reapply_missing_zatgo_client_id_fields
 zatgo_core.patches.v0_1_2.reapply_zatca_qr_field
+zatgo_core.patches.v0_1_3.add_accounting_client_id_fields

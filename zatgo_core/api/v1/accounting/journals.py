@@ -27,6 +27,7 @@ def create(
     posting_date: str | None = None,
     user_remark: str | None = None,
     voucher_type: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_journal_entry(
         accounts=accounts,
@@ -34,6 +35,7 @@ def create(
         posting_date=posting_date,
         user_remark=user_remark,
         voucher_type=voucher_type,
+        client_id=client_id,
     )
 
 

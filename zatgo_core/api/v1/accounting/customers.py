@@ -45,23 +45,15 @@ def create(
     """
     Backward-compatible create.
 
-    - Simple args (customer_name, phone, …) → legacy create_customer
-    - client_id + customer payload → full offline sync bundle
+    - Structured `customer` payload (VanSale mobile customer/contact/address
+      sync bundle) → sync_customer_bundle, its own client_id mechanism.
+    - Simple flat args (customer_name, phone, …), with or without a
+      client_id for idempotent offline retry → create_customer.
     """
-    if client_id or customer:
-        payload = customer
-        if payload is None:
-            payload = {
-                "customer_name": customer_name,
-                "customer_type": customer_type,
-                "customer_group": customer_group,
-                "territory": territory,
-                "email": email,
-                "mobile_no": phone,
-            }
+    if customer is not None:
         return sync_customer_bundle(
             client_id=client_id or frappe.generate_hash(length=20),
-            customer=payload,
+            customer=customer,
             contact=contact,
             address=address,
             attachments=attachments,
@@ -74,6 +66,7 @@ def create(
         territory=territory,
         email=email,
         phone=phone,
+        client_id=client_id,
     )
 
 
