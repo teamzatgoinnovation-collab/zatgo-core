@@ -114,6 +114,7 @@ def general_ledger(
     from_date: str | None = None,
     to_date: str | None = None,
     account: str | None = None,
+    voucher_type: str | None = None,
     page: int | str = 1,
     page_size: int | str = 100,
 ) -> dict[str, Any]:
@@ -125,6 +126,8 @@ def general_ledger(
     }
     if account:
         filters["account"] = account
+    if voucher_type:
+        filters["voucher_type"] = voucher_type
 
     size = min(max(int(page_size or 100), 1), 200)
     page_i = max(int(page or 1), 1)
@@ -254,6 +257,100 @@ def party_ledger(
             "total": total,
             "opening_balance": opening_balance,
             "closing_balance": closing_balance,
+            "source": "GL Entry",
+        },
+    )
+
+
+@frappe.whitelist()
+def trial_balance(from_date: str | None = None, to_date: str | None = None, company: str | None = None) -> dict[str, Any]:
+    """Opening/period/closing debit+credit per account — raw sums from GL Entry,
+    never netted or computed outside ERPNext's own ledger."""
+    require_login()
+    start, end = _date_range(from_date, to_date)
+    company_filter = "AND acc.company = %(company)s" if company else ""
+    params: dict[str, Any] = {"start": start, "end": end}
+    if company:
+        params["company"] = company
+
+    opening_rows = frappe.db.sql(
+        f"""
+        select gle.account, sum(gle.debit) as debit, sum(gle.credit) as credit
+        from `tabGL Entry` gle
+        inner join `tabAccount` acc on acc.name = gle.account
+        where gle.posting_date < %(start)s and ifnull(gle.is_cancelled, 0) = 0 {company_filter}
+        group by gle.account
+        """,
+        params,
+        as_dict=True,
+    )
+    period_rows = frappe.db.sql(
+        f"""
+        select gle.account, acc.account_name, acc.root_type, sum(gle.debit) as debit, sum(gle.credit) as credit
+        from `tabGL Entry` gle
+        inner join `tabAccount` acc on acc.name = gle.account
+        where gle.posting_date between %(start)s and %(end)s and ifnull(gle.is_cancelled, 0) = 0 {company_filter}
+        group by gle.account, acc.account_name, acc.root_type
+        """,
+        params,
+        as_dict=True,
+    )
+
+    opening_by_account = {r.account: (flt(r.debit), flt(r.credit)) for r in opening_rows}
+    # Accounts with only opening activity (no movement this period) still need a row.
+    accounts_seen = {r.account for r in period_rows}
+    missing = [a for a in opening_by_account if a not in accounts_seen]
+    if missing:
+        extra = frappe.get_all("Account", filters={"name": ["in", missing]}, fields=["name", "account_name", "root_type"])
+        period_rows = period_rows + [
+            frappe._dict(account=e.name, account_name=e.account_name, root_type=e.root_type, debit=0, credit=0)
+            for e in extra
+        ]
+
+    data = []
+    total_opening_debit = total_opening_credit = 0.0
+    total_debit = total_credit = 0.0
+    total_closing_debit = total_closing_credit = 0.0
+    for r in sorted(period_rows, key=lambda x: x.account):
+        opening_debit, opening_credit = opening_by_account.get(r.account, (0.0, 0.0))
+        period_debit, period_credit = flt(r.debit), flt(r.credit)
+        closing = (opening_debit - opening_credit) + (period_debit - period_credit)
+        closing_debit = closing if closing > 0 else 0.0
+        closing_credit = -closing if closing < 0 else 0.0
+        if not (opening_debit or opening_credit or period_debit or period_credit):
+            continue
+        data.append(
+            {
+                "account": r.account,
+                "account_name": r.account_name,
+                "root_type": r.root_type,
+                "opening_debit": opening_debit,
+                "opening_credit": opening_credit,
+                "debit": period_debit,
+                "credit": period_credit,
+                "closing_debit": closing_debit,
+                "closing_credit": closing_credit,
+            }
+        )
+        total_opening_debit += opening_debit
+        total_opening_credit += opening_credit
+        total_debit += period_debit
+        total_credit += period_credit
+        total_closing_debit += closing_debit
+        total_closing_credit += closing_credit
+
+    return ok(
+        data,
+        meta={
+            "stub": False,
+            "from_date": str(start),
+            "to_date": str(end),
+            "total_opening_debit": total_opening_debit,
+            "total_opening_credit": total_opening_credit,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
+            "total_closing_debit": total_closing_debit,
+            "total_closing_credit": total_closing_credit,
             "source": "GL Entry",
         },
     )
