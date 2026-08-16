@@ -999,6 +999,8 @@ def create_journal_entry(
     posting_date: str | None = None,
     user_remark: str | None = None,
     voucher_type: str | None = None,
+    reference_no: str | None = None,
+    reference_date: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_journal_entry_doc
@@ -1047,6 +1049,8 @@ def create_journal_entry(
             row["party_type"] = raw["party_type"]
         if raw.get("party"):
             row["party"] = raw["party"]
+        if raw.get("cost_center"):
+            row["cost_center"] = raw["cost_center"]
         if raw.get("user_remark"):
             row["user_remark"] = raw["user_remark"]
         rows.append(row)
@@ -1061,6 +1065,8 @@ def create_journal_entry(
             "company": _default_company(company),
             "posting_date": getdate(posting_date) if posting_date else today(),
             "user_remark": (user_remark or "").strip() or None,
+            "cheque_no": (reference_no or "").strip() or None,
+            "cheque_date": getdate(reference_date) if reference_date else None,
             "accounts": rows,
             "zatgo_client_id": cid,
         }

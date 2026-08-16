@@ -720,6 +720,7 @@ def map_journal_entry_doc(d: Any) -> dict[str, Any]:
             "account": a.account,
             "party_type": a.party_type,
             "party": a.party,
+            "cost_center": getattr(a, "cost_center", None),
             "debit": float(a.debit_in_account_currency or 0),
             "credit": float(a.credit_in_account_currency or 0),
             "user_remark": a.user_remark,
@@ -728,6 +729,8 @@ def map_journal_entry_doc(d: Any) -> dict[str, Any]:
     ]
     row["company"] = d.company
     row["user_remark"] = d.user_remark
+    row["reference_no"] = getattr(d, "cheque_no", None)
+    row["reference_date"] = str(d.cheque_date) if getattr(d, "cheque_date", None) else None
     return row
 
 
@@ -768,6 +771,23 @@ def list_accounts(page: int | str = 1, page_size: int | str = 50) -> dict[str, A
             "account_name": r.account_name,
             "account_type": r.account_type,
             "root_type": r.root_type,
+            "company": r.company,
+        },
+    )
+
+
+def list_cost_centers(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
+    return _list_doctype(
+        "Cost Center",
+        fields=["name", "cost_center_name", "company", "is_group"],
+        page=page,
+        page_size=page_size,
+        filters={"is_group": 0},
+        order_by="name asc",
+        map_row=lambda r: {
+            "id": r.name,
+            "name": r.name,
+            "cost_center_name": r.cost_center_name,
             "company": r.company,
         },
     )

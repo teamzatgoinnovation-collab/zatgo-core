@@ -6,7 +6,7 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_journal_entry, list_accounts, list_journal_entries
+from zatgo_core.services.erpnext_reads import get_journal_entry, list_accounts, list_cost_centers, list_journal_entries
 from zatgo_core.services.erpnext_writes import cancel_journal_entry, create_journal_entry, submit_journal_entry
 
 
@@ -27,6 +27,8 @@ def create(
     posting_date: str | None = None,
     user_remark: str | None = None,
     voucher_type: str | None = None,
+    reference_no: str | None = None,
+    reference_date: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_journal_entry(
@@ -35,6 +37,8 @@ def create(
         posting_date=posting_date,
         user_remark=user_remark,
         voucher_type=voucher_type,
+        reference_no=reference_no,
+        reference_date=reference_date,
         client_id=client_id,
     )
 
@@ -52,3 +56,8 @@ def cancel(name: str) -> dict[str, Any]:
 @frappe.whitelist()
 def list_accounts_catalog(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
     return list_accounts(page=page, page_size=page_size)
+
+
+@frappe.whitelist()
+def list_cost_centers_catalog(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
+    return list_cost_centers(page=page, page_size=page_size)
