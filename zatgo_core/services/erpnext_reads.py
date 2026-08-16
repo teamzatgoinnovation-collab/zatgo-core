@@ -590,6 +590,8 @@ def map_purchase_invoice_row(r: Any) -> dict[str, Any]:
         "date": str(r.posting_date) if r.posting_date else None,
         "due_date": str(r.due_date) if getattr(r, "due_date", None) else None,
         "currency": getattr(r, "currency", None),
+        "is_return": bool(getattr(r, "is_return", 0)),
+        "return_against": getattr(r, "return_against", None),
     }
 
 
