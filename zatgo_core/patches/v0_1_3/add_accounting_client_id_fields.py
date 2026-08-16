@@ -1,7 +1,7 @@
 """Ensure zatgo_client_id custom fields for the accounting-desktop create
-endpoints (Supplier, Purchase Invoice, Journal Entry) — Sales Invoice,
-Payment Entry, Stock Entry, and Customer already have this field from
-earlier patches; those three did not.
+endpoints (Supplier, Purchase Invoice, Journal Entry, Warehouse) — Sales
+Invoice, Payment Entry, Stock Entry, Customer, and Item already have this
+field from earlier patches; these four did not.
 
 Also invoked directly from zatgo_core.setup.ensure_custom_fields, which is
 called from install.py's after_install/after_migrate — patches.txt alone
@@ -50,6 +50,18 @@ def execute() -> None:
                 "label": "ZatGo Client Id",
                 "fieldtype": "Data",
                 "insert_after": "posting_date",
+                "unique": 1,
+                "read_only": 1,
+                "no_copy": 1,
+                "translatable": 0,
+            }
+        ],
+        "Warehouse": [
+            {
+                "fieldname": "zatgo_client_id",
+                "label": "ZatGo Client Id",
+                "fieldtype": "Data",
+                "insert_after": "warehouse_name",
                 "unique": 1,
                 "read_only": 1,
                 "no_copy": 1,

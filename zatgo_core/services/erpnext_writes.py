@@ -153,8 +153,17 @@ def create_item(
     stock_uom: str | None = None,
     standard_rate: float | int | str | None = None,
     is_stock_item: int | str | bool | None = 1,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import get_item
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Item", cid)
+        if existing:
+            return get_item(existing)
     frappe.has_permission("Item", "create", throw=True)
     code = require_str(item_code, "item_code")
     doc = frappe.get_doc(
@@ -166,11 +175,14 @@ def create_item(
             "stock_uom": (stock_uom or "").strip() or "Nos",
             "standard_rate": flt(standard_rate or 0),
             "is_stock_item": 1 if str(is_stock_item) not in ("0", "false", "False", "") else 0,
+            "zatgo_client_id": cid,
         }
     )
-    doc.insert()
+    if cid:
+        doc, _created = insert_idempotent(doc, doctype="Item", client_id=cid)
+    else:
+        doc.insert()
     frappe.db.commit()
-    from zatgo_core.services.erpnext_reads import get_item
 
     return get_item(doc.name)
 
@@ -204,12 +216,33 @@ def update_item(name: str, values: Any = None) -> dict[str, Any]:
     return get_item(doc.name)
 
 
+def _map_warehouse_doc(doc: Any) -> dict[str, Any]:
+    return {
+        "id": doc.name,
+        "name": doc.warehouse_name or doc.name,
+        "company": doc.company,
+        "parent_warehouse": getattr(doc, "parent_warehouse", None),
+        "disabled": int(doc.disabled or 0),
+    }
+
+
 def create_warehouse(
     warehouse_name: str,
     company: str | None = None,
     parent_warehouse: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
     require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Warehouse", cid)
+        if existing:
+            return ok(
+                _map_warehouse_doc(frappe.get_doc("Warehouse", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Warehouse"},
+            )
     frappe.has_permission("Warehouse", "create", throw=True)
     label = require_str(warehouse_name, "warehouse_name")
     company_name = _default_company(company)
@@ -220,19 +253,18 @@ def create_warehouse(
             "company": company_name,
             "is_group": 0,
             "parent_warehouse": (parent_warehouse or "").strip() or None,
+            "zatgo_client_id": cid,
         }
     )
-    doc.insert()
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Warehouse", client_id=cid)
+    else:
+        doc.insert()
+        created = True
     frappe.db.commit()
     return ok(
-        {
-            "id": doc.name,
-            "name": doc.warehouse_name or doc.name,
-            "company": doc.company,
-            "parent_warehouse": getattr(doc, "parent_warehouse", None),
-            "disabled": int(doc.disabled or 0),
-        },
-        meta={"stub": False, "created": True, "source": "Warehouse"},
+        _map_warehouse_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Warehouse"},
     )
 
 

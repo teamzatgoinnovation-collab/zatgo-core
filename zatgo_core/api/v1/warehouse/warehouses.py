@@ -45,11 +45,13 @@ def create(
     warehouse_name: str,
     company: str | None = None,
     parent_warehouse: str | None = None,
+    client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_warehouse(
         warehouse_name=warehouse_name,
         company=company,
         parent_warehouse=parent_warehouse,
+        client_id=client_id,
     )
 
 

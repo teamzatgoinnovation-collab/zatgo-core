@@ -47,23 +47,15 @@ def create(
     """
     Backward-compatible create.
 
-    - Simple args → legacy create_item
-    - client_id + item payload → full offline sync bundle
+    - Structured `item` payload (VanSale mobile sync bundle) →
+      sync_item_bundle, its own client_id mechanism.
+    - Simple flat args, with or without a client_id for idempotent offline
+      retry → create_item.
     """
-    if client_id or item:
-        payload = item
-        if payload is None:
-            payload = {
-                "item_code": item_code,
-                "item_name": item_name,
-                "item_group": item_group,
-                "stock_uom": stock_uom,
-                "selling_rate": standard_rate,
-                "is_stock_item": is_stock_item,
-            }
+    if item is not None:
         return sync_item_bundle(
             client_id=client_id or frappe.generate_hash(length=20),
-            item=payload,
+            item=item,
             attachments=attachments,
         )
 
@@ -74,6 +66,7 @@ def create(
         stock_uom=stock_uom,
         standard_rate=standard_rate,
         is_stock_item=is_stock_item,
+        client_id=client_id,
     )
 
 
