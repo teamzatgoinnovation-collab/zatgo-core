@@ -7,7 +7,11 @@ from typing import Any
 import frappe
 
 from zatgo_core.services.erpnext_reads import get_purchase_invoice, list_purchase_invoices
-from zatgo_core.services.erpnext_writes import create_purchase_invoice, submit_purchase_invoice
+from zatgo_core.services.erpnext_writes import (
+    create_purchase_invoice,
+    create_purchase_return,
+    submit_purchase_invoice,
+)
 
 
 @frappe.whitelist()
@@ -42,3 +46,12 @@ def create(
 @frappe.whitelist()
 def submit(name: str) -> dict[str, Any]:
     return submit_purchase_invoice(name)
+
+
+@frappe.whitelist()
+def create_return(
+    return_against: str,
+    items: str | list | None = None,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    return create_purchase_return(return_against=return_against, items=items, reason=reason)

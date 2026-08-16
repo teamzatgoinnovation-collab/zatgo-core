@@ -356,6 +356,85 @@ def submit_sales_invoice(name: str) -> dict[str, Any]:
     return ok(map_sales_invoice_doc(doc), meta={"stub": False, "submitted": True, "source": "Sales Invoice"})
 
 
+def create_sales_return(
+    return_against: str,
+    items: Any,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Partial/full Sales Return (credit note) against a submitted Sales Invoice."""
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+
+    require_login()
+    original_name = require_str(return_against, "return_against")
+    if not frappe.db.exists("Sales Invoice", original_name):
+        frappe.throw(f"Sales Invoice not found: {original_name}")
+    original = frappe.get_doc("Sales Invoice", original_name)
+    if int(original.docstatus or 0) != 1:
+        frappe.throw(f"Sales Invoice {original_name} is not submitted.", frappe.ValidationError)
+    if int(getattr(original, "is_return", 0) or 0):
+        frappe.throw(f"Sales Invoice {original_name} is itself a return.", frappe.ValidationError)
+    frappe.has_permission("Sales Invoice", "create", throw=True)
+
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list) or not items:
+        frappe.throw("At least one line item is required")
+
+    original_qty_by_item: dict[str, float] = {}
+    for row in original.items or []:
+        original_qty_by_item[row.item_code] = original_qty_by_item.get(row.item_code, 0) + flt(row.qty)
+
+    requested_qty_by_item: dict[str, float] = {}
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        code = require_str(raw.get("item_code") or raw.get("item"), "item_code")
+        qty = flt(raw.get("qty") or 0)
+        if qty <= 0:
+            frappe.throw("Return qty must be greater than zero")
+        if code not in original_qty_by_item:
+            frappe.throw(f"Item {code} was not sold on {original_name}")
+        if qty > original_qty_by_item[code] + 1e-6:
+            frappe.throw(
+                f"Cannot return {qty} of {code} — only {original_qty_by_item[code]} was sold on {original_name}.",
+                frappe.ValidationError,
+            )
+        requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
+
+    doc = make_return_doc("Sales Invoice", original_name)
+    kept_items = []
+    for row in doc.items or []:
+        return_qty = requested_qty_by_item.get(row.item_code)
+        if not return_qty:
+            continue
+        row.qty = -abs(return_qty)
+        row.amount = row.qty * flt(row.rate)
+        kept_items.append(row)
+    if not kept_items:
+        frappe.throw("None of the requested items match the original invoice")
+    doc.items = kept_items
+    if reason:
+        doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+
+    doc.run_method("calculate_taxes_and_totals")
+    doc.insert()
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not create and submit Sales Return. Fix stock/accounts, then retry.",
+            frappe.ValidationError,
+        )
+    doc.reload()
+    return ok(map_sales_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Sales Invoice"})
+
+
 def create_purchase_invoice(
     supplier: str,
     items: Any,
@@ -390,6 +469,85 @@ def submit_purchase_invoice(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
 
     return _submit_doc("Purchase Invoice", name, map_purchase_invoice_doc)
+
+
+def create_purchase_return(
+    return_against: str,
+    items: Any,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Partial/full Purchase Return (debit note) against a submitted Purchase Invoice."""
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+    from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
+
+    require_login()
+    original_name = require_str(return_against, "return_against")
+    if not frappe.db.exists("Purchase Invoice", original_name):
+        frappe.throw(f"Purchase Invoice not found: {original_name}")
+    original = frappe.get_doc("Purchase Invoice", original_name)
+    if int(original.docstatus or 0) != 1:
+        frappe.throw(f"Purchase Invoice {original_name} is not submitted.", frappe.ValidationError)
+    if int(getattr(original, "is_return", 0) or 0):
+        frappe.throw(f"Purchase Invoice {original_name} is itself a return.", frappe.ValidationError)
+    frappe.has_permission("Purchase Invoice", "create", throw=True)
+
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list) or not items:
+        frappe.throw("At least one line item is required")
+
+    original_qty_by_item: dict[str, float] = {}
+    for row in original.items or []:
+        original_qty_by_item[row.item_code] = original_qty_by_item.get(row.item_code, 0) + flt(row.qty)
+
+    requested_qty_by_item: dict[str, float] = {}
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        code = require_str(raw.get("item_code") or raw.get("item"), "item_code")
+        qty = flt(raw.get("qty") or 0)
+        if qty <= 0:
+            frappe.throw("Return qty must be greater than zero")
+        if code not in original_qty_by_item:
+            frappe.throw(f"Item {code} was not bought on {original_name}")
+        if qty > original_qty_by_item[code] + 1e-6:
+            frappe.throw(
+                f"Cannot return {qty} of {code} — only {original_qty_by_item[code]} was bought on {original_name}.",
+                frappe.ValidationError,
+            )
+        requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
+
+    doc = make_return_doc("Purchase Invoice", original_name)
+    kept_items = []
+    for row in doc.items or []:
+        return_qty = requested_qty_by_item.get(row.item_code)
+        if not return_qty:
+            continue
+        row.qty = -abs(return_qty)
+        row.amount = row.qty * flt(row.rate)
+        kept_items.append(row)
+    if not kept_items:
+        frappe.throw("None of the requested items match the original bill")
+    doc.items = kept_items
+    if reason:
+        doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+
+    doc.run_method("calculate_taxes_and_totals")
+    doc.insert()
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not create and submit Purchase Return. Fix stock/accounts, then retry.",
+            frappe.ValidationError,
+        )
+    doc.reload()
+    return ok(map_purchase_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Purchase Invoice"})
 
 
 def create_receive_payment(

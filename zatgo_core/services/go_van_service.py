@@ -11,6 +11,8 @@ from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
 from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_invoice_doc
 from zatgo_core.services.erpnext_writes import _default_company, _parse_items
+from zatgo_core.services.idempotency import find_by_client_id as _find_by_client_id
+from zatgo_core.services.idempotency import insert_idempotent
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
 
 
@@ -25,14 +27,6 @@ _STATUS_MAP = {
     "skipped": "Skipped",
     "Skipped": "Skipped",
 }
-
-
-def _find_by_client_id(doctype: str, client_id: str) -> str | None:
-    if not client_id or not frappe.db.exists("DocType", doctype):
-        return None
-    if not frappe.db.has_column(doctype, "zatgo_client_id"):
-        return None
-    return frappe.db.get_value(doctype, {"zatgo_client_id": client_id}, "name")
 
 
 def _resolve_customer(customer: str) -> str:
@@ -259,7 +253,21 @@ def create_order(
 
     _apply_sales_taxes(doc, company_name)
 
-    doc.insert()
+    doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
+    if not created:
+        # A concurrent request with the same client_id won the create race —
+        # treat it exactly like the pre-check "already exists" branch above.
+        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh or None)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        payload = _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+        payload["data"]["trip_id"] = (trip_id or "").strip() or None
+        return payload
+
     try:
         doc.submit()
         frappe.db.commit()
@@ -397,7 +405,16 @@ def create_sales_return(
     doc.naming_series = return_series or "ACC-SINV-RET-.YYYY.-"
 
     doc.run_method("calculate_taxes_and_totals")
-    doc.insert()
+    doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
+    if not created:
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+
     try:
         doc.submit()
         frappe.db.commit()
@@ -482,7 +499,12 @@ def create_collection(
     pe.reference_date = pe.posting_date
     if frappe.db.has_column("Payment Entry", "zatgo_client_id"):
         pe.zatgo_client_id = cid
-    pe.insert()
+    pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
+    if not created:
+        return ok(
+            {**map_payment_entry_doc(pe), "client_id": cid, "erp_name": pe.name},
+            meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+        )
     pe.submit()
     frappe.db.commit()
     return ok(
@@ -588,7 +610,18 @@ def adjust_stock(
             "zatgo_client_id": cid,
         }
     )
-    se.insert()
+    se, created = insert_idempotent(se, doctype="Stock Entry", client_id=cid)
+    if not created:
+        return ok(
+            {
+                "name": se.name,
+                "erp_name": se.name,
+                "client_id": cid,
+                "item_code": item_code,
+                "delta": flt(delta),
+            },
+            meta={"stub": False, "idempotent": True, "source": "Stock Entry"},
+        )
     se.submit()
     frappe.db.commit()
     return ok(
@@ -664,7 +697,20 @@ def transfer_stock(
             "zatgo_client_id": cid,
         }
     )
-    se.insert()
+    se, created = insert_idempotent(se, doctype="Stock Entry", client_id=cid)
+    if not created:
+        return ok(
+            {
+                "name": se.name,
+                "erp_name": se.name,
+                "client_id": cid,
+                "item_code": item_code,
+                "qty": flt(qty),
+                "from_warehouse": from_warehouse,
+                "to_warehouse": to_warehouse,
+            },
+            meta={"stub": False, "idempotent": True, "source": "Stock Entry"},
+        )
     se.submit()
     frappe.db.commit()
     return ok(

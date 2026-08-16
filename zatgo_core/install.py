@@ -5,6 +5,7 @@ from __future__ import annotations
 import frappe
 
 from zatgo_core.plugins.discover import discover_and_register_manifests
+from zatgo_core.setup.ensure_custom_fields import ensure_custom_fields
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
@@ -30,6 +31,10 @@ def after_install() -> None:
     seed_singletons()
     seed_number_series()
     seed_feature_flags()
+    try:
+        ensure_custom_fields()
+    except Exception:
+        logger.exception("Custom field seed failed")
     try:
         seed_application_settings()
     except Exception:
@@ -59,6 +64,10 @@ def after_migrate() -> None:
     seed_singletons()
     seed_number_series()
     seed_feature_flags()
+    try:
+        ensure_custom_fields()
+    except Exception:
+        logger.exception("Custom field seed failed")
     try:
         seed_application_settings()
     except Exception:
