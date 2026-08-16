@@ -399,6 +399,82 @@ def create_item_group(
     return ok(_map_item_group_doc(doc), meta={"stub": False, "created": True, "source": "Item Group"})
 
 
+def _map_account_doc(doc: Any) -> dict[str, Any]:
+    return {
+        "id": doc.name,
+        "name": doc.name,
+        "account_name": doc.account_name or doc.name,
+        "account_number": doc.account_number,
+        "parent_account": doc.parent_account,
+        "account_type": doc.account_type,
+        "root_type": doc.root_type,
+        "is_group": int(doc.is_group or 0),
+        "disabled": int(doc.disabled or 0),
+        "company": doc.company,
+        "account_currency": doc.account_currency,
+    }
+
+
+def create_account(
+    account_name: str,
+    parent_account: str,
+    account_type: str | None = None,
+    is_group: int | str | None = None,
+    account_number: str | None = None,
+    account_currency: str | None = None,
+    company: str | None = None,
+) -> dict[str, Any]:
+    require_login()
+    frappe.has_permission("Account", "create", throw=True)
+    label = require_str(account_name, "account_name")
+    parent = require_str(parent_account, "parent_account")
+    if not frappe.db.exists("Account", parent):
+        frappe.throw(f"Parent account {parent} not found")
+    parent_doc = frappe.get_doc("Account", parent)
+    if not parent_doc.is_group:
+        frappe.throw(f"{parent} is not a group account and cannot have child accounts")
+    doc = frappe.get_doc(
+        {
+            "doctype": "Account",
+            "account_name": label,
+            "parent_account": parent,
+            "company": (company or "").strip() or parent_doc.company,
+            "root_type": parent_doc.root_type,
+            "report_type": parent_doc.report_type,
+            "account_type": (account_type or "").strip() or None,
+            "account_number": (account_number or "").strip() or None,
+            "account_currency": (account_currency or "").strip() or None,
+            "is_group": 1 if str(is_group) in ("1", "true", "True") else 0,
+        }
+    )
+    doc.insert()
+    frappe.db.commit()
+    return ok(_map_account_doc(doc), meta={"stub": False, "created": True, "source": "Account"})
+
+
+def update_account(name: str, values: Any = None) -> dict[str, Any]:
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Account", "write", doc=name, throw=True)
+    data = parse_json_dict(values, "values")
+    doc = frappe.get_doc("Account", name)
+    mapping = {
+        "account_name": "account_name",
+        "account_type": "account_type",
+        "account_number": "account_number",
+        "disabled": "disabled",
+    }
+    for key, field in mapping.items():
+        if key in data and data[key] is not None:
+            value = data[key]
+            if field == "disabled":
+                value = 1 if str(value) not in ("0", "false", "False", "") else 0
+            setattr(doc, field, value)
+    doc.save()
+    frappe.db.commit()
+    return ok(_map_account_doc(doc), meta={"stub": False, "updated": True, "source": "Account"})
+
+
 def create_supplier(
     supplier_name: str,
     supplier_type: str | None = None,

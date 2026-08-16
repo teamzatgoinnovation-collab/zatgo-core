@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
+from frappe.utils import flt, getdate, nowdate
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_doc_permission, require_login
@@ -773,6 +774,80 @@ def list_accounts(page: int | str = 1, page_size: int | str = 50) -> dict[str, A
             "root_type": r.root_type,
             "company": r.company,
         },
+    )
+
+
+def list_chart_of_accounts(company: str | None = None) -> dict[str, Any]:
+    """Full Account tree (groups + leaves) for the Chart of Accounts screen.
+
+    Not paginated — a chart of accounts is a tree, not a flat list, and
+    fetching a partial page would break the hierarchy. Account counts for a
+    single company are small enough (tens to low hundreds) that this is fine.
+    """
+    require_login()
+    require_doc_permission("Account", "read")
+    filters: dict[str, Any] = {}
+    if company:
+        filters["company"] = company
+    rows = frappe.get_all(
+        "Account",
+        filters=filters,
+        fields=[
+            "name",
+            "account_name",
+            "account_number",
+            "parent_account",
+            "account_type",
+            "root_type",
+            "is_group",
+            "disabled",
+            "company",
+            "account_currency",
+        ],
+        order_by="lft asc",
+        limit_page_length=0,
+    )
+    data = [
+        {
+            "id": r.name,
+            "name": r.name,
+            "account_name": r.account_name or r.name,
+            "account_number": r.account_number,
+            "parent_account": r.parent_account,
+            "account_type": r.account_type,
+            "root_type": r.root_type,
+            "is_group": int(r.is_group or 0),
+            "disabled": int(r.disabled or 0),
+            "company": r.company,
+            "account_currency": r.account_currency,
+        }
+        for r in rows
+    ]
+    return ok(data, meta={"stub": False, "total": len(data), "source": "Account"})
+
+
+def get_account_balance(account: str, date: str | None = None) -> dict[str, Any]:
+    """Current balance for one account, computed by ERPNext — never derived locally."""
+    require_login()
+    frappe.has_permission("Account", "read", doc=account, throw=True)
+    if not frappe.db.exists("Account", account):
+        frappe.throw(f"Account {account} not found")
+    from erpnext.accounts.utils import get_balance_on
+
+    balance = flt(get_balance_on(account, date=getdate(date) if date else None))
+    doc = frappe.get_doc("Account", account)
+    debit = balance if balance > 0 else 0.0
+    credit = -balance if balance < 0 else 0.0
+    return ok(
+        {
+            "account": account,
+            "balance": balance,
+            "debit": debit,
+            "credit": credit,
+            "root_type": doc.root_type,
+            "as_of": str(getdate(date)) if date else str(getdate(nowdate())),
+        },
+        meta={"stub": False, "source": "GL Entry"},
     )
 
 
