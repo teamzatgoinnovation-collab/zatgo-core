@@ -178,6 +178,88 @@ def general_ledger(
 
 
 @frappe.whitelist()
+def party_ledger(
+    party_type: str,
+    party: str,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 100,
+) -> dict[str, Any]:
+    """GL Entry history for one Customer/Supplier, with a running balance."""
+    require_login()
+    if party_type not in ("Customer", "Supplier"):
+        frappe.throw("party_type must be Customer or Supplier")
+    if not party:
+        frappe.throw("party is required")
+    start, end = _date_range(from_date, to_date)
+    filters: dict[str, Any] = {
+        "posting_date": ["between", [start, end]],
+        "is_cancelled": 0,
+        "party_type": party_type,
+        "party": party,
+    }
+
+    size = min(max(int(page_size or 100), 1), 200)
+    page_i = max(int(page or 1), 1)
+
+    opening_balance = flt(
+        frappe.db.sql(
+            "SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) FROM `tabGL Entry` "
+            "WHERE party_type=%s AND party=%s AND posting_date < %s AND is_cancelled=0",
+            (party_type, party, start),
+        )[0][0]
+    )
+
+    # Fetch the whole in-range window (bounded by page_size cap x a sane max) so the running
+    # balance is correct for any page — a party ledger is not expected to have huge row counts.
+    all_rows = frappe.get_all(
+        "GL Entry",
+        filters=filters,
+        fields=["name", "posting_date", "account", "debit", "credit", "voucher_type", "voucher_no", "remarks"],
+        order_by="posting_date asc, creation asc",
+        limit_page_length=0,
+    )
+    total = len(all_rows)
+
+    running = opening_balance
+    ledger: list[dict[str, Any]] = []
+    for r in all_rows:
+        running += flt(r.debit) - flt(r.credit)
+        ledger.append(
+            {
+                "id": r.name,
+                "date": str(r.posting_date) if r.posting_date else None,
+                "account": r.account,
+                "debit": flt(r.debit),
+                "credit": flt(r.credit),
+                "voucher_type": r.voucher_type,
+                "voucher_no": r.voucher_no,
+                "remarks": r.remarks,
+                "balance": flt(running),
+            }
+        )
+    closing_balance = flt(running)
+    start_idx = (page_i - 1) * size
+    data = ledger[start_idx : start_idx + size]
+
+    return ok(
+        data,
+        meta={
+            "stub": False,
+            "from_date": str(start),
+            "to_date": str(end),
+            "page": page_i,
+            "page_size": size,
+            "total": total,
+            "opening_balance": opening_balance,
+            "closing_balance": closing_balance,
+            "source": "GL Entry",
+        },
+    )
+
+
+@frappe.whitelist()
 def profit_and_loss(from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
     require_login()
     start, end = _date_range(from_date, to_date)

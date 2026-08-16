@@ -16,8 +16,13 @@ from zatgo_core.services.erpnext_writes import (
 
 
 @frappe.whitelist()
-def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
-    return list_payment_entries(page=page, page_size=page_size)
+def list(
+    page: int | str = 1,
+    page_size: int | str = 20,
+    party_type: str | None = None,
+    party: str | None = None,
+) -> dict[str, Any]:
+    return list_payment_entries(page=page, page_size=page_size, party_type=party_type, party=party)
 
 
 @frappe.whitelist()

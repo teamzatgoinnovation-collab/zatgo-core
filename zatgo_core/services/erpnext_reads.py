@@ -510,7 +510,10 @@ def map_sales_invoice_doc(d: Any) -> dict[str, Any]:
     return row
 
 
-def list_sales_invoices(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+def list_sales_invoices(
+    page: int | str = 1, page_size: int | str = 20, customer: str | None = None
+) -> dict[str, Any]:
+    filters: dict[str, Any] = {"customer": customer} if customer else None
     return _list_doctype(
         "Sales Invoice",
         fields=[
@@ -528,6 +531,8 @@ def list_sales_invoices(page: int | str = 1, page_size: int | str = 20) -> dict[
         ],
         page=page,
         page_size=page_size,
+        filters=filters,
+        order_by="posting_date desc",
         map_row=map_sales_invoice_row,
     )
 
@@ -567,6 +572,7 @@ def get_supplier(name: str) -> dict[str, Any]:
             "country": d.country,
             "email": getattr(d, "email_id", None),
             "phone": getattr(d, "mobile_no", None),
+            "disabled": int(getattr(d, "disabled", 0) or 0),
         },
     )
 
@@ -594,7 +600,10 @@ def map_purchase_invoice_doc(d: Any) -> dict[str, Any]:
     return row
 
 
-def list_purchase_invoices(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+def list_purchase_invoices(
+    page: int | str = 1, page_size: int | str = 20, supplier: str | None = None
+) -> dict[str, Any]:
+    filters: dict[str, Any] = {"supplier": supplier} if supplier else None
     return _list_doctype(
         "Purchase Invoice",
         fields=[
@@ -607,9 +616,13 @@ def list_purchase_invoices(page: int | str = 1, page_size: int | str = 20) -> di
             "posting_date",
             "due_date",
             "currency",
+            "is_return",
+            "return_against",
         ],
         page=page,
         page_size=page_size,
+        filters=filters,
+        order_by="posting_date desc",
         map_row=map_purchase_invoice_row,
     )
 
@@ -649,7 +662,17 @@ def map_payment_entry_doc(d: Any) -> dict[str, Any]:
     return row
 
 
-def list_payment_entries(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+def list_payment_entries(
+    page: int | str = 1,
+    page_size: int | str = 20,
+    party_type: str | None = None,
+    party: str | None = None,
+) -> dict[str, Any]:
+    filters: dict[str, Any] | None = None
+    if party:
+        filters = {"party": party}
+        if party_type:
+            filters["party_type"] = party_type
     return _list_doctype(
         "Payment Entry",
         fields=[
@@ -666,6 +689,8 @@ def list_payment_entries(page: int | str = 1, page_size: int | str = 20) -> dict
         ],
         page=page,
         page_size=page_size,
+        filters=filters,
+        order_by="posting_date desc",
         map_row=map_payment_entry_row,
     )
 

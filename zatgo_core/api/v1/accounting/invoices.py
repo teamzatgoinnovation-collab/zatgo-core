@@ -16,8 +16,8 @@ from zatgo_core.services.erpnext_writes import (
 
 
 @frappe.whitelist()
-def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
-    return list_sales_invoices(page=page, page_size=page_size)
+def list(page: int | str = 1, page_size: int | str = 20, customer: str | None = None) -> dict[str, Any]:
+    return list_sales_invoices(page=page, page_size=page_size, customer=customer)
 
 
 @frappe.whitelist()

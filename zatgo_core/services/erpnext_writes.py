@@ -456,10 +456,14 @@ def update_supplier(name: str, values: Any = None) -> dict[str, Any]:
         "phone": "mobile_no",
         "email_id": "email_id",
         "mobile_no": "mobile_no",
+        "disabled": "disabled",
     }
     for key, field in mapping.items():
         if key in data and data[key] is not None:
-            setattr(doc, field, data[key])
+            value = data[key]
+            if field == "disabled":
+                value = 1 if str(value) not in ("0", "false", "False", "") else 0
+            setattr(doc, field, value)
     doc.save()
     frappe.db.commit()
     from zatgo_core.services.erpnext_reads import get_supplier
