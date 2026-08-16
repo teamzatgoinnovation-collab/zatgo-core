@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 
 from zatgo_core.services.erpnext_reads import get_journal_entry, list_accounts, list_journal_entries
-from zatgo_core.services.erpnext_writes import create_journal_entry, submit_journal_entry
+from zatgo_core.services.erpnext_writes import cancel_journal_entry, create_journal_entry, submit_journal_entry
 
 
 @frappe.whitelist()
@@ -42,6 +42,11 @@ def create(
 @frappe.whitelist()
 def submit(name: str) -> dict[str, Any]:
     return submit_journal_entry(name)
+
+
+@frappe.whitelist()
+def cancel(name: str) -> dict[str, Any]:
+    return cancel_journal_entry(name)
 
 
 @frappe.whitelist()

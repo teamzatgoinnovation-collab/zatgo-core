@@ -7,7 +7,12 @@ from typing import Any
 import frappe
 
 from zatgo_core.services.erpnext_reads import get_sales_invoice, list_items, list_sales_invoices
-from zatgo_core.services.erpnext_writes import create_sales_invoice, create_sales_return, submit_sales_invoice
+from zatgo_core.services.erpnext_writes import (
+    cancel_sales_invoice,
+    create_sales_invoice,
+    create_sales_return,
+    submit_sales_invoice,
+)
 
 
 @frappe.whitelist()
@@ -47,6 +52,11 @@ def submit(name: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
+def cancel(name: str) -> dict[str, Any]:
+    return cancel_sales_invoice(name)
+
+
+@frappe.whitelist()
 def create_return(
     return_against: str,
     items: str | list | None = None,
@@ -58,7 +68,7 @@ def create_return(
 
 @frappe.whitelist()
 def get_zatca_qr(name: str) -> dict[str, Any]:
-    """Return Phase 2 simplified ZATCA QR payload for a Sales Invoice."""
+    """Return the Phase 1 ZATCA TLV QR payload for a Sales Invoice."""
     from zatgo_core.api.response import ok
     from zatgo_core.api.validators import require_login, require_str
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr, zatca_fields_from_doc

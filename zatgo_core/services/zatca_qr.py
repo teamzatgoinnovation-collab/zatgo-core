@@ -1,4 +1,8 @@
-"""ZATCA Phase 2 simplified tax invoice QR (TLV → Base64)."""
+"""ZATCA Phase 1 simplified tax invoice QR (TLV → Base64).
+
+No cryptographic stamp, no CSID, no XML invoice, no clearance/reporting API —
+see .claude/rules/accounting.md for the Phase 1/Phase 2 distinction.
+"""
 
 from __future__ import annotations
 

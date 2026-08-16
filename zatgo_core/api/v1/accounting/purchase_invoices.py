@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.services.erpnext_reads import get_purchase_invoice, list_purchase_invoices
 from zatgo_core.services.erpnext_writes import (
+    cancel_purchase_invoice,
     create_purchase_invoice,
     create_purchase_return,
     submit_purchase_invoice,
@@ -48,6 +49,11 @@ def create(
 @frappe.whitelist()
 def submit(name: str) -> dict[str, Any]:
     return submit_purchase_invoice(name)
+
+
+@frappe.whitelist()
+def cancel(name: str) -> dict[str, Any]:
+    return cancel_purchase_invoice(name)
 
 
 @frappe.whitelist()

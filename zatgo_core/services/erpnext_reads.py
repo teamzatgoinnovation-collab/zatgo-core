@@ -72,6 +72,18 @@ def map_item_row(row: dict[str, Any]) -> dict[str, Any]:
         "barcode": row.get("barcode") or "",
         "uom": row.get("stock_uom"),
         "stock_uom": row.get("stock_uom"),
+        "sales_uom": row.get("sales_uom") or "",
+        "description": row.get("description") or "",
+        "has_batch_no": int(row.get("has_batch_no") or 0),
+        "has_serial_no": int(row.get("has_serial_no") or 0),
+        "is_sales_item": int(row.get("is_sales_item") if row.get("is_sales_item") is not None else 1),
+        "is_purchase_item": int(row.get("is_purchase_item") if row.get("is_purchase_item") is not None else 1),
+        "weight_per_unit": float(row.get("weight_per_unit") or 0),
+        "weight_uom": row.get("weight_uom") or "",
+        "default_warehouse": row.get("default_warehouse") or "",
+        "reorder_level": float(row.get("reorder_level") or 0),
+        "reorder_qty": float(row.get("reorder_qty") or 0),
+        "tax_template": row.get("tax_template") or "",
         "disabled": row.get("disabled"),
         "modified": row.get("modified"),
         "verticals": [],
@@ -107,6 +119,9 @@ def get_item(name: str) -> dict[str, Any]:
         barcode = ""
         if getattr(doc, "barcodes", None):
             barcode = doc.barcodes[0].barcode if doc.barcodes else ""
+        default_warehouse = doc.item_defaults[0].default_warehouse if getattr(doc, "item_defaults", None) else None
+        reorder_row = doc.reorder_levels[0] if getattr(doc, "reorder_levels", None) else None
+        tax_row = doc.taxes[0] if getattr(doc, "taxes", None) else None
         return map_item_row(
             {
                 "name": doc.name,
@@ -116,6 +131,19 @@ def get_item(name: str) -> dict[str, Any]:
                 "stock_uom": doc.stock_uom,
                 "disabled": doc.disabled,
                 "barcode": barcode,
+                "brand": doc.brand,
+                "description": doc.description,
+                "sales_uom": getattr(doc, "sales_uom", None),
+                "has_batch_no": doc.has_batch_no,
+                "has_serial_no": doc.has_serial_no,
+                "is_sales_item": doc.is_sales_item,
+                "is_purchase_item": doc.is_purchase_item,
+                "weight_per_unit": doc.weight_per_unit,
+                "weight_uom": doc.weight_uom,
+                "default_warehouse": default_warehouse,
+                "reorder_level": reorder_row.warehouse_reorder_level if reorder_row else 0,
+                "reorder_qty": reorder_row.warehouse_reorder_qty if reorder_row else 0,
+                "tax_template": tax_row.item_tax_template if tax_row else None,
             }
         )
 
@@ -337,6 +365,22 @@ def list_warehouses(page: int | str = 1, page_size: int | str = 20) -> dict[str,
             "id": r.name,
             "name": r.warehouse_name or r.name,
             "company": r.company,
+        },
+    )
+
+
+def list_item_groups(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
+    return _list_doctype(
+        "Item Group",
+        fields=["name", "item_group_name", "parent_item_group", "is_group"],
+        page=page,
+        page_size=page_size,
+        order_by="item_group_name asc",
+        map_row=lambda r: {
+            "id": r.name,
+            "name": r.item_group_name or r.name,
+            "parent_item_group": r.parent_item_group,
+            "is_group": int(r.is_group or 0),
         },
     )
 

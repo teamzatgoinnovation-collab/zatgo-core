@@ -67,6 +67,20 @@ def _submit_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     return ok(map_doc(doc), meta={"stub": False, "submitted": True, "source": doctype})
 
 
+def _cancel_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission(doctype, "cancel", doc=name, throw=True)
+    doc = frappe.get_doc(doctype, name)
+    if int(doc.docstatus or 0) == 2:
+        return ok(map_doc(doc), meta={"stub": False, "cancelled": False, "source": doctype})
+    if int(doc.docstatus or 0) != 1:
+        frappe.throw(f"{doctype} {name} must be submitted before it can be cancelled")
+    doc.cancel()
+    frappe.db.commit()
+    return ok(map_doc(doc), meta={"stub": False, "cancelled": True, "source": doctype})
+
+
 def create_customer(
     customer_name: str,
     customer_type: str | None = None,
@@ -187,6 +201,10 @@ def create_item(
     return get_item(doc.name)
 
 
+def _bool_field(value: Any) -> int:
+    return 1 if str(value).lower() in ("1", "true", "yes") else 0
+
+
 def update_item(name: str, values: Any = None) -> dict[str, Any]:
     require_login()
     require_str(name, "name")
@@ -200,15 +218,58 @@ def update_item(name: str, values: Any = None) -> dict[str, Any]:
         "standard_rate": "standard_rate",
         "is_stock_item": "is_stock_item",
         "disabled": "disabled",
+        "description": "description",
+        "brand": "brand",
+        "has_batch_no": "has_batch_no",
+        "has_serial_no": "has_serial_no",
+        "is_sales_item": "is_sales_item",
+        "is_purchase_item": "is_purchase_item",
+        "weight_per_unit": "weight_per_unit",
+        "weight_uom": "weight_uom",
     }
+    bool_fields = {"is_stock_item", "disabled", "has_batch_no", "has_serial_no", "is_sales_item", "is_purchase_item"}
     for key, field in mapping.items():
         if key in data and data[key] is not None:
             value = data[key]
-            if field == "standard_rate":
+            if field in ("standard_rate", "weight_per_unit"):
                 value = flt(value)
-            elif field in ("is_stock_item", "disabled"):
-                value = 1 if str(value) not in ("0", "false", "False", "") else 0
+            elif field in bool_fields:
+                value = _bool_field(value)
             setattr(doc, field, value)
+    if "sales_uom" in data and data["sales_uom"] and frappe.db.has_column("Item", "sales_uom"):
+        doc.sales_uom = data["sales_uom"]
+
+    default_warehouse = (data.get("default_warehouse") or "").strip() if "default_warehouse" in data else None
+    if default_warehouse and frappe.db.exists("Warehouse", default_warehouse):
+        company = doc.item_defaults[0].company if doc.item_defaults else _default_company()
+        if doc.item_defaults:
+            doc.item_defaults[0].default_warehouse = default_warehouse
+        else:
+            doc.append("item_defaults", {"company": company, "default_warehouse": default_warehouse})
+
+    if "reorder_level" in data:
+        reorder = flt(data.get("reorder_level") or 0)
+        reorder_qty = flt(data.get("reorder_qty") or reorder)
+        warehouse = default_warehouse or (
+            doc.item_defaults[0].default_warehouse if doc.item_defaults else None
+        )
+        if reorder > 0 and warehouse and frappe.db.exists("Warehouse", warehouse):
+            doc.reorder_levels = []
+            doc.append(
+                "reorder_levels",
+                {"warehouse": warehouse, "warehouse_reorder_level": reorder, "warehouse_reorder_qty": reorder_qty},
+            )
+        elif reorder <= 0:
+            doc.reorder_levels = []
+
+    if "tax_template" in data:
+        tax_template = (data.get("tax_template") or "").strip()
+        if tax_template and frappe.db.exists("Item Tax Template", tax_template):
+            doc.taxes = []
+            doc.append("taxes", {"item_tax_template": tax_template})
+        else:
+            doc.taxes = []
+
     doc.save()
     frappe.db.commit()
     from zatgo_core.services.erpnext_reads import get_item
@@ -298,6 +359,44 @@ def update_warehouse(name: str, values: Any = None) -> dict[str, Any]:
         },
         meta={"stub": False, "updated": True, "source": "Warehouse"},
     )
+
+
+def _map_item_group_doc(doc: Any) -> dict[str, Any]:
+    return {
+        "id": doc.name,
+        "name": doc.item_group_name or doc.name,
+        "parent_item_group": getattr(doc, "parent_item_group", None),
+        "is_group": int(doc.is_group or 0),
+    }
+
+
+def _default_item_group_parent() -> str | None:
+    if frappe.db.exists("Item Group", "All Item Groups"):
+        return "All Item Groups"
+    root = frappe.get_all("Item Group", filters={"is_group": 1}, pluck="name", limit=1)
+    return root[0] if root else None
+
+
+def create_item_group(
+    item_group_name: str,
+    parent_item_group: str | None = None,
+    is_group: int | str | None = None,
+) -> dict[str, Any]:
+    require_login()
+    frappe.has_permission("Item Group", "create", throw=True)
+    label = require_str(item_group_name, "item_group_name")
+    parent = (parent_item_group or "").strip() or _default_item_group_parent()
+    doc = frappe.get_doc(
+        {
+            "doctype": "Item Group",
+            "item_group_name": label,
+            "parent_item_group": parent,
+            "is_group": 1 if str(is_group) in ("1", "true", "True") else 0,
+        }
+    )
+    doc.insert()
+    frappe.db.commit()
+    return ok(_map_item_group_doc(doc), meta={"stub": False, "created": True, "source": "Item Group"})
 
 
 def create_supplier(
@@ -436,6 +535,12 @@ def submit_sales_invoice(name: str) -> dict[str, Any]:
     except Exception:
         frappe.log_error(title="ZATCA QR generation failed", message=frappe.get_traceback())
     return ok(map_sales_invoice_doc(doc), meta={"stub": False, "submitted": True, "source": "Sales Invoice"})
+
+
+def cancel_sales_invoice(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+
+    return _cancel_doc("Sales Invoice", name, map_sales_invoice_doc)
 
 
 def create_sales_return(
@@ -592,6 +697,12 @@ def submit_purchase_invoice(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
 
     return _submit_doc("Purchase Invoice", name, map_purchase_invoice_doc)
+
+
+def cancel_purchase_invoice(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
+
+    return _cancel_doc("Purchase Invoice", name, map_purchase_invoice_doc)
 
 
 def create_purchase_return(
@@ -806,6 +917,12 @@ def submit_payment_entry(name: str) -> dict[str, Any]:
     return _submit_doc("Payment Entry", name, map_payment_entry_doc)
 
 
+def cancel_payment_entry(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+
+    return _cancel_doc("Payment Entry", name, map_payment_entry_doc)
+
+
 def create_journal_entry(
     accounts: Any,
     company: str | None = None,
@@ -895,3 +1012,9 @@ def submit_journal_entry(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_journal_entry_doc
 
     return _submit_doc("Journal Entry", name, map_journal_entry_doc)
+
+
+def cancel_journal_entry(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
+
+    return _cancel_doc("Journal Entry", name, map_journal_entry_doc)

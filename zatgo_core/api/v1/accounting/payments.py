@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.services.erpnext_reads import get_payment_entry, list_payment_entries
 from zatgo_core.services.erpnext_writes import (
+    cancel_payment_entry,
     create_pay_payment,
     create_receive_payment,
     submit_payment_entry,
@@ -65,3 +66,8 @@ def create_pay(
 @frappe.whitelist()
 def submit(name: str) -> dict[str, Any]:
     return submit_payment_entry(name)
+
+
+@frappe.whitelist()
+def cancel(name: str) -> dict[str, Any]:
+    return cancel_payment_entry(name)
