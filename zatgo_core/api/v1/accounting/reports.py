@@ -263,6 +263,96 @@ def party_ledger(
 
 
 @frappe.whitelist()
+def account_ledger(
+    account: str,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 100,
+) -> dict[str, Any]:
+    """GL Entry history for one ledger account, with a running balance."""
+    require_login()
+    if not account:
+        frappe.throw("account is required")
+    start, end = _date_range(from_date, to_date)
+    filters: dict[str, Any] = {
+        "posting_date": ["between", [start, end]],
+        "is_cancelled": 0,
+        "account": account,
+    }
+
+    size = min(max(int(page_size or 100), 1), 200)
+    page_i = max(int(page or 1), 1)
+
+    opening_balance = flt(
+        frappe.db.sql(
+            "SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) FROM `tabGL Entry` "
+            "WHERE account=%s AND posting_date < %s AND is_cancelled=0",
+            (account, start),
+        )[0][0]
+    )
+
+    # Fetch the whole in-range window so the running balance is correct for any page —
+    # an account ledger is not expected to have huge row counts (mirrors party_ledger).
+    all_rows = frappe.get_all(
+        "GL Entry",
+        filters=filters,
+        fields=[
+            "name",
+            "posting_date",
+            "voucher_type",
+            "voucher_no",
+            "party_type",
+            "party",
+            "debit",
+            "credit",
+            "remarks",
+        ],
+        order_by="posting_date asc, creation asc",
+        limit_page_length=0,
+    )
+    total = len(all_rows)
+
+    running = opening_balance
+    ledger: list[dict[str, Any]] = []
+    for r in all_rows:
+        running += flt(r.debit) - flt(r.credit)
+        ledger.append(
+            {
+                "id": r.name,
+                "date": str(r.posting_date) if r.posting_date else None,
+                "voucher_type": r.voucher_type,
+                "voucher_no": r.voucher_no,
+                "party_type": r.party_type,
+                "party": r.party,
+                "debit": flt(r.debit),
+                "credit": flt(r.credit),
+                "remarks": r.remarks,
+                "balance": flt(running),
+            }
+        )
+    closing_balance = flt(running)
+    start_idx = (page_i - 1) * size
+    data = ledger[start_idx : start_idx + size]
+
+    return ok(
+        data,
+        meta={
+            "stub": False,
+            "account": account,
+            "from_date": str(start),
+            "to_date": str(end),
+            "page": page_i,
+            "page_size": size,
+            "total": total,
+            "opening_balance": opening_balance,
+            "closing_balance": closing_balance,
+            "source": "GL Entry",
+        },
+    )
+
+
+@frappe.whitelist()
 def trial_balance(from_date: str | None = None, to_date: str | None = None, company: str | None = None) -> dict[str, Any]:
     """Opening/period/closing debit+credit per account — raw sums from GL Entry,
     never netted or computed outside ERPNext's own ledger."""
