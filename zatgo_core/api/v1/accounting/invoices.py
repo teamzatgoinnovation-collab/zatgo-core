@@ -38,6 +38,8 @@ def create(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_sales_invoice(
@@ -47,6 +49,8 @@ def create(
         posting_date=posting_date,
         due_date=due_date,
         remarks=remarks,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 

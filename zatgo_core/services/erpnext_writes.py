@@ -554,6 +554,8 @@ def create_sales_invoice(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
@@ -580,6 +582,8 @@ def create_sales_invoice(
             "due_date": getdate(due_date) if due_date else None,
             "remarks": (remarks or "").strip() or None,
             "items": rows,
+            "cost_center": (cost_center or "").strip() or None,
+            "project": (project or "").strip() or None,
             "zatgo_client_id": cid,
         }
     )
@@ -731,6 +735,8 @@ def create_purchase_invoice(
     posting_date: str | None = None,
     due_date: str | None = None,
     remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
@@ -757,6 +763,8 @@ def create_purchase_invoice(
             "due_date": getdate(due_date) if due_date else None,
             "remarks": (remarks or "").strip() or None,
             "items": rows,
+            "cost_center": (cost_center or "").strip() or None,
+            "project": (project or "").strip() or None,
             "zatgo_client_id": cid,
         }
     )
@@ -889,6 +897,8 @@ def create_receive_payment(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
@@ -923,6 +933,10 @@ def create_receive_payment(
     if reference_no:
         pe.reference_no = reference_no
         pe.reference_date = pe.posting_date
+    if cost_center:
+        pe.cost_center = cost_center
+    if project:
+        pe.project = project
     pe.zatgo_client_id = cid
     if cid:
         pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
@@ -943,6 +957,8 @@ def create_pay_payment(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
@@ -977,6 +993,10 @@ def create_pay_payment(
     if reference_no:
         pe.reference_no = reference_no
         pe.reference_date = pe.posting_date
+    if cost_center:
+        pe.cost_center = cost_center
+    if project:
+        pe.project = project
     pe.zatgo_client_id = cid
     if cid:
         pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
@@ -999,6 +1019,8 @@ def create_contra_entry(
     reference_no: str | None = None,
     remarks: str | None = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     """Cash<->Bank / Bank<->Bank transfer — ERPNext's native Internal Transfer
@@ -1042,6 +1064,8 @@ def create_contra_entry(
             "reference_no": (reference_no or "").strip() or f"Contra-{frappe.generate_hash(length=8)}",
             "reference_date": date,
             "remarks": (remarks or "").strip() or None,
+            "cost_center": (cost_center or "").strip() or None,
+            "project": (project or "").strip() or None,
             "zatgo_client_id": cid,
         }
     )
@@ -1068,6 +1092,8 @@ def _create_advance_payment(
     invoices: Any,
     client_id: str | None,
     company: str | None,
+    cost_center: str | None = None,
+    project: str | None = None,
 ) -> dict[str, Any]:
     """Build a Payment Entry directly from a party — not bound to a single invoice.
     Supports on-account/advance receipts (no invoices given) and allocating one
@@ -1137,6 +1163,10 @@ def _create_advance_payment(
     pe.reference_date = date
     pe.paid_amount = amt
     pe.received_amount = amt
+    if cost_center:
+        pe.cost_center = cost_center
+    if project:
+        pe.project = project
     if payment_type == "Receive":
         pe.paid_from = party_account
         pe.paid_to = bank_account
@@ -1212,6 +1242,8 @@ def create_receive_advance(
     reference_no: str | None = None,
     invoices: Any = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     """Receive from a Customer without requiring one bound Sales Invoice —
@@ -1227,6 +1259,8 @@ def create_receive_advance(
         invoices,
         client_id,
         company,
+        cost_center=cost_center,
+        project=project,
     )
 
 
@@ -1238,6 +1272,8 @@ def create_pay_advance(
     reference_no: str | None = None,
     invoices: Any = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     """Pay a Supplier without requiring one bound Purchase Invoice —
@@ -1253,6 +1289,8 @@ def create_pay_advance(
         invoices,
         client_id,
         company,
+        cost_center=cost_center,
+        project=project,
     )
 
 

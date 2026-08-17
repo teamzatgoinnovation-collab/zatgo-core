@@ -45,6 +45,8 @@ def create_receive(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_receive_payment(
@@ -53,6 +55,8 @@ def create_receive(
         mode_of_payment=mode_of_payment,
         posting_date=posting_date,
         reference_no=reference_no,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 
@@ -64,6 +68,8 @@ def create_pay(
     mode_of_payment: str | None = None,
     posting_date: str | None = None,
     reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_pay_payment(
@@ -72,6 +78,8 @@ def create_pay(
         mode_of_payment=mode_of_payment,
         posting_date=posting_date,
         reference_no=reference_no,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 
@@ -85,6 +93,8 @@ def create_contra(
     reference_no: str | None = None,
     remarks: str | None = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return create_contra_entry(
@@ -95,6 +105,8 @@ def create_contra(
         reference_no=reference_no,
         remarks=remarks,
         company=company,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 
@@ -108,6 +120,8 @@ def create_receive_advance(
     reference_no: str | None = None,
     invoices: Any = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return _create_receive_advance_service(
@@ -118,6 +132,8 @@ def create_receive_advance(
         reference_no=reference_no,
         invoices=invoices,
         company=company,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 
@@ -131,6 +147,8 @@ def create_pay_advance(
     reference_no: str | None = None,
     invoices: Any = None,
     company: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
     client_id: str | None = None,
 ) -> dict[str, Any]:
     return _create_pay_advance_service(
@@ -141,6 +159,8 @@ def create_pay_advance(
         reference_no=reference_no,
         invoices=invoices,
         company=company,
+        cost_center=cost_center,
+        project=project,
         client_id=client_id,
     )
 
