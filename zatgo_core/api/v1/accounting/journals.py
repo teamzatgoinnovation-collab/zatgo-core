@@ -12,8 +12,14 @@ from zatgo_core.services.erpnext_reads import (
     list_accounts,
     list_cost_centers,
     list_journal_entries,
+    map_journal_entry_doc,
 )
-from zatgo_core.services.erpnext_writes import cancel_journal_entry, create_journal_entry, submit_journal_entry
+from zatgo_core.services.erpnext_writes import (
+    _amend_doc,
+    cancel_journal_entry,
+    create_journal_entry,
+    submit_journal_entry,
+)
 
 
 @frappe.whitelist()
@@ -62,6 +68,11 @@ def submit(name: str) -> dict[str, Any]:
 @frappe.whitelist()
 def cancel(name: str) -> dict[str, Any]:
     return cancel_journal_entry(name)
+
+
+@frappe.whitelist()
+def amend(name: str) -> dict[str, Any]:
+    return _amend_doc("Journal Entry", name, map_journal_entry_doc)
 
 
 @frappe.whitelist()

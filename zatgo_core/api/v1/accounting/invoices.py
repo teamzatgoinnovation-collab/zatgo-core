@@ -6,13 +6,20 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_document_pdf, get_sales_invoice, list_items, list_sales_invoices
+from zatgo_core.services.erpnext_reads import (
+    get_document_pdf,
+    get_sales_invoice,
+    list_items,
+    list_sales_invoices,
+    map_sales_invoice_doc,
+)
 from zatgo_core.services.erpnext_writes import (
     cancel_sales_invoice,
     create_sales_invoice,
     create_sales_return,
     submit_sales_invoice,
 )
+from zatgo_core.services.erpnext_writes import _amend_doc
 
 
 @frappe.whitelist()
@@ -63,6 +70,11 @@ def submit(name: str) -> dict[str, Any]:
 @frappe.whitelist()
 def cancel(name: str) -> dict[str, Any]:
     return cancel_sales_invoice(name)
+
+
+@frappe.whitelist()
+def amend(name: str) -> dict[str, Any]:
+    return _amend_doc("Sales Invoice", name, map_sales_invoice_doc)
 
 
 @frappe.whitelist()

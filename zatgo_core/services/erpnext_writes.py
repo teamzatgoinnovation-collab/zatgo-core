@@ -81,6 +81,24 @@ def _cancel_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     return ok(map_doc(doc), meta={"stub": False, "cancelled": True, "source": doctype})
 
 
+def _amend_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
+    """Correct a cancelled document by creating a new linked draft (amended_from),
+    ERPNext's own audit-trail-preserving correction mechanism — never edit or
+    resurrect the cancelled document itself."""
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission(doctype, "create", throw=True)
+    original = frappe.get_doc(doctype, name)
+    if int(original.docstatus or 0) != 2:
+        frappe.throw(f"Only a cancelled {doctype} can be amended")
+    new_doc = frappe.copy_doc(original)
+    new_doc.amended_from = name
+    new_doc.docstatus = 0
+    new_doc.insert()
+    frappe.db.commit()
+    return ok(map_doc(new_doc), meta={"stub": False, "amended_from": name, "source": doctype})
+
+
 def create_customer(
     customer_name: str,
     customer_type: str | None = None,
