@@ -634,6 +634,36 @@ def get_purchase_invoice(name: str) -> dict[str, Any]:
     return _get_doctype("Purchase Invoice", name, map_doc=map_purchase_invoice_doc)
 
 
+def get_document_pdf(doctype: str, name: str, print_format: str | None = None) -> dict[str, Any]:
+    """Render a document to PDF via ERPNext's own print engine (frappe.get_print) —
+    the accounting engine's authoritative rendering path, never a parallel renderer."""
+    import base64
+
+    require_login()
+    if not frappe.db.exists(doctype, name):
+        frappe.throw(f"{doctype} not found: {name}", frappe.DoesNotExistError)
+    require_doc_permission(doctype, "read", name)
+
+    fmt = (print_format or "").strip() or None
+    if fmt and not frappe.db.exists("Print Format", fmt):
+        fmt = None
+
+    pdf_bytes = frappe.get_print(doctype, name, print_format=fmt, as_pdf=True)
+    if isinstance(pdf_bytes, str):
+        pdf_bytes = pdf_bytes.encode("utf-8")
+
+    return ok(
+        {
+            "name": name,
+            "print_format": fmt or "Standard",
+            "content_type": "application/pdf",
+            "filename": f"{name}.pdf",
+            "pdf_base64": base64.b64encode(pdf_bytes).decode("ascii"),
+        },
+        meta={"source": "frappe.get_print", "doctype": doctype},
+    )
+
+
 def map_payment_entry_row(r: Any) -> dict[str, Any]:
     return {
         "id": r.name,

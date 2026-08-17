@@ -6,7 +6,7 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_sales_invoice, list_items, list_sales_invoices
+from zatgo_core.services.erpnext_reads import get_document_pdf, get_sales_invoice, list_items, list_sales_invoices
 from zatgo_core.services.erpnext_writes import (
     cancel_sales_invoice,
     create_sales_invoice,
@@ -23,6 +23,11 @@ def list(page: int | str = 1, page_size: int | str = 20, customer: str | None = 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
     return get_sales_invoice(name)
+
+
+@frappe.whitelist()
+def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
+    return get_document_pdf("Sales Invoice", name, print_format=print_format)
 
 
 @frappe.whitelist()

@@ -6,7 +6,13 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_journal_entry, list_accounts, list_cost_centers, list_journal_entries
+from zatgo_core.services.erpnext_reads import (
+    get_document_pdf,
+    get_journal_entry,
+    list_accounts,
+    list_cost_centers,
+    list_journal_entries,
+)
 from zatgo_core.services.erpnext_writes import cancel_journal_entry, create_journal_entry, submit_journal_entry
 
 
@@ -18,6 +24,11 @@ def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
     return get_journal_entry(name)
+
+
+@frappe.whitelist()
+def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
+    return get_document_pdf("Journal Entry", name, print_format=print_format)
 
 
 @frappe.whitelist()
