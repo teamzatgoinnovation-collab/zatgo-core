@@ -1425,6 +1425,121 @@ def submit_journal_entry(name: str) -> dict[str, Any]:
     return _submit_doc("Journal Entry", name, map_journal_entry_doc)
 
 
+def _create_split_entry(
+    party_type: str,
+    party: str,
+    lines: Any,
+    posting_date: str | None,
+    reference_no: str | None,
+    remarks: str | None,
+    cost_center: str | None,
+    company: str | None,
+    client_id: str | None,
+) -> dict[str, Any]:
+    """Multi-line receipt/payment: an auto-resolved party (receivable/payable)
+    line plus a caller-supplied split across several cash/bank accounts — for
+    a single transaction touching more than one account (e.g. part cash, part
+    card). Built on the same Journal Entry primitive as Contra; delegates to
+    create_journal_entry for balancing, validation, and idempotency rather
+    than duplicating any of that."""
+    require_login()
+    party = require_str(party, "party")
+    if not frappe.db.exists(party_type, party):
+        frappe.throw(f"{party_type} {party} not found")
+
+    if isinstance(lines, str):
+        import json
+
+        lines = json.loads(lines) if lines.strip() else []
+    if not isinstance(lines, list) or len(lines) < 1:
+        frappe.throw("At least one account line is required")
+
+    company_name = _default_company(company)
+    date = getdate(posting_date) if posting_date else getdate(nowdate())
+
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_party_details
+
+    party_details = get_party_details(company_name, party_type, party, date)
+    party_account = party_details["party_account"]
+
+    is_receive = party_type == "Customer"
+    total = 0.0
+    accounts: list[dict[str, Any]] = []
+    for raw in lines:
+        if not isinstance(raw, dict):
+            frappe.throw("Each account line must be an object")
+        account = require_str(raw.get("account"), "lines[].account")
+        amt = flt(raw.get("amount"))
+        if amt <= 0:
+            frappe.throw("Each line amount must be greater than zero")
+        total += amt
+        accounts.append(
+            {
+                "account": account,
+                "debit": amt if is_receive else 0,
+                "credit": 0 if is_receive else amt,
+                "cost_center": raw.get("cost_center") or cost_center or None,
+            }
+        )
+    accounts.append(
+        {
+            "account": party_account,
+            "debit": 0 if is_receive else total,
+            "credit": total if is_receive else 0,
+            "party_type": party_type,
+            "party": party,
+            "cost_center": cost_center or None,
+        }
+    )
+
+    # Bank Entry requires a reference no/date — auto-generate one if the caller
+    # didn't supply it, same as the Contra Entry flow.
+    ref_no = (reference_no or "").strip() or f"Split-{frappe.generate_hash(length=8)}"
+
+    return create_journal_entry(
+        accounts=accounts,
+        company=company_name,
+        posting_date=str(date),
+        user_remark=remarks,
+        voucher_type="Bank Entry",
+        reference_no=ref_no,
+        reference_date=str(date),
+        client_id=client_id,
+    )
+
+
+def create_split_receive(
+    party: str,
+    lines: Any,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    remarks: str | None = None,
+    cost_center: str | None = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    """Receive from a Customer split across several cash/bank accounts in one entry."""
+    return _create_split_entry(
+        "Customer", party, lines, posting_date, reference_no, remarks, cost_center, company, client_id
+    )
+
+
+def create_split_pay(
+    party: str,
+    lines: Any,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    remarks: str | None = None,
+    cost_center: str | None = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    """Pay a Supplier split across several cash/bank accounts in one entry."""
+    return _create_split_entry(
+        "Supplier", party, lines, posting_date, reference_no, remarks, cost_center, company, client_id
+    )
+
+
 def cancel_journal_entry(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_journal_entry_doc
 
