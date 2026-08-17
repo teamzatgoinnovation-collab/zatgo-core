@@ -94,6 +94,10 @@ def _amend_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     new_doc = frappe.copy_doc(original)
     new_doc.amended_from = name
     new_doc.docstatus = 0
+    # copy_doc carries over zatgo_client_id too, which collides with the original's
+    # DB-level unique constraint — the amended doc is a new logical document.
+    if hasattr(new_doc, "zatgo_client_id"):
+        new_doc.zatgo_client_id = None
     new_doc.insert()
     frappe.db.commit()
     return ok(map_doc(new_doc), meta={"stub": False, "amended_from": name, "source": doctype})
