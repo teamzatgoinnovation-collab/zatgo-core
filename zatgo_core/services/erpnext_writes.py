@@ -1033,76 +1033,6 @@ def create_pay_payment(
     )
 
 
-def create_contra_entry(
-    from_account: str,
-    to_account: str,
-    amount: float | str,
-    posting_date: str | None = None,
-    reference_no: str | None = None,
-    remarks: str | None = None,
-    company: str | None = None,
-    cost_center: str | None = None,
-    project: str | None = None,
-    client_id: str | None = None,
-) -> dict[str, Any]:
-    """Cash<->Bank / Bank<->Bank transfer — ERPNext's native Internal Transfer
-    Payment Entry, not a separate accounting mechanism."""
-    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
-
-    require_login()
-    cid = (client_id or "").strip() or None
-    if cid:
-        existing = find_by_client_id("Payment Entry", cid)
-        if existing:
-            return ok(
-                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
-                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
-            )
-    frappe.has_permission("Payment Entry", "create", throw=True)
-    from_acc = require_str(from_account, "from_account")
-    to_acc = require_str(to_account, "to_account")
-    if from_acc == to_acc:
-        frappe.throw("From and To accounts cannot be the same")
-    if not frappe.db.exists("Account", from_acc):
-        frappe.throw(f"Account {from_acc} not found")
-    if not frappe.db.exists("Account", to_acc):
-        frappe.throw(f"Account {to_acc} not found")
-    amt = flt(amount)
-    if amt <= 0:
-        frappe.throw("Amount must be greater than zero")
-
-    date = getdate(posting_date) if posting_date else getdate(nowdate())
-    doc = frappe.get_doc(
-        {
-            "doctype": "Payment Entry",
-            "payment_type": "Internal Transfer",
-            "company": _default_company(company),
-            "posting_date": date,
-            "paid_from": from_acc,
-            "paid_to": to_acc,
-            "paid_amount": amt,
-            "received_amount": amt,
-            "reference_no": (reference_no or "").strip() or f"Contra-{frappe.generate_hash(length=8)}",
-            "reference_date": date,
-            "remarks": (remarks or "").strip() or None,
-            "cost_center": (cost_center or "").strip() or None,
-            "project": (project or "").strip() or None,
-            "zatgo_client_id": cid,
-        }
-    )
-    if cid:
-        doc, created = insert_idempotent(doc, doctype="Payment Entry", client_id=cid)
-    else:
-        doc.insert()
-        created = True
-    frappe.db.commit()
-    return ok(
-        map_payment_entry_doc(doc),
-        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
-    )
-
-
 def _create_advance_payment(
     payment_type: str,
     party_type: str,
@@ -1328,6 +1258,47 @@ def cancel_payment_entry(name: str) -> dict[str, Any]:
     return _cancel_doc("Payment Entry", name, map_payment_entry_doc)
 
 
+_CASH_BANK_ACCOUNT_TYPES = {"Cash", "Bank"}
+
+
+def _is_cash_or_bank_account(account: str) -> bool:
+    return (frappe.get_cached_value("Account", account, "account_type") or "") in _CASH_BANK_ACCOUNT_TYPES
+
+
+def _validate_voucher_type_accounts(voucher_type: str, rows: list[dict[str, Any]]) -> None:
+    """Enforce standard double-entry voucher rules by account type, on top of
+    ERPNext's own validation (which doesn't distinguish these):
+      Contra    -> every line must be Cash/Bank
+      Bank Entry (our Receipt/Payment split, see _create_split_entry) ->
+                   the party line must NOT be Cash/Bank, every other line MUST be
+      Journal Entry (plain) -> no line may be Cash/Bank — use Receipt, Payment,
+                   or Contra instead so the cash/bank side is explicit
+    Receipt/Payment against a single invoice or on-account go through Payment
+    Entry (create_receive_payment/create_pay_payment/_create_advance_payment),
+    which structurally enforces the same rule by construction — nothing to
+    check here for those."""
+    if voucher_type == "Contra Entry":
+        for r in rows:
+            if not _is_cash_or_bank_account(r["account"]):
+                frappe.throw(
+                    f"Contra entries can only use Cash or Bank accounts — {r['account']} is neither."
+                )
+    elif voucher_type == "Bank Entry":
+        for r in rows:
+            if r.get("party_type"):
+                if _is_cash_or_bank_account(r["account"]):
+                    frappe.throw(f"{r['account']} cannot be the party account and a Cash/Bank account at once.")
+            elif not _is_cash_or_bank_account(r["account"]):
+                frappe.throw(f"{r['account']} must be a Cash or Bank account for a split Receipt/Payment.")
+    else:
+        for r in rows:
+            if _is_cash_or_bank_account(r["account"]):
+                frappe.throw(
+                    f"{r['account']} is a Cash/Bank account — use Receipt, Payment, or Contra instead of a "
+                    "plain Journal Entry."
+                )
+
+
 def create_journal_entry(
     accounts: Any,
     company: str | None = None,
@@ -1365,6 +1336,8 @@ def create_journal_entry(
         if not isinstance(raw, dict):
             frappe.throw("Each account line must be an object")
         account = require_str(raw.get("account"), "account")
+        if not frappe.db.exists("Account", account):
+            frappe.throw(f"Account {account} not found")
         debit = flt(raw.get("debit") or 0)
         credit = flt(raw.get("credit") or 0)
         if debit < 0 or credit < 0:
@@ -1390,8 +1363,14 @@ def create_journal_entry(
             row["user_remark"] = raw["user_remark"]
         rows.append(row)
 
+    _validate_voucher_type_accounts((voucher_type or "Journal Entry").strip() or "Journal Entry", rows)
+
     if abs(total_debit - total_credit) > 0.005:
         frappe.throw(f"Journal is not balanced (debit {total_debit} vs credit {total_credit})")
+    if not any(r["debit_in_account_currency"] > 0 for r in rows) or not any(
+        r["credit_in_account_currency"] > 0 for r in rows
+    ):
+        frappe.throw("Voucher must have at least one Debit and one Credit entry")
 
     doc = frappe.get_doc(
         {
