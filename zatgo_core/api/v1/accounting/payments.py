@@ -14,6 +14,8 @@ from zatgo_core.services.erpnext_writes import (
     create_receive_payment,
     submit_payment_entry,
 )
+from zatgo_core.services.erpnext_writes import create_pay_advance as _create_pay_advance_service
+from zatgo_core.services.erpnext_writes import create_receive_advance as _create_receive_advance_service
 
 
 @frappe.whitelist()
@@ -87,6 +89,52 @@ def create_contra(
         posting_date=posting_date,
         reference_no=reference_no,
         remarks=remarks,
+        company=company,
+        client_id=client_id,
+    )
+
+
+@frappe.whitelist()
+def create_receive_advance(
+    party: str,
+    amount: float | str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    invoices: Any = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    return _create_receive_advance_service(
+        party=party,
+        amount=amount,
+        mode_of_payment=mode_of_payment,
+        posting_date=posting_date,
+        reference_no=reference_no,
+        invoices=invoices,
+        company=company,
+        client_id=client_id,
+    )
+
+
+@frappe.whitelist()
+def create_pay_advance(
+    party: str,
+    amount: float | str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    invoices: Any = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    return _create_pay_advance_service(
+        party=party,
+        amount=amount,
+        mode_of_payment=mode_of_payment,
+        posting_date=posting_date,
+        reference_no=reference_no,
+        invoices=invoices,
         company=company,
         client_id=client_id,
     )

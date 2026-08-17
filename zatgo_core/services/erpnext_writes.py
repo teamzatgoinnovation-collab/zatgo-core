@@ -1057,6 +1057,205 @@ def create_contra_entry(
     )
 
 
+def _create_advance_payment(
+    payment_type: str,
+    party_type: str,
+    party: str,
+    amount: float | str,
+    mode_of_payment: str | None,
+    posting_date: str | None,
+    reference_no: str | None,
+    invoices: Any,
+    client_id: str | None,
+    company: str | None,
+) -> dict[str, Any]:
+    """Build a Payment Entry directly from a party — not bound to a single invoice.
+    Supports on-account/advance receipts (no invoices given) and allocating one
+    payment across several outstanding invoices. ERPNext's own controller computes
+    the unallocated remainder, account currency, and party/account defaults — this
+    only assembles the doc and validates our own inputs before handing it off."""
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
+    require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Payment Entry", cid)
+        if existing:
+            return ok(
+                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+            )
+    frappe.has_permission("Payment Entry", "create", throw=True)
+
+    party = require_str(party, "party")
+    if not frappe.db.exists(party_type, party):
+        frappe.throw(f"{party_type} {party} not found")
+    amt = flt(amount)
+    if amt <= 0:
+        frappe.throw("Amount must be greater than zero")
+
+    if isinstance(invoices, str):
+        import json
+
+        invoices = json.loads(invoices) if invoices.strip() else []
+    invoices = invoices or []
+    if not isinstance(invoices, list):
+        frappe.throw("invoices must be a list")
+
+    company_name = _default_company(company)
+    date = getdate(posting_date) if posting_date else getdate(nowdate())
+
+    from erpnext.accounts.doctype.payment_entry.payment_entry import (
+        get_bank_cash_account,
+        get_party_details,
+        get_reference_details,
+    )
+
+    party_details = get_party_details(company_name, party_type, party, date)
+    party_account = party_details["party_account"]
+    # get_bank_cash_account returns a dict ({account, account_currency, account_type[, balance]}),
+    # not a plain account name — extract the account itself.
+    bank_account = (
+        get_bank_cash_account(frappe._dict(company=company_name, mode_of_payment=mode_of_payment), None).get("account")
+    )
+    if not bank_account:
+        frappe.throw("No default cash/bank account configured for this company")
+
+    reference_doctype = "Sales Invoice" if party_type == "Customer" else "Purchase Invoice"
+    party_field = "customer" if party_type == "Customer" else "supplier"
+
+    pe = frappe.new_doc("Payment Entry")
+    pe.payment_type = payment_type
+    pe.company = company_name
+    pe.posting_date = date
+    pe.party_type = party_type
+    pe.party = party
+    if mode_of_payment:
+        pe.mode_of_payment = mode_of_payment
+    pe.reference_no = (reference_no or "").strip() or f"{payment_type}-{frappe.generate_hash(length=8)}"
+    pe.reference_date = date
+    pe.paid_amount = amt
+    pe.received_amount = amt
+    if payment_type == "Receive":
+        pe.paid_from = party_account
+        pe.paid_to = bank_account
+    else:
+        pe.paid_from = bank_account
+        pe.paid_to = party_account
+
+    remaining = amt
+    for raw in invoices:
+        if not isinstance(raw, dict):
+            frappe.throw("Each invoice allocation must be an object")
+        inv_name = require_str(raw.get("name"), "invoices[].name")
+        if not frappe.db.exists(reference_doctype, inv_name):
+            frappe.throw(f"{reference_doctype} {inv_name} not found")
+        inv_party, inv_docstatus, inv_outstanding = frappe.db.get_value(
+            reference_doctype, inv_name, [party_field, "docstatus", "outstanding_amount"]
+        )
+        if inv_party != party:
+            frappe.throw(f"{inv_name} does not belong to {party}")
+        if int(inv_docstatus or 0) != 1:
+            frappe.throw(f"{inv_name} must be submitted before allocating payment")
+        outstanding = flt(inv_outstanding)
+        if outstanding <= 0:
+            frappe.throw(f"{inv_name} has no outstanding balance")
+        requested = flt(raw.get("amount")) if raw.get("amount") is not None else outstanding
+        alloc = min(requested, outstanding, remaining)
+        if alloc <= 0:
+            continue
+        ref = get_reference_details(reference_doctype, inv_name, party_details["party_account_currency"])
+        pe.append(
+            "references",
+            {
+                "reference_doctype": reference_doctype,
+                "reference_name": inv_name,
+                "due_date": ref.get("due_date"),
+                "total_amount": ref.get("total_amount"),
+                "outstanding_amount": ref.get("outstanding_amount"),
+                "allocated_amount": alloc,
+            },
+        )
+        remaining -= alloc
+
+    pe.zatgo_client_id = cid
+    # set_missing_values() reads self.party_account as a transient attribute that
+    # ERPNext's own client-side form normally seeds before save — since we build
+    # this doc server-side, seed it ourselves with the value we already resolved.
+    pe.party_account = party_account
+    pe.set_missing_values()
+    if cid:
+        pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
+    else:
+        pe.insert()
+        created = True
+    frappe.db.commit()
+
+    return ok(
+        map_payment_entry_doc(pe),
+        meta={
+            "stub": False,
+            "created": created,
+            "idempotent": not created,
+            "unallocated_amount": flt(pe.unallocated_amount),
+            "source": "Payment Entry",
+        },
+    )
+
+
+def create_receive_advance(
+    party: str,
+    amount: float | str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    invoices: Any = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    """Receive from a Customer without requiring one bound Sales Invoice —
+    supports on-account/advance receipts and allocating across several invoices."""
+    return _create_advance_payment(
+        "Receive",
+        "Customer",
+        party,
+        amount,
+        mode_of_payment,
+        posting_date,
+        reference_no,
+        invoices,
+        client_id,
+        company,
+    )
+
+
+def create_pay_advance(
+    party: str,
+    amount: float | str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    invoices: Any = None,
+    company: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    """Pay a Supplier without requiring one bound Purchase Invoice —
+    supports on-account/advance payments and allocating across several bills."""
+    return _create_advance_payment(
+        "Pay",
+        "Supplier",
+        party,
+        amount,
+        mode_of_payment,
+        posting_date,
+        reference_no,
+        invoices,
+        client_id,
+        company,
+    )
+
+
 def submit_payment_entry(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
 
