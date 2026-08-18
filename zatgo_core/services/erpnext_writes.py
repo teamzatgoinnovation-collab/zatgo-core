@@ -53,6 +53,38 @@ def _parse_items(items: Any) -> list[dict[str, Any]]:
     return rows
 
 
+def _parse_quotation_items(items: Any) -> list[dict[str, Any]]:
+    """Same shape as _parse_items, plus an optional free-text description
+    and billing-type label (e.g. "One-time", "Annually") — Quotation-only
+    fields, so kept separate rather than growing the shared parser."""
+    if items is None:
+        return []
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list) or not items:
+        frappe.throw("At least one line item is required")
+    rows: list[dict[str, Any]] = []
+    for raw in items:
+        if not isinstance(raw, dict):
+            frappe.throw("Each item must be an object")
+        item_code = require_str(raw.get("item_code") or raw.get("item"), "item_code")
+        qty = flt(raw.get("qty") or 1)
+        rate = flt(raw.get("rate") or 0)
+        if qty <= 0:
+            frappe.throw("Item qty must be greater than zero")
+        row: dict[str, Any] = {"item_code": item_code, "qty": qty, "rate": rate}
+        if raw.get("item_name"):
+            row["item_name"] = raw["item_name"]
+        if raw.get("description"):
+            row["description"] = raw["description"]
+        if raw.get("billing_type"):
+            row["zatgo_billing_type"] = raw["billing_type"]
+        rows.append(row)
+    return rows
+
+
 def _submit_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     require_login()
     require_str(name, "name")
@@ -619,6 +651,96 @@ def create_sales_invoice(
     return ok(
         map_sales_invoice_doc(doc),
         meta={"stub": False, "created": created, "idempotent": not created, "source": "Sales Invoice"},
+    )
+
+
+def create_quotation(
+    customer: str,
+    items: Any,
+    company: str | None = None,
+    transaction_date: str | None = None,
+    valid_till: str | None = None,
+    terms: str | None = None,
+    cost_center: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_quotation_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
+    require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Quotation", cid)
+        if existing:
+            return ok(
+                map_quotation_doc(frappe.get_doc("Quotation", existing)),
+                meta={"stub": False, "idempotent": True, "source": "Quotation"},
+            )
+    frappe.has_permission("Quotation", "create", throw=True)
+    party = require_str(customer, "customer")
+    if not frappe.db.exists("Customer", party):
+        frappe.throw(f"Customer {party} not found")
+    rows = _parse_quotation_items(items)
+    doc = frappe.get_doc(
+        {
+            "doctype": "Quotation",
+            "quotation_to": "Customer",
+            "party_name": party,
+            "company": _default_company(company),
+            "transaction_date": getdate(transaction_date) if transaction_date else today(),
+            "valid_till": getdate(valid_till) if valid_till else None,
+            "terms": (terms or "").strip() or None,
+            "items": rows,
+            "cost_center": (cost_center or "").strip() or None,
+            "zatgo_client_id": cid,
+        }
+    )
+    if cid:
+        doc, created = insert_idempotent(doc, doctype="Quotation", client_id=cid)
+    else:
+        doc.insert()
+        created = True
+    frappe.db.commit()
+
+    return ok(
+        map_quotation_doc(doc),
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Quotation"},
+    )
+
+
+def submit_quotation(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_quotation_doc
+
+    return _submit_doc("Quotation", name, map_quotation_doc)
+
+
+def cancel_quotation(name: str) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_quotation_doc
+
+    return _cancel_doc("Quotation", name, map_quotation_doc)
+
+
+def create_sales_invoice_from_quotation(name: str) -> dict[str, Any]:
+    """Convert a submitted (Ordered) Quotation into a Sales Invoice via
+    ERPNext's own mapper — never re-derive item/tax mapping ourselves."""
+    from erpnext.selling.doctype.quotation.quotation import make_sales_invoice
+
+    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+
+    require_login()
+    require_str(name, "name")
+    if not frappe.db.exists("Quotation", name):
+        frappe.throw(f"Quotation {name} not found")
+    frappe.has_permission("Sales Invoice", "create", throw=True)
+    source = frappe.get_doc("Quotation", name)
+    if int(source.docstatus or 0) != 1:
+        frappe.throw("Quotation must be submitted before converting to an invoice")
+    invoice = make_sales_invoice(name)
+    invoice.insert()
+    frappe.db.commit()
+    return ok(
+        map_sales_invoice_doc(invoice),
+        meta={"stub": False, "created": True, "source": "Sales Invoice", "from_quotation": name},
     )
 
 

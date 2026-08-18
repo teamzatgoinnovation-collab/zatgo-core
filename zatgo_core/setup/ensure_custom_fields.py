@@ -34,6 +34,7 @@ def ensure_custom_fields() -> None:
     _run("item sync fields", _ensure_item_sync_fields)
     _run("zatca_qr_base64 field", _ensure_zatca_qr_field)
     _run("accounting client_id fields", _ensure_accounting_client_id_fields)
+    _run("quotation item type field", _ensure_quotation_item_type_field)
 
 
 def _run(label: str, fn) -> None:
@@ -69,5 +70,11 @@ def _ensure_zatca_qr_field() -> None:
 
 def _ensure_accounting_client_id_fields() -> None:
     from zatgo_core.patches.v0_1_3.add_accounting_client_id_fields import execute
+
+    execute()
+
+
+def _ensure_quotation_item_type_field() -> None:
+    from zatgo_core.patches.v0_2_0.add_quotation_item_type_field import execute
 
     execute()

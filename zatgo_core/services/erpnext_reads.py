@@ -542,6 +542,66 @@ def get_sales_invoice(name: str) -> dict[str, Any]:
     return _get_doctype("Sales Invoice", name, map_doc=map_sales_invoice_doc)
 
 
+def map_quotation_row(r: Any) -> dict[str, Any]:
+    return {
+        "id": r.name,
+        "name": r.name,
+        "customer": r.customer_name or r.party_name,
+        "customer_id": r.party_name,
+        "status": r.status,
+        "amount": float(r.grand_total or 0),
+        "date": str(r.transaction_date) if r.transaction_date else None,
+        "valid_till": str(r.valid_till) if getattr(r, "valid_till", None) else None,
+        "currency": getattr(r, "currency", None),
+        "docstatus": int(r.docstatus or 0),
+    }
+
+
+def map_quotation_doc(d: Any) -> dict[str, Any]:
+    row = map_quotation_row(d)
+    row["items"] = [
+        {
+            "item_code": item.item_code,
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": float(item.qty or 0),
+            "rate": float(item.rate or 0),
+            "amount": float(item.amount or 0),
+            "billing_type": getattr(item, "zatgo_billing_type", None),
+        }
+        for item in (d.items or [])
+    ]
+    row["company"] = d.company
+    row["terms"] = d.terms
+    return row
+
+
+def list_quotations(page: int | str = 1, page_size: int | str = 20, customer: str | None = None) -> dict[str, Any]:
+    filters: dict[str, Any] = {"party_name": customer} if customer else None
+    return _list_doctype(
+        "Quotation",
+        fields=[
+            "name",
+            "party_name",
+            "customer_name",
+            "status",
+            "grand_total",
+            "transaction_date",
+            "valid_till",
+            "currency",
+            "docstatus",
+        ],
+        page=page,
+        page_size=page_size,
+        filters=filters,
+        map_row=map_quotation_row,
+    )
+
+
+def get_quotation(name: str) -> dict[str, Any]:
+    return _get_doctype("Quotation", name, map_doc=map_quotation_doc)
+
+
 def list_suppliers(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
     return _list_doctype(
         "Supplier",

@@ -275,10 +275,158 @@ _HTML_80MM = r"""
 """
 
 
+QUOTATION_PRINT_FORMAT_NAME = "ZatGo Quotation"
+
+# Professional proposal-style quotation: brand-green accent, prepared-for/by
+# boxes, itemized commercials table, terms, signature blocks. All content is
+# pulled from the Quotation doc / Company / Customer — nothing hardcoded per
+# company, so this works for any tenant using this print format.
+_QUOTATION_HTML = r"""
+<style>
+  .zq { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; color: #1f2937; }
+  .zq * { box-sizing: border-box; }
+  .zq-accent { color: #15803d; }
+  .zq-head { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  .zq-head td { vertical-align: top; }
+  .zq-logo img { max-height: 60px; max-width: 180px; }
+  .zq-company-name { font-weight: 700; font-size: 13px; }
+  .zq-title { text-align: right; font-size: 26px; font-weight: 700; color: #15803d; margin: 0; }
+  .zq-meta { text-align: right; font-size: 10px; color: #4b5563; margin-top: 4px; }
+  .zq-meta b { color: #1f2937; }
+  .zq-tagline { font-size: 10px; font-weight: 700; color: #374151; margin: 10px 0 12px; }
+  .zq-boxes { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+  .zq-boxes td { width: 50%; padding: 10px 12px; vertical-align: top; }
+  .zq-boxes .for { background: #f3f4f6; }
+  .zq-boxes .by { background: #ecfdf5; }
+  .zq-box-label { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; color: #15803d; margin-bottom: 4px; }
+  .zq-box-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .zq-section-label {
+    font-size: 11px; font-weight: 700; border-left: 3px solid #15803d; padding-left: 6px; margin: 14px 0 8px;
+  }
+  .zq-table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .zq-table th { background: #15803d; color: #fff; text-align: left; padding: 6px 8px; font-size: 10px; }
+  .zq-table th.num, .zq-table td.num { text-align: right; }
+  .zq-table td { padding: 8px; border-bottom: 1px solid #e5e7eb; font-size: 10.5px; vertical-align: top; }
+  .zq-table .item-name { font-weight: 700; }
+  .zq-table .item-desc { color: #6b7280; font-size: 9.5px; }
+  .zq-totals { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .zq-totals td { padding: 10px 12px; }
+  .zq-totals .grand { background: #ecfdf5; border-top: 2px solid #15803d; }
+  .zq-totals .grand-label { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; color: #15803d; }
+  .zq-totals .grand-value { font-size: 16px; font-weight: 700; color: #15803d; }
+  .zq-terms { font-size: 10px; line-height: 1.5; color: #374151; }
+  .zq-sign { width: 100%; border-collapse: collapse; margin-top: 26px; }
+  .zq-sign td { width: 50%; padding-top: 26px; border-top: 1px solid #9ca3af; font-size: 10px; }
+  .zq-sign .lbl { font-size: 9px; color: #6b7280; }
+  .zq-footer { margin-top: 18px; text-align: center; font-size: 8.5px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 6px; }
+</style>
+{%- set company = frappe.get_doc("Company", doc.company) -%}
+{%- set customer = frappe.get_doc("Customer", doc.party_name) if doc.quotation_to == "Customer" else None -%}
+{%- set logo_url = company.company_logo -%}
+
+<div class="zq">
+  <table class="zq-head">
+    <tr>
+      <td style="width:55%">
+        {% if logo_url %}
+        <div class="zq-logo"><img src="{{ logo_url }}" alt="{{ company.company_name }}"/></div>
+        {% else %}
+        <div class="zq-company-name">{{ company.company_name }}</div>
+        {% endif %}
+      </td>
+      <td style="width:45%">
+        <p class="zq-title">QUOTATION</p>
+        <div class="zq-meta">
+          <div>Ref: <b>#{{ doc.name }}</b></div>
+          <div>Date: <b>{{ frappe.utils.formatdate(doc.transaction_date, "dd MMM yyyy") }}</b></div>
+          {% if doc.valid_till %}<div>Valid: <b>{{ frappe.utils.formatdate(doc.valid_till, "dd MMM yyyy") }}</b></div>{% endif %}
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="zq-boxes">
+    <tr>
+      <td class="for">
+        <div class="zq-box-label">PREPARED FOR</div>
+        <div class="zq-box-name">{{ doc.customer_name or doc.party_name }}</div>
+        {% if customer and customer.customer_primary_contact %}<div>{{ customer.customer_primary_contact }}</div>{% endif %}
+      </td>
+      <td class="by">
+        <div class="zq-box-label">PREPARED BY</div>
+        <div class="zq-box-name">{{ company.company_name }}</div>
+        {% if company.email %}<div>Email: {{ company.email }}</div>{% endif %}
+        {% if company.phone_no %}<div>Phone: {{ company.phone_no }}</div>{% endif %}
+        {% if company.website %}<div>Web: {{ company.website }}</div>{% endif %}
+      </td>
+    </tr>
+  </table>
+
+  <div class="zq-section-label">COMMERCIALS</div>
+  <table class="zq-table">
+    <thead>
+      <tr>
+        <th style="width:6%">#</th>
+        <th style="width:54%">Description</th>
+        <th style="width:20%">Type</th>
+        <th class="num" style="width:20%">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>
+          <div class="item-name">{{ item.item_name or item.item_code }}</div>
+          {% if item.description and item.description != (item.item_name or item.item_code) %}
+          <div class="item-desc">{{ item.description | striptags }}</div>
+          {% endif %}
+        </td>
+        <td>{{ item.zatgo_billing_type or "—" }}</td>
+        <td class="num">{{ doc.currency }} {{ "{:,.2f}".format(frappe.utils.flt(item.amount)) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="zq-totals">
+    <tr>
+      <td style="width:60%"></td>
+      <td class="grand" style="width:40%">
+        <div class="grand-label">GRAND TOTAL</div>
+        <div class="grand-value">{{ doc.currency }} {{ "{:,.2f}".format(frappe.utils.flt(doc.grand_total)) }}</div>
+      </td>
+    </tr>
+  </table>
+
+  {% if doc.terms %}
+  <div class="zq-section-label">TERMS &amp; CONDITIONS</div>
+  <div class="zq-terms">{{ doc.terms }}</div>
+  {% endif %}
+
+  <table class="zq-sign">
+    <tr>
+      <td>
+        <div class="zq-box-name">{{ company.company_name }}</div>
+        <div class="lbl">AUTHORIZED SIGNATORY</div>
+      </td>
+      <td>
+        <div class="zq-box-name">{{ doc.customer_name or doc.party_name }}</div>
+        <div class="lbl">CLIENT ACCEPTANCE / CONFIRMATION</div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="zq-footer">{{ company.company_name }} &nbsp;|&nbsp; Quotation #{{ doc.name }} &nbsp;|&nbsp; Confidential</div>
+</div>
+"""
+
+
 def _upsert_print_format(
     name: str,
     *,
     html: str,
+    doc_type: str = "Sales Invoice",
     css: str | None = None,
     margins: float | None = None,
 ) -> None:
@@ -287,7 +435,7 @@ def _upsert_print_format(
     else:
         doc = frappe.new_doc("Print Format")
         doc.name = name
-        doc.doc_type = "Sales Invoice"
+        doc.doc_type = doc_type
         doc.module = "ZatGo Core"
         doc.standard = "No"
         doc.custom_format = 1
@@ -298,7 +446,7 @@ def _upsert_print_format(
     doc.raw_printing = 0
     doc.disabled = 0
     doc.print_format_type = "Jinja"
-    doc.doc_type = "Sales Invoice"
+    doc.doc_type = doc_type
     doc.standard = "No"
     doc.module = "ZatGo Core"
     if css is not None:
@@ -315,7 +463,8 @@ def _upsert_print_format(
 
 
 def ensure_print_formats() -> None:
-    """Create or update the VanSale Tax Invoice print formats (A4 + 80mm thermal)."""
+    """Create or update all zatgo_core-managed print formats."""
     _upsert_print_format(PRINT_FORMAT_NAME, html=_HTML)
     _upsert_print_format(PRINT_FORMAT_80MM_NAME, html=_HTML_80MM, css=_CSS_80MM, margins=2)
+    _upsert_print_format(QUOTATION_PRINT_FORMAT_NAME, html=_QUOTATION_HTML, doc_type="Quotation", margins=10)
     frappe.db.commit()
