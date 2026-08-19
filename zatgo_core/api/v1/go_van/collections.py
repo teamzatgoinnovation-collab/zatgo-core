@@ -22,6 +22,8 @@ def create(
     method: str | None = None,
     sales_invoice: str | None = None,
     posting_date: str | None = None,
+    reference: str | None = None,
+    notes: str | None = None,
 ) -> dict[str, Any]:
     return create_collection(
         client_id=client_id,
@@ -30,6 +32,8 @@ def create(
         method=method,
         sales_invoice=sales_invoice,
         posting_date=posting_date,
+        reference=reference,
+        notes=notes,
     )
 
 

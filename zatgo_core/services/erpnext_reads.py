@@ -752,6 +752,7 @@ def map_payment_entry_doc(d: Any) -> dict[str, Any]:
     ]
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["reference_no"] = d.reference_no
     return row
 
 

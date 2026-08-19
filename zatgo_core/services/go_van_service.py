@@ -442,6 +442,8 @@ def create_collection(
     method: str | None = None,
     sales_invoice: str | None = None,
     posting_date: str | None = None,
+    reference: str | None = None,
+    notes: str | None = None,
 ) -> dict[str, Any]:
     require_login()
     cid = require_str(client_id, "client_id")
@@ -495,8 +497,17 @@ def create_collection(
     pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
     if method:
         pe.mode_of_payment = method
-    pe.reference_no = cid
+    ref = (reference or "").strip()
+    pe.reference_no = ref or cid
     pe.reference_date = pe.posting_date
+    note = (notes or "").strip()
+    if note:
+        # Payment Entry's own validate() rebuilds `remarks` from scratch
+        # (set_remarks()) unless custom_remarks is set — call it first so
+        # our appended note doesn't get silently wiped on insert/submit.
+        pe.set_remarks()
+        pe.remarks = f"{pe.remarks}\n{note}" if pe.remarks else note
+        pe.custom_remarks = 1
     if frappe.db.has_column("Payment Entry", "zatgo_client_id"):
         pe.zatgo_client_id = cid
     pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
