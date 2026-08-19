@@ -26,6 +26,16 @@ _PERMS: list[tuple[str, str, dict]] = [
     # Masters
     ("Customer", ROLE_USER, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1}),
     ("Customer", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1, "delete": 1}),
+    # Address / Contact — every Customer created via sync gets a linked
+    # billing Address + Contact, and ERPNext's Sales Invoice/Payment Entry
+    # validate() renders the customer's address on every save via
+    # render_address()->check_permission(); without read here (and create
+    # for the sync flow that makes them), every non-admin VanSale User order
+    # or collection fails with PermissionError.
+    ("Address", ROLE_USER, {"read": 1, "write": 1, "create": 1, "report": 1}),
+    ("Address", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "report": 1, "delete": 1}),
+    ("Contact", ROLE_USER, {"read": 1, "write": 1, "create": 1, "report": 1}),
+    ("Contact", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "report": 1, "delete": 1}),
     ("Item", ROLE_USER, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1}),
     ("Item", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "export": 1, "report": 1, "delete": 1}),
     # Item Price — ERPNext's Item.after_insert() auto-creates an Item Price
