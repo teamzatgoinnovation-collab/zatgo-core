@@ -153,7 +153,17 @@ def detail(
     for r in rows:
         due = getdate(r.due_date) if r.due_date else getdate(r.posting_date) or today_d
         days = date_diff(today_d, due)
-        credit_limit = flt(frappe.db.get_value("Customer", r.customer, "credit_limit") or 0)
+        # credit_limit lives on the "Customer Credit Limit" child table
+        # (per-company), not as a direct field on Customer — querying it
+        # there directly throws "Unknown column 'credit_limit'".
+        credit_limit = flt(
+            frappe.db.get_value(
+                "Customer Credit Limit",
+                {"parent": r.customer, "company": r.company},
+                "credit_limit",
+            )
+            or 0
+        )
         data.append(
             {
                 "name": r.name,
