@@ -99,6 +99,24 @@ def _submit_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     return ok(map_doc(doc), meta={"stub": False, "submitted": True, "source": doctype})
 
 
+def _try_auto_submit(doc) -> tuple[bool, str | None]:
+    """Submit `doc` immediately after insert so a saved voucher posts to
+    GL/stock ledger without a separate manual Submit step. If submission
+    fails, the already-inserted Draft is kept (not rolled back) — nothing is
+    lost, the caller just gets the error back to surface, and the doc's
+    existing Submit action still works once the underlying issue is fixed."""
+    if int(doc.docstatus or 0) == 1:
+        return True, None
+    try:
+        doc.submit()
+        frappe.db.commit()
+        return True, None
+    except Exception as exc:
+        frappe.db.rollback()
+        doc.reload()
+        return False, str(exc)
+
+
 def _cancel_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     require_login()
     require_str(name, "name")
@@ -1053,9 +1071,17 @@ def create_receive_payment(
     if cid:
         existing = find_by_client_id("Payment Entry", cid)
         if existing:
+            existing_doc = frappe.get_doc("Payment Entry", existing)
+            submitted, submit_error = _try_auto_submit(existing_doc)
             return ok(
-                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
-                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+                map_payment_entry_doc(existing_doc),
+                meta={
+                    "stub": False,
+                    "idempotent": True,
+                    "submitted": submitted,
+                    "submit_error": submit_error,
+                    "source": "Payment Entry",
+                },
             )
     frappe.has_permission("Payment Entry", "create", throw=True)
     si_name = require_str(sales_invoice, "sales_invoice")
@@ -1089,9 +1115,18 @@ def create_receive_payment(
         created = True
     frappe.db.commit()
 
+    submitted, submit_error = _try_auto_submit(pe)
+
     return ok(
         map_payment_entry_doc(pe),
-        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
+        meta={
+            "stub": False,
+            "created": created,
+            "idempotent": not created,
+            "submitted": submitted,
+            "submit_error": submit_error,
+            "source": "Payment Entry",
+        },
     )
 
 
@@ -1113,9 +1148,17 @@ def create_pay_payment(
     if cid:
         existing = find_by_client_id("Payment Entry", cid)
         if existing:
+            existing_doc = frappe.get_doc("Payment Entry", existing)
+            submitted, submit_error = _try_auto_submit(existing_doc)
             return ok(
-                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
-                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+                map_payment_entry_doc(existing_doc),
+                meta={
+                    "stub": False,
+                    "idempotent": True,
+                    "submitted": submitted,
+                    "submit_error": submit_error,
+                    "source": "Payment Entry",
+                },
             )
     frappe.has_permission("Payment Entry", "create", throw=True)
     pi_name = require_str(purchase_invoice, "purchase_invoice")
@@ -1149,9 +1192,18 @@ def create_pay_payment(
         created = True
     frappe.db.commit()
 
+    submitted, submit_error = _try_auto_submit(pe)
+
     return ok(
         map_payment_entry_doc(pe),
-        meta={"stub": False, "created": created, "idempotent": not created, "source": "Payment Entry"},
+        meta={
+            "stub": False,
+            "created": created,
+            "idempotent": not created,
+            "submitted": submitted,
+            "submit_error": submit_error,
+            "source": "Payment Entry",
+        },
     )
 
 
@@ -1182,9 +1234,17 @@ def _create_advance_payment(
     if cid:
         existing = find_by_client_id("Payment Entry", cid)
         if existing:
+            existing_doc = frappe.get_doc("Payment Entry", existing)
+            submitted, submit_error = _try_auto_submit(existing_doc)
             return ok(
-                map_payment_entry_doc(frappe.get_doc("Payment Entry", existing)),
-                meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
+                map_payment_entry_doc(existing_doc),
+                meta={
+                    "stub": False,
+                    "idempotent": True,
+                    "submitted": submitted,
+                    "submit_error": submit_error,
+                    "source": "Payment Entry",
+                },
             )
     frappe.has_permission("Payment Entry", "create", throw=True)
 
@@ -1296,12 +1356,16 @@ def _create_advance_payment(
         created = True
     frappe.db.commit()
 
+    submitted, submit_error = _try_auto_submit(pe)
+
     return ok(
         map_payment_entry_doc(pe),
         meta={
             "stub": False,
             "created": created,
             "idempotent": not created,
+            "submitted": submitted,
+            "submit_error": submit_error,
             "unallocated_amount": flt(pe.unallocated_amount),
             "source": "Payment Entry",
         },
@@ -1390,11 +1454,18 @@ def _is_cash_or_bank_account(account: str) -> bool:
 def _validate_voucher_type_accounts(voucher_type: str, rows: list[dict[str, Any]]) -> None:
     """Enforce standard double-entry voucher rules by account type, on top of
     ERPNext's own validation (which doesn't distinguish these):
-      Contra    -> every line must be Cash/Bank
-      Bank Entry (our Receipt/Payment split, see _create_split_entry) ->
-                   the party line must NOT be Cash/Bank, every other line MUST be
-      Journal Entry (plain) -> no line may be Cash/Bank — use Receipt, Payment,
-                   or Contra instead so the cash/bank side is explicit
+      Contra     -> every line must be Cash/Bank
+      Bank Entry -> Receipt or Payment, in either direction: every Cash/Bank
+                    line must sit on one side (all debit, or all credit) and
+                    every non-Cash/Bank line on the other. Debit-side cash/
+                    bank = Receipt (Dr Cash/Bank, Cr Customer/Income/other);
+                    credit-side cash/bank = Payment (Dr Supplier/Expense/
+                    other, Cr Cash/Bank). Direction-based, not dependent on
+                    a party being tagged on any line — a plain "Dr Cash /
+                    Cr Sales Income" receipt with no customer is valid too.
+      Journal Entry (plain) -> no line may be Cash/Bank — use Receipt,
+                    Payment, or Contra instead so the cash/bank side is
+                    explicit
     Receipt/Payment against a single invoice or on-account go through Payment
     Entry (create_receive_payment/create_pay_payment/_create_advance_payment),
     which structurally enforces the same rule by construction — nothing to
@@ -1406,12 +1477,20 @@ def _validate_voucher_type_accounts(voucher_type: str, rows: list[dict[str, Any]
                     f"Contra entries can only use Cash or Bank accounts — {r['account']} is neither."
                 )
     elif voucher_type == "Bank Entry":
+        cash_bank_sides: set[str] = set()
+        other_sides: set[str] = set()
         for r in rows:
-            if r.get("party_type"):
-                if _is_cash_or_bank_account(r["account"]):
-                    frappe.throw(f"{r['account']} cannot be the party account and a Cash/Bank account at once.")
-            elif not _is_cash_or_bank_account(r["account"]):
-                frappe.throw(f"{r['account']} must be a Cash or Bank account for a split Receipt/Payment.")
+            side = "debit" if flt(r["debit_in_account_currency"]) > 0 else "credit"
+            (cash_bank_sides if _is_cash_or_bank_account(r["account"]) else other_sides).add(side)
+        if not cash_bank_sides:
+            frappe.throw("At least one line must be a Cash or Bank account (Receipt/Payment).")
+        if len(cash_bank_sides) > 1:
+            frappe.throw(
+                "Cash/Bank accounts must all be on the same side — all debit for a Receipt, "
+                "all credit for a Payment."
+            )
+        if cash_bank_sides == other_sides:
+            frappe.throw("Cash/Bank and non-Cash/Bank accounts must be on opposite sides.")
     else:
         for r in rows:
             if _is_cash_or_bank_account(r["account"]):
@@ -1439,9 +1518,17 @@ def create_journal_entry(
     if cid:
         existing = find_by_client_id("Journal Entry", cid)
         if existing:
+            existing_doc = frappe.get_doc("Journal Entry", existing)
+            submitted, submit_error = _try_auto_submit(existing_doc)
             return ok(
-                map_journal_entry_doc(frappe.get_doc("Journal Entry", existing)),
-                meta={"stub": False, "idempotent": True, "source": "Journal Entry"},
+                map_journal_entry_doc(existing_doc),
+                meta={
+                    "stub": False,
+                    "idempotent": True,
+                    "submitted": submitted,
+                    "submit_error": submit_error,
+                    "source": "Journal Entry",
+                },
             )
     frappe.has_permission("Journal Entry", "create", throw=True)
     if isinstance(accounts, str):
@@ -1494,15 +1581,26 @@ def create_journal_entry(
     ):
         frappe.throw("Voucher must have at least one Debit and one Credit entry")
 
+    resolved_voucher_type = (voucher_type or "Journal Entry").strip() or "Journal Entry"
+    date = getdate(posting_date) if posting_date else today()
+    ref_no = (reference_no or "").strip()
+    ref_date = getdate(reference_date) if reference_date else None
+    if resolved_voucher_type == "Bank Entry" and not ref_no:
+        # ERPNext requires Reference No & Reference Date for Bank Entry —
+        # auto-generate rather than surface that as a confusing error on a
+        # field the caller may not know is conditionally required.
+        ref_no = f"{resolved_voucher_type}-{frappe.generate_hash(length=8)}"
+        ref_date = ref_date or date
+
     doc = frappe.get_doc(
         {
             "doctype": "Journal Entry",
-            "voucher_type": (voucher_type or "Journal Entry").strip() or "Journal Entry",
+            "voucher_type": resolved_voucher_type,
             "company": _default_company(company),
-            "posting_date": getdate(posting_date) if posting_date else today(),
+            "posting_date": date,
             "user_remark": (user_remark or "").strip() or None,
-            "cheque_no": (reference_no or "").strip() or None,
-            "cheque_date": getdate(reference_date) if reference_date else None,
+            "cheque_no": ref_no or None,
+            "cheque_date": ref_date,
             "accounts": rows,
             "zatgo_client_id": cid,
         }
@@ -1514,9 +1612,18 @@ def create_journal_entry(
         created = True
     frappe.db.commit()
 
+    submitted, submit_error = _try_auto_submit(doc)
+
     return ok(
         map_journal_entry_doc(doc),
-        meta={"stub": False, "created": created, "idempotent": not created, "source": "Journal Entry"},
+        meta={
+            "stub": False,
+            "created": created,
+            "idempotent": not created,
+            "submitted": submitted,
+            "submit_error": submit_error,
+            "source": "Journal Entry",
+        },
     )
 
 

@@ -850,23 +850,36 @@ def get_journal_entry(name: str) -> dict[str, Any]:
     return _get_doctype("Journal Entry", name, map_doc=map_journal_entry_doc)
 
 
-def list_accounts(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    return _list_doctype(
+def list_accounts(company: str | None = None) -> dict[str, Any]:
+    """Flat list of leaf (postable) accounts for the Journal/Payment/Contra
+    ledger picker. Not paginated — same reasoning as list_chart_of_accounts:
+    a company's leaf accounts are bounded (tens to low hundreds), and a
+    paginated flat list silently drops accounts sorted after the cutoff from
+    a client combobox that only ever fetches page 1."""
+    require_login()
+    require_doc_permission("Account", "read")
+    filters: dict[str, Any] = {"is_group": 0}
+    if company:
+        filters["company"] = company
+    rows = frappe.get_all(
         "Account",
-        fields=["name", "account_name", "account_type", "root_type", "company", "is_group"],
-        page=page,
-        page_size=page_size,
-        filters={"is_group": 0},
+        filters=filters,
+        fields=["name", "account_name", "account_type", "root_type", "company"],
         order_by="name asc",
-        map_row=lambda r: {
+        limit_page_length=0,
+    )
+    data = [
+        {
             "id": r.name,
             "name": r.name,
             "account_name": r.account_name,
             "account_type": r.account_type,
             "root_type": r.root_type,
             "company": r.company,
-        },
-    )
+        }
+        for r in rows
+    ]
+    return ok(data, meta={"stub": False, "total": len(data), "source": "Account"})
 
 
 def list_chart_of_accounts(company: str | None = None) -> dict[str, Any]:

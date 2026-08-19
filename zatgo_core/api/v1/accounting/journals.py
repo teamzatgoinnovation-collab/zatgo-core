@@ -129,8 +129,8 @@ def amend(name: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
-def list_accounts_catalog(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
-    return list_accounts(page=page, page_size=page_size)
+def list_accounts_catalog(company: str | None = None) -> dict[str, Any]:
+    return list_accounts(company=company)
 
 
 @frappe.whitelist()
