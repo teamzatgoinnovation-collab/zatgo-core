@@ -7,11 +7,26 @@ from typing import Any
 import frappe
 from frappe.utils import getdate
 
-from zatgo_core.api.response import paginated
+from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_payment_entry_row
 from zatgo_core.services.vansalex_service import create_collection
 from zatgo_core.services.van_sale_access import is_vansale_admin
+
+
+@frappe.whitelist()
+def modes() -> dict[str, Any]:
+    """Mode of Payment options for the New Collection form — the app must
+    only offer values that exist here, since create() sets mode_of_payment
+    as a Link field and an unknown value fails with LinkValidationError."""
+    require_login()
+    rows = frappe.get_all(
+        "Mode of Payment",
+        filters={"enabled": 1},
+        fields=["name"],
+        order_by="name asc",
+    )
+    return ok({"modes": [r.name for r in rows]})
 
 
 @frappe.whitelist()
