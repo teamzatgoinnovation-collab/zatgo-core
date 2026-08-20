@@ -17,6 +17,9 @@ _PERMS: list[tuple[str, str, dict]] = [
     # Sales Invoice
     ("Sales Invoice", ROLE_USER, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1, "export": 1}),
     ("Sales Invoice", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1, "export": 1, "cancel": 1}),
+    # Sales Order — the "Order" side of the Order -> Confirm -> Invoice flow.
+    ("Sales Order", ROLE_USER, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1, "export": 1}),
+    ("Sales Order", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1, "export": 1, "cancel": 1}),
     # Payment Entry
     ("Payment Entry", ROLE_USER, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1}),
     ("Payment Entry", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "submit": 1, "print": 1, "report": 1, "cancel": 1}),

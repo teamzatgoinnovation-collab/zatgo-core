@@ -20,6 +20,18 @@ def execute() -> None:
                 "translatable": 0,
             }
         ],
+        "Sales Order": [
+            {
+                "fieldname": "zatgo_client_id",
+                "label": "ZatGo Client Id",
+                "fieldtype": "Data",
+                "insert_after": "customer",
+                "unique": 1,
+                "read_only": 1,
+                "no_copy": 1,
+                "translatable": 0,
+            }
+        ],
         "Payment Entry": [
             {
                 "fieldname": "zatgo_client_id",

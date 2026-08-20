@@ -298,6 +298,233 @@ def create_order(
     return payload
 
 
+def _ack_sales_order(doc: Any, cid: str, *, idempotent: bool, created: bool) -> dict[str, Any]:
+    return ok(
+        {
+            "name": doc.name,
+            "erp_name": doc.name,
+            "client_id": cid,
+            "customer": doc.customer,
+            "grand_total": float(doc.grand_total or 0),
+            "docstatus": int(doc.docstatus or 0),
+            "status": doc.status,
+        },
+        meta={
+            "stub": False,
+            "idempotent": idempotent,
+            "created": created,
+            "submitted": int(doc.docstatus or 0) == 1,
+            "source": "Sales Order",
+        },
+    )
+
+
+def _normalize_items(items: Any) -> list[dict[str, Any]]:
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if isinstance(items, list):
+        normalized = []
+        for raw in items:
+            if not isinstance(raw, dict):
+                continue
+            row = dict(raw)
+            if row.get("rate") in (None, "", 0) and row.get("unit_price") is not None:
+                row["rate"] = row["unit_price"]
+            normalized.append(row)
+        items = normalized
+    return _parse_items(items)
+
+
+def create_sales_order(
+    client_id: str,
+    customer: str,
+    items: Any,
+    company: str | None = None,
+    trip_id: str | None = None,
+) -> dict[str, Any]:
+    """Create+submit a real ERPNext Sales Order — the "Order" side of the
+    Order -> Confirm -> Invoice flow. No stock/warehouse impact and no
+    ZATCA QR here; those only apply once the order is confirmed into a
+    Sales Invoice (see `confirm_order`). The existing `create_order()`
+    (Direct Invoice — order_id-equivalent NULL) is untouched by this."""
+    require_login()
+    cid = require_str(client_id, "client_id")
+
+    existing = _find_by_client_id("Sales Order", cid)
+    if existing:
+        doc = frappe.get_doc("Sales Order", existing)
+        if int(doc.docstatus or 0) == 0:
+            doc.submit()
+            frappe.db.commit()
+            doc.reload()
+        return _ack_sales_order(doc, cid, idempotent=True, created=False)
+
+    frappe.has_permission("Sales Order", "create", throw=True)
+    party = _resolve_customer(customer)
+    rows = _normalize_items(items)
+
+    company_name = _default_company(company)
+    pl = frappe.db.get_value("Customer", party, "default_price_list")
+    if pl:
+        for row in rows:
+            if flt(row.get("rate") or 0) <= 0:
+                rate = frappe.db.get_value(
+                    "Item Price",
+                    {"item_code": row.get("item_code"), "price_list": pl},
+                    "price_list_rate",
+                )
+                if rate is not None:
+                    row["rate"] = flt(rate)
+
+    doc = frappe.get_doc(
+        {
+            "doctype": "Sales Order",
+            "customer": party,
+            "company": company_name,
+            "transaction_date": today(),
+            "items": rows,
+            "zatgo_client_id": cid,
+            # Van sales don't go through a formal Delivery Note step —
+            # without this, ERPNext's validate_delivery_date() throws
+            # "Please enter Delivery Date" on every order.
+            "skip_delivery_note": 1,
+        }
+    )
+    if pl and frappe.get_meta("Sales Order").has_field("selling_price_list"):
+        doc.selling_price_list = pl
+
+    _apply_sales_taxes(doc, company_name)
+
+    doc, created = insert_idempotent(doc, doctype="Sales Order", client_id=cid)
+    if not created:
+        if int(doc.docstatus or 0) == 0:
+            doc.submit()
+            frappe.db.commit()
+            doc.reload()
+        payload = _ack_sales_order(doc, cid, idempotent=True, created=False)
+        payload["data"]["trip_id"] = (trip_id or "").strip() or None
+        return payload
+
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not create and submit Sales Order. Fix stock/accounts, then retry sync.",
+            frappe.ValidationError,
+        )
+
+    doc.reload()
+    payload = _ack_sales_order(doc, cid, idempotent=False, created=True)
+    payload["data"]["trip_id"] = (trip_id or "").strip() or None
+    return payload
+
+
+def confirm_order(
+    client_id: str,
+    sales_order: str,
+    warehouse: str,
+    company: str | None = None,
+    trip_id: str | None = None,
+) -> dict[str, Any]:
+    """Convert a submitted Sales Order into a submitted Sales Invoice —
+    the "Confirm Order" action. `client_id` here is the idempotency key
+    for the *resulting Invoice* (a double-tap/retry on Confirm must not
+    create two invoices), distinct from the Sales Order's own client_id.
+    Uses ERPNext's own `make_sales_invoice()`, which already links
+    `Sales Invoice Item.sales_order` back to the source order — no custom
+    field needed for that traceability."""
+    from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
+
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
+
+    require_login()
+    cid = require_str(client_id, "client_id")
+    wh = require_str(warehouse, "warehouse")
+    so_name = require_str(sales_order, "sales_order")
+
+    existing = _find_by_client_id("Sales Invoice", cid)
+    if existing:
+        doc = frappe.get_doc("Sales Invoice", existing)
+        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+
+    if not frappe.db.exists("Sales Order", so_name):
+        frappe.throw(f"Sales Order not found: {so_name}")
+    if not frappe.db.exists("Warehouse", wh):
+        frappe.throw(f"Warehouse not found: {wh}")
+    so = frappe.get_doc("Sales Order", so_name)
+    if int(so.docstatus or 0) != 1:
+        frappe.throw(f"Sales Order {so_name} is not submitted.", frappe.ValidationError)
+
+    frappe.has_permission("Sales Invoice", "create", throw=True)
+
+    doc = make_sales_invoice(so_name)
+    doc.update_stock = 1
+    doc.set_warehouse = wh
+    # make_sales_invoice() copies each line's warehouse from the Sales
+    # Order (defaulted to the company's default warehouse at order-creation
+    # time, since the order itself never touches stock/warehouse) —
+    # set_warehouse alone only fills a *missing* item warehouse, it doesn't
+    # override one already populated by the mapped-doctype copy. Force
+    # every line to the van's own warehouse explicitly.
+    for item in doc.items or []:
+        item.warehouse = wh
+    doc.zatgo_client_id = cid
+
+    doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
+    if not created:
+        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        payload = _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+        payload["data"]["trip_id"] = (trip_id or "").strip() or None
+        return payload
+
+    try:
+        doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.throw(
+            "Could not confirm Sales Order into Sales Invoice. Fix stock/accounts, then retry sync.",
+            frappe.ValidationError,
+        )
+
+    try:
+        generate_and_store_zatca_qr(doc)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+
+    trip = (trip_id or "").strip()
+    if trip and frappe.db.exists("ZG Trip", trip) and frappe.db.has_column("ZG Trip", "sales_invoice"):
+        try:
+            frappe.db.set_value("ZG Trip", trip, "sales_invoice", doc.name, update_modified=False)
+            frappe.db.commit()
+        except Exception:
+            frappe.log_error(title="VanSale trip-SI link failed", message=frappe.get_traceback())
+
+    doc.reload()
+    payload = _ack_sales_invoice(doc, cid, idempotent=False, created=True)
+    payload["data"]["trip_id"] = trip or None
+    payload["data"]["sales_order"] = so_name
+    return payload
+
+
 def create_sales_return(
     client_id: str,
     return_against: str,

@@ -10,7 +10,7 @@ from frappe.utils import getdate
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
-from zatgo_core.services.vansalex_service import create_order
+from zatgo_core.services.vansalex_service import confirm_order, create_order, create_sales_order
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 
 
@@ -23,6 +23,9 @@ def create(
     company: str | None = None,
     trip_id: str | None = None,
 ) -> dict[str, Any]:
+    """Direct Invoice — creates+submits a Sales Invoice immediately, no
+    Sales Order stage (order_id-equivalent NULL). Unchanged by the new
+    Order -> Confirm flow below."""
     require_login()
     wh = require_own_warehouse(warehouse)
     if not wh:
@@ -34,6 +37,51 @@ def create(
         client_id=client_id,
         customer=customer,
         items=items,
+        warehouse=wh,
+        company=company,
+        trip_id=trip_id,
+    )
+
+
+@frappe.whitelist()
+def create_order_draft(
+    client_id: str,
+    customer: str,
+    items: str | list | None = None,
+    company: str | None = None,
+    trip_id: str | None = None,
+) -> dict[str, Any]:
+    """Order side of the two-stage flow — creates+submits a real Sales
+    Order, no stock/warehouse impact yet. Confirm it via `confirm()`."""
+    require_login()
+    return create_sales_order(
+        client_id=client_id,
+        customer=customer,
+        items=items,
+        company=company,
+        trip_id=trip_id,
+    )
+
+
+@frappe.whitelist()
+def confirm(
+    client_id: str,
+    sales_order: str,
+    warehouse: str | None = None,
+    company: str | None = None,
+    trip_id: str | None = None,
+) -> dict[str, Any]:
+    """Confirm a submitted Sales Order into a submitted Sales Invoice."""
+    require_login()
+    wh = require_own_warehouse(warehouse)
+    if not wh:
+        frappe.throw(
+            "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
+            frappe.ValidationError,
+        )
+    return confirm_order(
+        client_id=client_id,
+        sales_order=sales_order,
         warehouse=wh,
         company=company,
         trip_id=trip_id,
