@@ -1,8 +1,9 @@
-"""Sales Return money-path coverage: return -> stock restored -> credit note.
+"""Money-path integration coverage: order -> stock deduction -> collection.
 
-Regression-protects the ownership/qty-cap checks in create_sales_return(): a
-non-admin caller must not be able to return against a warehouse/invoice that
-isn't theirs, and cannot return more than was originally sold.
+Flagged as zero-coverage in the Phase 1 audit. Also regression-protects the
+authorization fixes made alongside it: a non-admin caller must not be able to
+create an order against a warehouse that isn't theirs, or collect payment
+from a customer that isn't on their route.
 """
 
 from __future__ import annotations
@@ -11,22 +12,24 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
-from zatgo_core.services.go_van_service import create_order, create_sales_return
+from zatgo_core.api.v1.vansalex.orders import create as api_create_order
+from zatgo_core.services.vansalex_service import create_collection, create_order
 
 
-class TestGoVanReturn(IntegrationTestCase):
+class TestVansalexOrderToPayment(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.company = frappe.db.get_value("Company", {}, "name")
         if not cls.company:
             frappe.throw("No Company found — run install_fixtures before this test.")
-        cls.own_warehouse = cls._make_warehouse("VanSaleReturnTestOwn")
-        cls.other_warehouse = cls._make_warehouse("VanSaleReturnTestOther")
+        cls.own_warehouse = cls._make_warehouse("VanSaleTestOwn")
+        cls.other_warehouse = cls._make_warehouse("VanSaleTestOther")
         cls.item_code = cls._make_stocked_item(cls.own_warehouse, qty=50)
-        cls.own_customer = cls._make_customer("VanSale Return Test Own Customer")
+        cls.own_customer = cls._make_customer("VanSale Test Own Customer")
+        cls.other_customer = cls._make_customer("VanSale Test Other Customer")
         cls.van_user = cls._make_van_user(cls.own_warehouse)
-        cls.other_van_user = cls._make_van_user(cls.other_warehouse)
+        cls._make_trip(cls.van_user, cls.own_customer, cls.own_warehouse)
 
     def setUp(self) -> None:
         frappe.set_user(self.van_user)
@@ -54,7 +57,7 @@ class TestGoVanReturn(IntegrationTestCase):
 
     @classmethod
     def _make_stocked_item(cls, warehouse: str, qty: float) -> str:
-        code = f"VANSALE-RET-TEST-{random_string(6).upper()}"
+        code = f"VANSALE-TEST-{random_string(6).upper()}"
         frappe.get_doc(
             {
                 "doctype": "Item",
@@ -100,13 +103,13 @@ class TestGoVanReturn(IntegrationTestCase):
 
     @classmethod
     def _make_van_user(cls, warehouse: str) -> str:
-        email = f"vansale.return.test.{random_string(6).lower()}@zatgo.test"
+        email = f"vansale.audit.test.{random_string(6).lower()}@zatgo.test"
         frappe.get_doc(
             {
                 "doctype": "User",
                 "email": email,
                 "first_name": "VanSale",
-                "last_name": "ReturnTest",
+                "last_name": "AuditTest",
                 "send_welcome_email": 0,
                 "roles": [{"role": "VanSale User"}],
             }
@@ -122,64 +125,64 @@ class TestGoVanReturn(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         return email
 
-    def _make_original_order(self, qty: float = 5) -> str:
-        order = create_order(
-            client_id=f"test-return-order-{random_string(8)}",
-            customer=self.own_customer,
-            items=[{"item_code": self.item_code, "qty": qty, "rate": 10}],
-            warehouse=self.own_warehouse,
-        )
-        self.assertTrue(order["success"], order.get("error"))
-        return order["data"]["erp_name"]
+    @classmethod
+    def _make_trip(cls, user: str, customer: str, warehouse: str) -> None:
+        frappe.get_doc(
+            {
+                "doctype": "ZG Trip",
+                "title": "Audit Test Route",
+                "customer": customer,
+                "sequence": 1,
+                "status": "Planned",
+                "sales_user": user,
+                "warehouse": warehouse,
+            }
+        ).insert(ignore_permissions=True)
 
     # -- tests --------------------------------------------------------------
 
-    def test_partial_return_restores_stock_and_creates_credit_note(self) -> None:
-        si_name = self._make_original_order(qty=5)
-        qty_after_sale = frappe.db.get_value(
-            "Bin", {"item_code": self.item_code, "warehouse": self.own_warehouse}, "actual_qty"
-        )
-
-        result = create_sales_return(
-            client_id=f"test-return-{random_string(8)}",
-            return_against=si_name,
-            items=[{"item_code": self.item_code, "qty": 2}],
+    def test_full_order_to_payment_flow(self) -> None:
+        """A VanSale User can sell to their own customer/warehouse and collect payment."""
+        order = create_order(
+            client_id=f"test-order-{random_string(8)}",
+            customer=self.own_customer,
+            items=[{"item_code": self.item_code, "qty": 2, "rate": 10}],
             warehouse=self.own_warehouse,
-            reason="Damaged goods",
         )
-        self.assertTrue(result["success"], result.get("error"))
-        return_name = result["data"]["erp_name"]
+        self.assertTrue(order["success"], order.get("error"))
+        si_name = order["data"]["erp_name"]
+        self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "docstatus"), 1)
 
-        return_doc = frappe.db.get_value(
-            "Sales Invoice", return_name, ["is_return", "docstatus", "grand_total", "return_against"], as_dict=True
-        )
-        self.assertEqual(return_doc.is_return, 1)
-        self.assertEqual(return_doc.docstatus, 1)
-        self.assertEqual(return_doc.return_against, si_name)
-        self.assertLess(return_doc.grand_total, 0)
-
-        qty_after_return = frappe.db.get_value(
+        remaining_qty = frappe.db.get_value(
             "Bin", {"item_code": self.item_code, "warehouse": self.own_warehouse}, "actual_qty"
         )
-        self.assertEqual(qty_after_return, qty_after_sale + 2)
+        self.assertEqual(remaining_qty, 48)  # 50 received - 2 sold
 
-    def test_return_rejects_qty_exceeding_original_sale(self) -> None:
-        si_name = self._make_original_order(qty=3)
-        with self.assertRaises(frappe.ValidationError):
-            create_sales_return(
-                client_id=f"test-return-{random_string(8)}",
-                return_against=si_name,
-                items=[{"item_code": self.item_code, "qty": 10}],
-                warehouse=self.own_warehouse,
+        outstanding = frappe.db.get_value("Sales Invoice", si_name, "outstanding_amount")
+        collection = create_collection(
+            client_id=f"test-collect-{random_string(8)}",
+            customer=self.own_customer,
+            amount=outstanding,
+            sales_invoice=si_name,
+        )
+        self.assertTrue(collection["success"], collection.get("error"))
+        self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "outstanding_amount"), 0)
+
+    def test_order_rejects_warehouse_not_owned_by_caller(self) -> None:
+        """A non-admin cannot create an order against a warehouse that isn't theirs (API layer check)."""
+        with self.assertRaises(frappe.PermissionError):
+            api_create_order(
+                client_id=f"test-order-{random_string(8)}",
+                customer=self.own_customer,
+                items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+                warehouse=self.other_warehouse,
             )
 
-    def test_return_rejects_invoice_not_owned_by_caller(self) -> None:
-        si_name = self._make_original_order(qty=2)
-        frappe.set_user(self.other_van_user)
+    def test_collection_rejects_customer_not_on_callers_route(self) -> None:
+        """A non-admin cannot collect from a customer that isn't on their route."""
         with self.assertRaises(frappe.PermissionError):
-            create_sales_return(
-                client_id=f"test-return-{random_string(8)}",
-                return_against=si_name,
-                items=[{"item_code": self.item_code, "qty": 1}],
-                warehouse=self.other_warehouse,
+            create_collection(
+                client_id=f"test-collect-{random_string(8)}",
+                customer=self.other_customer,
+                amount=10,
             )

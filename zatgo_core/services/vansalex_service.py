@@ -1,4 +1,4 @@
-"""Go Van — native ERPNext writes with client_id idempotency."""
+"""VanSaleX — native ERPNext writes with client_id idempotency."""
 
 from __future__ import annotations
 

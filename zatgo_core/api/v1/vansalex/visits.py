@@ -1,4 +1,4 @@
-"""Go Van visits — ZG Trip status updates with optional GPS."""
+"""VanSaleX visits — ZG Trip status updates with optional GPS."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 
 from zatgo_core.api.validators import require_login
-from zatgo_core.services.go_van_service import update_visit
+from zatgo_core.services.vansalex_service import update_visit
 from zatgo_core.services.van_sale_access import is_vansale_admin
 
 

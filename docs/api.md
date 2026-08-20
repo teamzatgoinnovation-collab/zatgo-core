@@ -120,7 +120,7 @@ Examples:
 | `zatgo_core.api.v1.delivery.boys.ensure` | Resolve boy for session user |
 | `zatgo_core.api.v1.resto_pos.catalog.list` | POS catalog |
 | `zatgo_core.api.v1.resto_pos.kds_tickets.list` | Kitchen tickets |
-| `zatgo_core.api.v1.go_van.trips.list` | Go Van trips |
+| `zatgo_core.api.v1.vansalex.trips.list` | VanSaleX trips |
 
 ### Accounting (AR/AP)
 
@@ -139,7 +139,7 @@ Examples:
 | `zatgo_core.api.v1.accounting.reports.general_ledger` | from_date?, to_date?, account? | GL lines |
 | `zatgo_core.api.v1.accounting.reports.profit_and_loss` | from_date?, to_date? | Income vs expense |
 
-Products: `delivery`, `resto_pos`, `go_van`, `service`, `warehouse`, `crm`, `hr`, `fleet`, `accounting`, `admin`, `bi`, `customer_portal`, `vendor_portal`, `documentation`.
+Products: `delivery`, `resto_pos`, `vansalex`, `service`, `warehouse`, `crm`, `hr`, `fleet`, `accounting`, `admin`, `bi`, `customer_portal`, `vendor_portal`, `documentation`.
 
 ## Client helper
 

@@ -1,4 +1,4 @@
-"""Go Van collections — Payment Entry Receive with client_id idempotency."""
+"""VanSaleX collections — Payment Entry Receive with client_id idempotency."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from frappe.utils import getdate
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_payment_entry_row
-from zatgo_core.services.go_van_service import create_collection
+from zatgo_core.services.vansalex_service import create_collection
 from zatgo_core.services.van_sale_access import is_vansale_admin
 
 

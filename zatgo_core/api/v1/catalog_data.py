@@ -11,11 +11,11 @@ Status values:
 
 PRODUCT_CATALOG = [
     {
-        "product": "go_van",
-        "title": "Go Van",
+        "product": "vansalex",
+        "title": "VanSaleX",
         "status": "thin",
-        "namespace": "zatgo_core.api.v1.go_van",
-        "hub": "zatgo_core.api.v1.go_van",
+        "namespace": "zatgo_core.api.v1.vansalex",
+        "hub": "zatgo_core.api.v1.vansalex",
     },
     {
         "product": "delivery",

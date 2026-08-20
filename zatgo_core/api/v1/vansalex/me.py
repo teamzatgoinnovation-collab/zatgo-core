@@ -1,4 +1,4 @@
-"""Go Van — current user VanSale context."""
+"""VanSaleX — current user VanSale context."""
 
 from __future__ import annotations
 
@@ -44,5 +44,5 @@ def context() -> dict[str, Any]:
             "has_vansale_access": True,
             "profile": profile,
         },
-        meta={"source": "go_van.me"},
+        meta={"source": "vansalex.me"},
     )

@@ -1,4 +1,4 @@
-"""Go Van health endpoints."""
+"""VanSaleX health endpoints."""
 
 from __future__ import annotations
 
@@ -22,15 +22,15 @@ def status() -> dict[str, Any]:
     count = frappe.db.count("ZG Trip") if frappe.db.exists("DocType", "ZG Trip") else 0
     return ok(
         {
-            "product": "go_van",
-            "title": "Go Van",
+            "product": "vansalex",
+            "title": "VanSaleX",
             "ready": count > 0,
             "stub": False,
             "count": count,
             "message": (
-                "Go Van API reading ERPNext data"
+                "VanSaleX API reading ERPNext data"
                 if count
-                else "Go Van API ready — run seed_demo_data"
+                else "VanSaleX API ready — run seed_demo_data"
             ),
             "domain": "trips",
         },

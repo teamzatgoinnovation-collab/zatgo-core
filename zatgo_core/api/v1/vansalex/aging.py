@@ -1,4 +1,4 @@
-"""Go Van AR aging — wraps Sales Invoice outstanding buckets."""
+"""VanSaleX AR aging — wraps Sales Invoice outstanding buckets."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ def summary(
             "customers": customers[:200],
             "customer_count": len(customers),
         },
-        meta={"source": "go_van.aging.summary"},
+        meta={"source": "vansalex.aging.summary"},
     )
 
 
@@ -182,5 +182,5 @@ def detail(
             }
         )
     payload = paginated(data, page=page_i, page_size=size_i, total=total)
-    payload["meta"] = {**payload.get("meta", {}), "source": "go_van.aging.detail", "as_of": str(today_d)}
+    payload["meta"] = {**payload.get("meta", {}), "source": "vansalex.aging.detail", "as_of": str(today_d)}
     return payload

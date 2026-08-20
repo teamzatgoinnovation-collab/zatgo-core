@@ -348,7 +348,7 @@ def sync_item_bundle(
     if is_stock and opening_qty > 0 and default_warehouse:
         if not frappe.db.exists("Warehouse", default_warehouse):
             frappe.throw(f"Opening Warehouse not found: {default_warehouse}")
-        from zatgo_core.services.go_van_service import adjust_stock
+        from zatgo_core.services.vansalex_service import adjust_stock
 
         adjust_stock(
             client_id=f"{cid}:opening",

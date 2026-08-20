@@ -56,7 +56,7 @@ _PERMS: list[tuple[str, str, dict]] = [
     ("Account", ROLE_ADMIN, {"read": 1}),
     ("ZG Vehicle", ROLE_USER, {"read": 1}),
     ("ZG Vehicle", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1}),
-    # ZG Trip — go_van/trips.py, go_van_service.update_visit() require read/write
+    # ZG Trip — vansalex/trips.py, vansalex_service.update_visit() require read/write
     # via require_doc_permission/has_permission; without these, VanSale User and
     # VanSale Admin accounts (non System Manager) get PermissionError on the
     # core trip/visit flow.

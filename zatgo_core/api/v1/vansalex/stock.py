@@ -1,4 +1,4 @@
-"""Go Van stock — Bin list + Stock Entry adjust + Material Transfer."""
+"""VanSaleX stock — Bin list + Stock Entry adjust + Material Transfer."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 
 from zatgo_core.api.validators import require_login
-from zatgo_core.services.go_van_service import adjust_stock, list_van_stock, transfer_stock
+from zatgo_core.services.vansalex_service import adjust_stock, list_van_stock, transfer_stock
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
 
 

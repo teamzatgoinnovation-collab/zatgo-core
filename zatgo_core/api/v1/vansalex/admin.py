@@ -1,4 +1,4 @@
-"""Go Van admin overview APIs."""
+"""VanSaleX admin overview APIs."""
 
 from __future__ import annotations
 
@@ -170,5 +170,5 @@ def summary(
             "collections_count": len(payments),
             "by_user": sorted(by_user.values(), key=lambda x: x["user"]),
         },
-        meta={"source": "go_van.admin.summary"},
+        meta={"source": "vansalex.admin.summary"},
     )

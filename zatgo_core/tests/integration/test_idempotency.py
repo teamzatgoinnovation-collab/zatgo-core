@@ -16,7 +16,7 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
-from zatgo_core.services.go_van_service import create_order
+from zatgo_core.services.vansalex_service import create_order
 from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
 
 

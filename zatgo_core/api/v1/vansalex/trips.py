@@ -1,4 +1,4 @@
-"""Go Van trips — ZG Trip DocType."""
+"""VanSaleX trips — ZG Trip DocType."""
 
 from __future__ import annotations
 

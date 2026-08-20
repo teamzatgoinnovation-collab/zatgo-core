@@ -1,4 +1,4 @@
-"""Shared VanSale role / profile helpers for go_van APIs."""
+"""Shared VanSale role / profile helpers for vansalex APIs."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def require_own_warehouse(requested: str | None = None) -> str:
     Admins may pass any warehouse (or none). Non-admins must have a
     warehouse on their VanSale profile, and may not request a different
     one — this is the single source of truth for the "can this caller
-    touch this warehouse" check used across go_van stock/orders/collections.
+    touch this warehouse" check used across vansalex stock/orders/collections.
     """
     wh = (requested or "").strip()
     if is_vansale_admin():

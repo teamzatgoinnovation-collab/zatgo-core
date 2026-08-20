@@ -89,12 +89,12 @@ DEFAULT_CLIENT_APPS: tuple[dict[str, object], ...] = (
         "description": "Project Tracker Flutter app (tracker.api.v1.*)",
     },
     {
-        "app_key": "go_van",
-        "title": "Go Van",
+        "app_key": "vansalex",
+        "title": "VanSaleX",
         "platform": "Flutter",
         "enabled": 0,
-        "api_product": "go_van",
-        "description": "Go Van Flutter app",
+        "api_product": "vansalex",
+        "description": "VanSaleX Flutter app",
     },
     {
         "app_key": "service",
