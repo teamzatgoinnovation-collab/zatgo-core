@@ -9,6 +9,7 @@ from frappe.utils import flt, getdate, nowdate
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_doc_permission, require_login
+from zatgo_core.services.erpnext_writes import _default_company
 
 
 def _list_doctype(
@@ -892,9 +893,7 @@ def list_chart_of_accounts(company: str | None = None) -> dict[str, Any]:
     """
     require_login()
     require_doc_permission("Account", "read")
-    filters: dict[str, Any] = {}
-    if company:
-        filters["company"] = company
+    filters: dict[str, Any] = {"company": _default_company(company)}
     rows = frappe.get_all(
         "Account",
         filters=filters,
