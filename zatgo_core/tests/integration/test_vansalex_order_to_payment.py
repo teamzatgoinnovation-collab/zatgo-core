@@ -14,15 +14,14 @@ from frappe.utils import random_string
 
 from zatgo_core.api.v1.vansalex.orders import create as api_create_order
 from zatgo_core.services.vansalex_service import create_collection, create_order
+from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
 
 class TestVansalexOrderToPayment(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.company = frappe.db.get_value("Company", {}, "name")
-        if not cls.company:
-            frappe.throw("No Company found — run install_fixtures before this test.")
+        cls.company = get_or_create_test_company()
         cls.own_warehouse = cls._make_warehouse("VanSaleTestOwn")
         cls.other_warehouse = cls._make_warehouse("VanSaleTestOther")
         cls.item_code = cls._make_stocked_item(cls.own_warehouse, qty=50)
@@ -148,6 +147,7 @@ class TestVansalexOrderToPayment(IntegrationTestCase):
             customer=self.own_customer,
             items=[{"item_code": self.item_code, "qty": 2, "rate": 10}],
             warehouse=self.own_warehouse,
+            company=self.company,
         )
         self.assertTrue(order["success"], order.get("error"))
         si_name = order["data"]["erp_name"]

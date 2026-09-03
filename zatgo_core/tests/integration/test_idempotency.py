@@ -18,15 +18,14 @@ from frappe.utils import random_string
 
 from zatgo_core.services.vansalex_service import create_order
 from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
 
 class TestIdempotency(IntegrationTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.company = frappe.db.get_value("Company", {}, "name")
-        if not cls.company:
-            frappe.throw("No Company found — run install_fixtures before this test.")
+        cls.company = get_or_create_test_company()
         abbr = frappe.db.get_value("Company", cls.company, "abbr")
         cls.warehouse = f"IdempotencyTest - {abbr}" if abbr else "IdempotencyTest"
         if not frappe.db.exists("Warehouse", cls.warehouse):
@@ -109,6 +108,7 @@ class TestIdempotency(IntegrationTestCase):
             customer=self.customer,
             items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
             warehouse=self.warehouse,
+            company=self.company,
         )
         self.assertTrue(first["success"], first.get("error"))
         second = create_order(
@@ -116,6 +116,7 @@ class TestIdempotency(IntegrationTestCase):
             customer=self.customer,
             items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
             warehouse=self.warehouse,
+            company=self.company,
         )
         self.assertTrue(second["success"], second.get("error"))
         self.assertEqual(first["data"]["erp_name"], second["data"]["erp_name"])
