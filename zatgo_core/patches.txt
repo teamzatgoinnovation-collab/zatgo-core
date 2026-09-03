@@ -15,3 +15,4 @@ zatgo_core.patches.v0_1_1.reapply_missing_zatgo_client_id_fields
 zatgo_core.patches.v0_1_2.reapply_zatca_qr_field
 zatgo_core.patches.v0_1_3.add_accounting_client_id_fields
 zatgo_core.patches.v0_2_0.add_quotation_item_type_field
+zatgo_core.patches.v0_2_0.make_zg_trip_client_id_unique

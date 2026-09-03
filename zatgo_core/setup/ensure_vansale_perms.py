@@ -63,7 +63,7 @@ _PERMS: list[tuple[str, str, dict]] = [
     # via require_doc_permission/has_permission; without these, VanSale User and
     # VanSale Admin accounts (non System Manager) get PermissionError on the
     # core trip/visit flow.
-    ("ZG Trip", ROLE_USER, {"read": 1, "write": 1}),
+    ("ZG Trip", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
     ("ZG Trip", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
     ("ZG Delivery Stop", ROLE_USER, {"read": 1, "write": 1}),
     ("ZG Delivery Stop", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),

@@ -976,9 +976,7 @@ def update_visit(
 ) -> dict[str, Any]:
     require_login()
     cid = require_str(client_id, "client_id")
-    name = require_str(stop_id, "stop_id")
-    if not frappe.db.exists("ZG Trip", name):
-        frappe.throw(f"ZG Trip {name} not found")
+    name = assert_trip_access(require_str(stop_id, "stop_id"))
     status = _STATUS_MAP.get(str(visit_status).strip())
     if not status:
         frappe.throw(f"Invalid visit_status: {visit_status}")
@@ -986,8 +984,12 @@ def update_visit(
     frappe.has_permission("ZG Trip", "write", doc=name, throw=True)
     doc = frappe.get_doc("ZG Trip", name)
     doc.status = status
-    if frappe.db.has_column("ZG Trip", "zatgo_client_id"):
-        doc.zatgo_client_id = cid
+    # Deliberately does NOT write cid onto doc.zatgo_client_id. That field is
+    # the *create* idempotency key (UNIQUE as of
+    # patches.v0_2_0.make_zg_trip_client_id_unique) — overwriting it with a
+    # visit's client_id would orphan the trip from its create id, so a retried
+    # create would no longer find it and would insert a duplicate stop.
+    # A status set is idempotent on its own; it needs no key of its own.
     if lat is not None and str(lat) != "" and frappe.db.has_column("ZG Trip", "check_in_lat"):
         doc.check_in_lat = flt(lat)
     if lng is not None and str(lng) != "" and frappe.db.has_column("ZG Trip", "check_in_lng"):
@@ -1020,3 +1022,267 @@ def update_visit(
         },
         meta={"stub": False, "updated": True, "source": "ZG Trip"},
     )
+
+
+# ---------------------------------------------------------------------------
+# Trips (route plan stops)
+# ---------------------------------------------------------------------------
+
+_TRIP_OPTIONAL_COLUMNS = (
+    "sales_user",
+    "warehouse",
+    "vehicle",
+    "route_title",
+    "sales_invoice",
+    "check_in_lat",
+    "check_in_lng",
+    "check_in_at",
+    "visit_notes",
+    "no_sale_reason",
+)
+
+
+def assert_trip_access(name: str) -> str:
+    """Row-level guard: a field user may only touch their own trips.
+
+    `frappe.has_permission("ZG Trip", ...)` is role-level only — now that
+    VanSale User holds create/write on the DocType, every write path has to
+    check the assignment itself or one salesperson could edit another's route.
+    """
+    if not frappe.db.exists("ZG Trip", name):
+        frappe.throw(f"ZG Trip {name} not found")
+    if is_vansale_admin():
+        return name
+    owner = None
+    if frappe.db.has_column("ZG Trip", "sales_user"):
+        owner = frappe.db.get_value("ZG Trip", name, "sales_user")
+    owner = owner or frappe.db.get_value("ZG Trip", name, "owner")
+    if owner and owner != frappe.session.user:
+        frappe.throw(
+            "Access denied: You can only change stops on your own route.",
+            frappe.PermissionError,
+        )
+    return name
+
+
+def _trip_payload(doc: Any) -> dict[str, Any]:
+    payload = {
+        "id": doc.name,
+        "name": doc.name,
+        "erp_name": doc.name,
+        "title": doc.title,
+        "customer": doc.customer,
+        "address": doc.address or "",
+        "sequence": doc.sequence,
+        "lat": doc.lat,
+        "lng": doc.lng,
+        "status": doc.status,
+        "planned_at": str(doc.planned_at or ""),
+    }
+    for col in _TRIP_OPTIONAL_COLUMNS:
+        payload[col] = getattr(doc, col, None)
+    return payload
+
+
+def _next_trip_sequence(sales_user: str | None, planned_at: Any) -> int:
+    """One more than the highest sequence already planned for that day."""
+    filters: dict[str, Any] = {}
+    if sales_user and frappe.db.has_column("ZG Trip", "sales_user"):
+        filters["sales_user"] = sales_user
+    if planned_at:
+        day = getdate(planned_at)
+        filters["planned_at"] = ["between", [f"{day} 00:00:00", f"{day} 23:59:59"]]
+    rows = frappe.get_all(
+        "ZG Trip",
+        filters=filters or None,
+        fields=["sequence"],
+        order_by="sequence desc",
+        limit=1,
+    )
+    if not rows:
+        return 1
+    return int(rows[0].get("sequence") or 0) + 1
+
+
+def create_trip(
+    client_id: str,
+    customer: str,
+    planned_at: str | None = None,
+    address: str | None = None,
+    sequence: int | str | None = None,
+    lat: float | str | None = None,
+    lng: float | str | None = None,
+    title: str | None = None,
+    route_title: str | None = None,
+    sales_user: str | None = None,
+) -> dict[str, Any]:
+    """Create a route-plan stop, idempotent on `client_id`.
+
+    Mirrors create_collection's shape: pre-check by client_id, then insert
+    through insert_idempotent so a concurrent duplicate resolves to the same
+    document instead of a second stop.
+    """
+    require_login()
+    cid = require_str(client_id, "client_id")
+    existing = _find_by_client_id("ZG Trip", cid)
+    if existing:
+        doc = frappe.get_doc("ZG Trip", existing)
+        return ok(
+            {**_trip_payload(doc), "client_id": cid},
+            meta={"stub": False, "idempotent": True, "source": "ZG Trip"},
+        )
+
+    frappe.has_permission("ZG Trip", "create", throw=True)
+    party = _resolve_customer(customer)
+
+    admin = is_vansale_admin()
+    owner_user = (sales_user or "").strip() if admin else frappe.session.user
+    if not admin and sales_user and sales_user != frappe.session.user:
+        frappe.throw(
+            "Access denied: You can only plan stops on your own route.",
+            frappe.PermissionError,
+        )
+
+    profile = get_profile(owner_user or frappe.session.user)
+    when = getdate(planned_at) if planned_at else getdate(nowdate())
+
+    doc = frappe.new_doc("ZG Trip")
+    doc.title = (title or "").strip() or frappe.db.get_value(
+        "Customer", party, "customer_name"
+    ) or party
+    doc.customer = party
+    doc.address = (address or "").strip() or _customer_primary_address(party)
+    doc.status = "Planned"
+    doc.planned_at = f"{when} 00:00:00" if not _has_time(planned_at) else planned_at
+    doc.sequence = (
+        int(sequence)
+        if sequence not in (None, "")
+        else _next_trip_sequence(owner_user, when)
+    )
+    if lat not in (None, ""):
+        doc.lat = flt(lat)
+    if lng not in (None, ""):
+        doc.lng = flt(lng)
+
+    if owner_user and frappe.db.has_column("ZG Trip", "sales_user"):
+        doc.sales_user = owner_user
+    if profile:
+        if frappe.db.has_column("ZG Trip", "warehouse") and profile.get("warehouse"):
+            doc.warehouse = profile["warehouse"]
+        if frappe.db.has_column("ZG Trip", "vehicle") and profile.get("vehicle"):
+            doc.vehicle = profile["vehicle"]
+    if frappe.db.has_column("ZG Trip", "route_title"):
+        resolved_route = (route_title or "").strip() or (
+            (profile or {}).get("route_title") or ""
+        )
+        if resolved_route:
+            doc.route_title = resolved_route
+    if frappe.db.has_column("ZG Trip", "zatgo_client_id"):
+        doc.zatgo_client_id = cid
+
+    doc, created = insert_idempotent(doc, doctype="ZG Trip", client_id=cid)
+    frappe.db.commit()
+    return ok(
+        {**_trip_payload(doc), "client_id": cid},
+        meta={
+            "stub": False,
+            "created": created,
+            "idempotent": not created,
+            "source": "ZG Trip",
+        },
+    )
+
+
+def _has_time(raw: str | None) -> bool:
+    return bool(raw) and (" " in str(raw) or "T" in str(raw))
+
+
+def _customer_primary_address(customer: str) -> str:
+    """Best-effort address text so a stop shows something useful in the app."""
+    try:
+        from frappe.contacts.doctype.address.address import get_default_address
+
+        name = get_default_address("Customer", customer)
+        if not name:
+            return ""
+        addr = frappe.get_doc("Address", name)
+        parts = [addr.address_line1, addr.address_line2, addr.city]
+        return ", ".join(p for p in parts if p)
+    except Exception:
+        return ""
+
+
+def update_trip(
+    name: str,
+    planned_at: str | None = None,
+    address: str | None = None,
+    sequence: int | str | None = None,
+    lat: float | str | None = None,
+    lng: float | str | None = None,
+    title: str | None = None,
+) -> dict[str, Any]:
+    require_login()
+    trip = assert_trip_access(require_str(name, "name"))
+    doc = frappe.get_doc("ZG Trip", trip)
+    if planned_at not in (None, ""):
+        doc.planned_at = planned_at if _has_time(planned_at) else f"{getdate(planned_at)} 00:00:00"
+    if address is not None:
+        doc.address = address
+    if sequence not in (None, ""):
+        doc.sequence = int(sequence)
+    if lat not in (None, ""):
+        doc.lat = flt(lat)
+    if lng not in (None, ""):
+        doc.lng = flt(lng)
+    if title not in (None, ""):
+        doc.title = title
+    doc.save()
+    frappe.db.commit()
+    return ok(
+        _trip_payload(doc),
+        meta={"stub": False, "updated": True, "source": "ZG Trip"},
+    )
+
+
+def reorder_trips(stops: Any) -> dict[str, Any]:
+    """Apply new sequence numbers to a set of stops in one shot.
+
+    `stops` is a list of {"name": <ZG Trip>, "sequence": <int>} — the output
+    of the client's route optimizer. Only `sequence` is written, so this can
+    never disturb a visit already in progress.
+    """
+    require_login()
+    rows = _normalize_reorder(stops)
+    if not rows:
+        frappe.throw("No stops to reorder")
+
+    updated = []
+    for row in rows:
+        trip = assert_trip_access(row["name"])
+        frappe.db.set_value("ZG Trip", trip, "sequence", row["sequence"])
+        updated.append({"name": trip, "sequence": row["sequence"]})
+    frappe.db.commit()
+    return ok(
+        {"name": updated[0]["name"], "erp_name": updated[0]["name"], "stops": updated},
+        meta={"stub": False, "updated": len(updated), "source": "ZG Trip"},
+    )
+
+
+def _normalize_reorder(stops: Any) -> list[dict[str, Any]]:
+    import json
+
+    raw = stops
+    if isinstance(raw, str):
+        raw = json.loads(raw or "[]")
+    if not isinstance(raw, (list, tuple)):
+        frappe.throw("stops must be a list of {name, sequence}")
+    out: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            frappe.throw("stops must be a list of {name, sequence}")
+        name = require_str(entry.get("name") or entry.get("id") or "", "stops[].name")
+        seq = entry.get("sequence")
+        if seq in (None, ""):
+            frappe.throw(f"Missing sequence for stop {name}")
+        out.append({"name": name, "sequence": int(seq)})
+    return out

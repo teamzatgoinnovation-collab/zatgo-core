@@ -8,7 +8,6 @@ import frappe
 
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_service import update_visit
-from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
 @frappe.whitelist()
@@ -22,13 +21,10 @@ def update(
     no_sale_reason: str | None = None,
 ) -> dict[str, Any]:
     require_login()
-    if not is_vansale_admin():
-        if frappe.db.exists("ZG Delivery Stop", stop_id):
-            parent_trip = frappe.db.get_value("ZG Delivery Stop", stop_id, "parent")
-            if parent_trip and frappe.db.exists("ZG Trip", parent_trip):
-                trip_user = frappe.db.get_value("ZG Trip", parent_trip, "sales_user") or frappe.db.get_value("ZG Trip", parent_trip, "owner")
-                if trip_user and trip_user != frappe.session.user:
-                    frappe.throw("Access denied: You can only update visits for your assigned trip.", frappe.PermissionError)
+    # Row-level ownership is enforced inside update_visit via
+    # assert_trip_access — an earlier version tried to check it here by
+    # resolving stop_id as a ZG Delivery Stop and walking to its parent,
+    # which never matched a real caller, so the check silently never ran.
     return update_visit(
         client_id=client_id,
         stop_id=stop_id,

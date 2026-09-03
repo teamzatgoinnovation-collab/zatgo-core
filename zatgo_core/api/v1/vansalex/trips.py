@@ -9,6 +9,7 @@ from frappe.utils import getdate
 
 from zatgo_core.services.erpnext_reads import get_zg, list_zg
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
+from zatgo_core.services.vansalex_service import create_trip, reorder_trips, update_trip
 
 
 def _map(row: Any) -> dict[str, Any]:
@@ -44,6 +45,8 @@ def _scope_filters(
     vehicle: str | None = None,
     route_title: str | None = None,
     date: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
 ) -> dict[str, Any]:
     filters: dict[str, Any] = {}
     admin = is_vansale_admin()
@@ -70,9 +73,18 @@ def _scope_filters(
             if profile.get("route_title"):
                 filters["route_title"] = profile["route_title"]
 
-    if date and frappe.db.has_column("ZG Trip", "planned_at"):
-        day = getdate(date)
-        filters["planned_at"] = ["between", [f"{day} 00:00:00", f"{day} 23:59:59"]]
+    # `date` is the single-day form the app shipped with first; date_from/
+    # date_to widen it to a window so the day-pager can page without a
+    # round trip per day. A lone bound is treated as an open-ended range.
+    if frappe.db.has_column("ZG Trip", "planned_at"):
+        start = getdate(date_from or date) if (date_from or date) else None
+        end = getdate(date_to or date) if (date_to or date) else None
+        if start and end:
+            filters["planned_at"] = ["between", [f"{start} 00:00:00", f"{end} 23:59:59"]]
+        elif start:
+            filters["planned_at"] = [">=", f"{start} 00:00:00"]
+        elif end:
+            filters["planned_at"] = ["<=", f"{end} 23:59:59"]
 
     return filters
 
@@ -86,6 +98,8 @@ def list(
     vehicle: str | None = None,
     route_title: str | None = None,
     date: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
 ) -> dict[str, Any]:
     fields = [
         "name",
@@ -119,6 +133,8 @@ def list(
         vehicle=vehicle,
         route_title=route_title,
         date=date,
+        date_from=date_from,
+        date_to=date_to,
     )
     # Drop filters for columns that do not exist yet (pre-migrate).
     filters = {
@@ -147,3 +163,56 @@ def get(name: str) -> dict[str, Any]:
         if sales_u and sales_u != frappe.session.user:
             frappe.throw("Access denied: You can only view your own assigned trip.", frappe.PermissionError)
     return doc_res
+
+
+@frappe.whitelist()
+def create(
+    client_id: str,
+    customer: str,
+    planned_at: str | None = None,
+    address: str | None = None,
+    sequence: int | str | None = None,
+    lat: float | str | None = None,
+    lng: float | str | None = None,
+    title: str | None = None,
+    route_title: str | None = None,
+    sales_user: str | None = None,
+) -> dict[str, Any]:
+    return create_trip(
+        client_id=client_id,
+        customer=customer,
+        planned_at=planned_at,
+        address=address,
+        sequence=sequence,
+        lat=lat,
+        lng=lng,
+        title=title,
+        route_title=route_title,
+        sales_user=sales_user,
+    )
+
+
+@frappe.whitelist()
+def update(
+    name: str,
+    planned_at: str | None = None,
+    address: str | None = None,
+    sequence: int | str | None = None,
+    lat: float | str | None = None,
+    lng: float | str | None = None,
+    title: str | None = None,
+) -> dict[str, Any]:
+    return update_trip(
+        name=name,
+        planned_at=planned_at,
+        address=address,
+        sequence=sequence,
+        lat=lat,
+        lng=lng,
+        title=title,
+    )
+
+
+@frappe.whitelist()
+def reorder(stops: Any) -> dict[str, Any]:
+    return reorder_trips(stops)
