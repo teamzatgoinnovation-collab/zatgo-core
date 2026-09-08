@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 
 from zatgo_core.services.erpnext_reads import get_account_balance, list_chart_of_accounts
-from zatgo_core.services.erpnext_writes import create_account, update_account
+from zatgo_core.services.erpnext_writes import create_account, delete_account, update_account
 
 
 @frappe.whitelist()
@@ -45,3 +45,8 @@ def create(
 @frappe.whitelist()
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_account(name, values)
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_account(name)

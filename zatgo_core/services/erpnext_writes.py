@@ -153,6 +153,42 @@ def _amend_doc(doctype: str, name: str, map_doc: Any) -> dict[str, Any]:
     return ok(map_doc(new_doc), meta={"stub": False, "amended_from": name, "source": doctype})
 
 
+def _require_draft(doctype: str, name: str) -> Any:
+    """Load `doctype`/`name` and throw unless it's still a draft (docstatus 0) — the single
+    enforcement point for 'no silent edit/delete of a submitted document' (see
+    .claude/rules/accounting.md). Submitted documents can only be corrected via Cancel + Amend."""
+    doc = frappe.get_doc(doctype, name)
+    if int(doc.docstatus or 0) != 0:
+        frappe.throw(
+            f"{doctype} {name} is not a draft — submitted documents can only be corrected "
+            "via Cancel + Amend, never edited or deleted directly."
+        )
+    return doc
+
+
+def _delete_master(doctype: str, name: str) -> dict[str, Any]:
+    """Shared delete for non-submittable master doctypes (Account/Customer/Supplier — no
+    docstatus). Relies on ERPNext's own LinkExistsError when the record is still referenced
+    by other documents rather than duplicating that check here."""
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission(doctype, "delete", doc=name, throw=True)
+    frappe.delete_doc(doctype, name)
+    frappe.db.commit()
+    return ok({"name": name}, meta={"stub": False, "deleted": True, "source": doctype})
+
+
+def _delete_draft(doctype: str, name: str) -> dict[str, Any]:
+    """Shared delete for submittable transactional documents — only ever while still Draft."""
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission(doctype, "delete", doc=name, throw=True)
+    _require_draft(doctype, name)
+    frappe.delete_doc(doctype, name)
+    frappe.db.commit()
+    return ok({"name": name}, meta={"stub": False, "deleted": True, "source": doctype})
+
+
 def create_customer(
     customer_name: str,
     customer_type: str | None = None,
@@ -230,6 +266,10 @@ def update_customer(name: str, values: Any = None) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import enrich_customer_doc
 
     return ok(enrich_customer_doc(doc), meta={"stub": False, "updated": True, "source": "Customer"})
+
+
+def delete_customer(name: str) -> dict[str, Any]:
+    return _delete_master("Customer", name)
 
 
 def create_item(
@@ -547,6 +587,10 @@ def update_account(name: str, values: Any = None) -> dict[str, Any]:
     return ok(_map_account_doc(doc), meta={"stub": False, "updated": True, "source": "Account"})
 
 
+def delete_account(name: str) -> dict[str, Any]:
+    return _delete_master("Account", name)
+
+
 def create_supplier(
     supplier_name: str,
     supplier_type: str | None = None,
@@ -617,6 +661,10 @@ def update_supplier(name: str, values: Any = None) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import get_supplier
 
     return get_supplier(doc.name)
+
+
+def delete_supplier(name: str) -> dict[str, Any]:
+    return _delete_master("Supplier", name)
 
 
 def create_sales_invoice(
@@ -738,6 +786,47 @@ def cancel_quotation(name: str) -> dict[str, Any]:
     return _cancel_doc("Quotation", name, map_quotation_doc)
 
 
+def update_quotation(
+    name: str,
+    customer: str | None = None,
+    items: Any = None,
+    transaction_date: str | None = None,
+    valid_till: str | None = None,
+    terms: str | None = None,
+    cost_center: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_quotation_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Quotation", "write", doc=name, throw=True)
+    doc = _require_draft("Quotation", name)
+    if customer is not None:
+        party = require_str(customer, "customer")
+        if not frappe.db.exists("Customer", party):
+            frappe.throw(f"Customer {party} not found")
+        doc.party_name = party
+    if items is not None:
+        doc.items = []
+        for row in _parse_quotation_items(items):
+            doc.append("items", row)
+    if transaction_date is not None:
+        doc.transaction_date = getdate(transaction_date) if transaction_date else today()
+    if valid_till is not None:
+        doc.valid_till = getdate(valid_till) if valid_till else None
+    if terms is not None:
+        doc.terms = (terms or "").strip() or None
+    if cost_center is not None:
+        doc.cost_center = (cost_center or "").strip() or None
+    doc.save()
+    frappe.db.commit()
+    return ok(map_quotation_doc(doc), meta={"stub": False, "updated": True, "source": "Quotation"})
+
+
+def delete_quotation(name: str) -> dict[str, Any]:
+    return _delete_draft("Quotation", name)
+
+
 def create_sales_invoice_from_quotation(name: str) -> dict[str, Any]:
     """Convert a submitted (Ordered) Quotation into a Sales Invoice via
     ERPNext's own mapper — never re-derive item/tax mapping ourselves."""
@@ -787,6 +876,47 @@ def cancel_sales_invoice(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
 
     return _cancel_doc("Sales Invoice", name, map_sales_invoice_doc)
+
+
+def update_sales_invoice(
+    name: str,
+    customer: str | None = None,
+    items: Any = None,
+    posting_date: str | None = None,
+    due_date: str | None = None,
+    remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Sales Invoice", "write", doc=name, throw=True)
+    doc = _require_draft("Sales Invoice", name)
+    if customer is not None:
+        doc.customer = require_str(customer, "customer")
+    if items is not None:
+        doc.items = []
+        for row in _parse_items(items):
+            doc.append("items", row)
+    if posting_date is not None:
+        doc.posting_date = getdate(posting_date) if posting_date else today()
+    if due_date is not None:
+        doc.due_date = getdate(due_date) if due_date else None
+    if remarks is not None:
+        doc.remarks = (remarks or "").strip() or None
+    if cost_center is not None:
+        doc.cost_center = (cost_center or "").strip() or None
+    if project is not None:
+        doc.project = (project or "").strip() or None
+    doc.save()
+    frappe.db.commit()
+    return ok(map_sales_invoice_doc(doc), meta={"stub": False, "updated": True, "source": "Sales Invoice"})
+
+
+def delete_sales_invoice(name: str) -> dict[str, Any]:
+    return _delete_draft("Sales Invoice", name)
 
 
 def create_sales_return(
@@ -953,6 +1083,47 @@ def cancel_purchase_invoice(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
 
     return _cancel_doc("Purchase Invoice", name, map_purchase_invoice_doc)
+
+
+def update_purchase_invoice(
+    name: str,
+    supplier: str | None = None,
+    items: Any = None,
+    posting_date: str | None = None,
+    due_date: str | None = None,
+    remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Purchase Invoice", "write", doc=name, throw=True)
+    doc = _require_draft("Purchase Invoice", name)
+    if supplier is not None:
+        doc.supplier = require_str(supplier, "supplier")
+    if items is not None:
+        doc.items = []
+        for row in _parse_items(items):
+            doc.append("items", row)
+    if posting_date is not None:
+        doc.posting_date = getdate(posting_date) if posting_date else today()
+    if due_date is not None:
+        doc.due_date = getdate(due_date) if due_date else None
+    if remarks is not None:
+        doc.remarks = (remarks or "").strip() or None
+    if cost_center is not None:
+        doc.cost_center = (cost_center or "").strip() or None
+    if project is not None:
+        doc.project = (project or "").strip() or None
+    doc.save()
+    frappe.db.commit()
+    return ok(map_purchase_invoice_doc(doc), meta={"stub": False, "updated": True, "source": "Purchase Invoice"})
+
+
+def delete_purchase_invoice(name: str) -> dict[str, Any]:
+    return _delete_draft("Purchase Invoice", name)
 
 
 def create_purchase_return(
@@ -1444,6 +1615,44 @@ def cancel_payment_entry(name: str) -> dict[str, Any]:
     return _cancel_doc("Payment Entry", name, map_payment_entry_doc)
 
 
+def update_payment_entry(
+    name: str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    """Deliberately excludes `amount` — changing it would require re-running the party/invoice
+    allocation logic in `references`, which plain field assignment does not do safely. The
+    product answer for a wrong amount is delete-the-draft-and-recreate, not a partial edit."""
+    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Payment Entry", "write", doc=name, throw=True)
+    doc = _require_draft("Payment Entry", name)
+    if mode_of_payment is not None:
+        doc.mode_of_payment = (mode_of_payment or "").strip() or None
+    if posting_date is not None:
+        doc.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
+    if reference_no is not None:
+        doc.reference_no = (reference_no or "").strip() or None
+        if doc.reference_no:
+            doc.reference_date = doc.posting_date
+    if cost_center is not None:
+        doc.cost_center = (cost_center or "").strip() or None
+    if project is not None:
+        doc.project = (project or "").strip() or None
+    doc.save()
+    frappe.db.commit()
+    return ok(map_payment_entry_doc(doc), meta={"stub": False, "updated": True, "source": "Payment Entry"})
+
+
+def delete_payment_entry(name: str) -> dict[str, Any]:
+    return _delete_draft("Payment Entry", name)
+
+
 _CASH_BANK_ACCOUNT_TYPES = {"Cash", "Bank"}
 
 
@@ -1500,37 +1709,10 @@ def _validate_voucher_type_accounts(voucher_type: str, rows: list[dict[str, Any]
                 )
 
 
-def create_journal_entry(
-    accounts: Any,
-    company: str | None = None,
-    posting_date: str | None = None,
-    user_remark: str | None = None,
-    voucher_type: str | None = None,
-    reference_no: str | None = None,
-    reference_date: str | None = None,
-    client_id: str | None = None,
-) -> dict[str, Any]:
-    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
-
-    require_login()
-    cid = (client_id or "").strip() or None
-    if cid:
-        existing = find_by_client_id("Journal Entry", cid)
-        if existing:
-            existing_doc = frappe.get_doc("Journal Entry", existing)
-            submitted, submit_error = _try_auto_submit(existing_doc)
-            return ok(
-                map_journal_entry_doc(existing_doc),
-                meta={
-                    "stub": False,
-                    "idempotent": True,
-                    "submitted": submitted,
-                    "submit_error": submit_error,
-                    "source": "Journal Entry",
-                },
-            )
-    frappe.has_permission("Journal Entry", "create", throw=True)
+def _build_journal_entry_rows(accounts: Any, voucher_type: str | None) -> tuple[str, list[dict[str, Any]]]:
+    """Shared parse + per-line validation + voucher-type rule + balance check for Journal
+    Entry accounts, used by both create_journal_entry and update_journal_entry — update must
+    enforce exactly the same rules create does, not a looser subset."""
     if isinstance(accounts, str):
         import json
 
@@ -1572,7 +1754,8 @@ def create_journal_entry(
             row["user_remark"] = raw["user_remark"]
         rows.append(row)
 
-    _validate_voucher_type_accounts((voucher_type or "Journal Entry").strip() or "Journal Entry", rows)
+    resolved_voucher_type = (voucher_type or "Journal Entry").strip() or "Journal Entry"
+    _validate_voucher_type_accounts(resolved_voucher_type, rows)
 
     if abs(total_debit - total_credit) > 0.005:
         frappe.throw(f"Journal is not balanced (debit {total_debit} vs credit {total_credit})")
@@ -1581,7 +1764,41 @@ def create_journal_entry(
     ):
         frappe.throw("Voucher must have at least one Debit and one Credit entry")
 
-    resolved_voucher_type = (voucher_type or "Journal Entry").strip() or "Journal Entry"
+    return resolved_voucher_type, rows
+
+
+def create_journal_entry(
+    accounts: Any,
+    company: str | None = None,
+    posting_date: str | None = None,
+    user_remark: str | None = None,
+    voucher_type: str | None = None,
+    reference_no: str | None = None,
+    reference_date: str | None = None,
+    client_id: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
+    require_login()
+    cid = (client_id or "").strip() or None
+    if cid:
+        existing = find_by_client_id("Journal Entry", cid)
+        if existing:
+            existing_doc = frappe.get_doc("Journal Entry", existing)
+            submitted, submit_error = _try_auto_submit(existing_doc)
+            return ok(
+                map_journal_entry_doc(existing_doc),
+                meta={
+                    "stub": False,
+                    "idempotent": True,
+                    "submitted": submitted,
+                    "submit_error": submit_error,
+                    "source": "Journal Entry",
+                },
+            )
+    frappe.has_permission("Journal Entry", "create", throw=True)
+    resolved_voucher_type, rows = _build_journal_entry_rows(accounts, voucher_type)
     date = getdate(posting_date) if posting_date else today()
     ref_no = (reference_no or "").strip()
     ref_date = getdate(reference_date) if reference_date else None
@@ -1752,3 +1969,61 @@ def cancel_journal_entry(name: str) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_journal_entry_doc
 
     return _cancel_doc("Journal Entry", name, map_journal_entry_doc)
+
+
+def update_journal_entry(
+    name: str,
+    accounts: Any = None,
+    posting_date: str | None = None,
+    user_remark: str | None = None,
+    voucher_type: str | None = None,
+    reference_no: str | None = None,
+    reference_date: str | None = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.erpnext_reads import map_journal_entry_doc
+
+    require_login()
+    require_str(name, "name")
+    frappe.has_permission("Journal Entry", "write", doc=name, throw=True)
+    doc = _require_draft("Journal Entry", name)
+    if accounts is not None or voucher_type is not None:
+        # Re-validate against the full rule set (balance + voucher-type accounts) whenever
+        # either lines or voucher_type change — never skip the check create_journal_entry enforces.
+        source_accounts = (
+            accounts
+            if accounts is not None
+            else [
+                {
+                    "account": r.account,
+                    "debit": r.debit_in_account_currency,
+                    "credit": r.credit_in_account_currency,
+                    "party_type": r.party_type,
+                    "party": r.party,
+                    "cost_center": r.cost_center,
+                    "user_remark": r.user_remark,
+                }
+                for r in doc.accounts
+            ]
+        )
+        resolved_voucher_type, rows = _build_journal_entry_rows(
+            source_accounts, voucher_type if voucher_type is not None else doc.voucher_type
+        )
+        doc.voucher_type = resolved_voucher_type
+        doc.accounts = []
+        for row in rows:
+            doc.append("accounts", row)
+    if posting_date is not None:
+        doc.posting_date = getdate(posting_date) if posting_date else today()
+    if user_remark is not None:
+        doc.user_remark = (user_remark or "").strip() or None
+    if reference_no is not None:
+        doc.cheque_no = (reference_no or "").strip() or None
+    if reference_date is not None:
+        doc.cheque_date = getdate(reference_date) if reference_date else None
+    doc.save()
+    frappe.db.commit()
+    return ok(map_journal_entry_doc(doc), meta={"stub": False, "updated": True, "source": "Journal Entry"})
+
+
+def delete_journal_entry(name: str) -> dict[str, Any]:
+    return _delete_draft("Journal Entry", name)

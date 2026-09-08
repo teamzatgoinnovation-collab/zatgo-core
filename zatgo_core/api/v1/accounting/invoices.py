@@ -17,7 +17,9 @@ from zatgo_core.services.erpnext_writes import (
     cancel_sales_invoice,
     create_sales_invoice,
     create_sales_return,
+    delete_sales_invoice,
     submit_sales_invoice,
+    update_sales_invoice,
 )
 from zatgo_core.services.erpnext_writes import _amend_doc
 
@@ -60,6 +62,34 @@ def create(
         project=project,
         client_id=client_id,
     )
+
+
+@frappe.whitelist()
+def update(
+    name: str,
+    customer: str | None = None,
+    items: str | list | None = None,
+    posting_date: str | None = None,
+    due_date: str | None = None,
+    remarks: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    return update_sales_invoice(
+        name,
+        customer=customer,
+        items=items,
+        posting_date=posting_date,
+        due_date=due_date,
+        remarks=remarks,
+        cost_center=cost_center,
+        project=project,
+    )
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_sales_invoice(name)
 
 
 @frappe.whitelist()

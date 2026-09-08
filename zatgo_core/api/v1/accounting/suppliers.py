@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 
 from zatgo_core.services.erpnext_reads import get_supplier, list_suppliers
-from zatgo_core.services.erpnext_writes import create_supplier, update_supplier
+from zatgo_core.services.erpnext_writes import create_supplier, delete_supplier, update_supplier
 
 
 @frappe.whitelist()
@@ -42,3 +42,8 @@ def create(
 @frappe.whitelist()
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_supplier(name, values)
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_supplier(name)

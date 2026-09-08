@@ -11,7 +11,9 @@ from zatgo_core.services.erpnext_writes import (
     cancel_payment_entry,
     create_pay_payment,
     create_receive_payment,
+    delete_payment_entry,
     submit_payment_entry,
+    update_payment_entry,
 )
 from zatgo_core.services.erpnext_writes import create_pay_advance as _create_pay_advance_service
 from zatgo_core.services.erpnext_writes import create_receive_advance as _create_receive_advance_service
@@ -135,6 +137,30 @@ def create_pay_advance(
         project=project,
         client_id=client_id,
     )
+
+
+@frappe.whitelist()
+def update(
+    name: str,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+) -> dict[str, Any]:
+    return update_payment_entry(
+        name,
+        mode_of_payment=mode_of_payment,
+        posting_date=posting_date,
+        reference_no=reference_no,
+        cost_center=cost_center,
+        project=project,
+    )
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_payment_entry(name)
 
 
 @frappe.whitelist()

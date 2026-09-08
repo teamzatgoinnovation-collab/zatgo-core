@@ -661,6 +661,7 @@ def map_purchase_invoice_doc(d: Any) -> dict[str, Any]:
     row["items"] = _invoice_items(d)
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["docstatus"] = int(d.docstatus or 0)
     return row
 
 

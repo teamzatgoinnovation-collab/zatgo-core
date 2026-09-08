@@ -12,7 +12,9 @@ from zatgo_core.services.erpnext_writes import (
     cancel_quotation,
     create_quotation,
     create_sales_invoice_from_quotation,
+    delete_quotation,
     submit_quotation,
+    update_quotation,
 )
 
 
@@ -52,6 +54,32 @@ def create(
         cost_center=cost_center,
         client_id=client_id,
     )
+
+
+@frappe.whitelist()
+def update(
+    name: str,
+    customer: str | None = None,
+    items: str | list | None = None,
+    transaction_date: str | None = None,
+    valid_till: str | None = None,
+    terms: str | None = None,
+    cost_center: str | None = None,
+) -> dict[str, Any]:
+    return update_quotation(
+        name,
+        customer=customer,
+        items=items,
+        transaction_date=transaction_date,
+        valid_till=valid_till,
+        terms=terms,
+        cost_center=cost_center,
+    )
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_quotation(name)
 
 
 @frappe.whitelist()

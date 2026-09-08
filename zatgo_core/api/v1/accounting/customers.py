@@ -9,7 +9,7 @@ import frappe
 from zatgo_core.services.customer_sync_ops import sync_customer_op
 from zatgo_core.services.customer_sync_service import get_customer_defaults, sync_customer_bundle
 from zatgo_core.services.erpnext_reads import get_customer, list_customers
-from zatgo_core.services.erpnext_writes import create_customer, update_customer
+from zatgo_core.services.erpnext_writes import create_customer, delete_customer, update_customer
 
 
 @frappe.whitelist()
@@ -97,3 +97,8 @@ def sync(
 @frappe.whitelist()
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_customer(name, values)
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_customer(name)

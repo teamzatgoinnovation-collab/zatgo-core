@@ -20,7 +20,9 @@ from zatgo_core.services.erpnext_writes import (
     create_journal_entry,
     create_split_pay,
     create_split_receive,
+    delete_journal_entry,
     submit_journal_entry,
+    update_journal_entry,
 )
 
 
@@ -111,6 +113,32 @@ def create_split_pay_entry(
         company=company,
         client_id=client_id,
     )
+
+
+@frappe.whitelist()
+def update(
+    name: str,
+    accounts: str | list | None = None,
+    posting_date: str | None = None,
+    user_remark: str | None = None,
+    voucher_type: str | None = None,
+    reference_no: str | None = None,
+    reference_date: str | None = None,
+) -> dict[str, Any]:
+    return update_journal_entry(
+        name,
+        accounts=accounts,
+        posting_date=posting_date,
+        user_remark=user_remark,
+        voucher_type=voucher_type,
+        reference_no=reference_no,
+        reference_date=reference_date,
+    )
+
+
+@frappe.whitelist()
+def delete(name: str) -> dict[str, Any]:
+    return delete_journal_entry(name)
 
 
 @frappe.whitelist()
