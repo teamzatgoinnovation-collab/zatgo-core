@@ -41,7 +41,7 @@ def context() -> dict[str, Any]:
             "vansale_roles": [user_type],
             "is_admin": is_admin,
             "is_user": is_user,
-            "has_vansale_access": True,
+            "has_vansale_access": is_vansale_admin(user) or is_vansale_user(user),
             "profile": profile,
         },
         meta={"source": "vansalex.me"},
