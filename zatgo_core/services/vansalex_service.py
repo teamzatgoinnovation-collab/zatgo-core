@@ -697,30 +697,74 @@ def create_collection(
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
 
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
     si_name = (sales_invoice or "").strip()
-    if not si_name:
-        # Latest outstanding submitted SI for this customer
-        rows = frappe.get_all(
+    if si_name:
+        # Caller explicitly targeted one invoice — single-reference payment
+        # against exactly that invoice, as before.
+        if not frappe.db.exists("Sales Invoice", si_name):
+            frappe.throw(f"Sales Invoice {si_name} not found")
+        pe = get_payment_entry("Sales Invoice", si_name, party_amount=paid)
+    else:
+        # No specific invoice named (the only path the Flutter app actually
+        # uses today) — allocate oldest-first across every open invoice
+        # until `paid` is exhausted, so a driver can collect a customer's
+        # full displayed outstanding in one action even when it spans
+        # multiple invoices. This used to target only the single most
+        # recently posted invoice, which silently misallocated or hard-
+        # rejected any amount larger than that one invoice's outstanding
+        # (QA audit BUG-003).
+        open_invoices = frappe.get_all(
             "Sales Invoice",
             filters={
                 "customer": party,
                 "docstatus": 1,
                 "outstanding_amount": [">", 0],
             },
-            fields=["name"],
-            order_by="posting_date desc, creation desc",
-            limit=1,
+            fields=["name", "grand_total", "outstanding_amount", "due_date"],
+            order_by="posting_date asc, creation asc",
         )
-        if not rows:
+        if not open_invoices:
             frappe.throw(f"No outstanding Sales Invoice for customer {party}")
-        si_name = rows[0].name
 
-    if not frappe.db.exists("Sales Invoice", si_name):
-        frappe.throw(f"Sales Invoice {si_name} not found")
+        remaining = paid
+        allocations: list[tuple[Any, float]] = []
+        for inv in open_invoices:
+            if remaining <= 0:
+                break
+            alloc = min(remaining, flt(inv.outstanding_amount))
+            allocations.append((inv, alloc))
+            remaining -= alloc
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+        first_inv, first_alloc = allocations[0]
+        # get_payment_entry with no party_amount builds exactly one
+        # reference row, allocated to first_inv's full outstanding, and
+        # resolves all the party/account/currency setup we still want —
+        # only the allocation for a partial-against-the-oldest-invoice
+        # payment needs correcting down to what's actually being paid.
+        pe = get_payment_entry("Sales Invoice", first_inv.name)
+        pe.references[0].allocated_amount = first_alloc
 
-    pe = get_payment_entry("Sales Invoice", si_name, party_amount=paid)
+        for inv, alloc in allocations[1:]:
+            pe.append(
+                "references",
+                {
+                    "reference_doctype": "Sales Invoice",
+                    "reference_name": inv.name,
+                    "due_date": inv.due_date,
+                    "total_amount": inv.grand_total,
+                    "outstanding_amount": inv.outstanding_amount,
+                    "allocated_amount": alloc,
+                },
+            )
+        # The driver's actual collected amount, not get_payment_entry's
+        # single-invoice default — any amount beyond what open_invoices
+        # could absorb becomes a normal unallocated advance, computed by
+        # Payment Entry's own validate().
+        pe.paid_amount = paid
+        pe.received_amount = paid
+
     pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
     if method:
         pe.mode_of_payment = method
