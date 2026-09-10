@@ -22,6 +22,7 @@ def create(
     warehouse: str | None = None,
     company: str | None = None,
     trip_id: str | None = None,
+    discount_percentage: float | str | None = None,
 ) -> dict[str, Any]:
     """Direct Invoice — creates+submits a Sales Invoice immediately, no
     Sales Order stage (order_id-equivalent NULL). Unchanged by the new
@@ -40,6 +41,7 @@ def create(
         warehouse=wh,
         company=company,
         trip_id=trip_id,
+        discount_percentage=discount_percentage,
     )
 
 
@@ -50,6 +52,7 @@ def create_order_draft(
     items: str | list | None = None,
     company: str | None = None,
     trip_id: str | None = None,
+    discount_percentage: float | str | None = None,
 ) -> dict[str, Any]:
     """Order side of the two-stage flow — creates+submits a real Sales
     Order, no stock/warehouse impact yet. Confirm it via `confirm()`."""
@@ -60,6 +63,7 @@ def create_order_draft(
         items=items,
         company=company,
         trip_id=trip_id,
+        discount_percentage=discount_percentage,
     )
 
 

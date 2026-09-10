@@ -13,7 +13,7 @@ from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_i
 from zatgo_core.services.erpnext_writes import _default_company, _parse_items
 from zatgo_core.services.idempotency import find_by_client_id as _find_by_client_id
 from zatgo_core.services.idempotency import insert_idempotent
-from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
+from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 
 
 _STATUS_MAP = {
@@ -162,6 +162,13 @@ def _ensure_submitted_sales_invoice(
     return doc
 
 
+def _validated_discount_percentage(discount_percentage: Any) -> float:
+    pct = flt(discount_percentage or 0)
+    if pct < 0 or pct > 100:
+        frappe.throw("Discount percentage must be between 0 and 100.", frappe.ValidationError)
+    return pct
+
+
 def create_order(
     client_id: str,
     customer: str,
@@ -169,6 +176,7 @@ def create_order(
     warehouse: str | None = None,
     company: str | None = None,
     trip_id: str | None = None,
+    discount_percentage: Any = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
@@ -213,6 +221,7 @@ def create_order(
             normalized.append(row)
         items = normalized
     rows = _parse_items(items)
+    pct = _validated_discount_percentage(discount_percentage)
 
     company_name = _default_company(company)
     # Prefer customer default price list when item rates missing
@@ -246,6 +255,12 @@ def create_order(
     }
     if naming_series:
         doc_payload["naming_series"] = naming_series
+    if pct > 0:
+        # Discount is applied to Net Total (before tax), not Grand Total —
+        # ZATCA requires VAT to be computed on the actual discounted
+        # taxable value, not subtracted from an already-taxed total.
+        doc_payload["apply_discount_on"] = "Net Total"
+        doc_payload["additional_discount_percentage"] = pct
 
     doc = frappe.get_doc(doc_payload)
     if pl and frappe.get_meta("Sales Invoice").has_field("selling_price_list"):
@@ -343,6 +358,7 @@ def create_sales_order(
     items: Any,
     company: str | None = None,
     trip_id: str | None = None,
+    discount_percentage: Any = None,
 ) -> dict[str, Any]:
     """Create+submit a real ERPNext Sales Order — the "Order" side of the
     Order -> Confirm -> Invoice flow. No stock/warehouse impact and no
@@ -364,6 +380,23 @@ def create_sales_order(
     frappe.has_permission("Sales Order", "create", throw=True)
     party = _resolve_customer(customer)
     rows = _normalize_items(items)
+    pct = _validated_discount_percentage(discount_percentage)
+
+    # ERPNext's Sales Order controller requires a source warehouse on every
+    # stock-item line unconditionally, even though nothing ships until this
+    # order is later confirmed into an Invoice (Sales Order submission never
+    # touches the Stock Ledger). Without this, create_sales_order() throws
+    # "Source warehouse required" for any real stock item — resolve the
+    # caller's own van (the same one confirm_order() requires later) purely
+    # to satisfy that schema rule.
+    wh = require_own_warehouse(None)
+    if not wh:
+        frappe.throw(
+            "Van warehouse is required. Set warehouse on ZG Van Sale Profile.",
+            frappe.ValidationError,
+        )
+    for row in rows:
+        row.setdefault("warehouse", wh)
 
     company_name = _default_company(company)
     pl = frappe.db.get_value("Customer", party, "default_price_list")
@@ -378,20 +411,25 @@ def create_sales_order(
                 if rate is not None:
                     row["rate"] = flt(rate)
 
-    doc = frappe.get_doc(
-        {
-            "doctype": "Sales Order",
-            "customer": party,
-            "company": company_name,
-            "transaction_date": today(),
-            "items": rows,
-            "zatgo_client_id": cid,
-            # Van sales don't go through a formal Delivery Note step —
-            # without this, ERPNext's validate_delivery_date() throws
-            # "Please enter Delivery Date" on every order.
-            "skip_delivery_note": 1,
-        }
-    )
+    doc_payload: dict[str, Any] = {
+        "doctype": "Sales Order",
+        "customer": party,
+        "company": company_name,
+        "transaction_date": today(),
+        "items": rows,
+        "zatgo_client_id": cid,
+        # Van sales don't go through a formal Delivery Note step —
+        # without this, ERPNext's validate_delivery_date() throws
+        # "Please enter Delivery Date" on every order.
+        "skip_delivery_note": 1,
+    }
+    if pct > 0:
+        # Set on the Sales Order itself so it carries through automatically
+        # when confirm_order() later maps it into a Sales Invoice via
+        # ERPNext's own make_sales_invoice() (mapped-doctype fields copy).
+        doc_payload["apply_discount_on"] = "Net Total"
+        doc_payload["additional_discount_percentage"] = pct
+    doc = frappe.get_doc(doc_payload)
     if pl and frappe.get_meta("Sales Order").has_field("selling_price_list"):
         doc.selling_price_list = pl
 

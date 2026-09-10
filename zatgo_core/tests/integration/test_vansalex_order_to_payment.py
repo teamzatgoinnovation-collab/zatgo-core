@@ -13,7 +13,12 @@ from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
 from zatgo_core.api.v1.vansalex.orders import create as api_create_order
-from zatgo_core.services.vansalex_service import create_collection, create_order
+from zatgo_core.services.vansalex_service import (
+    confirm_order,
+    create_collection,
+    create_order,
+    create_sales_order,
+)
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
 
@@ -186,3 +191,70 @@ class TestVansalexOrderToPayment(IntegrationTestCase):
                 customer=self.other_customer,
                 amount=10,
             )
+
+    def test_direct_invoice_discount_percentage_reduces_grand_total(self) -> None:
+        """BUG-005: an order-level discount percentage must reduce the
+        Sales Invoice's grand_total, applied on Net Total (before tax) so
+        VAT is computed on the actual discounted taxable value.
+
+        Uses its own stocked item (not self.item_code) — create_order()
+        commits for real, so sharing the class-level item's stock count
+        with test_full_order_to_payment_flow's exact-quantity assertion
+        would make these tests order-dependent."""
+        item = self._make_stocked_item(self.own_warehouse, qty=50)
+        order = create_order(
+            client_id=f"test-order-discount-{random_string(8)}",
+            customer=self.own_customer,
+            items=[{"item_code": item, "qty": 2, "rate": 10}],
+            warehouse=self.own_warehouse,
+            company=self.company,
+            discount_percentage=10,
+        )
+        self.assertTrue(order["success"], order.get("error"))
+        si_name = order["data"]["erp_name"]
+        si = frappe.get_doc("Sales Invoice", si_name)
+        self.assertEqual(si.apply_discount_on, "Net Total")
+        self.assertEqual(si.additional_discount_percentage, 10)
+        self.assertEqual(si.grand_total, 18)  # (2 * 10) - 10%
+        self.assertEqual(order["data"]["amount"], 18)
+
+    def test_direct_invoice_rejects_out_of_range_discount(self) -> None:
+        item = self._make_stocked_item(self.own_warehouse, qty=50)
+        with self.assertRaises(frappe.ValidationError):
+            create_order(
+                client_id=f"test-order-baddisc-{random_string(8)}",
+                customer=self.own_customer,
+                items=[{"item_code": item, "qty": 1, "rate": 10}],
+                warehouse=self.own_warehouse,
+                company=self.company,
+                discount_percentage=150,
+            )
+
+    def test_two_stage_order_discount_carries_to_confirmed_invoice(self) -> None:
+        """The Order -> Confirm -> Invoice flow: a discount set on the Sales
+        Order must survive ERPNext's make_sales_invoice() mapping into the
+        final Sales Invoice, not just apply to the intermediate Order."""
+        item = self._make_stocked_item(self.own_warehouse, qty=50)
+        so = create_sales_order(
+            client_id=f"test-so-discount-{random_string(8)}",
+            customer=self.own_customer,
+            items=[{"item_code": item, "qty": 2, "rate": 10}],
+            company=self.company,
+            discount_percentage=25,
+        )
+        self.assertTrue(so["success"], so.get("error"))
+        so_name = so["data"]["erp_name"]
+        self.assertEqual(so["data"]["grand_total"], 15)  # (2 * 10) - 25%
+
+        invoice = confirm_order(
+            client_id=f"test-confirm-discount-{random_string(8)}",
+            sales_order=so_name,
+            warehouse=self.own_warehouse,
+            company=self.company,
+        )
+        self.assertTrue(invoice["success"], invoice.get("error"))
+        self.assertEqual(invoice["data"]["amount"], 15)
+        self.assertEqual(
+            frappe.db.get_value("Sales Invoice", invoice["data"]["erp_name"], "additional_discount_percentage"),
+            25,
+        )
