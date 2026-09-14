@@ -106,7 +106,14 @@ def generate_and_store_zatca_qr(doc: Any) -> str:
         vat_amount=taxes,
     )
     if frappe.get_meta("Sales Invoice").has_field("zatca_qr_base64"):
-        frappe.db.set_value("Sales Invoice", doc.name, "zatca_qr_base64", qr, update_modified=False)
+        values = {"zatca_qr_base64": qr}
+        # For print_designer's image binding (§ events/print_fields.py) -- same
+        # timing gap as the field it mirrors: this is a direct db.set_value, so
+        # the validate-hooked populate_print_fields never sees a fresh QR unless
+        # it's captured here too.
+        if frappe.get_meta("Sales Invoice").has_field("vansale_qr_image"):
+            values["vansale_qr_image"] = tlv_to_png_data_uri(qr)
+        frappe.db.set_value("Sales Invoice", doc.name, values, update_modified=False)
         doc.zatca_qr_base64 = qr
     return qr
 

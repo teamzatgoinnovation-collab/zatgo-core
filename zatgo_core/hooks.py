@@ -38,6 +38,9 @@ doc_events = {
         "after_insert": "zatgo_core.events.company.on_company_update",
         "on_update": "zatgo_core.events.company.on_company_update",
     },
+    "Sales Invoice": {
+        "validate": "zatgo_core.events.print_fields.populate_print_fields",
+    },
 }
 
 scheduler_events = {
