@@ -1099,6 +1099,767 @@ _QUOTATION_HTML = r"""
 """
 
 
+DEMO_QUOTATION_EN_NAME = "Quotation (EN)"
+DEMO_QUOTATION_AR_NAME = "Quotation (AR)"
+DEMO_DELIVERY_NOTE_EN_NAME = "Delivery Note (EN)"
+DEMO_DELIVERY_NOTE_AR_NAME = "Delivery Note (AR)"
+
+# Shared A4 stylesheet for the Quotation/Delivery Note family below -- same
+# visual identity as Sales ZG1 (bordered header/meta/buyer-box/items-table)
+# but trimmed of VAT/QR/bank sections these doctypes don't carry. RTL
+# mirroring is done via [dir="rtl"] attribute overrides in one stylesheet
+# rather than a duplicated CSS file per language.
+_QUOTE_DN_CSS = r"""
+@page {
+  size: A4 portrait;
+  margin: 6mm 7mm 7mm 7mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #fff !important;
+  color: #111;
+  font-family: Arial, "Noto Sans", sans-serif;
+  font-size: 9pt;
+  line-height: 1.25;
+}
+
+.invoice-page {
+  width: 100%;
+  max-width: 196mm;
+  margin: 0 auto;
+}
+
+.invoice-page[dir="rtl"] {
+  font-family: "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+}
+
+.company-header {
+  min-height: 26mm;
+  border: .45mm solid #8d9da5;
+  border-radius: 1.5mm 1.5mm 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3mm 4mm;
+  background: linear-gradient(to bottom, #f7fbfc, #fff);
+}
+
+.company-logo {
+  max-width: 40mm;
+  max-height: 14mm;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 1.5mm;
+}
+
+.company-name {
+  font-size: 12pt;
+  font-weight: 800;
+}
+
+.company-meta {
+  font-size: 7.5pt;
+  line-height: 1.3;
+  margin-top: 1.5mm;
+  color: #444;
+}
+
+.invoice-meta-bar {
+  min-height: 11mm;
+  border: .45mm solid #6c8b96;
+  border-top: 0;
+  display: grid;
+  grid-template-columns: 40% 60%;
+  align-items: center;
+  background: #edf6f8;
+  padding: 1.5mm 3mm;
+}
+
+.invoice-meta-bar .doc-title {
+  font-size: 11pt;
+  font-weight: 800;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2mm;
+}
+
+.meta-grid > div {
+  border-left: .25mm solid #aab9be;
+  padding-left: 2mm;
+}
+[dir="rtl"] .meta-grid > div {
+  border-left: none;
+  border-right: .25mm solid #aab9be;
+  padding-left: 0;
+  padding-right: 2mm;
+}
+
+.meta-grid .k {
+  font-size: 7pt;
+  color: #555;
+}
+.meta-grid .v {
+  font-weight: 700;
+}
+
+.buyer-box {
+  border: .45mm solid #718f98;
+  border-top: 0;
+}
+
+.section-title {
+  height: 6.5mm;
+  padding: 1.2mm 2.5mm;
+  display: flex;
+  align-items: center;
+  font-weight: 800;
+  font-size: 9pt;
+  background: #dceef2;
+  border-bottom: .3mm solid #7d9ba4;
+}
+
+.buyer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 14mm;
+}
+
+.buyer-grid > div {
+  padding: 2mm 2.5mm;
+}
+.buyer-grid > div:first-child {
+  border-right: .25mm solid #a9b7bb;
+}
+[dir="rtl"] .buyer-grid > div:first-child {
+  border-right: none;
+  border-left: .25mm solid #a9b7bb;
+}
+
+.label {
+  font-size: 7pt;
+  color: #555;
+  margin-bottom: .5mm;
+}
+
+.value {
+  font-weight: 700;
+  min-height: 4mm;
+  margin-bottom: 1.4mm;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin-top: 0;
+}
+
+.items-table th,
+.items-table td {
+  border: .3mm solid #7f9299;
+  padding: 1.4mm 1.1mm;
+  vertical-align: middle;
+}
+
+.items-table thead th {
+  background: #42536b;
+  color: #fff;
+  text-align: center;
+  font-size: 8pt;
+  font-weight: 700;
+}
+
+.items-table tbody td {
+  font-size: 8.2pt;
+}
+
+.items-table .no { width: 6%; }
+.items-table .code { width: 12%; }
+.items-table .description { width: 38%; }
+.items-table .qty { width: 10%; }
+.items-table .unit { width: 10%; }
+.items-table .price { width: 12%; }
+.items-table .amount { width: 12%; }
+
+.center { text-align: center; }
+.num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+[dir="rtl"] .num { text-align: left; }
+
+.item-description { text-align: left; word-wrap: break-word; }
+[dir="rtl"] .item-description { text-align: right; }
+
+.items-table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 55% 45%;
+  border-left: .3mm solid #7f9299;
+  border-right: .3mm solid #7f9299;
+  border-bottom: .3mm solid #7f9299;
+}
+
+.terms-area {
+  padding: 2.5mm 3mm;
+  border-right: .3mm solid #7f9299;
+  font-size: 8pt;
+}
+[dir="rtl"] .terms-area {
+  border-right: none;
+  border-left: .3mm solid #7f9299;
+}
+
+.terms-title {
+  font-weight: 800;
+  margin-bottom: 1mm;
+}
+
+.words {
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 2mm;
+}
+
+.total-row,
+.grand-row {
+  display: grid;
+  grid-template-columns: 60% 40%;
+  min-height: 8mm;
+  border-bottom: .3mm solid #7f9299;
+}
+
+.total-row span,
+.grand-row span {
+  padding: 1.2mm 2mm;
+  font-size: 8pt;
+  font-weight: 700;
+}
+
+.total-row b,
+.grand-row b {
+  padding: 1.2mm 2mm;
+  text-align: right;
+  border-left: .3mm solid #7f9299;
+  font-size: 8.5pt;
+}
+[dir="rtl"] .total-row b, [dir="rtl"] .grand-row b {
+  text-align: left;
+  border-left: none;
+  border-right: .3mm solid #7f9299;
+}
+
+.grand-row {
+  min-height: 10mm;
+  border-bottom: 0;
+  background: #dceef2;
+}
+.grand-row span, .grand-row b {
+  font-size: 9pt;
+  font-weight: 900;
+}
+
+.signature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18mm;
+  margin-top: 10mm;
+  font-size: 8pt;
+}
+
+.signature-row > div {
+  position: relative;
+  min-height: 10mm;
+  text-align: center;
+}
+
+.signature-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: .25mm solid #555;
+}
+
+.page-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4mm;
+  font-size: 7pt;
+  color: #555;
+}
+
+@media print {
+  body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  .items-table thead { display: table-header-group; }
+  .items-table tr, .buyer-box, .bottom-grid, .signature-row {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+"""
+
+_DEMO_QUOTATION_EN_HTML = r"""
+{# ERPNext / Frappe Print Format: Quotation (EN) — company-agnostic, works on any site #}
+{% set company = frappe.get_doc("Company", doc.company) %}
+{% set words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or company.default_currency) %}
+
+<div class="invoice-page" dir="ltr">
+
+  <div class="company-header">
+    <div>
+      {% if company.company_logo %}<img class="company-logo" src="{{ company.company_logo }}">{% endif %}
+      <div class="company-name">{{ company.company_name or doc.company }}</div>
+    </div>
+    <div class="company-meta" style="text-align:right">
+      {% if company.phone_no %}{{ company.phone_no }}<br>{% endif %}
+      {% if company.email %}{{ company.email }}{% endif %}
+    </div>
+  </div>
+
+  <div class="invoice-meta-bar">
+    <div class="doc-title">QUOTATION</div>
+    <div class="meta-grid">
+      <div>
+        <div class="k">Quotation No.</div>
+        <div class="v">{{ doc.name }}</div>
+      </div>
+      <div>
+        <div class="k">Date</div>
+        <div class="v">{{ frappe.format_date(doc.get("transaction_date") or doc.get("posting_date")) }}</div>
+      </div>
+        <div>
+          <div class="k">Valid Till</div>
+          <div class="v">{{ frappe.format_date(doc.valid_till) if doc.valid_till else "—" }}</div>
+        </div>
+    </div>
+  </div>
+
+  <div class="buyer-box">
+    <div class="section-title">Buyer Details</div>
+    <div class="buyer-grid">
+      <div>
+        <div class="label">Customer Name</div>
+        <div class="value">{{ doc.get("customer_name") or doc.party_name or doc.get("customer") or "" }}</div>
+      </div>
+      <div>
+        <div class="label">Address</div>
+        <div class="value">{% set _addr = frappe.db.get_value("Address", {"name": doc.customer_address}, ["address_line1","city"], as_dict=True) if doc.get("customer_address") else none %}
+          {% if _addr %}{{ _addr.address_line1 or "" }}{% if _addr.city %}, {{ _addr.city }}{% endif %}{% else %}{{ doc.address_display or "" }}{% endif %}</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="no">No.</th>
+        <th class="code">Code</th>
+        <th class="description">Description</th>
+        <th class="qty">Qty</th>
+        <th class="unit">Unit</th>
+        <th class="price">Unit Price</th>
+        <th class="amount">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td class="center">{{ loop.index }}</td>
+        <td class="center">{{ item.item_code or "" }}</td>
+        <td class="item-description">{{ item.item_name or "" }}</td>
+        <td class="num">{{ frappe.format(item.qty, {"fieldtype":"Float"}) }}</td>
+        <td class="center">{{ item.uom or item.stock_uom or "" }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.rate, currency=doc.currency) }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.amount, currency=doc.currency) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="bottom-grid">
+    <div class="terms-area">
+      {% if doc.get("tc_name") and doc.get("terms") %}
+      <div class="terms-title">Terms &amp; Conditions</div>
+      <div>{{ doc.terms }}</div>
+      {% endif %}
+      <div class="words"><b>Amount in Words:</b> {{ words }}</div>
+    </div>
+    <div>
+      <div class="total-row"><span>Net Total</span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
+      <div class="total-row"><span>Tax</span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+      <div class="grand-row"><span>Grand Total</span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
+    </div>
+  </div>
+
+  <div class="signature-row">
+    <div>
+      <div class="signature-line"></div>
+      Received By
+    </div>
+    <div>
+      <div class="signature-line"></div>
+      Prepared By
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>{{ company.company_name }}</span>
+    <span>Page {{ page_number or 1 }} / {{ total_pages or 1 }}</span>
+  </div>
+
+</div>
+"""
+
+_DEMO_QUOTATION_AR_HTML = r"""
+{# ERPNext / Frappe Print Format: Quotation (AR) — company-agnostic, works on any site #}
+{% set company = frappe.get_doc("Company", doc.company) %}
+{% set words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or company.default_currency) %}
+
+<div class="invoice-page" dir="rtl">
+
+  <div class="company-header">
+    <div>
+      {% if company.company_logo %}<img class="company-logo" src="{{ company.company_logo }}">{% endif %}
+      <div class="company-name">{{ company.company_name or doc.company }}</div>
+    </div>
+    <div class="company-meta" style="text-align:left">
+      {% if company.phone_no %}{{ company.phone_no }}<br>{% endif %}
+      {% if company.email %}{{ company.email }}{% endif %}
+    </div>
+  </div>
+
+  <div class="invoice-meta-bar">
+    <div class="doc-title">عرض سعر</div>
+    <div class="meta-grid">
+      <div>
+        <div class="k">رقم العرض</div>
+        <div class="v">{{ doc.name }}</div>
+      </div>
+      <div>
+        <div class="k">التاريخ</div>
+        <div class="v">{{ frappe.format_date(doc.get("transaction_date") or doc.get("posting_date")) }}</div>
+      </div>
+        <div>
+          <div class="k">صالح حتى</div>
+          <div class="v">{{ frappe.format_date(doc.valid_till) if doc.valid_till else "—" }}</div>
+        </div>
+    </div>
+  </div>
+
+  <div class="buyer-box">
+    <div class="section-title">بيانات العميل</div>
+    <div class="buyer-grid">
+      <div>
+        <div class="label">اسم العميل</div>
+        <div class="value">{{ doc.get("customer_name") or doc.party_name or doc.get("customer") or "" }}</div>
+      </div>
+      <div>
+        <div class="label">العنوان</div>
+        <div class="value">{% set _addr = frappe.db.get_value("Address", {"name": doc.customer_address}, ["address_line1","city"], as_dict=True) if doc.get("customer_address") else none %}
+          {% if _addr %}{{ _addr.address_line1 or "" }}{% if _addr.city %}, {{ _addr.city }}{% endif %}{% else %}{{ doc.address_display or "" }}{% endif %}</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="no">م</th>
+        <th class="code">الرمز</th>
+        <th class="description">الوصف</th>
+        <th class="qty">الكمية</th>
+        <th class="unit">الوحدة</th>
+        <th class="price">السعر</th>
+        <th class="amount">المبلغ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td class="center">{{ loop.index }}</td>
+        <td class="center">{{ item.item_code or "" }}</td>
+        <td class="item-description">{{ item.item_name or "" }}</td>
+        <td class="num">{{ frappe.format(item.qty, {"fieldtype":"Float"}) }}</td>
+        <td class="center">{{ item.uom or item.stock_uom or "" }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.rate, currency=doc.currency) }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.amount, currency=doc.currency) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="bottom-grid">
+    <div class="terms-area">
+      {% if doc.get("tc_name") and doc.get("terms") %}
+      <div class="terms-title">الشروط والأحكام</div>
+      <div>{{ doc.terms }}</div>
+      {% endif %}
+      <div class="words"><b>المبلغ بالحروف:</b> {{ words }}</div>
+    </div>
+    <div>
+      <div class="total-row"><span>الإجمالي</span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
+      <div class="total-row"><span>الضريبة</span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+      <div class="grand-row"><span>الإجمالي النهائي</span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
+    </div>
+  </div>
+
+  <div class="signature-row">
+    <div>
+      <div class="signature-line"></div>
+      المستلم
+    </div>
+    <div>
+      <div class="signature-line"></div>
+      أعده
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>{{ company.company_name }}</span>
+    <span>صفحة {{ page_number or 1 }} / {{ total_pages or 1 }}</span>
+  </div>
+
+</div>
+"""
+
+_DEMO_DELIVERY_NOTE_EN_HTML = r"""
+{# ERPNext / Frappe Print Format: Delivery Note (EN) — company-agnostic, works on any site #}
+{% set company = frappe.get_doc("Company", doc.company) %}
+{% set words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or company.default_currency) %}
+
+<div class="invoice-page" dir="ltr">
+
+  <div class="company-header">
+    <div>
+      {% if company.company_logo %}<img class="company-logo" src="{{ company.company_logo }}">{% endif %}
+      <div class="company-name">{{ company.company_name or doc.company }}</div>
+    </div>
+    <div class="company-meta" style="text-align:right">
+      {% if company.phone_no %}{{ company.phone_no }}<br>{% endif %}
+      {% if company.email %}{{ company.email }}{% endif %}
+    </div>
+  </div>
+
+  <div class="invoice-meta-bar">
+    <div class="doc-title">DELIVERY NOTE</div>
+    <div class="meta-grid">
+      <div>
+        <div class="k">Delivery Note No.</div>
+        <div class="v">{{ doc.name }}</div>
+      </div>
+      <div>
+        <div class="k">Date</div>
+        <div class="v">{{ frappe.format_date(doc.get("transaction_date") or doc.get("posting_date")) }}</div>
+      </div>
+        <div>
+          <div class="k">Against Sales Invoice</div>
+          <div class="v">{{ doc.get("against_sales_invoice") or doc.get("against_sales_order") or "—" }}</div>
+        </div>
+    </div>
+  </div>
+
+  <div class="buyer-box">
+    <div class="section-title">Buyer Details</div>
+    <div class="buyer-grid">
+      <div>
+        <div class="label">Customer Name</div>
+        <div class="value">{{ doc.get("customer_name") or doc.customer_name or doc.get("customer") or "" }}</div>
+      </div>
+      <div>
+        <div class="label">Address</div>
+        <div class="value">{{ doc.shipping_address or doc.address_display or "" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="no">No.</th>
+        <th class="code">Code</th>
+        <th class="description">Description</th>
+        <th class="qty">Qty</th>
+        <th class="unit">Unit</th>
+        <th class="price">Unit Price</th>
+        <th class="amount">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td class="center">{{ loop.index }}</td>
+        <td class="center">{{ item.item_code or "" }}</td>
+        <td class="item-description">{{ item.item_name or "" }}</td>
+        <td class="num">{{ frappe.format(item.qty, {"fieldtype":"Float"}) }}</td>
+        <td class="center">{{ item.uom or item.stock_uom or "" }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.rate, currency=doc.currency) }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.amount, currency=doc.currency) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="bottom-grid">
+    <div class="terms-area">
+      {% if doc.get("tc_name") and doc.get("terms") %}
+      <div class="terms-title">Terms &amp; Conditions</div>
+      <div>{{ doc.terms }}</div>
+      {% endif %}
+      <div class="words"><b>Amount in Words:</b> {{ words }}</div>
+    </div>
+    <div>
+      <div class="total-row"><span>Net Total</span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
+      <div class="total-row"><span>Tax</span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+      <div class="grand-row"><span>Grand Total</span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
+    </div>
+  </div>
+
+  <div class="signature-row">
+    <div>
+      <div class="signature-line"></div>
+      Received By
+    </div>
+    <div>
+      <div class="signature-line"></div>
+      Prepared By
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>{{ company.company_name }}</span>
+    <span>Page {{ page_number or 1 }} / {{ total_pages or 1 }}</span>
+  </div>
+
+</div>
+"""
+
+_DEMO_DELIVERY_NOTE_AR_HTML = r"""
+{# ERPNext / Frappe Print Format: Delivery Note (AR) — company-agnostic, works on any site #}
+{% set company = frappe.get_doc("Company", doc.company) %}
+{% set words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or company.default_currency) %}
+
+<div class="invoice-page" dir="rtl">
+
+  <div class="company-header">
+    <div>
+      {% if company.company_logo %}<img class="company-logo" src="{{ company.company_logo }}">{% endif %}
+      <div class="company-name">{{ company.company_name or doc.company }}</div>
+    </div>
+    <div class="company-meta" style="text-align:left">
+      {% if company.phone_no %}{{ company.phone_no }}<br>{% endif %}
+      {% if company.email %}{{ company.email }}{% endif %}
+    </div>
+  </div>
+
+  <div class="invoice-meta-bar">
+    <div class="doc-title">إشعار تسليم</div>
+    <div class="meta-grid">
+      <div>
+        <div class="k">رقم الإشعار</div>
+        <div class="v">{{ doc.name }}</div>
+      </div>
+      <div>
+        <div class="k">تاريخ التسليم</div>
+        <div class="v">{{ frappe.format_date(doc.get("transaction_date") or doc.get("posting_date")) }}</div>
+      </div>
+        <div>
+          <div class="k">رقم الفاتورة المرجعي</div>
+          <div class="v">{{ doc.get("against_sales_invoice") or doc.get("against_sales_order") or "—" }}</div>
+        </div>
+    </div>
+  </div>
+
+  <div class="buyer-box">
+    <div class="section-title">بيانات العميل</div>
+    <div class="buyer-grid">
+      <div>
+        <div class="label">اسم العميل</div>
+        <div class="value">{{ doc.get("customer_name") or doc.customer_name or doc.get("customer") or "" }}</div>
+      </div>
+      <div>
+        <div class="label">العنوان</div>
+        <div class="value">{{ doc.shipping_address or doc.address_display or "" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="no">م</th>
+        <th class="code">الرمز</th>
+        <th class="description">الوصف</th>
+        <th class="qty">الكمية</th>
+        <th class="unit">الوحدة</th>
+        <th class="price">السعر</th>
+        <th class="amount">المبلغ</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in doc.items %}
+      <tr>
+        <td class="center">{{ loop.index }}</td>
+        <td class="center">{{ item.item_code or "" }}</td>
+        <td class="item-description">{{ item.item_name or "" }}</td>
+        <td class="num">{{ frappe.format(item.qty, {"fieldtype":"Float"}) }}</td>
+        <td class="center">{{ item.uom or item.stock_uom or "" }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.rate, currency=doc.currency) }}</td>
+        <td class="num">{{ frappe.utils.fmt_money(item.amount, currency=doc.currency) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="bottom-grid">
+    <div class="terms-area">
+      {% if doc.get("tc_name") and doc.get("terms") %}
+      <div class="terms-title">الشروط والأحكام</div>
+      <div>{{ doc.terms }}</div>
+      {% endif %}
+      <div class="words"><b>المبلغ بالحروف:</b> {{ words }}</div>
+    </div>
+    <div>
+      <div class="total-row"><span>الإجمالي</span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
+      <div class="total-row"><span>الضريبة</span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+      <div class="grand-row"><span>الإجمالي النهائي</span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
+    </div>
+  </div>
+
+  <div class="signature-row">
+    <div>
+      <div class="signature-line"></div>
+      المستلم
+    </div>
+    <div>
+      <div class="signature-line"></div>
+      أعده
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>{{ company.company_name }}</span>
+    <span>صفحة {{ page_number or 1 }} / {{ total_pages or 1 }}</span>
+  </div>
+
+</div>
+"""
+
+
 def _upsert_print_format(
     name: str,
     *,
@@ -1155,6 +1916,38 @@ def ensure_print_formats() -> None:
         html=_DEMO_TAX_INVOICE_HTML,
         css=_DEMO_TAX_INVOICE_CSS,
         margins=15,
+        pdf_generator="chrome",
+    )
+    _upsert_print_format(
+        DEMO_QUOTATION_EN_NAME,
+        html=_DEMO_QUOTATION_EN_HTML,
+        doc_type="Quotation",
+        css=_QUOTE_DN_CSS,
+        margins=6,
+        pdf_generator="chrome",
+    )
+    _upsert_print_format(
+        DEMO_QUOTATION_AR_NAME,
+        html=_DEMO_QUOTATION_AR_HTML,
+        doc_type="Quotation",
+        css=_QUOTE_DN_CSS,
+        margins=6,
+        pdf_generator="chrome",
+    )
+    _upsert_print_format(
+        DEMO_DELIVERY_NOTE_EN_NAME,
+        html=_DEMO_DELIVERY_NOTE_EN_HTML,
+        doc_type="Delivery Note",
+        css=_QUOTE_DN_CSS,
+        margins=6,
+        pdf_generator="chrome",
+    )
+    _upsert_print_format(
+        DEMO_DELIVERY_NOTE_AR_NAME,
+        html=_DEMO_DELIVERY_NOTE_AR_HTML,
+        doc_type="Delivery Note",
+        css=_QUOTE_DN_CSS,
+        margins=6,
         pdf_generator="chrome",
     )
     frappe.db.commit()
