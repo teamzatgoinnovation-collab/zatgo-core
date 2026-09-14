@@ -385,11 +385,11 @@ _DEMO_TAX_INVOICE_HTML = r"""
             </td>
             <td class="num">{{ frappe.format(item.qty, {"fieldtype":"Float"}) }}</td>
             <td class="center">{{ item.uom or item.stock_uom or "" }}</td>
-            <td class="num">{{ frappe.format(item.rate, {"fieldtype":"Currency","currency":doc.currency}) }}</td>
-            <td class="num">{{ frappe.format(item.net_amount, {"fieldtype":"Currency","currency":doc.currency}) }}</td>
+            <td class="num">{{ frappe.utils.fmt_money(item.rate, currency=doc.currency) }}</td>
+            <td class="num">{{ frappe.utils.fmt_money(item.net_amount, currency=doc.currency) }}</td>
             <td class="num">{{ frappe.format(item.vansale_line_vat_rate, {"fieldtype":"Percent"}) }}</td>
-            <td class="num">{{ frappe.format(item.vansale_line_vat_amount, {"fieldtype":"Currency","currency":doc.currency}) }}</td>
-            <td class="num">{{ frappe.format(item.vansale_line_total_incl_vat, {"fieldtype":"Currency","currency":doc.currency}) }}</td>
+            <td class="num">{{ frappe.utils.fmt_money(item.vansale_line_vat_amount, currency=doc.currency) }}</td>
+            <td class="num">{{ frappe.utils.fmt_money(item.vansale_line_total_incl_vat, currency=doc.currency) }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -401,15 +401,15 @@ _DEMO_TAX_INVOICE_HTML = r"""
         <div class="words-title">Amount in Words <span class="arabic">المبلغ بالحروف</span></div>
         <div class="words">{{ doc.vansale_amount_in_words_print or "" }}</div>
         <div class="balance-box">
-          <div><span>Previous Balance <span class="arabic">الرصيد السابق</span></span><b>{{ frappe.format(doc.vansale_previous_balance or 0, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
-          <div><span>New Balance <span class="arabic">الرصيد الجديد</span></span><b>{{ frappe.format(doc.vansale_new_balance or 0, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
+          <div><span>Previous Balance <span class="arabic">الرصيد السابق</span></span><b>{{ frappe.utils.fmt_money(doc.vansale_previous_balance or 0, currency=doc.currency) }}</b></div>
+          <div><span>New Balance <span class="arabic">الرصيد الجديد</span></span><b>{{ frappe.utils.fmt_money(doc.vansale_new_balance or 0, currency=doc.currency) }}</b></div>
         </div>
       </div>
       <div class="totals-area">
-        <div class="total-row"><span>TOTAL AMOUNT <small class="arabic">الإجمالي</small></span><b>{{ frappe.format(doc.net_total, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
-        <div class="total-row"><span>DISCOUNT <small class="arabic">الخصم</small></span><b>{{ frappe.format(doc.discount_amount or 0, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
-        <div class="total-row"><span>TOTAL VAT <small class="arabic">قيمة الضريبة</small></span><b>{{ frappe.format(doc.total_taxes_and_charges or 0, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
-        <div class="grand-row"><span>GRAND TOTAL <small class="arabic">الإجمالي النهائي</small></span><b>{{ frappe.format(doc.grand_total, {"fieldtype":"Currency","currency":doc.currency}) }}</b></div>
+        <div class="total-row"><span>TOTAL AMOUNT <small class="arabic">الإجمالي</small></span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
+        <div class="total-row"><span>DISCOUNT <small class="arabic">الخصم</small></span><b>{{ frappe.utils.fmt_money(doc.discount_amount or 0, currency=doc.currency) }}</b></div>
+        <div class="total-row"><span>TOTAL VAT <small class="arabic">قيمة الضريبة</small></span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+        <div class="grand-row"><span>GRAND TOTAL <small class="arabic">الإجمالي النهائي</small></span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
       </div>
     </div>
 
