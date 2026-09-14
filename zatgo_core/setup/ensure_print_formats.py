@@ -349,7 +349,7 @@ _DEMO_TAX_INVOICE_HTML = r"""
         </div>
         <div>
           <div class="label">Customer VAT No.</div>
-          <div class="value">{{ customer.tax_id if customer else "" }}</div>
+          <div class="value">{{ (customer.tax_id if customer else "") or "" }}</div>
           <div class="label">Currency</div>
           <div class="value">{{ doc.currency or "SAR" }}</div>
         </div>
