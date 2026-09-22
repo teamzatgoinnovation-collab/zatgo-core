@@ -2128,6 +2128,15 @@ def ensure_print_formats() -> None:
     )
     try:
         _ensure_sales_zg1_chrome_pdf_generator()
+        # Commit now, not just at the end of this function -- a later
+        # _upsert_print_format() call below can throw uncommitted (e.g.
+        # the Quotation/Delivery Note formats hitting the same site-wide
+        # pdf_generator restriction this function works around above, on
+        # sites that also lock those), and an uncaught exception rolls
+        # back the whole transaction, silently undoing this otherwise-
+        # successful write along with it. Confirmed happening this way on
+        # democompanysa 2026-09-22.
+        frappe.db.commit()
     except Exception:
         logger.exception("Sales ZG1 chrome pdf_generator enforcement failed")
     _upsert_print_format(
