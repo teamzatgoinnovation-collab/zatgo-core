@@ -67,6 +67,42 @@ def _invoice_timestamp(doc: Any) -> str:
     return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
+def zatca_qr_data_uri(doc: Any) -> str:
+    """One-shot: build this invoice's ZATCA Phase 1 QR and render it as a
+    self-contained PNG data URI, computed fresh from the invoice's own
+    fields at print time.
+
+    For print formats that would otherwise display a QR from an "Attach
+    Image"-type field (e.g. a third-party app's generated PNG file) --
+    that file can be deleted from the invoice's attachments (by a user
+    cleaning up attachments, or anything else touching the File doctype),
+    silently breaking the QR on every future print. The five values ZATCA
+    Phase 1's TLV format encodes (seller name, VAT number, timestamp,
+    invoice total, VAT total) are all plain fields already on the
+    invoice/company, so there's no need to depend on a stored image at
+    all -- read-only, no DB write, safe to call directly from a print
+    format's Jinja.
+    """
+    if not getattr(doc, "company", None):
+        return ""
+    company = doc.company
+    seller_name = frappe.db.get_value("Company", company, "company_name") or company
+    vat_number = _seller_vat(company)
+    grand_total = doc.get("grand_total") or 0
+    taxes = doc.get("total_taxes_and_charges") or 0
+    if bool(int(doc.get("is_return") or 0)):
+        grand_total = abs(flt(grand_total))
+        taxes = abs(flt(taxes))
+    tlv_b64 = build_zatca_tlv_base64(
+        seller_name=str(seller_name),
+        vat_number=vat_number or "000000000000000",
+        timestamp=_invoice_timestamp(doc),
+        invoice_total=grand_total,
+        vat_amount=taxes,
+    )
+    return tlv_to_png_data_uri(tlv_b64)
+
+
 def tlv_to_png_data_uri(tlv_b64: str | None) -> str:
     """Encode ZATCA TLV base64 string as a PNG QR data URI for print formats."""
     if not tlv_b64:
