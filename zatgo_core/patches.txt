@@ -19,3 +19,4 @@ zatgo_core.patches.v0_2_0.make_zg_trip_client_id_unique
 zatgo_core.patches.v0_2_1.add_company_bank_fields
 zatgo_core.patches.v0_2_1.add_print_computed_fields
 zatgo_core.patches.v0_2_2.add_payment_type_field
+zatgo_core.patches.v0_2_2.add_cash_account_field

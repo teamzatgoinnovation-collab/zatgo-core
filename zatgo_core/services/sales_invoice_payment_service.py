@@ -7,9 +7,17 @@
   machinery the "Create > Payment" button in Desk uses) so GL postings,
   party account resolution, and exchange-rate handling all go through
   ERPNext's tested accounting code -- nothing here writes GL/stock rows
-  directly. The Cash account comes from the "Cash" Mode of Payment's
-  per-company default account (Mode of Payment Account), never hardcoded,
-  so this works across companies that configure different Cash accounts.
+  directly. The receiving account is `custom_cash_account`
+  (patches/v0_2_2/add_cash_account_field.py), required whenever Payment
+  Type = Cash -- a company can run more than one till/cash account, so
+  the user (or an API caller) always picks the specific one. The client
+  script pre-fills it from the "Cash" Mode of Payment's per-company
+  default account as a starting suggestion (see public/js/sales_invoice.js)
+  but that's just a UX convenience; nothing here falls back to it --
+  `mandatory_depends_on` on the field is a client-side-only hint in Frappe
+  (confirmed: frappe.model.base_document._get_missing_mandatory_fields
+  only ever looks at the static `reqd` flag), so the throw below is the
+  actual enforcement, not a formality.
 - Credit: no Payment Entry. The invoice keeps its normal
   outstanding_amount, exactly as ERPNext would leave any invoice with no
   payment.
@@ -67,7 +75,14 @@ def create_cash_payment_entry(sales_invoice: Document) -> None:
         )
         return
 
-    cash_account = _get_cash_account(sales_invoice.company)
+    cash_account = sales_invoice.get("custom_cash_account")
+    if not cash_account:
+        frappe.throw(
+            f"Cannot submit {sales_invoice.name}: Payment Type is Cash but no "
+            f"Cash Account was selected. Pick one in the Cash Account field "
+            f"before submitting."
+        )
+    _validate_cash_account(cash_account, sales_invoice.company)
 
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
@@ -98,24 +113,25 @@ def _has_submitted_payment_entry(sales_invoice_name: str) -> bool:
     )
 
 
-def _get_cash_account(company: str) -> str:
-    if not frappe.db.exists("Mode of Payment", CASH_MODE_OF_PAYMENT):
-        frappe.throw(
-            f"Cannot submit this Cash Sales Invoice: no 'Mode of Payment' named "
-            f"'{CASH_MODE_OF_PAYMENT}' exists. Create it under Accounting > "
-            f"Mode of Payment first."
-        )
-
-    cash_account = frappe.db.get_value(
-        "Mode of Payment Account",
-        {"parent": CASH_MODE_OF_PAYMENT, "company": company},
-        "default_account",
+def _validate_cash_account(account: str, company: str) -> None:
+    row = frappe.db.get_value(
+        "Account", account, ["company", "account_type", "is_group"], as_dict=True
     )
-    if not cash_account:
+    if not row:
+        frappe.throw(f"Cash account '{account}' does not exist.")
+    if row.company != company:
         frappe.throw(
-            f"Cannot submit this Cash Sales Invoice: the '{CASH_MODE_OF_PAYMENT}' "
-            f"Mode of Payment has no default account configured for company "
-            f"'{company}'. Add one under Mode of Payment > {CASH_MODE_OF_PAYMENT} "
-            f"> Accounts, then re-submit."
+            f"Cash account '{account}' belongs to company '{row.company}', not "
+            f"'{company}'. Pick a Cash Account that belongs to this invoice's company."
         )
-    return cash_account
+    if row.is_group:
+        frappe.throw(
+            f"Cash account '{account}' is a group account and cannot receive "
+            f"payments directly. Pick a specific ledger account."
+        )
+    if row.account_type != "Cash":
+        frappe.throw(
+            f"Cash account '{account}' is not a Cash-type account "
+            f"(account_type={row.account_type!r}). Pick an account with "
+            f"Account Type = Cash."
+        )

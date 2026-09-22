@@ -1964,6 +1964,68 @@ def _ensure_kasib_asia_payment_badge() -> None:
     doc.save(ignore_permissions=True)
 
 
+_KASIB_ASIA_PREV_BALANCE_MARKER = "prev-balance"
+
+# The pre-printed background has a "Previous Balance" label with a real
+# bordered input box next to it (confirmed by rendering a real invoice and
+# measuring the box: x 392-573px, y 1467-1497px on a 1240x1755 A4-at-150dpi
+# render -> left/top/width/height below). "Paid By", on the same row, has
+# no box at all -- under 3px of blank space before "Previous Balance"'s own
+# label starts -- so that one is deliberately left alone, same call as the
+# pre-existing "Received By" signature field.
+_KASIB_ASIA_PREV_BALANCE_HTML = (
+    '\n  <div class="prev-balance">'
+    '{{ frappe.utils.fmt_money(doc.get("vansale_previous_balance") or 0, currency=currency) }}'
+    "</div>"
+)
+
+_KASIB_ASIA_PREV_BALANCE_CSS = """
+/* ---------- Previous Balance (patches/v0_2_2) ---------- */
+.prev-balance {
+  position: absolute;
+  left: 32%; top: 83.6%; width: 14%; height: 1.7%;
+  z-index: 10;
+  font-size: 7.5pt;
+  font-weight: bold;
+  color: #0d2a5e;
+  text-align: center;
+  line-height: 4.8mm;
+  direction: ltr;
+}
+"""
+
+
+def _ensure_kasib_asia_previous_balance() -> None:
+    """Fill the (previously blank) "Previous Balance" box on "Kasib Asia
+    Tax Invoice" using `vansale_previous_balance` -- already computed for
+    every Sales Invoice on every zatgo_core site by
+    `events/print_fields.py::populate_print_fields` (validate hook), so
+    this is a template-only change; no new server-side computation.
+
+    Same idempotent, targeted-insertion approach as the payment-type badge
+    above (see its docstring) -- only touches html/css, module/standard
+    metadata untouched, no-ops on any site without this print format.
+    """
+    if not frappe.db.exists("Print Format", KASIB_ASIA_TAX_INVOICE_NAME):
+        return
+    doc = frappe.get_doc("Print Format", KASIB_ASIA_TAX_INVOICE_NAME)
+    if _KASIB_ASIA_PREV_BALANCE_MARKER in (doc.html or ""):
+        return  # already applied
+
+    anchor = '<div class="dynamic-field remarks wrap" dir="auto">{{ doc.remarks or doc.terms or "" }}</div>'
+    if anchor not in (doc.html or ""):
+        logger.warning(
+            "%s: expected anchor not found, skipping previous-balance "
+            "injection (template may have changed since this was written)",
+            KASIB_ASIA_TAX_INVOICE_NAME,
+        )
+        return
+
+    doc.html = doc.html.replace(anchor, anchor + _KASIB_ASIA_PREV_BALANCE_HTML)
+    doc.css = (doc.css or "").rstrip("\n") + "\n" + _KASIB_ASIA_PREV_BALANCE_CSS
+    doc.save(ignore_permissions=True)
+
+
 def _upsert_print_format(
     name: str,
     *,
@@ -2062,4 +2124,8 @@ def ensure_print_formats() -> None:
         _ensure_kasib_asia_payment_badge()
     except Exception:
         logger.exception("Kasib Asia Tax Invoice payment-type badge injection failed")
+    try:
+        _ensure_kasib_asia_previous_balance()
+    except Exception:
+        logger.exception("Kasib Asia Tax Invoice previous-balance injection failed")
     frappe.db.commit()
