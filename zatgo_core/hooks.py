@@ -23,6 +23,11 @@ before_uninstall = "zatgo_core.install.before_uninstall"
 
 boot_session = "zatgo_core.events.boot.boot_session"
 
+# Payment Type (Cash/Credit) UX hint -- purely visual, see the file itself.
+doctype_js = {
+    "Sales Invoice": "public/js/sales_invoice.js",
+}
+
 # Exposes tlv_to_png_data_uri() to print-format Jinja templates. Calling it
 # via frappe.get_attr(...) from inside a template works under bench execute
 # but is blocked by the sandboxed Jinja environment print formats actually
@@ -40,6 +45,7 @@ doc_events = {
     },
     "Sales Invoice": {
         "validate": "zatgo_core.events.print_fields.populate_print_fields",
+        "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
     },
 }
 

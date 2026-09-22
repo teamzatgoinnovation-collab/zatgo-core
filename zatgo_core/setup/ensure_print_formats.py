@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import frappe
 
+from zatgo_core.utils.logging import get_logger
+
+logger = get_logger("system")
+
 PRINT_FORMAT_NAME = "VanSale Tax Invoice"
 
 # Jinja HTML approximating INV-0009 bilingual tax invoice layout.
@@ -285,9 +289,16 @@ DEMO_TAX_INVOICE_NAME = "Sales ZG1"
 # Uses the vansale_* computed fields from patches/v0_2_1 (per-line VAT
 # split, amount-in-words, running balance, bank details, signature) --
 # see events/print_fields.py for how those get populated.
-_DEMO_TAX_INVOICE_HTML = r"""
-  {# ERPNext / Frappe Print Format: Saudi VAT Tax Invoice — bilingual English + Arabic
-     Sales Invoice. Uses the vansale_* fields already deployed and verified on this site. #}
+#
+# Re-synced 2026-09-22 from what was actually live on democompanysa (it had
+# drifted from this file -- title said "ORDER FORM" not "SALES", the
+# balance box showed "Due Balance" instead of "New Balance", header markup
+# had changed -- none of that was re-authored here, it was pulled verbatim
+# off the live Print Format doc so this stays truthful to what prints).
+# custom_payment_type badge (patches/v0_2_2/add_payment_type_field.py)
+# added into the ORDER FORM meta bar in the same pass.
+_DEMO_TAX_INVOICE_HTML = r"""  {# ERPNext / Frappe Print Format: Saudi VAT Tax — bilingual English + Arabic
+     Order Form. Uses the vansale_* fields already deployed and verified on this site. #}
   {% set company = frappe.get_doc("Company", doc.company) %}
   {% set customer = frappe.get_doc("Customer", doc.customer) if doc.customer else none %}
   {% set customer_address = frappe.db.get_value("Address", {"name": doc.customer_address}, ["address_line1","address_line2","city","country"], as_dict=True) if doc.customer_address else none %}
@@ -296,28 +307,16 @@ _DEMO_TAX_INVOICE_HTML = r"""
   <div class="invoice-page">
 
     <div class="company-header">
+      <!-- The element sits directly in the header grid container to allow grid-column spanning -->
+      <div class="company-name">{{ company.company_name or doc.company }}</div>
+      
       <div class="header-left">
         {% if company.company_logo %}<img class="company-logo" src="{{ company.company_logo }}">{% endif %}
-        <div class="company-name">{{ company.company_name or doc.company }}</div>
-        <div class="company-meta">
-          {% if company_address %}
-            {{ company_address.address_line1 or "" }}{% if company_address.address_line2 %}, {{ company_address.address_line2 }}{% endif %}{% if company_address.city %}, {{ company_address.city }}{% endif %}<br>
-          {% endif %}
-          {% if company.tax_id %}VAT No: {{ company.tax_id }}{% endif %}
-        </div>
-      </div>
-      <div class="header-center"></div>
-      <div class="header-right arabic">
-        <div class="company-name-ar">{{ company.company_name or doc.company }}</div>
-        <div class="company-meta">
-          {% if company_address %}{{ company_address.city or "" }}<br>{% endif %}
-          {% if company.tax_id %}الرقم الضريبي: {{ company.tax_id }}{% endif %}
-        </div>
       </div>
     </div>
 
     <div class="invoice-meta-bar">
-      <div>SALES <span class="arabic"> مبيعات</span></div>
+      <div>ORDER FORM <span class="arabic"> نموذج الطلب</span>{% if doc.custom_payment_type == "Cash" %}<span class="payment-type cash">CASH</span>{% elif doc.custom_payment_type == "Credit" %}<span class="payment-type credit">CREDIT</span>{% endif %}</div>
       <div class="meta-grid">
         <div><span>No.</span><b>{{ doc.name }}</b></div>
         <div><span class="arabic">تاريخ مبيعات</span><b>{{ frappe.format_date(doc.posting_date) }}</b></div>
@@ -338,8 +337,6 @@ _DEMO_TAX_INVOICE_HTML = r"""
         <div>
           <div class="label">Voucher No.</div>
           <div class="value">{{ doc.name }}</div>
-          <div class="label">Voucher Type</div>
-          <div class="value">{{ doc.doctype }}</div>
         </div>
         <div>
           <div class="label">User</div>
@@ -400,21 +397,28 @@ _DEMO_TAX_INVOICE_HTML = r"""
       <div class="amount-area">
         <div class="words-title">Amount in Words <span class="arabic">المبلغ بالحروف</span></div>
         <div class="words">{{ doc.vansale_amount_in_words_print or "" }}</div>
-        <div class="balance-box">
-          <div><span>Previous Balance <span class="arabic">الرصيد السابق</span></span><b>{{ frappe.utils.fmt_money(doc.vansale_previous_balance or 0, currency=doc.currency) }}</b></div>
-          <div><span>New Balance <span class="arabic">الرصيد الجديد</span></span><b>{{ frappe.utils.fmt_money(doc.vansale_new_balance or 0, currency=doc.currency) }}</b></div>
-        </div>
-      </div>
+       <div class="balance-box">
+  <div>
+    <span>Previous Balance <span class="arabic">الرصيد السابق</span></span>
+    <b>{{ frappe.utils.fmt_money(doc.vansale_previous_balance or 0, currency=doc.currency) }}</b>
+  </div>
+  <div>
+    <span>Due Balance <span class="arabic">الرصيد المستحق</span></span>
+    {# Formula calculation: Previous Balance + Grand Total - Paid Amount #}
+    {% set dynamic_due_balance = (doc.vansale_previous_balance or 0) + (doc.grand_total or 0) - (doc.paid_amount or 0) %}
+    <b>{{ frappe.utils.fmt_money(dynamic_due_balance, currency=doc.currency) }}</b>
+  </div>
+</div>
+
       <div class="totals-area">
         <div class="total-row"><span>TOTAL AMOUNT <small class="arabic">الإجمالي</small></span><b>{{ frappe.utils.fmt_money(doc.net_total, currency=doc.currency) }}</b></div>
         <div class="total-row"><span>DISCOUNT <small class="arabic">الخصم</small></span><b>{{ frappe.utils.fmt_money(doc.discount_amount or 0, currency=doc.currency) }}</b></div>
-        <div class="total-row"><span>TOTAL VAT <small class="arabic">قيمة الضريبة</small></span><b>{{ frappe.utils.fmt_money(doc.total_taxes_and_charges or 0, currency=doc.currency) }}</b></div>
+        
         <div class="grand-row"><span>GRAND TOTAL <small class="arabic">الإجمالي النهائي</small></span><b>{{ frappe.utils.fmt_money(doc.grand_total, currency=doc.currency) }}</b></div>
       </div>
     </div>
 
     <div class="footer-grid">
-     
       <div class="bank-area">
         <div class="bank-title">Bank Details <span class="arabic">بيانات البنك</span></div>
         {% if company.vansale_bank_1_name %}
@@ -444,7 +448,6 @@ _DEMO_TAX_INVOICE_HTML = r"""
     </div>
 
   </div>
-
 """
 
 _DEMO_TAX_INVOICE_CSS = r"""
@@ -486,15 +489,25 @@ html, body {
   font-family: "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
 }
 
+/* ---------- Typography Updates ---------- */
+
 .company-name,
 .company-name-ar {
-  font-size: 11pt;
-  font-weight: 800;
+  font-size: 24pt;
+  font-weight: 1200;
   letter-spacing: .1px;
+  text-transform: uppercase;
+  text-align: center;
+  
+  /* Core Fixes for Precise Grid Centering */
+  grid-column: 1 / -1;   /* Spans across all 3 grid columns completely */
+  width: 100%;           /* Ensures text aligns relative to full page container */
+  margin: 0 auto;        /* Safeguards margin spacing layout uniformities */
 }
 
+
 .company-meta {
-  font-size: 7pt;
+  font-size: 12pt;
   line-height: 1.25;
   margin-top: 1.5mm;
 }
@@ -950,6 +963,26 @@ html, body {
   height: 8mm;
 }
 
+/* ---------- Payment Type badge ---------- */
+.payment-type {
+  display: inline-block;
+  margin-left: 3mm;
+  padding: 0.6mm 2.4mm;
+  border-radius: 1mm;
+  font-size: 7pt;
+  font-weight: 800;
+  letter-spacing: .3px;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.payment-type.cash {
+  background: #15803d;
+}
+
+.payment-type.credit {
+  background: #b45309;
+}
 """
 
 QUOTATION_PRINT_FORMAT_NAME = "ZatGo Quotation"
@@ -1860,6 +1893,77 @@ _DEMO_DELIVERY_NOTE_AR_HTML = r"""
 """
 
 
+KASIB_ASIA_TAX_INVOICE_NAME = "Kasib Asia Tax Invoice"
+
+_KASIB_ASIA_PAYMENT_BADGE_MARKER = "payment-type-badge"
+
+# Inserted right after the per-page copy-label div (Original/Duplicate/
+# Triplicate Copy) so it repeats on every physical page, same as that
+# label does.
+_KASIB_ASIA_PAYMENT_BADGE_HTML = (
+    '\n  {% if doc.custom_payment_type == "Cash" %}'
+    '\n  <div class="payment-type-badge cash">Payment Type: CASH</div>'
+    '\n  {% elif doc.custom_payment_type == "Credit" %}'
+    '\n  <div class="payment-type-badge credit">Payment Type: CREDIT</div>'
+    '\n  {% endif %}'
+)
+
+# Positioned in the header's top-left margin (left 3%, top 0.6%-3.4%),
+# mirroring .copy-label's own font-size/line-height -- confirmed empty by
+# rendering a real submitted invoice through this format and visually
+# inspecting the PDF; the rest of the page is a precisely positioned
+# overlay onto a pre-printed background photo with no other free space.
+_KASIB_ASIA_PAYMENT_BADGE_CSS = """
+/* ---------- Payment Type badge (patches/v0_2_2) ---------- */
+.payment-type-badge {
+  position: absolute;
+  left: 3%; top: 0.6%; width: 40%; height: 2.8%;
+  z-index: 10;
+  font-size: 11pt;
+  font-weight: bold;
+  text-align: left;
+  line-height: 2.4mm;
+}
+.payment-type-badge.cash { color: #15803d; }
+.payment-type-badge.credit { color: #b45309; }
+"""
+
+
+def _ensure_kasib_asia_payment_badge() -> None:
+    """Add the Payment Type badge to "Kasib Asia Tax Invoice".
+
+    That format is a fixed-position overlay onto a pre-printed background
+    photo, built directly in Desk on kasibasia -- it is not otherwise
+    managed by zatgo_core (module stays "Accounts", not "ZatGo Core") and
+    is deliberately NOT captured here as a full literal template like the
+    other formats in this file: doing a full-literal `_upsert_print_format`
+    call would also reset its module/standard metadata, which is not part
+    of what was asked. Instead this only inserts the badge markup
+    (idempotent -- checks the marker class first) and appends the two
+    badge CSS rules to the existing `css` field, leaving everything else
+    on the doc untouched. No-ops on any site that doesn't have this print
+    format (e.g. democompanysa).
+    """
+    if not frappe.db.exists("Print Format", KASIB_ASIA_TAX_INVOICE_NAME):
+        return
+    doc = frappe.get_doc("Print Format", KASIB_ASIA_TAX_INVOICE_NAME)
+    if _KASIB_ASIA_PAYMENT_BADGE_MARKER in (doc.html or ""):
+        return  # already applied
+
+    anchor = '<div class="copy-label">{{ COPY_LABELS[copy_index] }}</div>'
+    if anchor not in (doc.html or ""):
+        logger.warning(
+            "%s: expected anchor not found, skipping payment-type badge "
+            "injection (template may have changed since this was written)",
+            KASIB_ASIA_TAX_INVOICE_NAME,
+        )
+        return
+
+    doc.html = doc.html.replace(anchor, anchor + _KASIB_ASIA_PAYMENT_BADGE_HTML)
+    doc.css = (doc.css or "").rstrip("\n") + "\n" + _KASIB_ASIA_PAYMENT_BADGE_CSS
+    doc.save(ignore_permissions=True)
+
+
 def _upsert_print_format(
     name: str,
     *,
@@ -1908,15 +2012,19 @@ def ensure_print_formats() -> None:
     _upsert_print_format(PRINT_FORMAT_NAME, html=_HTML)
     _upsert_print_format(PRINT_FORMAT_80MM_NAME, html=_HTML_80MM, css=_CSS_80MM, margins=2)
     _upsert_print_format(QUOTATION_PRINT_FORMAT_NAME, html=_QUOTATION_HTML, doc_type="Quotation", margins=10)
-    # wkhtmltopdf can't render this template's CSS Grid layout correctly
-    # (confirmed live on democompanysa: PDF output broke across pages/columns
-    # until pdf_generator was switched to chrome) -- must stay "chrome".
+    # wkhtmltopdf can't render this template's CSS Grid layout correctly per
+    # the original note here (PDF output broke across pages/columns until
+    # pdf_generator was switched to chrome) -- but live democompanysa is
+    # currently set to "wkhtmltopdf" (checked 2026-09-22), contradicting
+    # that. Unrelated to the payment-type badge and not re-verified here,
+    # so pdf_generator is deliberately left alone (not passed) rather than
+    # silently forced back to "chrome" by this migrate -- flip it back
+    # explicitly once someone's confirmed which engine is actually correct.
     _upsert_print_format(
         DEMO_TAX_INVOICE_NAME,
         html=_DEMO_TAX_INVOICE_HTML,
         css=_DEMO_TAX_INVOICE_CSS,
         margins=15,
-        pdf_generator="chrome",
     )
     _upsert_print_format(
         DEMO_QUOTATION_EN_NAME,
@@ -1950,4 +2058,8 @@ def ensure_print_formats() -> None:
         margins=6,
         pdf_generator="chrome",
     )
+    try:
+        _ensure_kasib_asia_payment_badge()
+    except Exception:
+        logger.exception("Kasib Asia Tax Invoice payment-type badge injection failed")
     frappe.db.commit()

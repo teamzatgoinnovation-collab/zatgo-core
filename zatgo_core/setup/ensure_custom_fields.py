@@ -40,6 +40,7 @@ def ensure_custom_fields() -> None:
     _run("quotation item type field", _ensure_quotation_item_type_field)
     _run("company bank fields", _ensure_company_bank_fields)
     _run("print computed fields", _ensure_print_computed_fields)
+    _run("payment type field", _ensure_payment_type_field)
 
 
 def _run(label: str, fn) -> None:
@@ -99,5 +100,11 @@ def _ensure_company_bank_fields() -> None:
 
 def _ensure_print_computed_fields() -> None:
     from zatgo_core.patches.v0_2_1.add_print_computed_fields import execute
+
+    execute()
+
+
+def _ensure_payment_type_field() -> None:
+    from zatgo_core.patches.v0_2_2.add_payment_type_field import execute
 
     execute()
