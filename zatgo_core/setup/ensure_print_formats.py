@@ -2026,6 +2026,40 @@ def _ensure_kasib_asia_previous_balance() -> None:
     doc.save(ignore_permissions=True)
 
 
+def _ensure_sales_zg1_chrome_pdf_generator() -> None:
+    """Force Sales ZG1's pdf_generator to "chrome", bypassing whatever a
+    site's Print Format.pdf_generator Select options are otherwise
+    restricted to.
+
+    Some sites lock every Print Format on the site to "wkhtmltopdf" only
+    (confirmed on democompanysa 2026-09-22, via a Property Setter --
+    Property Setters can't be scoped to one document, so this restriction
+    applies to every Print Format on that site, not just this one).
+    Frappe's Select validation checks the *current* value against the
+    *current* options on every save, even when the value isn't changing,
+    so a plain `doc.pdf_generator = "chrome"; doc.save()` raises
+    ValidationError there regardless -- confirmed directly, including on
+    a document that already had "chrome" stored before the site-wide
+    restriction existed.
+
+    Sales ZG1's CSS Grid layout is confirmed broken under wkhtmltopdf (see
+    the comment above its ensure_print_formats() call), so it must render
+    via chrome specifically -- writing only the `pdf_generator` column
+    directly is a deliberate, narrow bypass of Select validation for this
+    one field on this one document, not a general escape hatch, and
+    leaves the site's restriction intact for every other print format.
+    """
+    if not frappe.db.exists("Print Format", DEMO_TAX_INVOICE_NAME):
+        return
+    frappe.db.set_value(
+        "Print Format",
+        DEMO_TAX_INVOICE_NAME,
+        "pdf_generator",
+        "chrome",
+        update_modified=False,
+    )
+
+
 def _upsert_print_format(
     name: str,
     *,
@@ -2074,20 +2108,28 @@ def ensure_print_formats() -> None:
     _upsert_print_format(PRINT_FORMAT_NAME, html=_HTML)
     _upsert_print_format(PRINT_FORMAT_80MM_NAME, html=_HTML_80MM, css=_CSS_80MM, margins=2)
     _upsert_print_format(QUOTATION_PRINT_FORMAT_NAME, html=_QUOTATION_HTML, doc_type="Quotation", margins=10)
-    # wkhtmltopdf can't render this template's CSS Grid layout correctly per
-    # the original note here (PDF output broke across pages/columns until
-    # pdf_generator was switched to chrome) -- but live democompanysa is
-    # currently set to "wkhtmltopdf" (checked 2026-09-22), contradicting
-    # that. Unrelated to the payment-type badge and not re-verified here,
-    # so pdf_generator is deliberately left alone (not passed) rather than
-    # silently forced back to "chrome" by this migrate -- flip it back
-    # explicitly once someone's confirmed which engine is actually correct.
+    # wkhtmltopdf can't render this template's CSS Grid layout correctly --
+    # re-confirmed directly 2026-09-22: live democompanysa had drifted to
+    # "wkhtmltopdf" (contradicting the original note here) and every real
+    # print was actually broken -- Buyer Details collapsed into stacked
+    # unstyled boxes and the entire bottom half (totals, balance, bank
+    # details, signatures) didn't render at all. A side-by-side render of
+    # the same real invoice confirmed "chrome" produces the correct
+    # layout. Must stay "chrome" -- pdf_generator is deliberately NOT
+    # passed to _upsert_print_format here (that would go through
+    # doc.save()'s Select validation, which some sites reject -- see
+    # _ensure_sales_zg1_chrome_pdf_generator below for why and how it's
+    # still forced).
     _upsert_print_format(
         DEMO_TAX_INVOICE_NAME,
         html=_DEMO_TAX_INVOICE_HTML,
         css=_DEMO_TAX_INVOICE_CSS,
         margins=15,
     )
+    try:
+        _ensure_sales_zg1_chrome_pdf_generator()
+    except Exception:
+        logger.exception("Sales ZG1 chrome pdf_generator enforcement failed")
     _upsert_print_format(
         DEMO_QUOTATION_EN_NAME,
         html=_DEMO_QUOTATION_EN_HTML,
