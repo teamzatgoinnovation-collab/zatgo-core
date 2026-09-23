@@ -957,6 +957,43 @@ def get_account_balance(account: str, date: str | None = None) -> dict[str, Any]
     )
 
 
+def get_party_balance(party_type: str, party: str, company: str | None = None) -> dict[str, Any]:
+    """Live Customer/Supplier balance, computed by ERPNext's GL — never derived locally.
+
+    ``balance`` is ERPNext's raw debit-minus-credit convention (positive for a
+    Customer means they owe us; positive for a Supplier means *we* have a
+    credit with them). ``display_amount`` flips the Supplier sign so a
+    positive number always reads as "amount owed to the counterparty" for
+    Customer and "amount we owe" for Supplier, matching how a user expects
+    a balance-due figure to read regardless of party type.
+    """
+    require_login()
+    if party_type not in ("Customer", "Supplier"):
+        frappe.throw(f"Unsupported party_type {party_type}")
+    frappe.has_permission(party_type, "read", doc=party, throw=True)
+    if not frappe.db.exists(party_type, party):
+        frappe.throw(f"{party_type} {party} not found")
+    company = _default_company(company)
+    if not frappe.db.exists("Company", company):
+        frappe.throw(f"Company {company} not found")
+    from erpnext.accounts.utils import get_balance_on
+
+    balance = flt(get_balance_on(party_type=party_type, party=party, company=company))
+    display_amount = balance if party_type == "Customer" else -balance
+    currency = frappe.db.get_value("Company", company, "default_currency")
+    return ok(
+        {
+            "party_type": party_type,
+            "party": party,
+            "company": company,
+            "balance": balance,
+            "display_amount": display_amount,
+            "currency": currency,
+        },
+        meta={"stub": False, "source": "GL Entry"},
+    )
+
+
 def list_cost_centers(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
     return _list_doctype(
         "Cost Center",

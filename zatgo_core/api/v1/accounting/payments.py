@@ -6,7 +6,12 @@ from typing import Any
 
 import frappe
 
-from zatgo_core.services.erpnext_reads import get_document_pdf, get_payment_entry, list_payment_entries
+from zatgo_core.services.erpnext_reads import (
+    get_document_pdf,
+    get_party_balance,
+    get_payment_entry,
+    list_payment_entries,
+)
 from zatgo_core.services.erpnext_writes import (
     cancel_payment_entry,
     create_pay_payment,
@@ -32,6 +37,11 @@ def list(
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
     return get_payment_entry(name)
+
+
+@frappe.whitelist()
+def party_balance(party_type: str, party: str, company: str | None = None) -> dict[str, Any]:
+    return get_party_balance(party_type, party, company=company)
 
 
 @frappe.whitelist()

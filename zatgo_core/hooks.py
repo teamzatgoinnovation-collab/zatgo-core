@@ -26,6 +26,7 @@ boot_session = "zatgo_core.events.boot.boot_session"
 # Payment Type (Cash/Credit) UX hint -- purely visual, see the file itself.
 doctype_js = {
     "Sales Invoice": "public/js/sales_invoice.js",
+    "Payment Entry": "public/js/payment_entry.js",
 }
 
 # Exposes tlv_to_png_data_uri() to print-format Jinja templates. Calling it
