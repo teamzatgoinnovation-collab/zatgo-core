@@ -42,6 +42,7 @@ def ensure_custom_fields() -> None:
     _run("print computed fields", _ensure_print_computed_fields)
     _run("payment type field", _ensure_payment_type_field)
     _run("cash account field", _ensure_cash_account_field)
+    _run("payment entry balance field", _ensure_payment_entry_balance_field)
 
 
 def _run(label: str, fn) -> None:
@@ -113,5 +114,11 @@ def _ensure_payment_type_field() -> None:
 
 def _ensure_cash_account_field() -> None:
     from zatgo_core.patches.v0_2_2.add_cash_account_field import execute
+
+    execute()
+
+
+def _ensure_payment_entry_balance_field() -> None:
+    from zatgo_core.patches.v0_2_2.add_payment_entry_balance_field import execute
 
     execute()
