@@ -37,6 +37,7 @@ jinja = {
     "methods": [
         "zatgo_core.services.zatca_qr.tlv_to_png_data_uri",
         "zatgo_core.services.zatca_qr.zatca_qr_data_uri",
+        "zatgo_core.services.print_tracking.get_copy_label",
     ],
 }
 

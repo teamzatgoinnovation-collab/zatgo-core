@@ -1,0 +1,220 @@
+
+
+{# =========================================================
+   CONFIGURATION
+   ========================================================= #}
+
+{% set ROWS_PER_PAGE = 10 %}
+{% set items = doc.items or [] %}
+{% set item_count = items|length %}
+
+{# =========================================================
+   PRINTER COPY LABEL
+   One physical page per print action. get_copy_label(doc) reads the
+   invoice's own persisted print-count (zatgo_core.services.print_tracking)
+   to decide Original vs Duplicate, and -- only on an actual Print action,
+   never a preview -- atomically bumps that count. Previously this
+   printed 3 fixed copies (Original + 2 Duplicate) in a single job; that
+   doesn't reflect an actual per-print history, so it's gone.
+   ========================================================= #}
+
+{% set copy_label = get_copy_label(doc) %}
+
+{% set page_count = ((item_count - 1) // ROWS_PER_PAGE + 1) if item_count > 0 else 1 %}
+
+{% set COLUMNS = [
+  ('itemno', 3.35, 7.71),
+  ('desc', 11.06, 31.49),
+  ('qty', 42.60, 7.37),
+  ('unit', 49.97, 6.70),
+  ('unitprice', 56.4, 8.60),
+  ('net', 65.38, 9.55),
+  ('vat', 73.25, 13.01),
+  ('total', 85.5, 8.54),
+] %}
+{% set ROW_TOPS = [35.836, 40.024, 44.251, 48.439, 52.746, 56.895, 61.083, 65.389, 69.538, 73.844] %}
+{% set ROW_HEIGHTS = [4.188, 4.228, 4.188, 4.307, 4.149, 4.188, 4.307, 4.149, 4.307, 4.109] %}
+
+{% set customer_tax_id = "" %}
+{% if doc.customer %}
+  {% set customer_tax_id = frappe.db.get_value("Customer", doc.customer, "tax_id") or "" %}
+{% endif %}
+
+{% set address_city = "" %}
+{% set address_line1 = "" %}
+{% if doc.customer_address %}
+  {% set address_city = frappe.db.get_value("Address", doc.customer_address, "city") or "" %}
+  {% set address_line1 = frappe.db.get_value("Address", doc.customer_address, "address_line1") or "" %}
+{% endif %}
+
+{# =========================================================
+   ZATCA QR SOURCE
+   `ksa_einv_qr` is the field ERPNext / zatca_erpgulf / our own
+   Phase-1 backfill all write to. Read-only here: whichever
+   pipeline populated it (signed Phase 2, or Phase 1 fallback)
+   is authoritative, and a signed QR must never be overwritten
+   by a template-level guess.
+   ========================================================= #}
+
+{% set qr_uri = zatca_qr_data_uri(doc) %}
+
+{# =========================================================
+   PAYMENT METHOD
+   ========================================================= #}
+
+{% set paid_modes = [] %}
+{% if doc.get("is_pos") and doc.get("payments") %}
+  {% for payment in doc.payments %}
+    {% if payment.mode_of_payment %}{% set _ = paid_modes.append(payment.mode_of_payment) %}{% endif %}
+  {% endfor %}
+{% else %}
+  {% set payment_refs = frappe.get_all("Payment Entry Reference",
+      filters={"reference_doctype": "Sales Invoice", "reference_name": doc.name, "docstatus": 1},
+      pluck="parent") %}
+  {% for payment_entry_name in payment_refs %}
+    {% set payment_mode = frappe.db.get_value("Payment Entry", payment_entry_name, "mode_of_payment") %}
+    {% if payment_mode %}{% set _ = paid_modes.append(payment_mode) %}{% endif %}
+  {% endfor %}
+{% endif %}
+
+{% set paid_types = [] %}
+{% for mode in paid_modes %}
+  {% if mode %}
+    {% set payment_type = frappe.db.get_value("Mode of Payment", mode, "type") or "General" %}
+    {% set _ = paid_types.append(payment_type) %}
+  {% endif %}
+{% endfor %}
+
+{% set paid_amount = (doc.grand_total or 0) - (doc.outstanding_amount or 0) %}
+
+{% set net_total = doc.net_total or 0 %}
+{% set total_vat = doc.total_taxes_and_charges or 0 %}
+{% set discount_amount = doc.discount_amount or 0 %}
+{% set grand_total = doc.grand_total or 0 %}
+{% set currency = doc.currency or "" %}
+
+{# =========================================================
+   PAGE LOOP
+   One page per ROWS_PER_PAGE items on the pre-printed form (it has
+   exactly 10 fixed row boxes at hand-calibrated positions -- an
+   invoice with more than 10 items has always needed a second page
+   here, and no amount of CSS spacing changes that without redesigning
+   the background artwork itself). Only the very last page skips the
+   forced page-break.
+   ========================================================= #}
+
+{% for page in range(page_count) %}
+{% set start_index = page * ROWS_PER_PAGE %}
+{% set page_items = items[start_index:start_index + ROWS_PER_PAGE] %}
+{% set is_last_page = page == page_count - 1 %}
+
+<div class="invoice-page{% if is_last_page %} last-page{% endif %}">
+  <img class="invoice-background" src="/files/KasibAsiaFinal.jpg" alt="">
+
+  <div class="copy-label">{{ copy_label }}</div>
+  {% if doc.custom_payment_type == "Cash" %}
+  <div class="payment-type-badge cash">Payment Type: CASH</div>
+  {% elif doc.custom_payment_type == "Credit" %}
+  <div class="payment-type-badge credit">Payment Type: CREDIT</div>
+  {% endif %}
+
+  <div class="dynamic-field invoice-date center">
+    {% if doc.posting_date %}{{ frappe.utils.formatdate(doc.posting_date, "dd/MM/yyyy") }}{% endif %}
+  </div>
+  <div class="dynamic-field invoice-number center">{{ doc.name or "" }}</div>
+
+  {% if qr_uri %}
+  <div class="zatca-qr">
+    <img src="{{ qr_uri }}" alt="ZATCA QR">
+  </div>
+  {% endif %}
+
+  <div class="dynamic-field customer-name" dir="auto">{{ doc.customer_name or doc.customer or "" }}</div>
+  <div class="dynamic-field customer-vat center" dir="ltr">{{ customer_tax_id }}</div>
+  <div class="dynamic-field customer-address wrap" dir="auto">
+    {% if address_line1 and address_city %}{{ address_line1 }}, {{ address_city }}
+    {% elif address_line1 %}{{ address_line1 }}
+    {% elif address_city %}{{ address_city }}{% endif %}
+  </div>
+  <div class="dynamic-field customer-mobile center ltr">{{ doc.contact_mobile or doc.get("contact_phone") or "" }}</div>
+
+  {% for row_i in range(page_items|length) %}
+    {% set item = page_items[row_i] %}
+
+    {# ---- Item VAT: try ERPNext's own item_tax_amount first, then
+       item_wise_tax_detail off the tax row. Neither field is populated on
+       every ERPNext version/config (both are None on plain manually-taxed
+       invoices), so the final fallback reads item.item_tax_rate - the
+       per-item rate ERPNext itself resolved during tax calculation (via
+       item tax template or the invoice's own tax rows) - and applies it to
+       this item's own net_amount. That is NOT the "net_amount * 15%"
+       shortcut the brief warns against: it's still ERPNext's own resolved
+       rate for this specific item, not a hardcoded constant, so zero-rated
+       / exempt / mixed-rate invoices still come out right. #}
+    {% set item_net = item.net_amount or item.amount or 0 %}
+    {% set item_vat = item.item_tax_amount or 0 %}
+    {% if not item_vat and doc.taxes %}
+      {% for tax in doc.taxes %}
+        {% if tax.item_wise_tax_detail %}
+          {% set tax_details = frappe.utils.parse_json(tax.item_wise_tax_detail) %}
+          {% if tax_details and item.item_code in tax_details %}
+            {% set detail = tax_details[item.item_code] %}
+            {% if detail is sequence and detail|length > 1 %}
+              {% set item_vat = item_vat + (detail[1] or 0) %}
+            {% endif %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+    {% if not item_vat and item.item_tax_rate %}
+      {% set item_rates = frappe.utils.parse_json(item.item_tax_rate) %}
+      {% set item_rate_sum = item_rates.values()|sum if item_rates else 0 %}
+      {% set item_vat = item_net * item_rate_sum / 100 %}
+    {% endif %}
+    {% set item_total = item_net + item_vat %}
+    {% set row_top = ROW_TOPS[row_i] %}
+    {% set row_height = ROW_HEIGHTS[row_i] %}
+    {% set row_line_height = row_height * 2.97 %}
+
+    {% for col_name, col_left, col_width in COLUMNS %}
+    <div class="item-cell{% if col_name == 'desc' %} desc{% endif %}"
+         style="left: {{ col_left }}%; width: {{ col_width }}%; top: {{ row_top }}%; height: {{ row_height }}%;
+                {{ 'line-height: %.2fmm;'|format(row_line_height) if col_name != 'desc' else '' }}">
+      {% if col_name == 'itemno' %}{{ item.idx or (start_index + row_i + 1) }}
+      {% elif col_name == 'desc' %}
+        <div dir="auto">{{ item.item_name or item.description or item.item_code or "" }}</div>
+        {% if item.get('custom_item_name_ar') %}<div class="ar-line">{{ item.custom_item_name_ar }}</div>{% endif %}
+      {% elif col_name == 'qty' %}{{ "%g"|format(item.qty or 0) }}
+      {% elif col_name == 'unit' %}{{ item.uom or item.stock_uom or "" }}
+      {% elif col_name == 'unitprice' %}{{ frappe.utils.fmt_money(item.rate or 0) }}
+      {% elif col_name == 'net' %}{{ frappe.utils.fmt_money(item_net) }}
+      {% elif col_name == 'vat' %}{{ frappe.utils.fmt_money(item_vat) }}
+      {% elif col_name == 'total' %}{{ frappe.utils.fmt_money(item_total) }}
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% endfor %}
+
+  {% if is_last_page %}
+    <div class="dynamic-field total-ex-vat">{{ frappe.utils.fmt_money(net_total) }}</div>
+    <div class="dynamic-field total-vat">{{ frappe.utils.fmt_money(total_vat) }}</div>
+    <div class="dynamic-field discount">{{ frappe.utils.fmt_money(discount_amount) }}</div>
+    <div class="dynamic-field grand-total">{{ frappe.utils.fmt_money(grand_total) }}</div>
+
+    {%- set amount_words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or "SAR") -%}
+  <div class="dynamic-field remarks" dir="auto">{{ amount_words }}{% if doc.remarks or doc.terms %} &mdash; {{ doc.remarks or doc.terms }}{% endif %}</div>
+  <div class="prev-balance">{{ frappe.utils.fmt_money(doc.get("vansale_previous_balance") or 0) }}</div>
+
+    {# Previous Balance and Received-By are manual/signature fields with no
+       reliable ERPNext source for this invoice alone - left blank rather
+       than guessed, per "don't invent data when it isn't available". #}
+    {% if "Cash" in paid_types %}<div class="paid-mark cash">&#10003;</div>{% endif %}
+    {% if "Bank" in paid_types %}
+      <div class="payment-box bank-transfer">{{ frappe.utils.fmt_money(paid_amount) }}</div>
+    {% endif %}
+    {% if paid_types|length > 0 and "Cash" not in paid_types and "Bank" not in paid_types %}
+      <div class="paid-mark other">&#10003;</div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endfor %}

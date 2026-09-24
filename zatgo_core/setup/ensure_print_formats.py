@@ -2026,6 +2026,51 @@ def _ensure_kasib_asia_previous_balance() -> None:
     doc.save(ignore_permissions=True)
 
 
+_KASIB_ASIA_SINGLE_COPY_MARKER = "get_copy_label"
+
+
+def _ensure_kasib_asia_single_copy_print_tracking() -> None:
+    """Original/Duplicate Copy now comes from real print history, not a
+    hardcoded 3-copies-per-job loop.
+
+    Before 2026-09-24 the template printed a FIXED ["Original Copy",
+    "Duplicate Copy", "Duplicate Copy"] triplicate in a single job, every
+    time -- unrelated to whether the invoice had ever actually been
+    printed before, and guaranteeing at least 3 physical pages per print
+    (directly conflicting with a later "always exactly one page" ask).
+    Replaced with a single copy per print action, labeled by
+    zatgo_core.services.print_tracking.get_copy_label(doc), which reads
+    (and, only on a genuine Print action via Frappe's own `trigger_print`
+    signal -- never a preview -- atomically increments) the new
+    Sales Invoice.custom_print_count field. See print_tracking.py's module
+    docstring for why `trigger_print` is the closest reliable signal a web
+    app has for "a real print happened" (no web app can observe ink
+    actually leaving a printer), and add_print_count_field.py for the
+    field. Text color also switched #0d2a5e -> #000000 throughout (dot-
+    matrix ribbons are monochrome; "no unnecessary colors" was an
+    explicit requirement).
+
+    Same idempotent-guard shape as the two functions above, but this is a
+    structural rewrite (remove the outer copy loop; recolor), not a
+    simple anchor-based insertion -- not safely auto-re-appliable the
+    same way, so this only detects and warns if the live doc has drifted
+    back to the old behavior, rather than silently overwriting a
+    possibly-since-edited template. Re-apply by hand (see zatgo-core git
+    history around 2026-09-24) if this ever fires.
+    """
+    if not frappe.db.exists("Print Format", KASIB_ASIA_TAX_INVOICE_NAME):
+        return
+    doc_html = frappe.db.get_value("Print Format", KASIB_ASIA_TAX_INVOICE_NAME, "html") or ""
+    if _KASIB_ASIA_SINGLE_COPY_MARKER in doc_html:
+        return  # already applied
+    logger.warning(
+        "%s: no longer calls get_copy_label() -- looks reverted to the old "
+        "hardcoded 3-copies-per-job loop. Re-apply the 2026-09-24 single-"
+        "copy print-tracking change by hand.",
+        KASIB_ASIA_TAX_INVOICE_NAME,
+    )
+
+
 def _ensure_sales_zg1_chrome_pdf_generator() -> None:
     """Force Sales ZG1's pdf_generator to "chrome", bypassing whatever a
     site's Print Format.pdf_generator Select options are otherwise
@@ -2179,4 +2224,8 @@ def ensure_print_formats() -> None:
         _ensure_kasib_asia_previous_balance()
     except Exception:
         logger.exception("Kasib Asia Tax Invoice previous-balance injection failed")
+    try:
+        _ensure_kasib_asia_single_copy_print_tracking()
+    except Exception:
+        logger.exception("Kasib Asia Tax Invoice single-copy print-tracking check failed")
     frappe.db.commit()
