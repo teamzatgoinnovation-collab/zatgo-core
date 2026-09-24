@@ -20,6 +20,12 @@ import json
 
 import frappe
 
+# NOTE: Number Card has a `filters_config` field, but the workspace widget
+# (frappe/public/js/frappe/widgets/number_card_widget.js) never reads it --
+# the rendered tile only ever offers "Refresh"/"Edit" actions, no live
+# filter UI. Don't set it here expecting an adjustable date picker on the
+# tile; that isn't a capability this widget has.
+
 NUMBER_CARDS = [
     {
         "name": "Today's Sales",
@@ -64,6 +70,12 @@ def execute() -> None:
 def _ensure_number_cards() -> None:
     for card in NUMBER_CARDS:
         if frappe.db.exists("Number Card", card["name"]):
+            # show_full_number wasn't set by an earlier run of this patch --
+            # without it, a card whose value is exactly 0 renders "NaN"
+            # (Frappe's shorten_number() returns "" for a falsy 0, which
+            # cascades into NaN in the widget's downstream number-format
+            # conversion). Re-sync it onto already-created cards too.
+            frappe.db.set_value("Number Card", card["name"], "show_full_number", 1)
             continue
         frappe.get_doc(
             {
@@ -82,6 +94,7 @@ def _ensure_number_cards() -> None:
                 "is_standard": 0,
                 "module": "Accounts",
                 "show_percentage_stats": 1,
+                "show_full_number": 1,
                 "stats_time_interval": "Daily",
             }
         ).insert(ignore_permissions=True)
@@ -93,29 +106,40 @@ def _ensure_workspace_additions() -> None:
     doc = frappe.get_doc("Workspace", "Invoicing")
     content = json.loads(doc.content)
 
-    existing_number_cards = {b["data"].get("number_card_name") for b in content if b.get("type") == "number_card"}
+    # The "content" JSON only controls layout (block order/col span) -- the
+    # workspace renderer resolves each number_card block by matching its
+    # data.number_card_name against a *label* in the separate `number_cards`
+    # child table, then reads that row's own number_card_name to know which
+    # real Number Card doc to render. A content block with no matching
+    # `number_cards` row silently renders nothing -- both must be kept in
+    # sync, which is why this checks each one independently below.
+    existing_content_refs = {b["data"].get("number_card_name") for b in content if b.get("type") == "number_card"}
+    existing_child_labels = {row.label for row in doc.number_cards}
     existing_cards = {b["data"].get("card_name") for b in content if b.get("type") == "card"}
 
-    # Splice the two new number_card blocks right after the existing four
-    # (same col:3 sizing), before the "Reports & Masters" header -- keeps
-    # the untouched blocks' relative order identical either way.
+    changed = False
+
+    # Splice new number_card blocks right after the existing four (same
+    # col:3 sizing), before the "Reports & Masters" header -- keeps the
+    # untouched blocks' relative order identical either way.
     header_idx = next((i for i, b in enumerate(content) if b.get("type") == "header"), len(content))
-    inserted_number_cards = False
     for card in reversed(NUMBER_CARDS):
-        if card["label"] in existing_number_cards:
-            continue
-        content.insert(
-            header_idx,
-            {"id": frappe.generate_hash(length=10), "type": "number_card", "data": {"number_card_name": card["label"], "col": 3}},
-        )
-        inserted_number_cards = True
+        if card["label"] not in existing_content_refs:
+            content.insert(
+                header_idx,
+                {"id": frappe.generate_hash(length=10), "type": "number_card", "data": {"number_card_name": card["label"], "col": 3}},
+            )
+            changed = True
+        if card["label"] not in existing_child_labels:
+            doc.append("number_cards", {"number_card_name": card["name"], "label": card["label"]})
+            changed = True
 
-    inserted_reports_card = False
-    if "Reports" not in existing_cards:
+    inserted_reports_card = "Reports" not in existing_cards
+    if inserted_reports_card:
         content.append({"id": frappe.generate_hash(length=10), "type": "card", "data": {"card_name": "Reports", "col": 4}})
-        inserted_reports_card = True
+        changed = True
 
-    if not inserted_number_cards and not inserted_reports_card:
+    if not changed:
         return  # already applied, nothing new to add
 
     doc.content = json.dumps(content)
