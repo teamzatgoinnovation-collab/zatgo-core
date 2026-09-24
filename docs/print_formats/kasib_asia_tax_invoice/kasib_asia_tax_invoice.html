@@ -40,11 +40,35 @@
   {% set customer_tax_id = frappe.db.get_value("Customer", doc.customer, "tax_id") or "" %}
 {% endif %}
 
+{# ---- Customer Address: fall back to the customer's own default address
+   when the invoice itself has none set -- confirmed on real kasibasia
+   data that customer_address is essentially never populated on the
+   invoice, which otherwise silently blanked this box on every print.
+   Mirrors the customer_tax_id fallback just above (read straight off
+   the Customer/Address master, not an invoice-level field). #}
 {% set address_city = "" %}
 {% set address_line1 = "" %}
-{% if doc.customer_address %}
-  {% set address_city = frappe.db.get_value("Address", doc.customer_address, "city") or "" %}
-  {% set address_line1 = frappe.db.get_value("Address", doc.customer_address, "address_line1") or "" %}
+{% set customer_address_name = doc.customer_address %}
+{% if not customer_address_name and doc.customer %}
+  {% set customer_address_name = get_party_default_address("Customer", doc.customer) %}
+{% endif %}
+{% if customer_address_name %}
+  {% set address_city = frappe.db.get_value("Address", customer_address_name, "city") or "" %}
+  {% set address_line1 = frappe.db.get_value("Address", customer_address_name, "address_line1") or "" %}
+{% endif %}
+
+{# ---- Customer Mobile: invoice-level contact_mobile/contact_phone and
+   Customer.mobile_no are usually blank -- the number that's actually
+   entered lives on the Address record's own "Phone" field instead
+   (confirmed: e.g. "TRADE CORE INTERNATIONAL Co.-Billing" has phone
+   99555222 there, nowhere else). Chains off customer_address_name
+   above, so it's the same address already shown in the box next to it. #}
+{% set customer_mobile = doc.contact_mobile or doc.get("contact_phone") or "" %}
+{% if not customer_mobile and doc.customer %}
+  {% set customer_mobile = frappe.db.get_value("Customer", doc.customer, "mobile_no") or "" %}
+{% endif %}
+{% if not customer_mobile and customer_address_name %}
+  {% set customer_mobile = frappe.db.get_value("Address", customer_address_name, "phone") or "" %}
 {% endif %}
 
 {# =========================================================
@@ -132,11 +156,10 @@
   <div class="dynamic-field customer-name" dir="auto">{{ doc.customer_name or doc.customer or "" }}</div>
   <div class="dynamic-field customer-vat center" dir="ltr">{{ customer_tax_id }}</div>
   <div class="dynamic-field customer-address wrap" dir="auto">
-    {% if address_line1 and address_city %}{{ address_line1 }}, {{ address_city }}
-    {% elif address_line1 %}{{ address_line1 }}
-    {% elif address_city %}{{ address_city }}{% endif %}
+    {% if address_line1 %}<div>{{ address_line1 }}</div>{% endif %}
+    {% if address_city %}<div>{{ address_city }}</div>{% endif %}
   </div>
-  <div class="dynamic-field customer-mobile center ltr">{{ doc.contact_mobile or doc.get("contact_phone") or "" }}</div>
+  <div class="dynamic-field customer-mobile center ltr">{{ customer_mobile }}</div>
 
   {% for row_i in range(page_items|length) %}
     {% set item = page_items[row_i] %}
@@ -172,6 +195,13 @@
       {% set item_vat = item_net * item_rate_sum / 100 %}
     {% endif %}
     {% set item_total = item_net + item_vat %}
+    {# ---- Item Arabic name: `custom_item_name_ar` doesn't exist as a
+       field anywhere on Sales Invoice Item (confirmed against the live
+       schema) -- the real Arabic name lives on the Item master as
+       `zatgo_item_name_ar`, already populated there for real items (e.g.
+       "LUNA MILK FULLFAT 400 GM"). Looked up per row rather than joined
+       in bulk since this format renders at most 10 rows at a time. #}
+    {% set item_name_ar = frappe.db.get_value("Item", item.item_code, "zatgo_item_name_ar") or "" if item.item_code else "" %}
     {% set row_top = ROW_TOPS[row_i] %}
     {% set row_height = ROW_HEIGHTS[row_i] %}
     {% set row_line_height = row_height * 2.97 %}
@@ -183,7 +213,7 @@
       {% if col_name == 'itemno' %}{{ item.idx or (start_index + row_i + 1) }}
       {% elif col_name == 'desc' %}
         <div dir="auto">{{ item.item_name or item.description or item.item_code or "" }}</div>
-        {% if item.get('custom_item_name_ar') %}<div class="ar-line">{{ item.custom_item_name_ar }}</div>{% endif %}
+        {% if item_name_ar %}<div class="ar-line">{{ item_name_ar }}</div>{% endif %}
       {% elif col_name == 'qty' %}{{ "%g"|format(item.qty or 0) }}
       {% elif col_name == 'unit' %}{{ item.uom or item.stock_uom or "" }}
       {% elif col_name == 'unitprice' %}{{ frappe.utils.fmt_money(item.rate or 0) }}

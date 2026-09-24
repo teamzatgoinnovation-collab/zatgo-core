@@ -158,6 +158,13 @@ body {
     line-height: 1.25;
 
     overflow: hidden;
+
+    /* A single long unbroken run (a long area/district name with no
+       spaces) must wrap within the box instead of overflowing past its
+       right edge into whatever the pre-printed form has next to it --
+       confirmed happening on a real render before this was added. */
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .dynamic-field.center {
@@ -334,7 +341,7 @@ body {
   .invoice-number     { left: 69.51%; top: 19.44%; width: 16.75%; height: 2.81%; font-size: 9pt;  line-height: 8.34mm; }
   .customer-name      { left: 46.90%; top: 22.24%; width: 49.41%; height: 2.69%; font-size: 10pt; line-height: 7.98mm; }
   .customer-vat       { left: 60.86%; top: 24.93%; width: 35.46%; height: 3.00%; font-size: 10pt; line-height: 8.92mm; }
-  .customer-address   { left: 41.88%; top: 27.93%; width: 15.63%; height: 3.20%; font-size: 8pt;  padding-top: 2.2mm; line-height: 1.2; }
+  .customer-address   { left: 44.5%; top: 27.93%; width: 13.5%; height: 3.20%; font-size: 8pt;  padding-top: 2.2mm; line-height: 1.2; }
   .customer-mobile    { left: 69.79%; top: 27.93%; width: 16.47%; height: 3.20%; font-size: 9pt;  line-height: 9.5mm; }
 
 
