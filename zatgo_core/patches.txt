@@ -23,3 +23,5 @@ zatgo_core.patches.v0_2_2.add_cash_account_field
 zatgo_core.patches.v0_2_2.add_payment_entry_balance_field
 zatgo_core.patches.v0_2_2.add_accounting_dashboard_cards
 zatgo_core.patches.v0_2_2.add_print_count_field
+zatgo_core.patches.v0_2_3.add_purchase_invoice_payment_type_field
+zatgo_core.patches.v0_2_3.add_purchase_invoice_cash_account_field

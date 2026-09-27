@@ -13,7 +13,7 @@ app_description = (
 )
 app_email = "engineering@zatgo.local"
 app_license = "mit"
-app_version = "0.2.2"
+app_version = "0.2.3"
 
 required_apps = ["erpnext"]
 
@@ -23,9 +23,10 @@ before_uninstall = "zatgo_core.install.before_uninstall"
 
 boot_session = "zatgo_core.events.boot.boot_session"
 
-# Payment Type (Cash/Credit) UX hint -- purely visual, see the file itself.
+# Payment Type (Cash/Credit) UX hint -- purely visual, see the files themselves.
 doctype_js = {
     "Sales Invoice": "public/js/sales_invoice.js",
+    "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
 }
 
@@ -50,6 +51,11 @@ doc_events = {
     "Sales Invoice": {
         "validate": "zatgo_core.events.print_fields.populate_print_fields",
         "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
+        "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
+    },
+    "Purchase Invoice": {
+        "on_submit": "zatgo_core.events.purchase_invoice_payment.on_submit",
+        "before_cancel": "zatgo_core.events.purchase_invoice_payment.before_cancel",
     },
 }
 

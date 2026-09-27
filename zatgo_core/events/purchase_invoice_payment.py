@@ -1,7 +1,8 @@
-"""Sales Invoice submit/cancel: Cash payment automation.
+"""Purchase Invoice submit/cancel: Cash payment automation.
 
-See zatgo_core.services.invoice_cash_payment_service for the actual logic
-(shared with Purchase Invoice -- see events/purchase_invoice_payment.py).
+Mirrors events/sales_invoice_payment.py -- see
+zatgo_core.services.invoice_cash_payment_service for the actual logic
+(shared between both doctypes).
 """
 
 from __future__ import annotations

@@ -28,3 +28,27 @@ def get_or_create_test_company() -> str:
             }
         ).insert(ignore_permissions=True)
     return TEST_COMPANY_NAME
+
+
+def get_or_create_cash_mode_of_payment(company: str, cash_account: str) -> str:
+    """"Cash" is a standard setup-wizard fixture that a bare `bench new-site
+    --install-app erpnext` (skipping the wizard) never creates -- see
+    erpnext/CLAUDE.md. Real, wizard-provisioned sites already have it; this
+    just makes the test suite not depend on which kind of site it runs
+    against."""
+    if not frappe.db.exists("Mode of Payment", "Cash"):
+        frappe.get_doc(
+            {
+                "doctype": "Mode of Payment",
+                "mode_of_payment": "Cash",
+                "type": "Cash",
+                "accounts": [{"company": company, "default_account": cash_account}],
+            }
+        ).insert(ignore_permissions=True)
+    elif not frappe.db.exists(
+        "Mode of Payment Account", {"parent": "Cash", "company": company}
+    ):
+        mop = frappe.get_doc("Mode of Payment", "Cash")
+        mop.append("accounts", {"company": company, "default_account": cash_account})
+        mop.save(ignore_permissions=True)
+    return "Cash"
