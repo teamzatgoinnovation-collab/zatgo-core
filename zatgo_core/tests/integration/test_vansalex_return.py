@@ -151,9 +151,18 @@ class TestVansalexReturn(IntegrationTestCase):
         return_name = result["data"]["erp_name"]
 
         return_doc = frappe.db.get_value(
-            "Sales Invoice", return_name, ["is_return", "docstatus", "grand_total", "return_against"], as_dict=True
+            "Sales Invoice",
+            return_name,
+            ["is_return", "docstatus", "grand_total", "return_against", "naming_series"],
+            as_dict=True,
         )
         self.assertEqual(return_doc.is_return, 1)
+        self.assertIn(
+            "RET-",
+            return_doc.naming_series,
+            "Return must use the site's configured return naming series, not the plain invoice one "
+            "(regression test for kasibasia's SINV-00008, which continued the plain SINV- counter)",
+        )
         self.assertEqual(return_doc.docstatus, 1)
         self.assertEqual(return_doc.return_against, si_name)
         self.assertLess(return_doc.grand_total, 0)

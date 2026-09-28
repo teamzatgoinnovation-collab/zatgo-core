@@ -49,11 +49,13 @@ doc_events = {
         "on_update": "zatgo_core.events.company.on_company_update",
     },
     "Sales Invoice": {
+        "before_insert": "zatgo_core.events.return_naming.sync_naming_series",
         "validate": "zatgo_core.events.print_fields.populate_print_fields",
         "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
     },
     "Purchase Invoice": {
+        "before_insert": "zatgo_core.events.return_naming.sync_naming_series",
         "on_submit": "zatgo_core.events.purchase_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.purchase_invoice_payment.before_cancel",
     },

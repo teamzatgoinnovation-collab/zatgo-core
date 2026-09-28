@@ -664,10 +664,15 @@ def create_sales_return(
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
 
     profile = get_profile()
-    return_series = ""
     if profile:
         return_series = (profile.get("sales_return_naming_series") or "").strip()
-    doc.naming_series = return_series or "ACC-SINV-RET-.YYYY.-"
+        if return_series:
+            doc.naming_series = return_series
+    # Otherwise leave naming_series as inherited from make_return_doc() --
+    # zatgo_core.events.return_naming.sync_naming_series (before_insert)
+    # switches it to the site's actual configured "-RET-" series. The old
+    # hardcoded "ACC-SINV-RET-.YYYY.-" fallback assumed a prefix convention
+    # that doesn't match every site (kasibasia's is plain "SINV-RET-").
 
     doc.run_method("calculate_taxes_and_totals")
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
