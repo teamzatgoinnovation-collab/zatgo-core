@@ -6,6 +6,7 @@ import frappe
 
 from zatgo_core.plugins.discover import discover_and_register_manifests
 from zatgo_core.setup.ensure_custom_fields import ensure_custom_fields
+from zatgo_core.setup.ensure_mode_of_payment import ensure_mode_of_payment
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
@@ -44,6 +45,10 @@ def after_install() -> None:
     except Exception:
         logger.exception("Print format seed failed")
     try:
+        ensure_mode_of_payment()
+    except Exception:
+        logger.exception("Mode of Payment seed failed")
+    try:
         ensure_vansale_perms()
     except Exception:
         logger.exception("VanSale DocPerm seed failed")
@@ -76,6 +81,10 @@ def after_migrate() -> None:
         ensure_print_formats()
     except Exception:
         logger.exception("Print format seed failed")
+    try:
+        ensure_mode_of_payment()
+    except Exception:
+        logger.exception("Mode of Payment seed failed")
     try:
         ensure_vansale_perms()
     except Exception:

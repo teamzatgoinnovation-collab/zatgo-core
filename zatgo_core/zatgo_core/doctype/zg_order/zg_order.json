@@ -1,0 +1,199 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-09-27 00:00:00.000000",
+  "default_view": "List",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "order_number",
+    "table",
+    "table_name",
+    "covers",
+    "status",
+    "channel",
+    "opened_at",
+    "server",
+    "note",
+    "customer",
+    "customer_name",
+    "customer_phone",
+    "delivery_address",
+    "delivery_phone",
+    "delivery_notes",
+    "delivery_boy",
+    "delivery_boy_name",
+    "delivery_status",
+    "delivery_stop",
+    "sales_invoice",
+    "payment_entry",
+    "company",
+    "zatgo_client_id",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "order_number",
+      "fieldtype": "Data",
+      "label": "Order Number",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "table",
+      "fieldtype": "Link",
+      "label": "Table",
+      "options": "ZG Table"
+    },
+    {
+      "fieldname": "table_name",
+      "fieldtype": "Data",
+      "label": "Table Name",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "covers",
+      "fieldtype": "Int",
+      "label": "Covers",
+      "default": "1"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nSent\nReady\nPaid\nVoid",
+      "default": "Open",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "channel",
+      "fieldtype": "Select",
+      "label": "Channel",
+      "options": "Dine In\nCounter\nWalk In\nDelivery",
+      "default": "Counter",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "opened_at",
+      "fieldtype": "Datetime",
+      "label": "Opened At"
+    },
+    {
+      "fieldname": "server",
+      "fieldtype": "Data",
+      "label": "Server"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Link",
+      "label": "Customer",
+      "options": "Customer"
+    },
+    {
+      "fieldname": "customer_name",
+      "fieldtype": "Data",
+      "label": "Customer Name"
+    },
+    {
+      "fieldname": "customer_phone",
+      "fieldtype": "Data",
+      "label": "Customer Phone"
+    },
+    {
+      "fieldname": "delivery_address",
+      "fieldtype": "Small Text",
+      "label": "Delivery Address"
+    },
+    {
+      "fieldname": "delivery_phone",
+      "fieldtype": "Data",
+      "label": "Delivery Phone"
+    },
+    {
+      "fieldname": "delivery_notes",
+      "fieldtype": "Small Text",
+      "label": "Delivery Notes"
+    },
+    {
+      "fieldname": "delivery_boy",
+      "fieldtype": "Link",
+      "label": "Delivery Boy",
+      "options": "ZG Delivery Boy"
+    },
+    {
+      "fieldname": "delivery_boy_name",
+      "fieldtype": "Data",
+      "label": "Delivery Boy Name"
+    },
+    {
+      "fieldname": "delivery_status",
+      "fieldtype": "Select",
+      "label": "Delivery Status",
+      "options": "\nAwaiting\nHanded Off"
+    },
+    {
+      "fieldname": "delivery_stop",
+      "fieldtype": "Link",
+      "label": "Delivery Stop",
+      "options": "ZG Delivery Stop"
+    },
+    {
+      "fieldname": "sales_invoice",
+      "fieldtype": "Link",
+      "label": "Sales Invoice",
+      "options": "Sales Invoice"
+    },
+    {
+      "fieldname": "payment_entry",
+      "fieldtype": "Link",
+      "label": "Payment Entry",
+      "options": "Payment Entry"
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company"
+    },
+    {
+      "fieldname": "zatgo_client_id",
+      "fieldtype": "Data",
+      "label": "ZatGo Client ID",
+      "unique": 1
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "ZG Order Item"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-09-27 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Order",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1, "delete": 1, "email": 1, "export": 1, "print": 1,
+      "read": 1, "report": 1, "role": "System Manager", "share": 1, "write": 1
+    },
+    {
+      "create": 1, "delete": 0, "email": 1, "export": 1, "print": 1,
+      "read": 1, "report": 1, "role": "All", "share": 0, "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
