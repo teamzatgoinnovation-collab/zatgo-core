@@ -14,7 +14,9 @@
   "allow_warehouse_change",
   "sales_section",
   "allow_orders",
-  "max_discount_percent"
+  "max_discount_percent",
+  "collection_section",
+  "restrict_collections_to_route"
  ],
  "fields": [
   {
@@ -78,6 +80,18 @@
    "fieldtype": "Percent",
    "label": "Max Discount %",
    "default": "100"
+  },
+  {
+   "fieldname": "collection_section",
+   "fieldtype": "Section Break",
+   "label": "Collections"
+  },
+  {
+   "fieldname": "restrict_collections_to_route",
+   "fieldtype": "Check",
+   "label": "Restrict Collections to Route",
+   "default": "1",
+   "description": "When on, drivers can only collect from customers on their route (ZG Trip) or that they invoiced themselves. Turn off to let drivers collect from any customer."
   }
  ],
  "index_web_pages_for_search": 0,

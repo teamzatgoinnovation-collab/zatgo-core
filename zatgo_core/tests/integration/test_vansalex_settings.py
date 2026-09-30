@@ -18,7 +18,7 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import flt, random_string
 
-from zatgo_core.services.vansalex_service import create_order
+from zatgo_core.services.vansalex_service import create_collection, create_order
 from zatgo_core.services.vansalex_settings import resolve, selectable_warehouses
 from zatgo_core.tests.integration._fixtures import (
     get_or_create_cash_mode_of_payment,
@@ -255,3 +255,44 @@ class TestVansalexSettings(IntegrationTestCase):
         user = self._make_van_user(None)
         frappe.defaults.set_user_default("company", self.company, user)
         self.assertEqual(resolve(user)["warehouse"], company_wh)
+
+    # -- collections route rule --------------------------------------------
+
+    def _admin_invoice_for(self, customer: str) -> None:
+        """An open invoice the driver didn't make (admin-created)."""
+        frappe.set_user("Administrator")
+        result = create_order(
+            client_id=f"test-settings-adm-{random_string(8)}",
+            customer=customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+            warehouse=self.warehouse,
+            payment_type="Credit",
+        )
+        self.assertTrue(result["success"], result.get("error"))
+
+    def _collect(self, customer: str) -> dict:
+        frappe.set_user(self.user)
+        return create_collection(
+            client_id=f"test-settings-col-{random_string(8)}",
+            customer=customer,
+            amount=5,
+        )
+
+    def test_collection_allowed_from_customer_the_driver_invoiced(self) -> None:
+        # Not on the driver's route, but the driver sold to them — the same
+        # customers whose balances the app shows on New Collection.
+        self._sell(warehouse=self.warehouse, payment_type="Credit")
+        self.assertTrue(self._collect(self.customer)["success"])
+
+    def test_collection_refused_from_unrelated_customer(self) -> None:
+        other = self._make_customer(f"Settings Other {random_string(8)}")
+        self._admin_invoice_for(other)
+        with self.assertRaises(frappe.PermissionError):
+            self._collect(other)
+
+    def test_collection_from_any_customer_when_restriction_off(self) -> None:
+        other = self._make_customer(f"Settings Other {random_string(8)}")
+        self._admin_invoice_for(other)
+        self._set_profile(restrict_collections_to_route="No")
+        self.assertEqual(resolve(self.user)["restrict_collections_to_route"], 0)
+        self.assertTrue(self._collect(other)["success"])

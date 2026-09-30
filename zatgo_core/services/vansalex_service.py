@@ -767,12 +767,18 @@ def create_collection(
     frappe.has_permission("Payment Entry", "create", throw=True)
     party = _resolve_customer(customer)
     if not is_vansale_admin():
-        on_own_route = frappe.db.exists(
-            "ZG Trip", {"customer": party, "sales_user": frappe.session.user}
-        )
-        if not on_own_route:
+        from zatgo_core.services.van_sale_access import field_user_customers
+        from zatgo_core.services.vansalex_settings import resolve
+
+        # VanSaleX Settings / the driver's profile decide whether collections
+        # are limited to the driver's own customers: their route (ZG Trip)
+        # plus anyone they invoiced — the same set whose balances the app
+        # shows them (aging is scoped the same way).
+        if resolve()["restrict_collections_to_route"] and party not in field_user_customers():
             frappe.throw(
-                "Access denied: you can only collect from customers on your own route.",
+                "Access denied: you can only collect from customers on your route "
+                "or that you invoiced. Ask your admin to add this customer to your "
+                "route, or to turn off 'Restrict Collections to Route' in VanSaleX.",
                 frappe.PermissionError,
             )
     paid = flt(amount)

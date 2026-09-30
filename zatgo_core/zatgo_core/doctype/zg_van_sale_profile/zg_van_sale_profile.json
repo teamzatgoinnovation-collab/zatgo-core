@@ -21,6 +21,7 @@
     "show_payment_type_on_invoice",
     "show_warehouse_on_invoice",
     "allow_warehouse_change",
+    "restrict_collections_to_route",
     "invoice_section",
     "sales_invoice_naming_series",
     "sales_return_naming_series",
@@ -119,6 +120,13 @@
       "fieldname": "allow_warehouse_change",
       "fieldtype": "Select",
       "label": "Allow Changing Warehouse",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
+      "fieldname": "restrict_collections_to_route",
+      "fieldtype": "Select",
+      "label": "Restrict Collections to Route",
       "options": "Inherit\nYes\nNo",
       "default": "Inherit"
     },

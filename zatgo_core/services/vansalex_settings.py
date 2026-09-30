@@ -36,6 +36,7 @@ _DEFAULTS: dict[str, Any] = {
     "allow_warehouse_change": 0,
     "allow_orders": 1,
     "max_discount_percent": 100,
+    "restrict_collections_to_route": 1,
 }
 
 
@@ -147,6 +148,9 @@ def resolve(user: str | None = None) -> dict[str, Any]:
             profile, "allow_warehouse_change", glob["allow_warehouse_change"]
         ),
         "allow_orders": cint(glob["allow_orders"]),
+        "restrict_collections_to_route": _override(
+            profile, "restrict_collections_to_route", glob["restrict_collections_to_route"]
+        ),
         "max_discount_percent": flt(glob["max_discount_percent"]),
     }
 
