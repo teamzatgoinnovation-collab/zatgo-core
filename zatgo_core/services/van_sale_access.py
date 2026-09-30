@@ -86,6 +86,26 @@ def require_own_warehouse(requested: str | None = None) -> str:
     return user_wh
 
 
+def field_user_customers(user: str | None = None) -> set[str]:
+    """Customers a non-admin VanSale user may see receivables for.
+
+    Their own route (ZG Trip rows assigned to them — the same rule that
+    gates create_collection) plus anyone they have invoiced themselves.
+    Receivables for every other customer on the site stay admin-only.
+    """
+    uid = user or frappe.session.user
+    on_route = frappe.get_all(
+        "ZG Trip", filters={"sales_user": uid}, pluck="customer", distinct=True
+    )
+    invoiced = frappe.get_all(
+        "Sales Invoice",
+        filters={"owner": uid, "docstatus": 1},
+        pluck="customer",
+        distinct=True,
+    )
+    return {c for c in (*on_route, *invoiced) if c}
+
+
 def map_profile_row(row: Any) -> dict[str, Any]:
     r = row.as_dict() if callable(getattr(row, "as_dict", None)) else dict(row)
     full_name = frappe.db.get_value("User", r.get("user"), "full_name") or r.get("user")

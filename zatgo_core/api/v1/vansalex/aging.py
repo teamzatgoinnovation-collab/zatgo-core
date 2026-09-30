@@ -9,7 +9,7 @@ from frappe.utils import date_diff, flt, getdate, today
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login
-from zatgo_core.services.van_sale_access import is_vansale_admin
+from zatgo_core.services.van_sale_access import field_user_customers, is_vansale_admin
 
 
 def _bucket_key(days: int) -> str:
@@ -24,6 +24,29 @@ def _bucket_key(days: int) -> str:
     if days <= 120:
         return "d_91_120"
     return "d_120_plus"
+
+
+def _scope_to_caller(filters: dict[str, Any], customer: str | None) -> bool:
+    """Restrict a non-admin caller to their own customers.
+
+    Returns False when nothing is in scope (caller should return an empty
+    result). Asking for a specific out-of-scope customer is a PermissionError,
+    matching create_collection's route check.
+    """
+    if is_vansale_admin():
+        return True
+    allowed = field_user_customers()
+    if customer:
+        if customer not in allowed:
+            frappe.throw(
+                "Access denied: you can only view receivables for your own customers.",
+                frappe.PermissionError,
+            )
+        return True
+    if not allowed:
+        return False
+    filters["customer"] = ["in", sorted(allowed)]
+    return True
 
 
 def _empty_buckets() -> dict[str, float]:
@@ -52,25 +75,23 @@ def summary(
         filters["customer"] = customer
     if company:
         filters["company"] = company
-    elif not is_vansale_admin():
-        # Field users see all open AR they can read (ERPNext perm); no owner filter on SI aging
-        pass
-
-    rows = frappe.get_all(
-        "Sales Invoice",
-        filters=filters,
-        fields=[
-            "name",
-            "customer",
-            "customer_name",
-            "outstanding_amount",
-            "grand_total",
-            "posting_date",
-            "due_date",
-            "company",
-        ],
-        limit_page_length=5000,
-    )
+    rows: list[Any] = []
+    if _scope_to_caller(filters, customer):
+        rows = frappe.get_all(
+            "Sales Invoice",
+            filters=filters,
+            fields=[
+                "name",
+                "customer",
+                "customer_name",
+                "outstanding_amount",
+                "grand_total",
+                "posting_date",
+                "due_date",
+                "company",
+            ],
+            limit_page_length=5000,
+        )
     buckets = _empty_buckets()
     by_customer: dict[str, dict[str, Any]] = {}
 
@@ -129,6 +150,10 @@ def detail(
         filters["customer"] = customer
     if company:
         filters["company"] = company
+    if not _scope_to_caller(filters, customer):
+        payload = paginated([], page=page_i, page_size=size_i, total=0)
+        payload["meta"] = {**payload.get("meta", {}), "source": "vansalex.aging.detail", "as_of": str(today_d)}
+        return payload
 
     total = frappe.db.count("Sales Invoice", filters)
     rows = frappe.get_all(
