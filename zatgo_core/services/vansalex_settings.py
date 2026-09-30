@@ -10,6 +10,11 @@ first and zatgo_core's second:
 - cash account: Profile.cash_account → ERPNext Mode of Payment "Cash"
                 default account for the company → ZG Company Settings
                 .default_cash_account
+- sales taxes:  ZG Company Settings.default_tax_template → the company's
+                default ERPNext Sales Taxes and Charges Template
+                (is_default) → its first enabled one
+- print format: ERPNext's default print format for Sales Invoice (the
+                site's Customize Form setting) → "VanSale Tax Invoice"
 
 This is the single source for both the mobile app (served through
 `vansalex.me.context`) and server-side validation of sales, so the app
@@ -116,6 +121,53 @@ def default_cash_account(company: str | None) -> str | None:
     return _zg_company_setting(company, "default_cash_account")
 
 
+def sales_tax_template(company: str | None) -> tuple[str | None, bool]:
+    """(Sales Taxes and Charges Template, prices-are-tax-inclusive) for
+    [company]: zatgo_core's per-company choice first, then ERPNext's own
+    default template for the company."""
+    template = _zg_company_setting(company, "default_tax_template")
+    inclusive = bool(cint(_zg_company_setting(company, "enable_tax_inclusive") or 0))
+    if not company or not frappe.db.exists("DocType", "Sales Taxes and Charges Template"):
+        return template, inclusive
+    if not template:
+        filters = {"company": company, "disabled": 0}
+        template = frappe.db.get_value(
+            "Sales Taxes and Charges Template", {**filters, "is_default": 1}, "name"
+        ) or frappe.db.get_value("Sales Taxes and Charges Template", filters, "name")
+    if template and not frappe.db.exists("Sales Taxes and Charges Template", template):
+        template = None
+    return template, inclusive
+
+
+def tax_summary(company: str | None) -> dict[str, Any]:
+    """What the app needs to show VAT before the invoice exists: the
+    template name and its combined percentage on net total. The server
+    still computes the real figures through ERPNext on submit."""
+    template, inclusive = sales_tax_template(company)
+    rate = 0.0
+    if template:
+        rows = frappe.get_all(
+            "Sales Taxes and Charges",
+            filters={"parent": template, "parenttype": "Sales Taxes and Charges Template"},
+            fields=["charge_type", "rate", "included_in_print_rate"],
+        )
+        on_net = [r for r in rows if r.charge_type == "On Net Total"]
+        rate = sum(flt(r.rate) for r in on_net)
+        inclusive = inclusive or (bool(on_net) and all(cint(r.included_in_print_rate) for r in on_net))
+    return {"tax_template": template, "tax_rate": rate, "tax_inclusive": int(inclusive)}
+
+
+def default_print_format() -> str:
+    """The site's default Sales Invoice print format, as set in ERPNext
+    (Customize Form → Default Print Format)."""
+    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
+
+    fmt = frappe.get_meta("Sales Invoice").default_print_format
+    if fmt and frappe.db.get_value("Print Format", fmt, "disabled") == 0:
+        return fmt
+    return PRINT_FORMAT_NAME
+
+
 def resolve(user: str | None = None) -> dict[str, Any]:
     """Effective settings for [user] (default: session user)."""
     uid = user or frappe.session.user
@@ -152,6 +204,8 @@ def resolve(user: str | None = None) -> dict[str, Any]:
             profile, "restrict_collections_to_route", glob["restrict_collections_to_route"]
         ),
         "max_discount_percent": flt(glob["max_discount_percent"]),
+        **tax_summary(company),
+        "print_format": default_print_format(),
     }
 
 

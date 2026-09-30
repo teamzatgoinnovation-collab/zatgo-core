@@ -10,8 +10,9 @@ from frappe.utils import getdate
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
-from zatgo_core.services.vansalex_service import create_sales_return
-from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
+from zatgo_core.api.response import ok
+from zatgo_core.services.vansalex_service import create_sales_return, get_returnable
+from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
 @frappe.whitelist()
@@ -23,18 +24,15 @@ def create(
     company: str | None = None,
     reason: str | None = None,
 ) -> dict[str, Any]:
+    """Credit note against a submitted sale. Stock returns to the caller's
+    van warehouse (VanSaleX settings); quantities are capped at what is
+    left to return on that invoice."""
     require_login()
-    wh = require_own_warehouse(warehouse)
-    if not wh:
-        frappe.throw(
-            "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
-            frappe.ValidationError,
-        )
     return create_sales_return(
         client_id=client_id,
         return_against=return_against,
         items=items,
-        warehouse=wh,
+        warehouse=warehouse,
         company=company,
         reason=reason,
     )
@@ -59,14 +57,8 @@ def list(
         if warehouse and frappe.db.has_column("Sales Invoice", "set_warehouse"):
             filters["set_warehouse"] = warehouse
     else:
+        # Own returns, whichever warehouse (same scoping as orders.list).
         filters["owner"] = frappe.session.user
-        profile = get_profile()
-        if (
-            profile
-            and profile.get("warehouse")
-            and frappe.db.has_column("Sales Invoice", "set_warehouse")
-        ):
-            filters["set_warehouse"] = profile["warehouse"]
 
     if date:
         filters["posting_date"] = str(getdate(date))
@@ -107,6 +99,13 @@ def list(
     payload = paginated(data, page=page_i, page_size=size_i, total=total)
     payload["meta"] = {**payload.get("meta", {}), "source": "Sales Invoice"}
     return payload
+
+
+@frappe.whitelist()
+def returnable(sales_invoice: str) -> dict[str, Any]:
+    """Lines of [sales_invoice] with sold / already returned / returnable qty."""
+    require_login()
+    return ok(get_returnable(sales_invoice), meta={"source": "vansalex.returns.returnable"})
 
 
 @frappe.whitelist()

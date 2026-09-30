@@ -192,3 +192,40 @@ class TestVansalexReturn(IntegrationTestCase):
                 items=[{"item_code": self.item_code, "qty": 1}],
                 warehouse=self.other_warehouse,
             )
+
+    def test_returnable_nets_out_earlier_returns(self) -> None:
+        from zatgo_core.services.vansalex_service import get_returnable
+
+        si_name = self._make_original_order(qty=5)
+        create_sales_return(
+            client_id=f"test-return-{random_string(8)}",
+            return_against=si_name,
+            items=[{"item_code": self.item_code, "qty": 2}],
+            warehouse=self.own_warehouse,
+        )
+        line = get_returnable(si_name)["items"][0]
+        self.assertEqual((line["sold_qty"], line["returned_qty"], line["returnable_qty"]), (5, 2, 3))
+        # A second return may only take what is left.
+        with self.assertRaises(frappe.ValidationError):
+            create_sales_return(
+                client_id=f"test-return-{random_string(8)}",
+                return_against=si_name,
+                items=[{"item_code": self.item_code, "qty": 4}],
+                warehouse=self.own_warehouse,
+            )
+
+    def test_van_user_returns_own_sale_into_default_warehouse(self) -> None:
+        si_name = self._make_original_order(qty=3)
+        frappe.db.set_value("Sales Invoice", si_name, "owner", self.van_user)
+        frappe.set_user(self.van_user)
+        result = create_sales_return(
+            client_id=f"test-return-{random_string(8)}",
+            return_against=si_name,
+            items=[{"item_code": self.item_code, "qty": 1}],
+        )
+        self.assertTrue(result["success"], result.get("error"))
+        self.assertEqual(
+            frappe.db.get_value("Sales Invoice", result["data"]["erp_name"], "set_warehouse"),
+            self.own_warehouse,
+        )
+

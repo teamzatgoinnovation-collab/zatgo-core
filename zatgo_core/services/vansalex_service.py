@@ -39,34 +39,11 @@ def _resolve_customer(customer: str) -> str:
     frappe.throw(f"Customer not found: {name}")
 
 
-def _company_tax_settings(company: str) -> tuple[str | None, bool]:
-    """Return (default_tax_template, tax_inclusive) for company."""
-    if not frappe.db.exists("DocType", "ZG Company Settings"):
-        return None, False
-    row = frappe.db.get_value(
-        "ZG Company Settings",
-        {"company": company},
-        ["default_tax_template", "enable_tax_inclusive"],
-        as_dict=True,
-    )
-    if not row:
-        return None, False
-    template = (row.get("default_tax_template") or "").strip() or None
-    inclusive = bool(int(row.get("enable_tax_inclusive") or 0))
-    return template, inclusive
-
-
 def _apply_sales_taxes(doc: Any, company: str) -> None:
-    template, inclusive = _company_tax_settings(company)
+    from zatgo_core.services.vansalex_settings import sales_tax_template
+
+    template, inclusive = sales_tax_template(company)
     if not template:
-        # Fallback: first enabled Sales Taxes and Charges Template for company
-        if frappe.db.exists("DocType", "Sales Taxes and Charges Template"):
-            template = frappe.db.get_value(
-                "Sales Taxes and Charges Template",
-                {"company": company, "disabled": 0},
-                "name",
-            )
-    if not template or not frappe.db.exists("Sales Taxes and Charges Template", template):
         return
     doc.taxes_and_charges = template
     try:
@@ -607,6 +584,82 @@ def confirm_order(
     return payload
 
 
+def _returnable_original(original_name: str) -> Any:
+    """The submitted, non-return Sales Invoice [original_name], if the
+    caller may return against it: admins any; a field user only their own
+    sales or sales from their van's warehouse."""
+    if not frappe.db.exists("Sales Invoice", original_name):
+        frappe.throw(f"Sales Invoice not found: {original_name}")
+    original = frappe.get_doc("Sales Invoice", original_name)
+    if int(original.docstatus or 0) != 1:
+        frappe.throw(f"Sales Invoice {original_name} is not submitted.", frappe.ValidationError)
+    if int(getattr(original, "is_return", 0) or 0):
+        frappe.throw(f"Sales Invoice {original_name} is itself a return.", frappe.ValidationError)
+    if not is_vansale_admin():
+        from zatgo_core.services.vansalex_settings import resolve
+
+        own_wh = resolve().get("warehouse")
+        if original.owner != frappe.session.user and not (
+            own_wh and (original.set_warehouse or "") == own_wh
+        ):
+            frappe.throw(
+                "Access denied: you can only return items against your own van's sales.",
+                frappe.PermissionError,
+            )
+    return original
+
+
+def returnable_lines(original: Any) -> list[dict[str, Any]]:
+    """Per item of [original]: sold qty, qty already returned by submitted
+    credit notes, and what is left to return."""
+    sold: dict[str, dict[str, Any]] = {}
+    for row in original.items or []:
+        line = sold.setdefault(
+            row.item_code,
+            {
+                "item_code": row.item_code,
+                "item_name": row.item_name,
+                "uom": row.uom,
+                "rate": flt(row.rate),
+                "sold_qty": 0.0,
+            },
+        )
+        line["sold_qty"] += flt(row.qty)
+    returned: dict[str, float] = {}
+    for r in frappe.get_all(
+        "Sales Invoice Item",
+        filters={
+            "parent": ["in", frappe.get_all(
+                "Sales Invoice",
+                filters={"return_against": original.name, "is_return": 1, "docstatus": 1},
+                pluck="name",
+            ) or [""]],
+        },
+        fields=["item_code", "qty"],
+    ):
+        returned[r.item_code] = returned.get(r.item_code, 0) + abs(flt(r.qty))
+    out = []
+    for code, line in sold.items():
+        line["returned_qty"] = returned.get(code, 0.0)
+        line["returnable_qty"] = max(line["sold_qty"] - line["returned_qty"], 0.0)
+        out.append(line)
+    return out
+
+
+def get_returnable(sales_invoice: str) -> dict[str, Any]:
+    """What can still be returned against [sales_invoice] (for the app's
+    New Return screen)."""
+    original = _returnable_original(require_str(sales_invoice, "sales_invoice"))
+    return {
+        "name": original.name,
+        "customer": original.customer,
+        "customer_name": original.customer_name,
+        "posting_date": str(original.posting_date or ""),
+        "grand_total": flt(original.grand_total),
+        "items": returnable_lines(original),
+    }
+
+
 def create_sales_return(
     client_id: str,
     return_against: str,
@@ -622,7 +675,6 @@ def create_sales_return(
 
     require_login()
     cid = require_str(client_id, "client_id")
-    wh = (warehouse or "").strip()
 
     existing = _find_by_client_id("Sales Invoice", cid)
     if existing:
@@ -635,30 +687,18 @@ def create_sales_return(
             frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
         return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
 
-    if not wh:
+    original_name = require_str(return_against, "return_against")
+    original = _returnable_original(original_name)
+    # Stock goes back into the caller's van (their default warehouse unless
+    # VanSaleX Settings let them pick another of the company's).
+    from zatgo_core.services.vansalex_settings import allowed_warehouse
+
+    wh = allowed_warehouse(warehouse)
+    if frappe.db.get_value("Warehouse", wh, "company") != original.company:
         frappe.throw(
-            "Van warehouse is required to create a stock-updating Sales Return.",
+            f"Warehouse {wh} belongs to another company than {original_name}.",
             frappe.ValidationError,
         )
-    if not frappe.db.exists("Warehouse", wh):
-        frappe.throw(f"Warehouse not found: {wh}")
-
-    original_name = require_str(return_against, "return_against")
-    if not frappe.db.exists("Sales Invoice", original_name):
-        frappe.throw(f"Sales Invoice not found: {original_name}")
-    original = frappe.get_doc("Sales Invoice", original_name)
-    if int(original.docstatus or 0) != 1:
-        frappe.throw(f"Sales Invoice {original_name} is not submitted.", frappe.ValidationError)
-    if int(getattr(original, "is_return", 0) or 0):
-        frappe.throw(f"Sales Invoice {original_name} is itself a return.", frappe.ValidationError)
-    if not is_vansale_admin():
-        profile = get_profile()
-        user_wh = (profile.get("warehouse") if profile else "") or ""
-        if not user_wh or (original.set_warehouse or "") != user_wh:
-            frappe.throw(
-                "Access denied: you can only return items against your own van's sales.",
-                frappe.PermissionError,
-            )
 
     frappe.has_permission("Sales Invoice", "create", throw=True)
     if isinstance(items, str):
@@ -668,10 +708,7 @@ def create_sales_return(
     if not isinstance(items, list) or not items:
         frappe.throw("At least one line item is required")
 
-    original_qty_by_item: dict[str, float] = {}
-    for row in original.items or []:
-        original_qty_by_item[row.item_code] = original_qty_by_item.get(row.item_code, 0) + flt(row.qty)
-
+    returnable = {r["item_code"]: r for r in returnable_lines(original)}
     requested_qty_by_item: dict[str, float] = {}
     for raw in items:
         if not isinstance(raw, dict):
@@ -680,14 +717,17 @@ def create_sales_return(
         qty = flt(raw.get("qty") or 0)
         if qty <= 0:
             frappe.throw("Return qty must be greater than zero")
-        if code not in original_qty_by_item:
+        if code not in returnable:
             frappe.throw(f"Item {code} was not sold on {original_name}")
-        if qty > original_qty_by_item[code] + 1e-6:
+        requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
+    for code, qty in requested_qty_by_item.items():
+        left = returnable[code]["returnable_qty"]
+        if qty > left + 1e-6:
             frappe.throw(
-                f"Cannot return {qty} of {code} — only {original_qty_by_item[code]} was sold on {original_name}.",
+                f"Cannot return {qty:g} of {code} — only {left:g} of the "
+                f"{returnable[code]['sold_qty']:g} sold on {original_name} is left to return.",
                 frappe.ValidationError,
             )
-        requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
 
     doc = make_return_doc("Sales Invoice", original_name)
     kept_items = []

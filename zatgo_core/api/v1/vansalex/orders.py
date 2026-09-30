@@ -97,6 +97,7 @@ def list(
     sales_user: str | None = None,
     warehouse: str | None = None,
     date: str | None = None,
+    customer: str | None = None,
 ) -> dict[str, Any]:
     """List Sales Invoices for VanSale (admin: filterable; user: own)."""
     require_login()
@@ -115,6 +116,8 @@ def list(
 
     if date:
         filters["posting_date"] = str(getdate(date))
+    if customer:
+        filters["customer"] = customer
 
     total = frappe.db.count("Sales Invoice", filters)
     rows = frappe.get_all(
@@ -252,12 +255,13 @@ def list_sales_orders(
 
 @frappe.whitelist()
 def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
-    """Return Sales Invoice PDF (base64) using VanSale Tax Invoice format."""
+    """Sales Invoice PDF (base64). Without [print_format]: the site's
+    default Sales Invoice print format set in ERPNext."""
     import base64
 
     from zatgo_core.api.response import ok
     from zatgo_core.api.validators import require_str
-    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
+    from zatgo_core.services.vansalex_settings import default_print_format
 
     require_login()
     invoice = require_str(name, "name")
@@ -272,9 +276,9 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
             frappe.ValidationError,
         )
 
-    fmt = (print_format or "").strip() or PRINT_FORMAT_NAME
+    fmt = (print_format or "").strip() or default_print_format()
     if not frappe.db.exists("Print Format", fmt):
-        fmt = "Standard"
+        fmt = default_print_format()
 
     pdf_bytes = frappe.get_print(
         "Sales Invoice",

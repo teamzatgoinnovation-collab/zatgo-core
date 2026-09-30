@@ -184,6 +184,50 @@ class TestVansalexSettings(IntegrationTestCase):
         settings = context()["data"]["settings"]
         self.assertEqual(settings["warehouse"], self.warehouse)
         self.assertIn(settings["default_payment_type"], ("Cash", "Credit"))
+        self.assertIn("tax_rate", settings)
+        self.assertIn("tax_inclusive", settings)
+        self.assertTrue(frappe.db.exists("Print Format", settings["print_format"]))
+
+    def test_tax_summary_uses_erpnext_default_template(self) -> None:
+        from zatgo_core.services.vansalex_settings import tax_summary
+
+        tax_account = frappe.db.get_value(
+            "Account",
+            {
+                "company": self.company,
+                "account_type": ["in", ["Tax", "Chargeable", "Income Account"]],
+                "is_group": 0,
+            },
+            "name",
+        )
+        if not tax_account:
+            self.skipTest("test company has no account usable as a tax head")
+        title = f"VSX Test VAT {random_string(5)}"
+        tpl = frappe.get_doc(
+            {
+                "doctype": "Sales Taxes and Charges Template",
+                "title": title,
+                "company": self.company,
+                "is_default": 1,
+                "taxes": [
+                    {
+                        "charge_type": "On Net Total",
+                        "account_head": tax_account,
+                        "rate": 15,
+                        "description": "VAT 15%",
+                    }
+                ],
+            }
+        ).insert(ignore_permissions=True)
+        try:
+            if frappe.db.get_value("ZG Company Settings", {"company": self.company}, "default_tax_template"):
+                self.skipTest("ZG Company Settings pins a tax template on the test company")
+            summary = tax_summary(self.company)
+            self.assertEqual(summary["tax_template"], tpl.name)
+            self.assertEqual(summary["tax_rate"], 15)
+            self.assertEqual(summary["tax_inclusive"], 0)
+        finally:
+            frappe.delete_doc("Sales Taxes and Charges Template", tpl.name, force=True)
 
     # -- cash / credit -------------------------------------------------------
 
