@@ -1,0 +1,131 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-09-30 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "payment_section",
+  "default_payment_type",
+  "allow_credit_sales",
+  "show_payment_type_on_invoice",
+  "warehouse_section",
+  "show_warehouse_on_invoice",
+  "allow_warehouse_change",
+  "sales_section",
+  "allow_orders",
+  "max_discount_percent"
+ ],
+ "fields": [
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment (Cash / Credit)"
+  },
+  {
+   "fieldname": "default_payment_type",
+   "fieldtype": "Select",
+   "label": "Default Payment Type",
+   "options": "Cash\nCredit",
+   "default": "Cash",
+   "description": "Cash invoices auto-create a Payment Entry on submit into the Cash account (ERPNext Mode of Payment \"Cash\" default account for the company, unless the user's VanSale Profile sets one)."
+  },
+  {
+   "fieldname": "allow_credit_sales",
+   "fieldtype": "Check",
+   "label": "Allow Credit Sales",
+   "default": "1"
+  },
+  {
+   "fieldname": "show_payment_type_on_invoice",
+   "fieldtype": "Check",
+   "label": "Show Cash / Credit on Invoice",
+   "default": "1",
+   "description": "When hidden, the app always uses the default payment type."
+  },
+  {
+   "fieldname": "warehouse_section",
+   "fieldtype": "Section Break",
+   "label": "Warehouse"
+  },
+  {
+   "fieldname": "show_warehouse_on_invoice",
+   "fieldtype": "Check",
+   "label": "Show Warehouse on Invoice",
+   "default": "1"
+  },
+  {
+   "fieldname": "allow_warehouse_change",
+   "fieldtype": "Check",
+   "label": "Allow Changing Warehouse",
+   "default": "0",
+   "description": "Lets drivers sell from another warehouse of the same company. The default warehouse comes from the user's VanSale Profile, then ZG Company Settings, then ERPNext Stock Settings."
+  },
+  {
+   "fieldname": "sales_section",
+   "fieldtype": "Section Break",
+   "label": "Sales"
+  },
+  {
+   "fieldname": "allow_orders",
+   "fieldtype": "Check",
+   "label": "Allow Orders (Invoice Later)",
+   "default": "1",
+   "description": "Offer the Order option (a Sales Order converted to a tax invoice later) besides Invoice."
+  },
+  {
+   "fieldname": "max_discount_percent",
+   "fieldtype": "Percent",
+   "label": "Max Discount %",
+   "default": "100"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-09-30 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "VanSaleX Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  },
+  {
+   "role": "VanSale Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  },
+  {
+   "role": "VanSale User",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -162,10 +162,33 @@ def _ensure_submitted_sales_invoice(
     return doc
 
 
+def _apply_payment_type(target: Any, sale: dict[str, Any]) -> None:
+    """Cash / Credit onto a Sales Invoice (dict payload or doc). A Cash
+    invoice's Payment Entry is then auto-created on submit by the existing
+    zatgo_core hook (services/invoice_cash_payment_service.py)."""
+    meta = frappe.get_meta("Sales Invoice")
+    if not sale.get("payment_type") or not meta.has_field("custom_payment_type"):
+        return
+    values = {"custom_payment_type": sale["payment_type"]}
+    if sale.get("cash_account") and meta.has_field("custom_cash_account"):
+        values["custom_cash_account"] = sale["cash_account"]
+    for key, value in values.items():
+        if isinstance(target, dict):
+            target[key] = value
+        else:
+            target.set(key, value)
+
+
 def _validated_discount_percentage(discount_percentage: Any) -> float:
     pct = flt(discount_percentage or 0)
     if pct < 0 or pct > 100:
         frappe.throw("Discount percentage must be between 0 and 100.", frappe.ValidationError)
+    if pct > 0 and not is_vansale_admin():
+        from zatgo_core.services.vansalex_settings import resolve
+
+        cap = flt(resolve()["max_discount_percent"])
+        if pct > cap:
+            frappe.throw(f"Discount can't exceed {cap:g}% for your account.", frappe.ValidationError)
     return pct
 
 
@@ -177,7 +200,10 @@ def create_order(
     company: str | None = None,
     trip_id: str | None = None,
     discount_percentage: Any = None,
+    payment_type: str | None = None,
+    cash_account: str | None = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.vansalex_settings import resolve_sale
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
     require_login()
@@ -196,13 +222,10 @@ def create_order(
             frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
         return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
 
-    if not wh:
-        frappe.throw(
-            "Van warehouse is required to create a stock-updating Sales Invoice.",
-            frappe.ValidationError,
-        )
-    if not frappe.db.exists("Warehouse", wh):
-        frappe.throw(f"Warehouse not found: {wh}")
+    # Warehouse / Cash-Credit / cash account, validated against the user's
+    # effective VanSaleX settings (see services/vansalex_settings.py).
+    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
+    wh = sale["warehouse"]
 
     frappe.has_permission("Sales Invoice", "create", throw=True)
     party = _resolve_customer(customer)
@@ -223,7 +246,10 @@ def create_order(
     rows = _parse_items(items)
     pct = _validated_discount_percentage(discount_percentage)
 
-    company_name = _default_company(company)
+    # The invoice's company is the stock's company — a user-default or
+    # "first Company" fallback can disagree with the van warehouse and post
+    # to the wrong books (or fail on party-account currency).
+    company_name = frappe.db.get_value("Warehouse", wh, "company") or _default_company(company)
     # Prefer customer default price list when item rates missing
     pl = frappe.db.get_value("Customer", party, "default_price_list")
     if pl:
@@ -253,6 +279,7 @@ def create_order(
         "update_stock": 1,
         "set_warehouse": wh,
     }
+    _apply_payment_type(doc_payload, sale)
     if naming_series:
         doc_payload["naming_series"] = naming_series
     if pct > 0:
@@ -378,6 +405,14 @@ def create_sales_order(
         return _ack_sales_order(doc, cid, idempotent=True, created=False)
 
     frappe.has_permission("Sales Order", "create", throw=True)
+    if not is_vansale_admin():
+        from zatgo_core.services.vansalex_settings import resolve
+
+        if not resolve()["allow_orders"]:
+            frappe.throw(
+                "Orders (invoice later) are turned off — create an Invoice instead.",
+                frappe.PermissionError,
+            )
     party = _resolve_customer(customer)
     rows = _normalize_items(items)
     pct = _validated_discount_percentage(discount_percentage)
@@ -398,7 +433,7 @@ def create_sales_order(
     for row in rows:
         row.setdefault("warehouse", wh)
 
-    company_name = _default_company(company)
+    company_name = frappe.db.get_value("Warehouse", wh, "company") or _default_company(company)
     pl = frappe.db.get_value("Customer", party, "default_price_list")
     if pl:
         for row in rows:
@@ -464,9 +499,11 @@ def create_sales_order(
 def confirm_order(
     client_id: str,
     sales_order: str,
-    warehouse: str,
+    warehouse: str | None = None,
     company: str | None = None,
     trip_id: str | None = None,
+    payment_type: str | None = None,
+    cash_account: str | None = None,
 ) -> dict[str, Any]:
     """Convert a submitted Sales Order into a submitted Sales Invoice —
     the "Confirm Order" action. `client_id` here is the idempotency key
@@ -477,11 +514,12 @@ def confirm_order(
     field needed for that traceability."""
     from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
 
+    from zatgo_core.services.vansalex_settings import resolve_sale
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
     require_login()
     cid = require_str(client_id, "client_id")
-    wh = require_str(warehouse, "warehouse")
+    wh = (warehouse or "").strip()
     so_name = require_str(sales_order, "sales_order")
 
     existing = _find_by_client_id("Sales Invoice", cid)
@@ -498,8 +536,8 @@ def confirm_order(
 
     if not frappe.db.exists("Sales Order", so_name):
         frappe.throw(f"Sales Order not found: {so_name}")
-    if not frappe.db.exists("Warehouse", wh):
-        frappe.throw(f"Warehouse not found: {wh}")
+    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
+    wh = sale["warehouse"]
     so = frappe.get_doc("Sales Order", so_name)
     if int(so.docstatus or 0) != 1:
         frappe.throw(f"Sales Order {so_name} is not submitted.", frappe.ValidationError)
@@ -517,6 +555,7 @@ def confirm_order(
     # every line to the van's own warehouse explicitly.
     for item in doc.items or []:
         item.warehouse = wh
+    _apply_payment_type(doc, sale)
     doc.zatgo_client_id = cid
 
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)

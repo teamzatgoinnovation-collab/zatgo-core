@@ -6,6 +6,7 @@ Custom Frappe app extending ERPNext for ZatGo's Van Sales / Accounting / Invento
 
 - Idempotent-insert helper: `zatgo_core/services/idempotency.py::insert_idempotent`. Use it for any new create-endpoint keyed on `zatgo_client_id` rather than re-deriving the check-then-insert pattern.
 - Custom-field self-healing: `zatgo_core/setup/ensure_custom_fields.py`, called from `install.py`'s `after_install`/`after_migrate`. If you add a new schema-critical custom field, register it there too, not only in a `patches.txt` entry.
+- VanSaleX (mobile van sales) settings: Desk workspace "VanSaleX" + config-center manifest `plugins/manifests/vansalex.py`. `VanSaleX Settings` (single) + per-user `ZG Van Sale Profile` overrides are resolved by `services/vansalex_settings.py` (`resolve`, `resolve_sale`, `allowed_warehouse`) — the one place warehouse / Cash-Credit / cash-account rules live; APIs and the app both go through it. Defaults come from ERPNext first (Mode of Payment "Cash" account, Stock Settings), zatgo_core second. A missing `payment_type` on `orders.create`/`confirm` deliberately keeps pre-Cash/Credit behaviour (older app builds).
 - Integration tests live in `zatgo_core/tests/integration/` (money-path, returns, idempotency) — extend these for new financial-document endpoints rather than relying on unit tests alone.
 
 ## Known pre-existing issue (not fixed, don't be confused by it)

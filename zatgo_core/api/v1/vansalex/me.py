@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
+from zatgo_core.services.vansalex_settings import resolve as resolve_settings
 from zatgo_core.services.van_sale_access import (
     get_profile,
     is_vansale_admin,
@@ -43,6 +44,10 @@ def context() -> dict[str, Any]:
             "is_user": is_user,
             "has_vansale_access": is_vansale_admin(user) or is_vansale_user(user),
             "profile": profile,
+            # Effective VanSaleX settings (VanSaleX Settings + this user's
+            # ZG Van Sale Profile overrides) — the app renders from these
+            # and keeps none of its own; the server enforces them on write.
+            "settings": resolve_settings(user),
         },
         meta={"source": "vansalex.me"},
     )

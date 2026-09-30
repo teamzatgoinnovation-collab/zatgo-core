@@ -11,7 +11,7 @@ from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
 from zatgo_core.services.vansalex_service import confirm_order, create_order, create_sales_order
-from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
+from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
 @frappe.whitelist()
@@ -23,25 +23,24 @@ def create(
     company: str | None = None,
     trip_id: str | None = None,
     discount_percentage: float | str | None = None,
+    payment_type: str | None = None,
+    cash_account: str | None = None,
 ) -> dict[str, Any]:
-    """Direct Invoice — creates+submits a Sales Invoice immediately, no
-    Sales Order stage (order_id-equivalent NULL). Unchanged by the new
-    Order -> Confirm flow below."""
+    """Invoice — creates+submits a Sales Invoice immediately. Warehouse,
+    Cash/Credit and cash account are checked against the caller's VanSaleX
+    settings (services/vansalex_settings.resolve_sale); a Cash invoice gets
+    its Payment Entry auto-created on submit."""
     require_login()
-    wh = require_own_warehouse(warehouse)
-    if not wh:
-        frappe.throw(
-            "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
-            frappe.ValidationError,
-        )
     return create_order(
         client_id=client_id,
         customer=customer,
         items=items,
-        warehouse=wh,
+        warehouse=warehouse,
         company=company,
         trip_id=trip_id,
         discount_percentage=discount_percentage,
+        payment_type=payment_type,
+        cash_account=cash_account,
     )
 
 
@@ -74,21 +73,20 @@ def confirm(
     warehouse: str | None = None,
     company: str | None = None,
     trip_id: str | None = None,
+    payment_type: str | None = None,
+    cash_account: str | None = None,
 ) -> dict[str, Any]:
-    """Confirm a submitted Sales Order into a submitted Sales Invoice."""
+    """Confirm a submitted Sales Order into a submitted Sales Invoice
+    (Cash/Credit and warehouse as for ``create``)."""
     require_login()
-    wh = require_own_warehouse(warehouse)
-    if not wh:
-        frappe.throw(
-            "Van warehouse is required. Set warehouse on ZG Van Sale Profile or pass warehouse.",
-            frappe.ValidationError,
-        )
     return confirm_order(
         client_id=client_id,
         sales_order=sales_order,
-        warehouse=wh,
+        warehouse=warehouse,
         company=company,
         trip_id=trip_id,
+        payment_type=payment_type,
+        cash_account=cash_account,
     )
 
 
@@ -111,14 +109,9 @@ def list(
         if warehouse and frappe.db.has_column("Sales Invoice", "set_warehouse"):
             filters["set_warehouse"] = warehouse
     else:
+        # Own invoices, whichever warehouse they were sold from (a driver may
+        # be allowed to sell from more than one — see VanSaleX Settings).
         filters["owner"] = frappe.session.user
-        profile = get_profile()
-        if (
-            profile
-            and profile.get("warehouse")
-            and frappe.db.has_column("Sales Invoice", "set_warehouse")
-        ):
-            filters["set_warehouse"] = profile["warehouse"]
 
     if date:
         filters["posting_date"] = str(getdate(date))

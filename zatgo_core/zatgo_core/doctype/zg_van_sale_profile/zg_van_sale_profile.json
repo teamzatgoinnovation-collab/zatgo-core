@@ -13,6 +13,14 @@
     "warehouse",
     "vehicle",
     "route_title",
+    "app_section",
+    "cash_account",
+    "default_payment_type",
+    "allow_credit_sales",
+    "app_column",
+    "show_payment_type_on_invoice",
+    "show_warehouse_on_invoice",
+    "allow_warehouse_change",
     "invoice_section",
     "sales_invoice_naming_series",
     "sales_return_naming_series",
@@ -48,8 +56,8 @@
       "fieldtype": "Link",
       "label": "Van Warehouse",
       "options": "Warehouse",
-      "reqd": 1,
-      "in_list_view": 1
+      "in_list_view": 1,
+      "description": "Leave empty to use ZG Company Settings' default warehouse, then ERPNext Stock Settings."
     },
     {
       "fieldname": "vehicle",
@@ -65,6 +73,56 @@
       "in_list_view": 1
     },
     {
+      "fieldname": "app_section",
+      "fieldtype": "Section Break",
+      "label": "VanSaleX App (blank / Inherit = use VanSaleX Settings)"
+    },
+    {
+      "fieldname": "cash_account",
+      "fieldtype": "Link",
+      "label": "Cash Account",
+      "options": "Account",
+      "description": "Account that receives Cash invoices. Leave empty to use the company's Mode of Payment \"Cash\" default account."
+    },
+    {
+      "fieldname": "default_payment_type",
+      "fieldtype": "Select",
+      "label": "Default Payment Type",
+      "options": "\nCash\nCredit"
+    },
+    {
+      "fieldname": "allow_credit_sales",
+      "fieldtype": "Select",
+      "label": "Allow Credit Sales",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
+      "fieldname": "app_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "show_payment_type_on_invoice",
+      "fieldtype": "Select",
+      "label": "Show Cash / Credit on Invoice",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
+      "fieldname": "show_warehouse_on_invoice",
+      "fieldtype": "Select",
+      "label": "Show Warehouse on Invoice",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
+      "fieldname": "allow_warehouse_change",
+      "fieldtype": "Select",
+      "label": "Allow Changing Warehouse",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
       "fieldname": "invoice_section",
       "fieldtype": "Section Break",
       "label": "Invoice Settings (ERPNext)"
@@ -74,7 +132,7 @@
       "fieldtype": "Select",
       "label": "Sales Invoice Naming Series",
       "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
-      "description": "Invoice number series from ERPNext Sales Invoice. Leave empty to use the Sales Invoice DocType default (Selling → Sales Invoice naming)."
+      "description": "Invoice number series from ERPNext Sales Invoice. Leave empty to use the Sales Invoice DocType default (Selling \u2192 Sales Invoice naming)."
     },
     {
       "fieldname": "sales_return_naming_series",
@@ -91,7 +149,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-07-23 19:40:00.000000",
+  "modified": "2026-09-30 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Van Sale Profile",

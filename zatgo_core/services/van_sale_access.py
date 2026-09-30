@@ -77,6 +77,12 @@ def require_own_warehouse(requested: str | None = None) -> str:
     profile = get_profile()
     user_wh = (profile.get("warehouse") if profile else "") or ""
     if not user_wh:
+        # No warehouse on the profile: the company default applies
+        # (ZG Company Settings, then ERPNext Stock Settings).
+        from zatgo_core.services.vansalex_settings import resolve
+
+        user_wh = resolve().get("warehouse") or ""
+    if not user_wh:
         frappe.throw("No van warehouse assigned to your profile.", frappe.ValidationError)
     if wh and wh != user_wh:
         frappe.throw(
