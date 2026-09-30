@@ -159,6 +159,105 @@ def list(
 
 
 @frappe.whitelist()
+def list_sales_orders(
+    page: int | str = 1,
+    page_size: int | str = 20,
+    sales_user: str | None = None,
+    date: str | None = None,
+) -> dict[str, Any]:
+    """List Sales Orders from the Order -> Confirm -> Invoice flow.
+
+    Same scoping as ``list``: admins may filter by owner, a field user only
+    ever sees their own. Each row carries its lines and, once confirmed, the
+    Sales Invoice it became — so a client with no local store can reprint the
+    order receipt or offer Confirm straight from this list.
+    """
+    require_login()
+    page_i, size_i, start = parse_pagination(page, page_size)
+    filters: dict[str, Any] = {"docstatus": ["<", 2]}
+    if is_vansale_admin():
+        if sales_user:
+            filters["owner"] = sales_user
+    else:
+        filters["owner"] = frappe.session.user
+    if date:
+        filters["transaction_date"] = str(getdate(date))
+
+    total = frappe.db.count("Sales Order", filters)
+    rows = frappe.get_all(
+        "Sales Order",
+        filters=filters,
+        fields=[
+            "name",
+            "customer",
+            "customer_name",
+            "transaction_date",
+            "status",
+            "docstatus",
+            "per_billed",
+            "net_total",
+            "total_taxes_and_charges",
+            "grand_total",
+            "additional_discount_percentage",
+            "zatgo_client_id",
+            "creation",
+        ],
+        order_by="creation desc",
+        start=start,
+        page_length=size_i,
+    )
+    names = [r.name for r in rows]
+    items_by_order: dict[str, list[dict[str, Any]]] = {n: [] for n in names}
+    invoice_by_order: dict[str, str] = {}
+    if names:
+        for it in frappe.get_all(
+            "Sales Order Item",
+            filters={"parent": ["in", names]},
+            fields=["parent", "item_code", "item_name", "qty", "rate"],
+            order_by="idx asc",
+        ):
+            items_by_order[it.parent].append(
+                {
+                    "item_code": it.item_code,
+                    "item_name": it.item_name,
+                    "qty": float(it.qty or 0),
+                    "rate": float(it.rate or 0),
+                }
+            )
+        for si in frappe.get_all(
+            "Sales Invoice Item",
+            filters={"sales_order": ["in", names], "docstatus": 1},
+            fields=["sales_order", "parent"],
+        ):
+            invoice_by_order.setdefault(si.sales_order, si.parent)
+
+    data = [
+        {
+            "id": r.name,
+            "name": r.name,
+            "client_id": r.zatgo_client_id,
+            "customer": r.customer_name or r.customer,
+            "customer_id": r.customer,
+            "date": str(r.transaction_date or ""),
+            "created_at": str(r.creation or ""),
+            "status": r.status,
+            "docstatus": int(r.docstatus or 0),
+            "per_billed": float(r.per_billed or 0),
+            "net_total": float(r.net_total or 0),
+            "total_taxes_and_charges": float(r.total_taxes_and_charges or 0),
+            "grand_total": float(r.grand_total or 0),
+            "discount_percentage": float(r.additional_discount_percentage or 0),
+            "sales_invoice": invoice_by_order.get(r.name),
+            "items": items_by_order.get(r.name, []),
+        }
+        for r in rows
+    ]
+    payload = paginated(data, page=page_i, page_size=size_i, total=total)
+    payload["meta"] = {**payload.get("meta", {}), "source": "Sales Order"}
+    return payload
+
+
+@frappe.whitelist()
 def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     """Return Sales Invoice PDF (base64) using VanSale Tax Invoice format."""
     import base64
