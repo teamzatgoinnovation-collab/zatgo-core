@@ -541,6 +541,11 @@ def confirm_order(
     so = frappe.get_doc("Sales Order", so_name)
     if int(so.docstatus or 0) != 1:
         frappe.throw(f"Sales Order {so_name} is not submitted.", frappe.ValidationError)
+    # A field user may only invoice their own orders (from their own stock).
+    if not is_vansale_admin() and so.owner != frappe.session.user:
+        frappe.throw(
+            "Access denied: you can only convert your own orders.", frappe.PermissionError
+        )
 
     frappe.has_permission("Sales Invoice", "create", throw=True)
 
@@ -790,9 +795,21 @@ def create_collection(
     si_name = (sales_invoice or "").strip()
     if si_name:
         # Caller explicitly targeted one invoice — single-reference payment
-        # against exactly that invoice, as before.
-        if not frappe.db.exists("Sales Invoice", si_name):
+        # against exactly that invoice. It must be an open invoice of the
+        # customer that passed the access check above; otherwise the payment
+        # would post against a different customer's receivable.
+        si = frappe.db.get_value(
+            "Sales Invoice", si_name, ["customer", "docstatus", "outstanding_amount"], as_dict=True
+        )
+        if not si:
             frappe.throw(f"Sales Invoice {si_name} not found")
+        if si.customer != party:
+            frappe.throw(
+                f"Sales Invoice {si_name} belongs to a different customer.",
+                frappe.PermissionError,
+            )
+        if int(si.docstatus or 0) != 1 or flt(si.outstanding_amount) <= 0:
+            frappe.throw(f"Sales Invoice {si_name} has nothing outstanding.")
         pe = get_payment_entry("Sales Invoice", si_name, party_amount=paid)
     else:
         # No specific invoice named (the only path the Flutter app actually

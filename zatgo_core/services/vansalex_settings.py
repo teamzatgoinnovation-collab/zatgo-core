@@ -197,7 +197,8 @@ def selectable_warehouses() -> list[dict[str, Any]]:
     if not (eff["allow_warehouse_change"] or is_vansale_admin()):
         names = [eff["warehouse"]] if eff["warehouse"] else []
     else:
-        filters: dict[str, Any] = {"is_group": 0, "disabled": 0}
+        # Sellable stock only: leaf, enabled, not a Transit warehouse.
+        filters: dict[str, Any] = {"is_group": 0, "disabled": 0, "warehouse_type": ["!=", "Transit"]}
         if eff["company"]:
             filters["company"] = eff["company"]
         names = frappe.get_all("Warehouse", filters=filters, pluck="name", order_by="name asc")

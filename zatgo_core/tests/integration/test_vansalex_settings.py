@@ -296,3 +296,40 @@ class TestVansalexSettings(IntegrationTestCase):
         self._set_profile(restrict_collections_to_route="No")
         self.assertEqual(resolve(self.user)["restrict_collections_to_route"], 0)
         self.assertTrue(self._collect(other)["success"])
+
+    def test_collection_cannot_target_another_customers_invoice(self) -> None:
+        # Allowed customer + someone else's invoice must be refused, or the
+        # payment would post against the other customer's receivable.
+        self._sell(warehouse=self.warehouse, payment_type="Credit")
+        other = self._make_customer(f"Settings Other {random_string(8)}")
+        self._admin_invoice_for(other)
+        other_si = frappe.get_all(
+            "Sales Invoice", filters={"customer": other, "docstatus": 1}, pluck="name"
+        )[0]
+        frappe.set_user(self.user)
+        with self.assertRaises(frappe.PermissionError):
+            create_collection(
+                client_id=f"test-settings-col-{random_string(8)}",
+                customer=self.customer,
+                amount=5,
+                sales_invoice=other_si,
+            )
+
+    def test_driver_cannot_convert_another_drivers_order(self) -> None:
+        from zatgo_core.services.vansalex_service import confirm_order, create_sales_order
+
+        other_driver = self._make_van_user(self.warehouse)
+        frappe.set_user(other_driver)
+        so = create_sales_order(
+            client_id=f"test-settings-so-{random_string(8)}",
+            customer=self.customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+        )["data"]["erp_name"]
+        frappe.set_user(self.user)
+        with self.assertRaises(frappe.PermissionError):
+            confirm_order(
+                client_id=f"test-settings-cf-{random_string(8)}",
+                sales_order=so,
+                payment_type="Credit",
+            )
+
