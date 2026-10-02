@@ -47,3 +47,17 @@ def resolve_series_for_return_state(current: str, options: list[str], is_return:
 
     stripped = strip_return_marker(current)
     return stripped if stripped != current and stripped in options else None
+
+
+def counter_collision(prefix_a: str, prefix_b: str) -> bool:
+    """True when two different series counters can emit the same name.
+
+    A series emits `<counter prefix><zero-padded number>`. Equal prefixes share
+    one tabSeries counter, so numbers never repeat. But if one prefix is the
+    other plus only digits, two separate counters overlap: "S1-.##" at 101 and
+    "S1-1.##" at 01 both produce "S1-101".
+    """
+    if not prefix_a or not prefix_b or prefix_a == prefix_b:
+        return False
+    short, long_ = sorted((prefix_a, prefix_b), key=len)
+    return long_.startswith(short) and long_[len(short) :].isdigit()

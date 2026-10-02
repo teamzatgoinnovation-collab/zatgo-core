@@ -23,7 +23,9 @@ def _load_naming_series_module():
     return module
 
 
-resolve_series_for_return_state = _load_naming_series_module().resolve_series_for_return_state
+_module = _load_naming_series_module()
+resolve_series_for_return_state = _module.resolve_series_for_return_state
+counter_collision = _module.counter_collision
 
 
 class TestResolveSeriesForReturnState(unittest.TestCase):
@@ -55,6 +57,26 @@ class TestResolveSeriesForReturnState(unittest.TestCase):
     def test_empty_current_is_untouched(self) -> None:
         result = resolve_series_for_return_state("", ["SINV-", "SINV-RET-"], is_return=True)
         self.assertIsNone(result)
+
+
+
+class TestCounterCollision(unittest.TestCase):
+    def test_same_prefix_is_one_shared_counter_not_a_collision(self) -> None:
+        self.assertFalse(counter_collision("S1-", "S1-"))
+
+    def test_return_prefix_never_collides_with_its_invoice_prefix(self) -> None:
+        self.assertFalse(counter_collision("S1-", "S1-RET-"))
+        self.assertFalse(counter_collision("V1-RET-", "V1-"))
+
+    def test_prefix_extended_only_by_digits_collides(self) -> None:
+        # "S1-.##" at 101 and "S1-1.##" at 01 both produce "S1-101".
+        self.assertTrue(counter_collision("S1-", "S1-1"))
+        self.assertTrue(counter_collision("S1-0", "S1-"))
+
+    def test_unrelated_or_unknown_prefixes_do_not_collide(self) -> None:
+        self.assertFalse(counter_collision("S1-", "V1-"))
+        self.assertFalse(counter_collision("S1-", "S1-A1"))
+        self.assertFalse(counter_collision(None, "S1-"))
 
 
 if __name__ == "__main__":

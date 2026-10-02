@@ -23,8 +23,7 @@
     "allow_warehouse_change",
     "restrict_collections_to_route",
     "invoice_section",
-    "sales_invoice_naming_series",
-    "sales_return_naming_series",
+    "invoice_naming_note",
     "notes"
   ],
   "fields": [
@@ -133,21 +132,12 @@
     {
       "fieldname": "invoice_section",
       "fieldtype": "Section Break",
-      "label": "Invoice Settings (ERPNext)"
+      "label": "Invoice Numbering"
     },
     {
-      "fieldname": "sales_invoice_naming_series",
-      "fieldtype": "Select",
-      "label": "Sales Invoice Naming Series",
-      "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
-      "description": "Invoice number series from ERPNext Sales Invoice. Leave empty to use the Sales Invoice DocType default (Selling \u2192 Sales Invoice naming)."
-    },
-    {
-      "fieldname": "sales_return_naming_series",
-      "fieldtype": "Select",
-      "label": "Sales Return Naming Series",
-      "options": "\nACC-SINV-.YYYY.-\nACC-SINV-RET-.YYYY.-",
-      "description": "Number series used for Sales Returns (credit notes). Leave empty to use ACC-SINV-RET-.YYYY.-."
+      "fieldname": "invoice_naming_note",
+      "fieldtype": "HTML",
+      "options": "<p class=\"text-muted small\">Which Sales Invoice and Sales Return series this user gets is set per user and company in <a href=\"/app/zg-sales-invoice-naming-settings\">ZG Sales Invoice Naming Settings</a>.</p>"
     },
     {
       "fieldname": "notes",
@@ -157,7 +147,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-09-30 00:00:00.000000",
+  "modified": "2026-10-02 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Van Sale Profile",

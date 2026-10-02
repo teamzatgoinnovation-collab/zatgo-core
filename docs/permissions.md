@@ -10,6 +10,7 @@
 | ZG Application Admin | Apps, feature flags, integrations |
 | ZG Read Only | Read settings / audit / reports |
 | Delivery | Delivery app login — linked `ZG Delivery Boy.user`; read/write own stops |
+| ZG Invoice Naming Manager | Edit `ZG Sales Invoice Naming Settings` (which series each user's invoices/returns get). System Manager and Accounts Manager can too; nobody else, including Sales/VanSale users, can read it |
 
 ## Category matrix (service guards)
 

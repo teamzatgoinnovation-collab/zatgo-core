@@ -12,6 +12,8 @@ ROLES = {
     "DELIVERY": "Delivery",
     "VANSALE_USER": "VanSale User",
     "VANSALE_ADMIN": "VanSale Admin",
+    # Manages ZG Sales Invoice Naming Settings (user-wise invoice series).
+    "INVOICE_NAMING_MANAGER": "ZG Invoice Naming Manager",
 }
 
 # Which roles may write which settings categories.

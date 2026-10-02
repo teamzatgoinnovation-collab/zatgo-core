@@ -1,0 +1,89 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-02 00:00:00.000000",
+  "description": "Which naming series each user's Sales Invoices and Sales Returns get, per company.",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "rules_section",
+    "rules",
+    "behavior_section",
+    "unmapped_user_behavior"
+  ],
+  "fields": [
+    {
+      "fieldname": "rules_section",
+      "fieldtype": "Section Break",
+      "label": "User-wise Sales Invoice Naming"
+    },
+    {
+      "fieldname": "rules",
+      "fieldtype": "Table",
+      "label": "Rules",
+      "options": "ZG Sales Invoice Naming Rule",
+      "description": "Normal invoices by the user in that company get the Invoice Series; Sales Returns (credit notes) get the Return Series. Enforced on the server for the desk, the REST API and the VanSaleX app; whatever series the request carried is replaced. Existing invoices are never renamed. Series must first exist under Selling Settings → Document Naming → Sales Invoice."
+    },
+    {
+      "fieldname": "behavior_section",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "unmapped_user_behavior",
+      "fieldtype": "Select",
+      "label": "Users Without a Rule",
+      "options": "Use ERPNext default series\nBlock Sales Invoice creation",
+      "default": "Use ERPNext default series",
+      "reqd": 1,
+      "description": "Use ERPNext default series: they keep ERPNext's normal behaviour (the Series on the invoice; returns switch to its -RET- series). Block: they can't create Sales Invoices or Sales Returns until they get a rule. Administrator (scheduler jobs, Auto Repeat, Subscriptions) is never blocked."
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-02 00:00:01.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Sales Invoice Naming Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 0,
+      "email": 0,
+      "export": 0,
+      "share": 0
+    },
+    {
+      "role": "Accounts Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 0,
+      "email": 0,
+      "export": 0,
+      "share": 0
+    },
+    {
+      "role": "ZG Invoice Naming Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 0,
+      "email": 0,
+      "export": 0,
+      "share": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
+from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
 def boot_session(bootinfo: Any) -> None:
@@ -39,6 +40,9 @@ def boot_session(bootinfo: Any) -> None:
             "system": system,
             "feature_flags": flags,
             "version": __version__,
+            # This user's own invoice/return series per company, for the
+            # Sales Invoice form (public/js/sales_invoice.js).
+            "sales_invoice_naming": get_session_user_series(),
         }
     except Exception:
         frappe.logger("zatgo_core").exception("boot_session enrichment failed")

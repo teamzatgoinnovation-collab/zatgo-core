@@ -15,6 +15,7 @@ Module: **ZatGo Core**
 | ZG Security Settings | Password policy, OTP/2FA, session, IP/devices, audit, API keys |
 | ZG Sync Settings | Offline mode, interval, retry, conflict strategy, Redis queue |
 | ZG Number Series Settings | Child table of prefixes/sequences for all document types |
+| ZG Sales Invoice Naming Settings | User-wise Sales Invoice naming: (user, company) → invoice series + return series, and what happens to users without a rule. Enforced in the Sales Invoice `before_insert` hook by `services/sales_invoice_naming.py` for every entry point (desk, REST, VanSaleX API, Create Return) |
 
 ## List DocTypes
 
@@ -32,6 +33,7 @@ Module: **ZatGo Core**
 ## Child tables
 
 - `ZG Number Series Item` → parent `ZG Number Series Settings.series_items`
+- `ZG Sales Invoice Naming Rule` → parent `ZG Sales Invoice Naming Settings.rules` (one row per user + company)
 
 ## Why not literal "System Settings"?
 

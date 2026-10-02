@@ -29,8 +29,28 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 	refresh(frm) {
 		show_payment_type_hint(frm);
+		show_user_naming_series(frm);
+	},
+	company(frm) {
+		show_user_naming_series(frm);
+	},
+	is_return(frm) {
+		show_user_naming_series(frm);
 	},
 });
+
+// User-wise naming series (ZG Sales Invoice Naming Settings). The server sets
+// naming_series on insert regardless (zatgo_core/events/sales_invoice_naming.py);
+// this only shows the user the series the invoice is actually going to get.
+function show_user_naming_series(frm) {
+	if (!frm.is_new() || frm.doc.amended_from) return;
+	const rules = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.sales_invoice_naming) || {};
+	const rule = rules[frm.doc.company];
+	frm.set_df_property("naming_series", "read_only", rule ? 1 : 0);
+	if (!rule) return;
+	const series = frm.doc.is_return ? rule.return_series : rule.normal_series;
+	if (frm.doc.naming_series !== series) frm.set_value("naming_series", series);
+}
 
 function prefill_cash_account(frm) {
 	if (frm.doc.custom_payment_type !== "Cash" || frm.doc.custom_cash_account || !frm.doc.company) {

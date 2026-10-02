@@ -28,6 +28,8 @@ doctype_js = {
     "Sales Invoice": "public/js/sales_invoice.js",
     "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
+    # Link from Document Naming to the user-wise Sales Invoice series page.
+    "Selling Settings": "public/js/selling_settings.js",
 }
 
 # Exposes tlv_to_png_data_uri() to print-format Jinja templates. Calling it
@@ -49,7 +51,7 @@ doc_events = {
         "on_update": "zatgo_core.events.company.on_company_update",
     },
     "Sales Invoice": {
-        "before_insert": "zatgo_core.events.return_naming.sync_naming_series",
+        "before_insert": "zatgo_core.events.sales_invoice_naming.set_naming_series",
         "validate": "zatgo_core.events.print_fields.populate_print_fields",
         "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
@@ -85,6 +87,7 @@ fixtures = [
                     "ZG Read Only",
                     "VanSale User",
                     "VanSale Admin",
+                    "ZG Invoice Naming Manager",
                 ],
             ]
         ],

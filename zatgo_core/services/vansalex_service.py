@@ -240,12 +240,8 @@ def create_order(
                 if rate is not None:
                     row["rate"] = flt(rate)
 
-    # Invoice number series: ZG Van Sale Profile → ERPNext Sales Invoice default.
-    naming_series = ""
-    profile = get_profile()
-    if profile:
-        naming_series = (profile.get("sales_invoice_naming_series") or "").strip()
-
+    # No naming_series here: the Sales Invoice before_insert hook picks it from
+    # the caller's rule in ZG Sales Invoice Naming Settings (or ERPNext's default).
     doc_payload: dict[str, Any] = {
         "doctype": "Sales Invoice",
         "customer": party,
@@ -257,8 +253,6 @@ def create_order(
         "set_warehouse": wh,
     }
     _apply_payment_type(doc_payload, sale)
-    if naming_series:
-        doc_payload["naming_series"] = naming_series
     if pct > 0:
         # Discount is applied to Net Total (before tax), not Grand Total —
         # ZATCA requires VAT to be computed on the actual discounted
@@ -747,16 +741,10 @@ def create_sales_return(
     if reason:
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
 
-    profile = get_profile()
-    if profile:
-        return_series = (profile.get("sales_return_naming_series") or "").strip()
-        if return_series:
-            doc.naming_series = return_series
-    # Otherwise leave naming_series as inherited from make_return_doc() --
-    # zatgo_core.events.return_naming.sync_naming_series (before_insert)
-    # switches it to the site's actual configured "-RET-" series. The old
-    # hardcoded "ACC-SINV-RET-.YYYY.-" fallback assumed a prefix convention
-    # that doesn't match every site (kasibasia's is plain "SINV-RET-").
+    # naming_series is left to the Sales Invoice before_insert hook
+    # (events/sales_invoice_naming.py): the caller's return series from ZG Sales
+    # Invoice Naming Settings, else the site's configured "-RET-" counterpart.
+    # Never the original's number: the return is a new document in its own series.
 
     doc.run_method("calculate_taxes_and_totals")
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
