@@ -72,8 +72,10 @@ _HTML = r"""
 {%- set pad = 8 - n_items if n_items < 8 else 0 -%}
 
 <div class="vti">
-  <div class="vti-title">TAX INVOICE</div>
-  <div class="vti-title-ar">فاتورة ضريبية</div>
+  {#- A return is a credit note, not a second tax invoice. -#}
+  <div class="vti-title">{{ "CREDIT NOTE" if doc.get("is_return") else "TAX INVOICE" }}</div>
+  <div class="vti-title-ar">{{ "إشعار دائن" if doc.get("is_return") else "فاتورة ضريبية" }}</div>
+  {% if doc.get("is_return") and doc.get("return_against") %}<div style="text-align:center;margin:-8px 0 10px">Against Invoice: {{ doc.return_against }}</div>{% endif %}
 
   <table class="vti-head">
     <tr>
@@ -181,7 +183,7 @@ _HTML = r"""
           <tr>
             <td class="k">Total Gross</td>
             <td class="ar">مجموع إجمالي</td>
-            <td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.net_total or doc.total)) }}</td>
+            <td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.total)) }}</td>
           </tr>
           <tr>
             <td class="k">Discount</td>
@@ -212,29 +214,20 @@ _HTML = r"""
 
 PRINT_FORMAT_80MM_NAME = "VanSale Tax Invoice 80mm"
 
-# @page CSS is the standard Frappe/wkhtmltopdf mechanism for a thermal page
-# size — there's no dedicated Print Format doctype field for it.
-_CSS_80MM = "@page { size: 80mm auto; margin: 2mm; }"
+# Page size: Frappe ignores CSS @page — it reads wkhtmltopdf's page-width /
+# page-height / margins from a `.print-format { ... }` rule in the rendered
+# HTML (frappe.utils.pdf.read_options_from_html). The rule is emitted from the
+# template itself so the roll length follows the receipt's content; a static
+# "@page { size: 80mm auto }" (the old approach) produced an A4 page with the
+# receipt in its top-left corner. Nothing is left in the Print Format's CSS.
+_CSS_80MM = ""
 
-# Compact stacked layout (no wide item table) for a ~72mm printable width.
+# Dedicated thermal layout for a 72mm printable width (80mm roll, 4mm side
+# margins). Tables, not flexbox: wkhtmltopdf's WebKit has no flex support, so
+# the old flex rows lost their right-aligned numbers. Amounts on a return are
+# printed as magnitudes under a CREDIT NOTE heading, matching the ZATCA QR
+# (services/zatca_qr.py), which also encodes magnitudes for returns.
 _HTML_80MM = r"""
-<style>
-  .vt80 { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10px; color: #111; width: 100%; }
-  .vt80 .c { text-align: center; }
-  .vt80 .title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
-  .vt80 .title-ar { font-size: 11px; font-weight: 700; direction: rtl; margin: 0 0 6px; }
-  .vt80 hr { border: none; border-top: 1px dashed #333; margin: 4px 0; }
-  .vt80 .row { display: flex; justify-content: space-between; }
-  .vt80 .item { margin: 3px 0; }
-  .vt80 .item .name { font-size: 9px; }
-  .vt80 .item .sub { font-size: 9px; color: #333; display: flex; justify-content: space-between; }
-  .vt80 .totals td { padding: 1px 0; font-size: 10px; }
-  .vt80 .totals .v { text-align: right; }
-  .vt80 .grand { font-size: 11px; font-weight: 700; }
-  .vt80 .qr { text-align: center; margin-top: 6px; }
-  .vt80 .qr img { width: 90px; height: 90px; }
-  .vt80 .foot { text-align: center; font-size: 8px; margin-top: 4px; }
-</style>
 {%- set company = frappe.get_doc("Company", doc.company) -%}
 {%- set settings = None -%}
 {%- if frappe.db.exists("DocType", "ZG Company Settings") -%}
@@ -242,39 +235,130 @@ _HTML_80MM = r"""
   {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
 {%- endif -%}
 {%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
+{%- set cr = company.get("company_registration") or company.get("registration_details") or "" -%}
+{%- set phone = company.phone_no or "" -%}
+{%- set cust_tax = frappe.db.get_value("Customer", doc.customer, "tax_id") or "" -%}
+{%- set is_ret = doc.get("is_return") -%}
+{%- set sign = -1 if is_ret else 1 -%}
 {%- set qr_uri = tlv_to_png_data_uri(doc.get("zatca_qr_base64")) if doc.get("zatca_qr_base64") else "" -%}
-
-<div class="vt80">
-  <div class="title c">{{ company.company_name }}</div>
-  <div class="c" style="font-size:9px">VAT: {{ vat_no or "—" }}</div>
-  <div class="title-ar c">{{ "فاتورة ضريبية مبسطة" if not doc.get("is_return") else "إشعار دائن" }}</div>
-  <div class="c" style="font-size:9px;font-weight:700">
-    {{ "CREDIT NOTE" if doc.get("is_return") else "SIMPLIFIED TAX INVOICE" }}
-  </div>
+{%- set cur = doc.currency or company.default_currency or "" -%}
+{#- Payments: POS rows on the invoice itself, else submitted Payment Entries
+    allocated against it (the auto-created Cash payment). -#}
+{%- set pays = [] -%}
+{%- for p in (doc.get("payments") or []) -%}
+  {%- if p.amount -%}{%- set _ = pays.append([p.mode_of_payment, p.amount]) -%}{%- endif -%}
+{%- endfor -%}
+{%- if not pays and not is_ret -%}
+  {%- for r in frappe.get_all("Payment Entry Reference", filters={"reference_doctype": "Sales Invoice", "reference_name": doc.name, "docstatus": 1}, fields=["parent", "allocated_amount"]) -%}
+    {%- set _ = pays.append([frappe.db.get_value("Payment Entry", r.parent, "mode_of_payment") or "Payment", r.allocated_amount]) -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- set taxes = (doc.taxes or [])|selectattr("tax_amount")|list -%}
+{#- Roll length in mm: fixed blocks + one estimate per item/tax/payment row,
+    with a line per ~30 characters of item name. Generous on purpose — a short
+    blank tail is better than a receipt split over two pages. -#}
+{%- set ns = namespace(h=90) -%}
+{%- for item in doc.items -%}
+  {%- set ns.h = ns.h + 5 + 4 * (((item.item_name or item.item_code)|length) // 30 + 1) -%}
+{%- endfor -%}
+{%- set ns.h = ns.h + 5 * (taxes|length) + 5 * (pays|length) -%}
+{%- if doc.discount_amount -%}{%- set ns.h = ns.h + 10 -%}{%- endif -%}
+{%- if doc.get("rounding_adjustment") -%}{%- set ns.h = ns.h + 10 -%}{%- endif -%}
+{%- if qr_uri -%}{%- set ns.h = ns.h + 34 -%}{%- endif -%}
+{%- macro amt(v) -%}{{ "{:,.2f}".format(sign * frappe.utils.flt(v)) }}{%- endmacro -%}
+<style>
+  .print-format {
+    page-width: 80mm; page-height: {{ ns.h }}mm;
+    margin-top: 2mm; margin-bottom: 2mm; margin-left: 4mm; margin-right: 4mm;
+    padding: 0 !important; width: auto !important; max-width: none !important;
+  }
+  .letter-head, .letter-head-footer { display: none !important; }
+  .t80 { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; color: #000; width: 100%; line-height: 1.3; }
+  .t80 .c { text-align: center; }
+  .t80 .b { font-weight: 700; }
+  .t80 .co { font-size: 15px; font-weight: 700; }
+  .t80 .ttl { font-size: 13px; font-weight: 700; margin-top: 3px; }
+  .t80 .ar { direction: rtl; }
+  .t80 hr { border: none; border-top: 1px dashed #000; margin: 4px 0; }
+  .t80 table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0 !important; }
+  /* !important: Frappe's print stylesheet pads table cells for A4. */
+  .t80 td, .t80 th { padding: 1px 0 !important; border: none !important; vertical-align: top; font-size: 11px; line-height: 1.3; }
+  .t80 th { font-weight: 700; text-align: left; color: #000 !important; background: none !important; }
+  .t80 .r { text-align: right; white-space: nowrap; }
+  .t80 .nm { word-wrap: break-word; overflow-wrap: break-word; padding-top: 3px !important; }
+  .t80 .meta td.k { width: 30%; }
+  .t80 .grand td { font-size: 14px; font-weight: 700; padding-top: 3px !important; }
+  .t80 .qr { text-align: center; margin-top: 6px; }
+  .t80 .qr img { width: 30mm; height: 30mm; }
+  .t80 .foot { text-align: center; font-size: 10px; margin-top: 4px; }
+</style>
+<div class="t80">
+  <div class="c co">{{ company.company_name }}</div>
+  {% if vat_no %}<div class="c">VAT: {{ vat_no }}</div>{% endif %}
+  {% if cr %}<div class="c">CR: {{ cr }}</div>{% endif %}
+  {% if phone %}<div class="c">Phone: {{ phone }}</div>{% endif %}
   <hr/>
-  <div style="font-size:9px">Invoice: {{ doc.name }}</div>
-  <div style="font-size:9px">Date: {{ frappe.utils.formatdate(doc.posting_date, "dd-MM-yyyy") }}</div>
-  <div style="font-size:9px">Customer: {{ doc.customer_name or doc.customer }}</div>
-  {% if doc.get("return_against") %}<div style="font-size:9px">Against: {{ doc.return_against }}</div>{% endif %}
+  <div class="c ttl">{{ "CREDIT NOTE" if is_ret else "SIMPLIFIED TAX INVOICE" }}</div>
+  <div class="c b ar">{{ "إشعار دائن" if is_ret else "فاتورة ضريبية مبسطة" }}</div>
   <hr/>
-  {% for item in doc.items %}
-  <div class="item">
-    <div class="name">{{ item.item_name or item.item_code }}</div>
-    <div class="sub">
-      <span>{{ "%.2f"|format(frappe.utils.flt(item.qty)) }} x {{ "%.2f"|format(frappe.utils.flt(item.rate)) }}</span>
-      <span>{{ "%.2f"|format(frappe.utils.flt(item.amount)) }}</span>
-    </div>
-  </div>
-  {% endfor %}
+  <table class="meta">
+    <tr><td class="k">{{ "Credit Note" if is_ret else "Invoice" }}</td><td class="b">{{ doc.name }}</td></tr>
+    {% if is_ret and doc.get("return_against") %}<tr><td class="k">Against</td><td>{{ doc.return_against }}</td></tr>{% endif %}
+    <tr><td class="k">Date</td><td>{{ frappe.utils.formatdate(doc.posting_date, "dd/MM/yyyy") }}{% if doc.get("posting_time") %} {{ frappe.utils.format_time(doc.posting_time, "HH:mm") }}{% endif %}</td></tr>
+    <tr><td class="k">Customer</td><td>{{ doc.customer_name or doc.customer }}</td></tr>
+    {% if cust_tax %}<tr><td class="k">VAT</td><td>{{ cust_tax }}</td></tr>{% endif %}
+  </table>
   <hr/>
-  <table class="totals" style="width:100%">
-    <tr><td>Total VAT</td><td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.total_taxes_and_charges)) }}</td></tr>
-    <tr class="grand"><td>GRAND TOTAL</td><td class="v">{{ "%.2f"|format(frappe.utils.flt(doc.grand_total)) }}</td></tr>
+  <table>
+    <colgroup><col style="width:34%"/><col style="width:30%"/><col style="width:36%"/></colgroup>
+    <tr><th>QTY</th><th class="r">PRICE</th><th class="r">AMOUNT</th></tr>
+  </table>
+  <hr/>
+  <table>
+    <colgroup><col style="width:34%"/><col style="width:30%"/><col style="width:36%"/></colgroup>
+    {% for item in doc.items %}
+    <tr><td colspan="3" class="nm">{{ item.item_name or item.item_code }}</td></tr>
+    <tr>
+      {%- set q = sign * frappe.utils.flt(item.qty) -%}
+      <td>{{ q|int if q == q|int else "%.2f"|format(q) }} {{ item.uom or "" }}</td>
+      <td class="r">{{ "{:,.2f}".format(frappe.utils.flt(item.rate)) }}</td>
+      <td class="r">{{ amt(item.amount) }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <hr/>
+  <table>
+    <colgroup><col style="width:62%"/><col style="width:38%"/></colgroup>
+    <tr><td>Subtotal</td><td class="r">{{ amt(doc.total) }}</td></tr>
+    {% if doc.discount_amount %}
+    <tr><td>Discount{% if doc.get("additional_discount_percentage") %} ({{ frappe.utils.flt(doc.additional_discount_percentage)|round(2) }}%){% endif %}</td><td class="r">-{{ amt(doc.discount_amount) }}</td></tr>
+    <tr><td>Net Total</td><td class="r">{{ amt(doc.net_total) }}</td></tr>
+    {% endif %}
+    {% for t in taxes %}
+    <tr><td>{{ t.description or t.account_head }}{% if t.rate and "%" not in (t.description or "") %} {{ frappe.utils.flt(t.rate)|round(2) }}%{% endif %}</td><td class="r">{{ amt(t.tax_amount_after_discount_amount or t.tax_amount) }}</td></tr>
+    {% endfor %}
+    <tr class="grand"><td>TOTAL {{ cur }}</td><td class="r">{{ amt(doc.grand_total) }}</td></tr>
+    {% if doc.get("rounding_adjustment") %}
+    <tr><td>Rounding</td><td class="r">{{ amt(doc.rounding_adjustment) }}</td></tr>
+    <tr class="b"><td>Rounded Total</td><td class="r">{{ amt(doc.rounded_total) }}</td></tr>
+    {% endif %}
+  </table>
+  <hr/>
+  <table>
+    <colgroup><col style="width:62%"/><col style="width:38%"/></colgroup>
+    {% if is_ret %}
+    <tr class="b"><td>Credit Balance</td><td class="r">{{ amt(doc.outstanding_amount) }}</td></tr>
+    {% else %}
+    {% if doc.get("custom_payment_type") %}<tr><td>Payment</td><td class="r b">{{ doc.custom_payment_type|upper }}</td></tr>{% endif %}
+    {% for p in pays %}<tr><td>Paid ({{ p[0] }})</td><td class="r">{{ amt(p[1]) }}</td></tr>{% endfor %}
+    <tr class="b"><td>Balance Due</td><td class="r">{{ amt(doc.outstanding_amount) }}</td></tr>
+    {% endif %}
   </table>
   {% if qr_uri %}
   <div class="qr"><img src="{{ qr_uri }}" alt="QR"/></div>
   {% endif %}
-  <div class="foot">ZATCA Compliant E-Invoice</div>
+  <hr/>
+  <div class="foot b">Thank You &middot; شكراً لكم</div>
 </div>
 """
 
