@@ -26,3 +26,4 @@ zatgo_core.patches.v0_2_2.add_print_count_field
 zatgo_core.patches.v0_2_3.add_purchase_invoice_payment_type_field
 zatgo_core.patches.v0_2_3.add_purchase_invoice_cash_account_field
 zatgo_core.patches.v0_2_3.move_van_profile_series_to_naming_rules
+zatgo_core.patches.v0_2_4.add_multi_payment_fields

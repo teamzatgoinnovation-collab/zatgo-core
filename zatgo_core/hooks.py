@@ -28,6 +28,7 @@ doctype_js = {
     "Sales Invoice": "public/js/sales_invoice.js",
     "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
+    "Mode of Payment": "public/js/mode_of_payment.js",
     # Link from Document Naming to the user-wise Sales Invoice series page.
     "Selling Settings": "public/js/selling_settings.js",
 }
@@ -52,7 +53,10 @@ doc_events = {
     },
     "Sales Invoice": {
         "before_insert": "zatgo_core.events.sales_invoice_naming.set_naming_series",
-        "validate": "zatgo_core.events.print_fields.populate_print_fields",
+        "validate": [
+            "zatgo_core.events.print_fields.populate_print_fields",
+            "zatgo_core.services.payment_allocation.validate_sales_invoice",
+        ],
         "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
     },
@@ -61,6 +65,24 @@ doc_events = {
         "on_submit": "zatgo_core.events.purchase_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.purchase_invoice_payment.before_cancel",
     },
+    # Multi-method / multi-account payment allocation -- see
+    # services/payment_allocation.py and the extend_doctype_class below.
+    "Payment Entry": {
+        "before_validate": "zatgo_core.services.payment_allocation.prepare_payment_entry",
+        "validate": "zatgo_core.services.payment_allocation.validate_payment_entry",
+    },
+    "Mode of Payment": {
+        "validate": "zatgo_core.services.payment_allocation.validate_mode_of_payment",
+    },
+}
+
+# Mixins (Frappe v16) layered over ERPNext's classes -- and over hrms's
+# Payment Entry override -- rather than replacing them. Sales Invoice: keep
+# an allowed payment-row account instead of resetting it to the mode default.
+# Payment Entry: split the bank-side GL line across Payment Details rows.
+extend_doctype_class = {
+    "Sales Invoice": "zatgo_core.overrides.sales_invoice.ZatGoSalesInvoice",
+    "Payment Entry": "zatgo_core.overrides.payment_entry.ZatGoPaymentEntry",
 }
 
 scheduler_events = {

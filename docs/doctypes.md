@@ -34,6 +34,8 @@ Module: **ZatGo Core**
 
 - `ZG Number Series Item` → parent `ZG Number Series Settings.series_items`
 - `ZG Sales Invoice Naming Rule` → parent `ZG Sales Invoice Naming Settings.rules` (one row per user + company)
+- `ZG Mode of Payment Account` → parent `Mode of Payment.custom_zg_accounts` (allowed ledger accounts per payment method + company; see `multi_payment.md`)
+- `ZG Payment Allocation` → parent `Payment Entry.custom_payment_details` (payment split across methods / accounts; see `multi_payment.md`)
 
 ## Why not literal "System Settings"?
 

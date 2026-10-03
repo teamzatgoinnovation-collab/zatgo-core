@@ -22,6 +22,25 @@ frappe.ui.form.on("Sales Invoice", {
 				is_group: 0,
 			},
 		}));
+		// Payment rows (ERPNext's own POS `payments` table): only the accounts
+		// configured for the row's Payment Method in this company. The server
+		// re-validates every row (services/payment_allocation.py).
+		frm.set_query("account", "payments", (doc, cdt, cdn) => {
+			const row = locals[cdt][cdn];
+			return {
+				query: "zatgo_core.api.v1.accounting.payment_methods.account_query",
+				filters: { mode_of_payment: row.mode_of_payment, company: doc.company },
+			};
+		});
+	},
+	paid_amount(frm) {
+		show_payment_summary(frm);
+	},
+	grand_total(frm) {
+		show_payment_summary(frm);
+	},
+	outstanding_amount(frm) {
+		show_payment_summary(frm);
 	},
 	custom_payment_type(frm) {
 		show_payment_type_hint(frm);
@@ -30,6 +49,7 @@ frappe.ui.form.on("Sales Invoice", {
 	refresh(frm) {
 		show_payment_type_hint(frm);
 		show_user_naming_series(frm);
+		show_payment_summary(frm);
 	},
 	company(frm) {
 		show_user_naming_series(frm);
@@ -86,4 +106,42 @@ function show_payment_type_hint(frm) {
 			"orange"
 		);
 	}
+}
+
+frappe.ui.form.on("Sales Invoice Payment", {
+	amount(frm) {
+		show_payment_summary(frm);
+	},
+	payments_remove(frm) {
+		show_payment_summary(frm);
+	},
+});
+
+// Invoice Total / Payment Total / Difference under the payments grid. Display
+// only -- the numbers are ERPNext's own paid_amount / outstanding_amount, and
+// the submit-time rule (full payment unless Payment Type = Credit) is enforced
+// server-side.
+function show_payment_summary(frm) {
+	const field = frm.fields_dict.payments;
+	if (!field || !field.$wrapper) return;
+	field.$wrapper.find(".zg-payment-summary").remove();
+	if (!frm.doc.is_pos || !(frm.doc.payments || []).length || frm.doc.is_return) return;
+
+	const total = flt(frm.doc.rounded_total) || flt(frm.doc.grand_total);
+	const paid = flt(frm.doc.paid_amount);
+	const diff = flt(total - paid, precision("outstanding_amount"));
+	const fmt = (v) => format_currency(v, frm.doc.currency);
+	const tone = diff === 0 ? "green" : "orange";
+	const note =
+		diff > 0 && frm.doc.custom_payment_type !== "Credit"
+			? __("Allocate the full amount, or set Payment Type to Credit to leave it outstanding.")
+			: diff < 0
+			? __("Payments exceed the invoice total.")
+			: "";
+	$(`<div class="zg-payment-summary text-muted small" style="margin-top:6px">
+		${__("Invoice Total")}: <b>${fmt(total)}</b> &nbsp;·&nbsp;
+		${__("Payment Total")}: <b>${fmt(paid)}</b> &nbsp;·&nbsp;
+		${__("Difference")}: <span class="indicator-pill ${tone}">${fmt(diff)}</span>
+		${note ? `<div class="text-warning">${note}</div>` : ""}
+	</div>`).appendTo(field.$wrapper);
 }

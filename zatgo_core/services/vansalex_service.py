@@ -71,9 +71,12 @@ def _apply_sales_taxes(doc: Any, company: str) -> None:
 def _ack_sales_invoice(doc: Any, cid: str, *, idempotent: bool, created: bool) -> dict[str, Any]:
     from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_NAME
 
+    from zatgo_core.services.payment_allocation import payment_details_payload
+
     return ok(
         {
             **map_sales_invoice_doc(doc),
+            "payment_details": payment_details_payload(doc),
             "client_id": cid,
             "erp_name": doc.name,
             "print_format": PRINT_FORMAT_NAME,
@@ -156,6 +159,16 @@ def _apply_payment_type(target: Any, sale: dict[str, Any]) -> None:
             target.set(key, value)
 
 
+def _apply_payment_details(doc: Any, payment_details: Any) -> None:
+    """Payment split across methods/accounts, recorded on the invoice itself
+    as ERPNext POS payments (services/payment_allocation.py). Everything is
+    re-validated by the Sales Invoice validate hook; an amount short of the
+    total is only accepted for payment_type Credit."""
+    from zatgo_core.services.payment_allocation import apply_to_sales_invoice, parse_payment_details
+
+    apply_to_sales_invoice(doc, parse_payment_details(payment_details))
+
+
 def _validated_discount_percentage(discount_percentage: Any) -> float:
     pct = flt(discount_percentage or 0)
     if pct < 0 or pct > 100:
@@ -179,6 +192,7 @@ def create_order(
     discount_percentage: Any = None,
     payment_type: str | None = None,
     cash_account: str | None = None,
+    payment_details: Any = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.vansalex_settings import resolve_sale
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
@@ -265,6 +279,7 @@ def create_order(
         doc.selling_price_list = pl
 
     _apply_sales_taxes(doc, company_name)
+    _apply_payment_details(doc, payment_details)
 
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
     if not created:
@@ -475,6 +490,7 @@ def confirm_order(
     trip_id: str | None = None,
     payment_type: str | None = None,
     cash_account: str | None = None,
+    payment_details: Any = None,
 ) -> dict[str, Any]:
     """Convert a submitted Sales Order into a submitted Sales Invoice —
     the "Confirm Order" action. `client_id` here is the idempotency key
@@ -532,6 +548,7 @@ def confirm_order(
     for item in doc.items or []:
         item.warehouse = wh
     _apply_payment_type(doc, sale)
+    _apply_payment_details(doc, payment_details)
     doc.zatgo_client_id = cid
 
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
@@ -786,14 +803,20 @@ def create_collection(
     posting_date: str | None = None,
     reference: str | None = None,
     notes: str | None = None,
+    payment_details: Any = None,
 ) -> dict[str, Any]:
+    from zatgo_core.services.payment_allocation import (
+        apply_to_payment_entry,
+        parse_payment_details,
+    )
+
     require_login()
     cid = require_str(client_id, "client_id")
     existing = _find_by_client_id("Payment Entry", cid)
     if existing:
         pe = frappe.get_doc("Payment Entry", existing)
         return ok(
-            {**map_payment_entry_doc(pe), "client_id": cid, "erp_name": pe.name},
+            {**_collection_payload(pe), "client_id": cid, "erp_name": pe.name},
             meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
         )
 
@@ -814,7 +837,17 @@ def create_collection(
                 "route, or to turn off 'Restrict Collections to Route' in VanSaleX.",
                 frappe.PermissionError,
             )
+    # Accounts left blank are filled from the Payment Entry's own company
+    # (apply_to_payment_entry), once it is known.
+    detail_rows = parse_payment_details(payment_details)
     paid = flt(amount)
+    if detail_rows:
+        rows_total = sum(r["amount"] for r in detail_rows)
+        if amount not in (None, "") and abs(paid - rows_total) > 0.005:
+            frappe.throw(
+                f"amount {paid} does not match the payment_details total {rows_total}."
+            )
+        paid = rows_total
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
 
@@ -912,20 +945,27 @@ def create_collection(
         pe.set_remarks()
         pe.remarks = f"{pe.remarks}\n{note}" if pe.remarks else note
         pe.custom_remarks = 1
+    apply_to_payment_entry(pe, detail_rows)
     if frappe.db.has_column("Payment Entry", "zatgo_client_id"):
         pe.zatgo_client_id = cid
     pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
     if not created:
         return ok(
-            {**map_payment_entry_doc(pe), "client_id": cid, "erp_name": pe.name},
+            {**_collection_payload(pe), "client_id": cid, "erp_name": pe.name},
             meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
         )
     pe.submit()
     frappe.db.commit()
     return ok(
-        {**map_payment_entry_doc(pe), "client_id": cid, "erp_name": pe.name},
+        {**_collection_payload(pe), "client_id": cid, "erp_name": pe.name},
         meta={"stub": False, "created": True, "submitted": True, "source": "Payment Entry"},
     )
+
+
+def _collection_payload(pe: Any) -> dict[str, Any]:
+    from zatgo_core.services.payment_allocation import payment_details_payload
+
+    return {**map_payment_entry_doc(pe), "payment_details": payment_details_payload(pe)}
 
 
 def list_van_stock(

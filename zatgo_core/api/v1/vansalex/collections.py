@@ -15,31 +15,46 @@ from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
 @frappe.whitelist()
-def modes() -> dict[str, Any]:
+def modes(company: str | None = None) -> dict[str, Any]:
     """Mode of Payment options for the New Collection form — the app must
     only offer values that exist here, since create() sets mode_of_payment
-    as a Link field and an unknown value fails with LinkValidationError."""
+    as a Link field and an unknown value fails with LinkValidationError.
+    `methods` adds each mode's allowed accounts (default first) for the
+    caller's company, for building `payment_details`."""
+    from zatgo_core.services.payment_allocation import allowed_accounts
+    from zatgo_core.services.vansalex_settings import resolve
+
     require_login()
     rows = frappe.get_all(
         "Mode of Payment",
         filters={"enabled": 1},
-        fields=["name"],
+        fields=["name", "type"],
         order_by="name asc",
     )
-    return ok({"modes": [r.name for r in rows]})
+    company = (company or "").strip() or resolve().get("company")
+    methods = [
+        {"name": r.name, "type": r.type, "accounts": allowed_accounts(r.name, company) if company else []}
+        for r in rows
+    ]
+    return ok({"modes": [r.name for r in rows], "company": company, "methods": methods})
 
 
 @frappe.whitelist()
 def create(
     client_id: str,
     customer: str,
-    amount: float | str,
+    amount: float | str | None = None,
     method: str | None = None,
     sales_invoice: str | None = None,
     posting_date: str | None = None,
     reference: str | None = None,
     notes: str | None = None,
+    payment_details: str | list | None = None,
 ) -> dict[str, Any]:
+    """Receive a customer payment. Either `amount` (+ optional `method`) or
+    `payment_details` ([{payment_method, account?, amount, reference_no?,
+    remarks?}]) to split it across methods/accounts; with both, `amount`
+    must equal the rows' total."""
     return create_collection(
         client_id=client_id,
         customer=customer,
@@ -49,6 +64,7 @@ def create(
         posting_date=posting_date,
         reference=reference,
         notes=notes,
+        payment_details=payment_details,
     )
 
 

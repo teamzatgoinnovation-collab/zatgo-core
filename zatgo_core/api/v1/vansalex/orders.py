@@ -25,11 +25,15 @@ def create(
     discount_percentage: float | str | None = None,
     payment_type: str | None = None,
     cash_account: str | None = None,
+    payment_details: str | list | None = None,
 ) -> dict[str, Any]:
     """Invoice — creates+submits a Sales Invoice immediately. Warehouse,
     Cash/Credit and cash account are checked against the caller's VanSaleX
     settings (services/vansalex_settings.resolve_sale); a Cash invoice gets
-    its Payment Entry auto-created on submit."""
+    its Payment Entry auto-created on submit. `payment_details`
+    ([{payment_method, account?, amount, reference_no?, remarks?}]) instead
+    records the payment on the invoice itself, split across methods and
+    accounts (services/payment_allocation.py)."""
     require_login()
     return create_order(
         client_id=client_id,
@@ -41,6 +45,7 @@ def create(
         discount_percentage=discount_percentage,
         payment_type=payment_type,
         cash_account=cash_account,
+        payment_details=payment_details,
     )
 
 
@@ -75,9 +80,10 @@ def confirm(
     trip_id: str | None = None,
     payment_type: str | None = None,
     cash_account: str | None = None,
+    payment_details: str | list | None = None,
 ) -> dict[str, Any]:
     """Confirm a submitted Sales Order into a submitted Sales Invoice
-    (Cash/Credit and warehouse as for ``create``)."""
+    (Cash/Credit, warehouse and payment_details as for ``create``)."""
     require_login()
     return confirm_order(
         client_id=client_id,
@@ -87,6 +93,7 @@ def confirm(
         trip_id=trip_id,
         payment_type=payment_type,
         cash_account=cash_account,
+        payment_details=payment_details,
     )
 
 
