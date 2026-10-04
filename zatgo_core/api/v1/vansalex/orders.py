@@ -90,6 +90,9 @@ def create_order_draft(
     """Order side of the two-stage flow — creates+submits a real Sales
     Order, no stock/warehouse impact yet. Confirm it via `confirm()`."""
     require_login()
+    # sales_order mirrors VanSaleX Settings → Allow Orders; as a module it
+    # binds every caller (the service's own check exempts admins).
+    require_access("sales_order")
     return create_sales_order(
         client_id=client_id,
         customer=customer,

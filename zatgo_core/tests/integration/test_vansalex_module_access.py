@@ -279,6 +279,28 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         # Read-only lists the dashboard also uses stay open while it is on.
         self.assertIn("data", returns_api.list())
 
+    def test_orders_off_rejects_order_even_for_admin_profile(self) -> None:
+        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
+        frappe.db.set_value("ZG Van Sale Profile", name, "user_type", "Admin")
+        settings = frappe.get_single("VanSaleX Settings")
+        old = cint(settings.allow_orders)
+        try:
+            frappe.db.set_single_value("VanSaleX Settings", "allow_orders", 0)
+            frappe.db.commit()
+            frappe.clear_document_cache("VanSaleX Settings", "VanSaleX Settings")
+            self._as_user()
+            with self.assertRaises(frappe.PermissionError):
+                orders_api.create_order_draft(
+                    client_id=f"so-{random_string(8)}",
+                    customer=self.customer,
+                    items=[{"item_code": self.item_code, "qty": 1}],
+                )
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_single_value("VanSaleX Settings", "allow_orders", old)
+            frappe.db.commit()
+            frappe.clear_document_cache("VanSaleX Settings", "VanSaleX Settings")
+
     def test_sales_invoice_disabled_rejects_invoice(self) -> None:
         self._disable_for_user("sales_invoice")
         self._as_user()
