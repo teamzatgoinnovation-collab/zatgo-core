@@ -22,6 +22,8 @@
     "show_warehouse_on_invoice",
     "allow_warehouse_change",
     "restrict_collections_to_route",
+    "access_section",
+    "access_overrides",
     "invoice_section",
     "invoice_naming_note",
     "notes"
@@ -143,11 +145,24 @@
       "fieldname": "notes",
       "fieldtype": "Small Text",
       "label": "Notes"
+    },
+    {
+      "fieldname": "access_section",
+      "fieldtype": "Section Break",
+      "label": "Modules & Features (switch off for this user)",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "access_overrides",
+      "fieldtype": "Table",
+      "label": "Disabled for this user",
+      "options": "ZG Van Sale Profile Access",
+      "description": "Can only take away what VanSaleX Settings → Modules & Features allows, never add to it."
     }
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-10-02 00:00:00.000000",
+  "modified": "2026-10-04 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Van Sale Profile",

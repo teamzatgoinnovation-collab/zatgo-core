@@ -105,6 +105,8 @@ def create_cash_payment_entry(invoice: Document) -> None:
 
     payment_entry = get_payment_entry(invoice.doctype, invoice.name, bank_account=cash_account)
     payment_entry.mode_of_payment = CASH_MODE_OF_PAYMENT
+    # Part of the sale, not a VanSaleX "collection" (vansalex_access backstop).
+    payment_entry.flags.zatgo_auto_cash_payment = True
     payment_entry.insert(ignore_permissions=True)
     payment_entry.submit()
 

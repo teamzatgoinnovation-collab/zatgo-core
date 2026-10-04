@@ -6,6 +6,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_settings import allowed_warehouse, selectable_warehouses
@@ -20,6 +21,7 @@ def list(
     page_size: int | str = 100,
 ) -> dict[str, Any]:
     require_login()
+    require_access("inventory", "sales_invoice", "products", "dashboard")
     wh = (warehouse or "").strip()
     if not is_vansale_admin():
         wh = allowed_warehouse(wh)
@@ -31,6 +33,7 @@ def warehouses() -> dict[str, Any]:
     """Warehouses the caller may choose on an invoice (just their default
     unless VanSaleX Settings / their profile allow changing it)."""
     require_login()
+    require_access("sales_invoice", "inventory")
     return ok(selectable_warehouses(), meta={"source": "Warehouse"})
 
 
@@ -43,6 +46,7 @@ def adjust(
     company: str | None = None,
 ) -> dict[str, Any]:
     require_login()
+    require_access("inventory")
     wh = (warehouse or "").strip()
     if not is_vansale_admin():
         wh = require_own_warehouse(None)
@@ -65,6 +69,7 @@ def transfer(
     company: str | None = None,
 ) -> dict[str, Any]:
     require_login()
+    require_access("inventory")
     from_wh = (from_warehouse or "").strip()
     to_wh = (to_warehouse or "").strip()
     if not is_vansale_admin():

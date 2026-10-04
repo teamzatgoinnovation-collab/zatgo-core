@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
+from zatgo_core.services.vansalex_access import effective as effective_access
 from zatgo_core.services.vansalex_settings import resolve as resolve_settings
 from zatgo_core.services.van_sale_access import (
     get_profile,
@@ -48,6 +49,10 @@ def context() -> dict[str, Any]:
             # ZG Van Sale Profile overrides) — the app renders from these
             # and keeps none of its own; the server enforces them on write.
             "settings": resolve_settings(user),
+            # Modules & features this client (site) gives this user — the
+            # app shows only these; the endpoints enforce them
+            # (services/vansalex_access.py).
+            "access": effective_access(user),
         },
         meta={"source": "vansalex.me"},
     )

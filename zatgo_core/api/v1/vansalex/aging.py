@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import date_diff, flt, getdate, today
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.van_sale_access import field_user_customers, is_vansale_admin
@@ -69,6 +70,7 @@ def summary(
 ) -> dict[str, Any]:
     """Aging summary buckets across open Sales Invoices."""
     require_login()
+    require_access("reports", "collections", "dashboard")
     today_d = getdate(today())
     filters: dict[str, Any] = {"docstatus": 1, "outstanding_amount": [">", 0]}
     if customer:
@@ -143,6 +145,7 @@ def detail(
 ) -> dict[str, Any]:
     """Invoice-level aging detail for drill-down."""
     require_login()
+    require_access("reports", "collections", "dashboard")
     today_d = getdate(today())
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": 1, "outstanding_amount": [">", 0]}

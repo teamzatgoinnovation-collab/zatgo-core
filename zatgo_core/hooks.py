@@ -52,7 +52,10 @@ doc_events = {
         "on_update": "zatgo_core.events.company.on_company_update",
     },
     "Sales Invoice": {
-        "before_insert": "zatgo_core.events.sales_invoice_naming.set_naming_series",
+        "before_insert": [
+            "zatgo_core.services.vansalex_access.check_doc_access",
+            "zatgo_core.events.sales_invoice_naming.set_naming_series",
+        ],
         "validate": [
             "zatgo_core.events.print_fields.populate_print_fields",
             "zatgo_core.services.payment_allocation.validate_sales_invoice",
@@ -68,9 +71,17 @@ doc_events = {
     # Multi-method / multi-account payment allocation -- see
     # services/payment_allocation.py and the extend_doctype_class below.
     "Payment Entry": {
+        "before_insert": "zatgo_core.services.vansalex_access.check_doc_access",
         "before_validate": "zatgo_core.services.payment_allocation.prepare_payment_entry",
         "validate": "zatgo_core.services.payment_allocation.validate_payment_entry",
     },
+    # VanSaleX Modules & Features backstop for field users on any entry
+    # point (services/vansalex_access.py); Sales Invoice / Payment Entry above.
+    "Sales Order": {"before_insert": "zatgo_core.services.vansalex_access.check_doc_access"},
+    # before_save: create AND edit (the app edits through the shared
+    # accounting.customers / warehouse.items endpoints).
+    "Customer": {"before_save": "zatgo_core.services.vansalex_access.check_doc_access"},
+    "Item": {"before_save": "zatgo_core.services.vansalex_access.check_doc_access"},
     "Mode of Payment": {
         "validate": "zatgo_core.services.payment_allocation.validate_mode_of_payment",
     },

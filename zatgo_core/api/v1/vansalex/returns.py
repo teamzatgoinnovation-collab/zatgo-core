@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
@@ -28,6 +29,7 @@ def create(
     van warehouse (VanSaleX settings); quantities are capped at what is
     left to return on that invoice."""
     require_login()
+    require_access("sales_return")
     return create_sales_return(
         client_id=client_id,
         return_against=return_against,
@@ -48,6 +50,7 @@ def list(
 ) -> dict[str, Any]:
     """List Sales Returns for VanSale (admin: filterable; user: own)."""
     require_login()
+    require_access("sales_return", "dashboard", "reports")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 1}
     admin = is_vansale_admin()
@@ -105,6 +108,7 @@ def list(
 def returnable(sales_invoice: str) -> dict[str, Any]:
     """Lines of [sales_invoice] with sold / already returned / returnable qty."""
     require_login()
+    require_access("sales_return")
     return ok(get_returnable(sales_invoice), meta={"source": "vansalex.returns.returnable"})
 
 

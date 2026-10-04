@@ -6,6 +6,7 @@ from typing import Any
 
 import frappe
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_service import update_visit
 
@@ -21,6 +22,7 @@ def update(
     no_sale_reason: str | None = None,
 ) -> dict[str, Any]:
     require_login()
+    require_access("route_plan")
     # Row-level ownership is enforced inside update_visit via
     # assert_trip_access — an earlier version tried to check it here by
     # resolving stop_id as a ZG Delivery Stop and walking to its parent,

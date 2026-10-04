@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_payment_entry_row
@@ -21,6 +22,7 @@ def modes(company: str | None = None) -> dict[str, Any]:
     as a Link field and an unknown value fails with LinkValidationError.
     `methods` adds each mode's allowed accounts (default first) for the
     caller's company, for building `payment_details`."""
+    require_access("collections", "sales_invoice")
     from zatgo_core.services.payment_allocation import allowed_accounts
     from zatgo_core.services.vansalex_settings import resolve
 
@@ -55,6 +57,7 @@ def create(
     `payment_details` ([{payment_method, account?, amount, reference_no?,
     remarks?}]) to split it across methods/accounts; with both, `amount`
     must equal the rows' total."""
+    require_access("collections")
     return create_collection(
         client_id=client_id,
         customer=customer,
@@ -77,6 +80,7 @@ def list(
 ) -> dict[str, Any]:
     """List Payment Entries (Receive) for VanSale."""
     require_login()
+    require_access("collections", "dashboard", "reports")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {
         "docstatus": ["<", 2],

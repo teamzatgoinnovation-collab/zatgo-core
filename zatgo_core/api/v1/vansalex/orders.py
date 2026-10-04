@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
@@ -35,6 +36,7 @@ def create(
     records the payment on the invoice itself, split across methods and
     accounts (services/payment_allocation.py)."""
     require_login()
+    require_access("sales_invoice")
     return create_order(
         client_id=client_id,
         customer=customer,
@@ -85,6 +87,7 @@ def confirm(
     """Confirm a submitted Sales Order into a submitted Sales Invoice
     (Cash/Credit, warehouse and payment_details as for ``create``)."""
     require_login()
+    require_access("sales_invoice")
     return confirm_order(
         client_id=client_id,
         sales_order=sales_order,
@@ -108,6 +111,7 @@ def list(
 ) -> dict[str, Any]:
     """List Sales Invoices for VanSale (admin: filterable; user: own)."""
     require_login()
+    require_access("sales_invoice", "sales_return", "dashboard", "reports")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 0}
     admin = is_vansale_admin()
@@ -176,6 +180,7 @@ def list_sales_orders(
     order receipt or offer Confirm straight from this list.
     """
     require_login()
+    require_access("sales_order", "sales_invoice", "dashboard")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2]}
     if is_vansale_admin():
@@ -286,6 +291,14 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     fmt = (print_format or "").strip() or default_print_format()
     if not frappe.db.exists("Print Format", fmt):
         fmt = default_print_format()
+    # Printing is read-only, but which papers a client prints on is a
+    # VanSaleX feature: the thermal format is "80mm", anything else is A4.
+    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_80MM_NAME
+
+    require_access("sales_invoice", "sales_return")
+    require_access(
+        "sales_invoice.print_80mm" if fmt == PRINT_FORMAT_80MM_NAME else "sales_invoice.print_a4"
+    )
 
     pdf_bytes = frappe.get_print(
         "Sales Invoice",

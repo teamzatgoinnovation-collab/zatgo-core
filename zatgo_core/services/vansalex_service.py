@@ -165,8 +165,12 @@ def _apply_payment_details(doc: Any, payment_details: Any) -> None:
     re-validated by the Sales Invoice validate hook; an amount short of the
     total is only accepted for payment_type Credit."""
     from zatgo_core.services.payment_allocation import apply_to_sales_invoice, parse_payment_details
+    from zatgo_core.services.vansalex_access import check_payment_rows
 
-    apply_to_sales_invoice(doc, parse_payment_details(payment_details))
+    rows = parse_payment_details(payment_details, doc.company)
+    # Split / account choice are VanSaleX features the client may not have.
+    check_payment_rows(rows, doc.company, "sales_invoice")
+    apply_to_sales_invoice(doc, rows)
 
 
 def _validated_discount_percentage(discount_percentage: Any) -> float:
@@ -840,6 +844,11 @@ def create_collection(
     # Accounts left blank are filled from the Payment Entry's own company
     # (apply_to_payment_entry), once it is known.
     detail_rows = parse_payment_details(payment_details)
+    # Card / split collection are VanSaleX features the client may not have.
+    from zatgo_core.services.vansalex_access import check_collection_method, check_payment_rows
+
+    check_payment_rows(detail_rows, "", "collections")
+    check_collection_method(method)
     paid = flt(amount)
     if detail_rows:
         rows_total = sum(r["amount"] for r in detail_rows)

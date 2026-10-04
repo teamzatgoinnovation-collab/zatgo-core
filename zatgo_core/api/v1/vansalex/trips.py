@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import getdate
 
+from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.services.erpnext_reads import get_zg, list_zg
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin
 from zatgo_core.services.vansalex_service import create_trip, reorder_trips, update_trip
@@ -101,6 +102,7 @@ def list(
     date_from: str | None = None,
     date_to: str | None = None,
 ) -> dict[str, Any]:
+    require_access("route_plan", "dashboard")
     fields = [
         "name",
         "title",
@@ -156,6 +158,7 @@ def list(
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
+    require_access("route_plan")
     doc_res = get_zg("ZG Trip", name, map_doc=lambda d: _map(d))
     if not is_vansale_admin():
         trip_data = doc_res.get("data") if isinstance(doc_res, dict) and "data" in doc_res else doc_res
@@ -178,6 +181,7 @@ def create(
     route_title: str | None = None,
     sales_user: str | None = None,
 ) -> dict[str, Any]:
+    require_access("route_plan")
     return create_trip(
         client_id=client_id,
         customer=customer,
@@ -202,6 +206,7 @@ def update(
     lng: float | str | None = None,
     title: str | None = None,
 ) -> dict[str, Any]:
+    require_access("route_plan")
     return update_trip(
         name=name,
         planned_at=planned_at,
@@ -215,4 +220,5 @@ def update(
 
 @frappe.whitelist()
 def reorder(stops: Any) -> dict[str, Any]:
+    require_access("route_plan")
     return reorder_trips(stops)
