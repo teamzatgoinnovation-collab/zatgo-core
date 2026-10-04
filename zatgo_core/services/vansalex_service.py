@@ -186,42 +186,17 @@ def _validated_discount_percentage(discount_percentage: Any) -> float:
     return pct
 
 
-def create_order(
-    client_id: str,
+def _build_direct_invoice(
     customer: str,
     items: Any,
-    warehouse: str | None = None,
-    company: str | None = None,
-    trip_id: str | None = None,
-    discount_percentage: Any = None,
-    payment_type: str | None = None,
-    cash_account: str | None = None,
-    payment_details: Any = None,
-) -> dict[str, Any]:
-    from zatgo_core.services.vansalex_settings import resolve_sale
-    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
-
-    require_login()
-    cid = require_str(client_id, "client_id")
-    wh = (warehouse or "").strip()
-
-    existing = _find_by_client_id("Sales Invoice", cid)
-    if existing:
-        doc = frappe.get_doc("Sales Invoice", existing)
-        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh or None)
-        try:
-            generate_and_store_zatca_qr(doc)
-            frappe.db.commit()
-            doc.reload()
-        except Exception:
-            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
-        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
-
-    # Warehouse / Cash-Credit / cash account, validated against the user's
-    # effective VanSaleX settings (see services/vansalex_settings.py).
-    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
-    wh = sale["warehouse"]
-
+    wh: str,
+    company: str | None,
+    discount_percentage: Any,
+    sale: dict[str, Any],
+) -> Any:
+    """The unsaved Sales Invoice `orders.create` submits -- shared with
+    `preview_invoice_totals` so the totals a driver is shown before paying
+    are exactly the ones the invoice will get."""
     frappe.has_permission("Sales Invoice", "create", throw=True)
     party = _resolve_customer(customer)
     if isinstance(items, str):
@@ -266,7 +241,6 @@ def create_order(
         "company": company_name,
         "posting_date": today(),
         "items": rows,
-        "zatgo_client_id": cid,
         "update_stock": 1,
         "set_warehouse": wh,
     }
@@ -283,6 +257,82 @@ def create_order(
         doc.selling_price_list = pl
 
     _apply_sales_taxes(doc, company_name)
+    return doc
+
+
+def preview_invoice_totals(
+    customer: str,
+    items: Any,
+    warehouse: str | None = None,
+    company: str | None = None,
+    discount_percentage: Any = None,
+) -> dict[str, Any]:
+    """Totals `orders.create` would give this sale, computed by ERPNext's own
+    taxes_and_totals without saving anything -- above all `rounded_total`,
+    what a split payment has to add up to (the app can't reproduce ERPNext's
+    rounding: smallest currency fraction + the site's rounding method)."""
+    from zatgo_core.services.vansalex_settings import resolve_sale
+
+    require_login()
+    sale = resolve_sale(payment_type=None, warehouse=(warehouse or "").strip())
+    doc = _build_direct_invoice(customer, items, sale["warehouse"], company, discount_percentage, sale)
+    doc.set_missing_values(for_validate=True)
+    doc.calculate_taxes_and_totals()
+    grand = flt(doc.grand_total)
+    rounded = flt(doc.rounded_total)
+    return ok(
+        {
+            "net_total": flt(doc.net_total),
+            "total_taxes_and_charges": flt(doc.total_taxes_and_charges),
+            "grand_total": grand,
+            "rounded_total": rounded,
+            "rounding_adjustment": flt(doc.rounding_adjustment),
+            # What payments must add up to (rounded_total is 0 when rounding
+            # is disabled).
+            "payable_total": rounded or grand,
+            "currency": doc.currency,
+        }
+    )
+
+
+def create_order(
+    client_id: str,
+    customer: str,
+    items: Any,
+    warehouse: str | None = None,
+    company: str | None = None,
+    trip_id: str | None = None,
+    discount_percentage: Any = None,
+    payment_type: str | None = None,
+    cash_account: str | None = None,
+    payment_details: Any = None,
+) -> dict[str, Any]:
+    from zatgo_core.services.vansalex_settings import resolve_sale
+    from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
+
+    require_login()
+    cid = require_str(client_id, "client_id")
+    wh = (warehouse or "").strip()
+
+    existing = _find_by_client_id("Sales Invoice", cid)
+    if existing:
+        doc = frappe.get_doc("Sales Invoice", existing)
+        doc = _ensure_submitted_sales_invoice(doc, warehouse=wh or None)
+        try:
+            generate_and_store_zatca_qr(doc)
+            frappe.db.commit()
+            doc.reload()
+        except Exception:
+            frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
+        return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
+
+    # Warehouse / Cash-Credit / cash account, validated against the user's
+    # effective VanSaleX settings (see services/vansalex_settings.py).
+    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
+    wh = sale["warehouse"]
+
+    doc = _build_direct_invoice(customer, items, wh, company, discount_percentage, sale)
+    doc.zatgo_client_id = cid
     _apply_payment_details(doc, payment_details)
 
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
@@ -338,6 +388,8 @@ def _ack_sales_order(doc: Any, cid: str, *, idempotent: bool, created: bool) -> 
             "client_id": cid,
             "customer": doc.customer,
             "grand_total": float(doc.grand_total or 0),
+            # What an invoice confirmed from it must be paid in full by.
+            "rounded_total": float(doc.rounded_total or doc.grand_total or 0),
             "docstatus": int(doc.docstatus or 0),
             "status": doc.status,
         },

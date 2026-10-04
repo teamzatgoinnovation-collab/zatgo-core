@@ -11,7 +11,12 @@ from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
-from zatgo_core.services.vansalex_service import confirm_order, create_order, create_sales_order
+from zatgo_core.services.vansalex_service import (
+    confirm_order,
+    create_order,
+    create_sales_order,
+    preview_invoice_totals,
+)
 from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
@@ -48,6 +53,28 @@ def create(
         payment_type=payment_type,
         cash_account=cash_account,
         payment_details=payment_details,
+    )
+
+
+@frappe.whitelist()
+def preview_totals(
+    customer: str,
+    items: str | list | None = None,
+    warehouse: str | None = None,
+    company: str | None = None,
+    discount_percentage: float | str | None = None,
+) -> dict[str, Any]:
+    """Read-only: the totals ``create`` would give this sale (ERPNext's own
+    calculation, nothing saved) -- ``payable_total`` is what split payments
+    must add up to."""
+    require_login()
+    require_access("sales_invoice")
+    return preview_invoice_totals(
+        customer=customer,
+        items=items,
+        warehouse=warehouse,
+        company=company,
+        discount_percentage=discount_percentage,
     )
 
 
@@ -206,6 +233,7 @@ def list_sales_orders(
             "net_total",
             "total_taxes_and_charges",
             "grand_total",
+            "rounded_total",
             "additional_discount_percentage",
             "zatgo_client_id",
             "creation",
@@ -254,6 +282,7 @@ def list_sales_orders(
             "net_total": float(r.net_total or 0),
             "total_taxes_and_charges": float(r.total_taxes_and_charges or 0),
             "grand_total": float(r.grand_total or 0),
+            "rounded_total": float(r.rounded_total or r.grand_total or 0),
             "discount_percentage": float(r.additional_discount_percentage or 0),
             "sales_invoice": invoice_by_order.get(r.name),
             "items": items_by_order.get(r.name, []),

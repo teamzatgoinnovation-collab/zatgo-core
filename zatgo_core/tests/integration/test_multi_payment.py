@@ -536,3 +536,29 @@ class TestMultiPayment(IntegrationTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["mode_of_payment"], "Card")
         self.assertGreaterEqual(data[0]["received"], 1000)
+
+    def test_preview_totals_match_the_invoice_split_must_cover(self) -> None:
+        """orders.preview_totals: ERPNext's own totals for a sale, nothing
+        saved -- payable_total (rounded_total when rounding is on) is what a
+        split must add up to, so the app never has to re-implement rounding."""
+        from frappe.utils import round_based_on_smallest_currency_fraction
+
+        from zatgo_core.services.vansalex_service import preview_invoice_totals
+
+        warehouse = frappe.db.get_value("Warehouse", {"company": self.company, "is_group": 0}, "name")
+        before = frappe.db.count("Sales Invoice")
+        data = preview_invoice_totals(
+            customer=self.customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 57.5}],
+            warehouse=warehouse,
+        )["data"]
+        self.assertEqual(frappe.db.count("Sales Invoice"), before, "preview must not save anything")
+        self.assertEqual(data["grand_total"], 57.5)
+        if frappe.db.get_single_value("Global Defaults", "disable_rounded_total"):
+            self.assertEqual(data["payable_total"], 57.5)
+        else:
+            self.assertEqual(
+                data["payable_total"], round_based_on_smallest_currency_fraction(57.5, "SAR", 2)
+            )
+            self.assertEqual(data["payable_total"], data["rounded_total"])
+

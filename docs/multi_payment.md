@@ -129,6 +129,13 @@ account becomes the method's default for the document's company):
   `methods: [{name, type, accounts: [{account, is_default}]}]` for the
   caller's company (`modes` unchanged for older app builds).
 - Responses include `payment_details` with each row's `base_amount`.
+- `zatgo_core.api.v1.vansalex.orders.preview_totals` (read-only, nothing
+  saved): ERPNext's own totals for a would-be `orders.create`;
+  `payable_total` (= `rounded_total`, or `grand_total` when rounding is
+  disabled) is what a split must add up to. Sales Orders (`create_order_draft`
+  ack, `list_sales_orders`) carry `rounded_total` for the same purpose on
+  `orders.confirm`. ERPNext rounds to the currency's smallest fraction with
+  the site's rounding method, so clients must not re-derive it.
 
 Desk / other clients: `zatgo_core.api.v1.accounting.payment_methods.methods(company)`,
 `.default_account(mode_of_payment, company)`, `.account_query` (Link search,
