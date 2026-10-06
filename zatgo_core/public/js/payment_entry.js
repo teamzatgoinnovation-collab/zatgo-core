@@ -4,6 +4,15 @@
 // the user can see what is actually owed before entering an amount.
 
 frappe.ui.form.on("Payment Entry", {
+	// Narration (`remarks`): once the user writes one, tick ERPNext's own
+	// "Custom Remarks" so save doesn't replace it with auto-text. The server
+	// does the same for later edits (services/narration.py).
+	remarks: function (frm) {
+		if (frm.doc.docstatus !== 0) return;
+		// Written -> keep it; cleared -> back to ERPNext's auto-text.
+		const custom = (frm.doc.remarks || "").trim() ? 1 : 0;
+		if (frm.doc.custom_remarks !== custom) frm.set_value("custom_remarks", custom);
+	},
 	setup: function (frm) {
 		frm.set_query("account", "custom_payment_details", (doc, cdt, cdn) => {
 			const row = locals[cdt][cdn];

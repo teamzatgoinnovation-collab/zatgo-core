@@ -29,6 +29,7 @@ doctype_js = {
     "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
     "Mode of Payment": "public/js/mode_of_payment.js",
+    "Journal Entry": "public/js/journal_entry.js",
     # Link from Document Naming to the user-wise Sales Invoice series page.
     "Selling Settings": "public/js/selling_settings.js",
 }
@@ -72,7 +73,11 @@ doc_events = {
     # services/payment_allocation.py and the extend_doctype_class below.
     "Payment Entry": {
         "before_insert": "zatgo_core.services.vansalex_access.check_doc_access",
-        "before_validate": "zatgo_core.services.payment_allocation.prepare_payment_entry",
+        "before_validate": [
+            "zatgo_core.services.payment_allocation.prepare_payment_entry",
+            # A narration the user writes is kept (services/narration.py).
+            "zatgo_core.services.narration.keep_user_narration",
+        ],
         "validate": "zatgo_core.services.payment_allocation.validate_payment_entry",
     },
     # VanSaleX Modules & Features backstop for field users on any entry
@@ -82,6 +87,7 @@ doc_events = {
     # accounting.customers / warehouse.items endpoints).
     "Customer": {"before_save": "zatgo_core.services.vansalex_access.check_doc_access"},
     "Item": {"before_save": "zatgo_core.services.vansalex_access.check_doc_access"},
+    "Journal Entry": {"before_validate": "zatgo_core.services.narration.keep_user_narration"},
     "Mode of Payment": {
         "validate": "zatgo_core.services.payment_allocation.validate_mode_of_payment",
     },

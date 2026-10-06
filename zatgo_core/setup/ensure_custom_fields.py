@@ -47,6 +47,7 @@ def ensure_custom_fields() -> None:
     _run("purchase invoice payment type field", _ensure_purchase_invoice_payment_type_field)
     _run("purchase invoice cash account field", _ensure_purchase_invoice_cash_account_field)
     _run("multi payment fields", _ensure_multi_payment_fields)
+    _run("narration fields", _ensure_narration_fields)
 
 
 def _run(label: str, fn) -> None:
@@ -148,5 +149,11 @@ def _ensure_purchase_invoice_cash_account_field() -> None:
 
 def _ensure_multi_payment_fields() -> None:
     from zatgo_core.patches.v0_2_4.add_multi_payment_fields import execute
+
+    execute()
+
+
+def _ensure_narration_fields() -> None:
+    from zatgo_core.patches.v0_2_5.add_narration_fields import execute
 
     execute()

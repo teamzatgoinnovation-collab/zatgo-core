@@ -43,6 +43,7 @@ def create(
     terms: str | None = None,
     cost_center: str | None = None,
     client_id: str | None = None,
+    narration: str | None = None,
 ) -> dict[str, Any]:
     return create_quotation(
         customer=customer,
@@ -53,6 +54,7 @@ def create(
         terms=terms,
         cost_center=cost_center,
         client_id=client_id,
+        narration=narration,
     )
 
 
@@ -65,6 +67,7 @@ def update(
     valid_till: str | None = None,
     terms: str | None = None,
     cost_center: str | None = None,
+    narration: str | None = None,
 ) -> dict[str, Any]:
     return update_quotation(
         name,
@@ -74,6 +77,7 @@ def update(
         valid_till=valid_till,
         terms=terms,
         cost_center=cost_center,
+        narration=narration,
     )
 
 

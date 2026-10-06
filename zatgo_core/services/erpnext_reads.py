@@ -506,6 +506,7 @@ def map_sales_invoice_doc(d: Any) -> dict[str, Any]:
     row["items"] = _invoice_items(d)
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["narration"] = d.remarks
     row["docstatus"] = int(d.docstatus or 0)
     row["total_taxes_and_charges"] = float(getattr(d, "total_taxes_and_charges", None) or 0)
     row["zatca_qr_base64"] = getattr(d, "zatca_qr_base64", None)
@@ -574,6 +575,7 @@ def map_quotation_doc(d: Any) -> dict[str, Any]:
     ]
     row["company"] = d.company
     row["terms"] = d.terms
+    row["narration"] = d.get("custom_narration")
     return row
 
 
@@ -661,6 +663,7 @@ def map_purchase_invoice_doc(d: Any) -> dict[str, Any]:
     row["items"] = _invoice_items(d)
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["narration"] = d.remarks
     row["docstatus"] = int(d.docstatus or 0)
     return row
 
@@ -754,6 +757,7 @@ def map_payment_entry_doc(d: Any) -> dict[str, Any]:
     ]
     row["company"] = d.company
     row["remarks"] = d.remarks
+    row["narration"] = d.remarks
     row["reference_no"] = d.reference_no
     return row
 
@@ -825,6 +829,7 @@ def map_journal_entry_doc(d: Any) -> dict[str, Any]:
     ]
     row["company"] = d.company
     row["user_remark"] = d.user_remark
+    row["narration"] = d.remark
     row["reference_no"] = getattr(d, "cheque_no", None)
     row["reference_date"] = str(d.cheque_date) if getattr(d, "cheque_date", None) else None
     return row

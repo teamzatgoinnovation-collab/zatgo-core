@@ -7,6 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import flt, getdate, nowdate, today
 
+from zatgo_core.services.narration import set_narration
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import parse_json_dict, require_login, require_str
 
@@ -729,6 +730,7 @@ def create_quotation(
     terms: str | None = None,
     cost_center: str | None = None,
     client_id: str | None = None,
+    narration: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_quotation_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
@@ -756,6 +758,7 @@ def create_quotation(
             "transaction_date": getdate(transaction_date) if transaction_date else today(),
             "valid_till": getdate(valid_till) if valid_till else None,
             "terms": (terms or "").strip() or None,
+            "custom_narration": (narration or "").strip() or None,
             "items": rows,
             "cost_center": (cost_center or "").strip() or None,
             "zatgo_client_id": cid,
@@ -794,6 +797,7 @@ def update_quotation(
     valid_till: str | None = None,
     terms: str | None = None,
     cost_center: str | None = None,
+    narration: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_quotation_doc
 
@@ -816,6 +820,8 @@ def update_quotation(
         doc.valid_till = getdate(valid_till) if valid_till else None
     if terms is not None:
         doc.terms = (terms or "").strip() or None
+    if narration is not None:
+        doc.custom_narration = (narration or "").strip() or None
     if cost_center is not None:
         doc.cost_center = (cost_center or "").strip() or None
     doc.save()
@@ -1233,6 +1239,7 @@ def create_receive_payment(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
@@ -1278,6 +1285,7 @@ def create_receive_payment(
         pe.cost_center = cost_center
     if project:
         pe.project = project
+    set_narration(pe, remarks)
     pe.zatgo_client_id = cid
     if cid:
         pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
@@ -1310,6 +1318,7 @@ def create_pay_payment(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
@@ -1355,6 +1364,7 @@ def create_pay_payment(
         pe.cost_center = cost_center
     if project:
         pe.project = project
+    set_narration(pe, remarks)
     pe.zatgo_client_id = cid
     if cid:
         pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
@@ -1391,6 +1401,7 @@ def _create_advance_payment(
     company: str | None,
     cost_center: str | None = None,
     project: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     """Build a Payment Entry directly from a party — not bound to a single invoice.
     Supports on-account/advance receipts (no invoices given) and allocating one
@@ -1472,6 +1483,7 @@ def _create_advance_payment(
         pe.cost_center = cost_center
     if project:
         pe.project = project
+    set_narration(pe, remarks)
     if payment_type == "Receive":
         pe.paid_from = party_account
         pe.paid_to = bank_account
@@ -1554,6 +1566,7 @@ def create_receive_advance(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     """Receive from a Customer without requiring one bound Sales Invoice —
     supports on-account/advance receipts and allocating across several invoices."""
@@ -1570,6 +1583,7 @@ def create_receive_advance(
         company,
         cost_center=cost_center,
         project=project,
+        remarks=remarks,
     )
 
 
@@ -1584,6 +1598,7 @@ def create_pay_advance(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     """Pay a Supplier without requiring one bound Purchase Invoice —
     supports on-account/advance payments and allocating across several bills."""
@@ -1600,6 +1615,7 @@ def create_pay_advance(
         company,
         cost_center=cost_center,
         project=project,
+        remarks=remarks,
     )
 
 
@@ -1622,6 +1638,7 @@ def update_payment_entry(
     reference_no: str | None = None,
     cost_center: str | None = None,
     project: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     """Deliberately excludes `amount` — changing it would require re-running the party/invoice
     allocation logic in `references`, which plain field assignment does not do safely. The
@@ -1644,6 +1661,9 @@ def update_payment_entry(
         doc.cost_center = (cost_center or "").strip() or None
     if project is not None:
         doc.project = (project or "").strip() or None
+    if remarks is not None:
+        # Narration: kept as written (the save hook flags it as custom).
+        doc.remarks = (remarks or "").strip() or None
     doc.save()
     frappe.db.commit()
     return ok(map_payment_entry_doc(doc), meta={"stub": False, "updated": True, "source": "Payment Entry"})

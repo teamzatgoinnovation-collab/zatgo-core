@@ -59,6 +59,7 @@ def create_receive(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     return create_receive_payment(
         sales_invoice=sales_invoice,
@@ -69,6 +70,7 @@ def create_receive(
         cost_center=cost_center,
         project=project,
         client_id=client_id,
+        remarks=remarks,
     )
 
 
@@ -82,6 +84,7 @@ def create_pay(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     return create_pay_payment(
         purchase_invoice=purchase_invoice,
@@ -92,6 +95,7 @@ def create_pay(
         cost_center=cost_center,
         project=project,
         client_id=client_id,
+        remarks=remarks,
     )
 
 
@@ -107,6 +111,7 @@ def create_receive_advance(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     return _create_receive_advance_service(
         party=party,
@@ -119,6 +124,7 @@ def create_receive_advance(
         cost_center=cost_center,
         project=project,
         client_id=client_id,
+        remarks=remarks,
     )
 
 
@@ -134,6 +140,7 @@ def create_pay_advance(
     cost_center: str | None = None,
     project: str | None = None,
     client_id: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
     return _create_pay_advance_service(
         party=party,
@@ -146,6 +153,7 @@ def create_pay_advance(
         cost_center=cost_center,
         project=project,
         client_id=client_id,
+        remarks=remarks,
     )
 
 
@@ -157,7 +165,9 @@ def update(
     reference_no: str | None = None,
     cost_center: str | None = None,
     project: str | None = None,
+    remarks: str | None = None,
 ) -> dict[str, Any]:
+    """`remarks` is the Narration; empty string clears it (ERPNext's auto-text returns)."""
     return update_payment_entry(
         name,
         mode_of_payment=mode_of_payment,
@@ -165,6 +175,7 @@ def update(
         reference_no=reference_no,
         cost_center=cost_center,
         project=project,
+        remarks=remarks,
     )
 
 
