@@ -12,7 +12,7 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import add_days, nowdate, random_string
 
-from zatgo_core.patches.v0_2_5.add_narration_fields import NATIVE_NARRATION, NEW_NARRATION
+from zatgo_core.patches.v0_2_5.add_narration_fields import ANCHOR, NATIVE_NARRATION, narration_field
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
 
@@ -103,23 +103,57 @@ class TestNarration(IntegrationTestCase):
 
     # -- fields ---------------------------------------------------------------
 
-    def test_every_transaction_has_a_visible_narration(self) -> None:
-        for doctype, (fieldname, section) in NATIVE_NARRATION.items():
+    def test_every_transaction_has_narration_and_attachment_on_main_tab(self) -> None:
+        for doctype in ANCHOR:
             meta = frappe.get_meta(doctype)
+            order = [df.fieldname for df in meta.fields]
+            fieldname = narration_field(doctype)
             df = meta.get_field(fieldname)
+            self.assertIsNotNone(df, doctype)
             self.assertEqual(df.label, "Narration", doctype)
             self.assertFalse(df.hidden, doctype)
-            self.assertFalse(meta.get_field(section).collapsible, f"{doctype} section collapsed")
-        for doctype in ("Payment Entry", "Journal Entry"):
-            field = NATIVE_NARRATION[doctype][0]
-            self.assertFalse(frappe.get_meta(doctype).get_field(field).read_only_depends_on, doctype)
-        for doctype in NEW_NARRATION:
-            df = frappe.get_meta(doctype).get_field("custom_narration")
-            self.assertIsNotNone(df, doctype)
-            self.assertEqual(df.label, "Narration")
-            self.assertTrue(
-                frappe.db.has_column(doctype, "custom_narration"), f"{doctype}: column not created"
+            # Narration section sits on the first tab, holding narration + attachment.
+            i = order.index("custom_narration_section")
+            first_tab_break = next(
+                (j for j, f in enumerate(order) if j > 0 and meta.get_field(f).fieldtype == "Tab Break"),
+                len(order),
             )
+            self.assertLess(i, first_tab_break, f"{doctype}: Narration section not on the main tab")
+            self.assertEqual(order[i + 1], fieldname, f"{doctype}: narration not in its section")
+            self.assertIn("custom_attachment", order[i : i + 4], doctype)
+            self.assertEqual(meta.get_field("custom_attachment").fieldtype, "Attach")
+            self.assertFalse(meta.get_field("custom_narration_section").depends_on, doctype)
+            if fieldname == "custom_narration":
+                self.assertTrue(frappe.db.has_column(doctype, "custom_narration"), doctype)
+            self.assertTrue(frappe.db.has_column(doctype, "custom_attachment"), doctype)
+        for doctype in ("Payment Entry", "Journal Entry"):
+            field = NATIVE_NARRATION[doctype]
+            self.assertFalse(frappe.get_meta(doctype).get_field(field).read_only_depends_on, doctype)
+
+    def test_attachment_added_before_first_save_is_linked(self) -> None:
+        """What the Attachment field does on a new form: upload first (no
+        document yet), then Frappe links the file to the document on save."""
+        f = frappe.get_doc(
+            {"doctype": "File", "file_name": f"voucher-{random_string(5)}.txt", "content": b"voucher", "is_private": 1}
+        ).insert(ignore_permissions=True)
+        je = frappe.get_doc(
+            {
+                "doctype": "Journal Entry",
+                "company": self.company,
+                "posting_date": nowdate(),
+                "custom_attachment": f.file_url,
+                "accounts": [
+                    {"account": self.expense, "debit_in_account_currency": 5},
+                    {"account": self.cash, "credit_in_account_currency": 5},
+                ],
+            }
+        ).insert(ignore_permissions=True)
+        self.assertTrue(
+            frappe.db.exists(
+                "File",
+                {"file_url": f.file_url, "attached_to_doctype": "Journal Entry", "attached_to_name": je.name},
+            )
+        )
 
     # -- Payment Entry --------------------------------------------------------
 

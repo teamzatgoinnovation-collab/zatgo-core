@@ -1,22 +1,28 @@
 # Narration on transactions
 
-Every transaction document has a visible, user-editable **Narration**
-(optional). Attachments need nothing extra: the form sidebar's Attach works on
-all of them (and `upload_file` for API clients).
+Every transaction document has a **Narration** section on its main tab,
+right after the main table, visible on a new form before the first save.
+It holds:
 
-| Doctype | Narration field | Where |
+- **Narration:** optional, user-editable.
+- **Attachment** (`custom_attachment`, Attach): a file can be added before
+  the first save, when the form sidebar's Attachments panel isn't shown
+  yet. Frappe links it to the document on save. More files go through the
+  sidebar after saving. Editable after submit too.
+
+| Doctype | Narration field | Section placed after |
 |---|---|---|
-| Payment Entry | `remarks` (native) | More Information section (ERPNext shows it once accounts + amounts are filled) |
-| Journal Entry | `remark` (native) | More Info tab |
-| Sales Invoice, Purchase Invoice, POS Invoice | `remarks` (native) | More Info tab (SI: once a customer is set) |
-| Stock Entry, Purchase Receipt | `remarks` (native) | Other Info / More Info tab |
-| Sales Order, Purchase Order, Quotation, Delivery Note, Material Request | `custom_narration` | top of the More Info tab |
-| Stock Reconciliation | `custom_narration` | end of the form |
+| Payment Entry | `remarks` (native) | Transaction ID (reference no. / date) |
+| Journal Entry | `remark` (native) | Accounting Entries table |
+| Sales / Purchase / POS Invoice, Stock Entry, Purchase Receipt | `remarks` (native) | Items table |
+| Sales Order, Purchase Order, Quotation, Delivery Note, Material Request, Stock Reconciliation | `custom_narration` | Items table |
 
-Native fields are relabelled "Narration" and their section is shown
-expanded. They already flow into GL Entry `remarks`, so ledger reports show
-the narration. Code: `patches/v0_2_5/add_narration_fields.py` (+
-`setup/ensure_custom_fields.py`).
+Native fields are relabelled "Narration" and moved into the section; they
+already flow into GL Entry `remarks`, so ledger reports show the narration.
+The section and its fields are placed with a `field_order` property setter
+(what Customize Form saves), recomputed from the site's current layout so
+other customisations are kept. Code: `patches/v0_2_5/add_narration_fields.py`,
+also run on every migrate via `setup/ensure_custom_fields.py`.
 
 **Payment Entry / Journal Entry:** ERPNext rewrites `remarks` / `remark`
 with auto-text on every save unless its own "Custom Remark(s)" flag is set.
