@@ -1,10 +1,12 @@
-"""Cash / Credit payment-type selector on Sales Invoice.
+"""Cash / Bank / Credit payment-type selector on Sales Invoice.
 
 Drives the auto Payment Entry creation in
-zatgo_core.services.invoice_cash_payment_service -- Cash submits create and
-submit a matching Payment Entry via ERPNext's own get_payment_entry(),
+zatgo_core.services.invoice_cash_payment_service -- Cash and Bank submits
+create and submit a matching Payment Entry via ERPNext's own
+get_payment_entry() (Bank's own fields: patches/v0_2_7/add_bank_payment_fields.py),
 Credit leaves the invoice outstanding. See that module for the on_submit
-logic this field feeds. (Purchase Invoice has its own mirrored field, see
+logic this field feeds. Re-run on every migrate (setup/ensure_custom_fields.py),
+so the options here are the live ones. (Purchase Invoice has its own mirrored field, see
 patches/v0_2_3/add_purchase_invoice_payment_type_field.py.)
 """
 
@@ -24,7 +26,7 @@ def execute() -> None:
                     "fieldname": "custom_payment_type",
                     "label": "Payment Type",
                     "fieldtype": "Select",
-                    "options": "\nCash\nCredit",
+                    "options": "\nCash\nBank\nCredit",
                     "insert_after": "due_date",
                     "translatable": 0,
                 },

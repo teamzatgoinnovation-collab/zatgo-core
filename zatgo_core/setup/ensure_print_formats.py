@@ -400,7 +400,7 @@ _DEMO_TAX_INVOICE_HTML = r"""  {# ERPNext / Frappe Print Format: Saudi VAT Tax �
     </div>
 
     <div class="invoice-meta-bar">
-      <div>ORDER FORM <span class="arabic"> نموذج الطلب</span>{% if doc.custom_payment_type == "Cash" %}<span class="payment-type cash">CASH</span>{% elif doc.custom_payment_type == "Credit" %}<span class="payment-type credit">CREDIT</span>{% endif %}</div>
+      <div>ORDER FORM <span class="arabic"> نموذج الطلب</span>{% if doc.custom_payment_type == "Cash" %}<span class="payment-type cash">CASH</span>{% elif doc.custom_payment_type == "Bank" %}<span class="payment-type bank">BANK</span>{% elif doc.custom_payment_type == "Credit" %}<span class="payment-type credit">CREDIT</span>{% endif %}</div>
       <div class="meta-grid">
         <div><span>No.</span><b>{{ doc.name }}</b></div>
         <div><span class="arabic">تاريخ مبيعات</span><b>{{ frappe.format_date(doc.posting_date) }}</b></div>
@@ -1062,6 +1062,10 @@ html, body {
 
 .payment-type.cash {
   background: #15803d;
+}
+
+.payment-type.bank {
+  background: #1d4ed8;
 }
 
 .payment-type.credit {
@@ -1981,13 +1985,24 @@ KASIB_ASIA_TAX_INVOICE_NAME = "Kasib Asia Tax Invoice"
 
 _KASIB_ASIA_PAYMENT_BADGE_MARKER = "payment-type-badge"
 
+# Payment Type "Bank" (patches/v0_2_7). Sites that already have the badge
+# get just this branch, inserted before the Credit one; the badge CSS is left
+# as the site has it (kasibasia restyled it in Desk).
+_KASIB_ASIA_BANK_BADGE_MARKER = 'doc.custom_payment_type == "Bank"'
+_KASIB_ASIA_BANK_BADGE_HTML = (
+    '\n  {% elif doc.custom_payment_type == "Bank" %}'
+    '\n  <div class="payment-type-badge bank">Payment Type: BANK</div>'
+)
+_KASIB_ASIA_CREDIT_BADGE_BRANCH = '\n  {% elif doc.custom_payment_type == "Credit" %}'
+
 # Inserted right after the per-page copy-label div (Original/Duplicate/
 # Triplicate Copy) so it repeats on every physical page, same as that
 # label does.
 _KASIB_ASIA_PAYMENT_BADGE_HTML = (
     '\n  {% if doc.custom_payment_type == "Cash" %}'
     '\n  <div class="payment-type-badge cash">Payment Type: CASH</div>'
-    '\n  {% elif doc.custom_payment_type == "Credit" %}'
+    + _KASIB_ASIA_BANK_BADGE_HTML
+    + '\n  {% elif doc.custom_payment_type == "Credit" %}'
     '\n  <div class="payment-type-badge credit">Payment Type: CREDIT</div>'
     '\n  {% endif %}'
 )
@@ -2009,6 +2024,7 @@ _KASIB_ASIA_PAYMENT_BADGE_CSS = """
   line-height: 2.4mm;
 }
 .payment-type-badge.cash { color: #15803d; }
+.payment-type-badge.bank { color: #1d4ed8; }
 .payment-type-badge.credit { color: #b45309; }
 """
 
@@ -2032,6 +2048,11 @@ def _ensure_kasib_asia_payment_badge() -> None:
         return
     doc = frappe.get_doc("Print Format", KASIB_ASIA_TAX_INVOICE_NAME)
     if _KASIB_ASIA_PAYMENT_BADGE_MARKER in (doc.html or ""):
+        if _KASIB_ASIA_BANK_BADGE_MARKER not in doc.html and doc.html.count(_KASIB_ASIA_CREDIT_BADGE_BRANCH) == 1:
+            doc.html = doc.html.replace(
+                _KASIB_ASIA_CREDIT_BADGE_BRANCH, _KASIB_ASIA_BANK_BADGE_HTML + _KASIB_ASIA_CREDIT_BADGE_BRANCH
+            )
+            doc.save(ignore_permissions=True)
         return  # already applied
 
     anchor = '<div class="copy-label">{{ COPY_LABELS[copy_index] }}</div>'

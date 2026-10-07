@@ -138,6 +138,8 @@
   <div class="copy-label">{{ copy_label }}</div>
   {% if doc.custom_payment_type == "Cash" %}
   <div class="payment-type-badge cash">Payment Type: CASH</div>
+  {% elif doc.custom_payment_type == "Bank" %}
+  <div class="payment-type-badge bank">Payment Type: BANK</div>
   {% elif doc.custom_payment_type == "Credit" %}
   <div class="payment-type-badge credit">Payment Type: CREDIT</div>
   {% endif %}

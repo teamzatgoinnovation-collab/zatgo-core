@@ -29,3 +29,4 @@ zatgo_core.patches.v0_2_3.move_van_profile_series_to_naming_rules
 zatgo_core.patches.v0_2_4.add_multi_payment_fields
 zatgo_core.patches.v0_2_5.add_narration_fields
 zatgo_core.patches.v0_2_6.narration_on_main_tab
+zatgo_core.patches.v0_2_7.add_bank_payment_fields

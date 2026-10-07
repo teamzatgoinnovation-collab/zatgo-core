@@ -1,4 +1,4 @@
-"""Cash / Credit payment automation for Sales Invoice and Purchase Invoice.
+"""Cash / Bank / Credit payment automation for Sales Invoice and Purchase Invoice.
 
 Covers zatgo_core.services.invoice_cash_payment_service end-to-end through
 real document submit/cancel (not the service function in isolation) so a
@@ -34,11 +34,48 @@ class TestInvoiceCashPayment(IntegrationTestCase):
             {"company": cls.company, "account_type": "Expense Account", "is_group": 0},
             "name",
         )
+        cls.bank_account = cls._make_bank_account()
+        cls.bank_mode_of_payment = cls._make_bank_mode_of_payment()
         cls.item_code = cls._make_non_stock_item()
         cls.customer = cls._make_customer("Invoice Cash Payment Test Customer")
         cls.supplier = cls._make_supplier("Invoice Cash Payment Test Supplier")
 
     # -- fixtures -------------------------------------------------------
+
+    @classmethod
+    def _make_bank_account(cls) -> str:
+        name = frappe.db.get_value(
+            "Account", {"company": cls.company, "account_name": "ZG Test Bank", "is_group": 0}, "name"
+        )
+        if name:
+            return name
+        parent = frappe.db.get_value(
+            "Account", {"company": cls.company, "account_type": "Bank", "is_group": 1}, "name"
+        ) or frappe.db.get_value("Account", {"company": cls.company, "root_type": "Asset", "is_group": 1}, "name")
+        return frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": "ZG Test Bank",
+                "company": cls.company,
+                "parent_account": parent,
+                "account_type": "Bank",
+                "account_currency": "SAR",
+            }
+        ).insert(ignore_permissions=True).name
+
+    @classmethod
+    def _make_bank_mode_of_payment(cls) -> str:
+        name = "ZG Test Bank Transfer"
+        if not frappe.db.exists("Mode of Payment", name):
+            frappe.get_doc(
+                {
+                    "doctype": "Mode of Payment",
+                    "mode_of_payment": name,
+                    "type": "Bank",
+                    "accounts": [{"company": cls.company, "default_account": cls.bank_account}],
+                }
+            ).insert(ignore_permissions=True)
+        return name
 
     @classmethod
     def _make_non_stock_item(cls) -> str:
@@ -83,9 +120,12 @@ class TestInvoiceCashPayment(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         return name
 
-    def _make_sales_invoice(self, payment_type: str, cash_account: str | None = "keep") -> "frappe.model.document.Document":
+    def _make_sales_invoice(
+        self, payment_type: str, cash_account: str | None = "keep", **extra
+    ) -> "frappe.model.document.Document":
         si = frappe.get_doc(
             {
+                **extra,
                 "doctype": "Sales Invoice",
                 "customer": self.customer,
                 "company": self.company,
@@ -173,6 +213,63 @@ class TestInvoiceCashPayment(IntegrationTestCase):
     def test_sales_invoice_cash_without_cash_account_blocks_submit(self) -> None:
         si = self._make_sales_invoice("Cash", cash_account=None)
         with self.assertRaises(frappe.ValidationError):
+            si.submit()
+
+    def test_sales_invoice_bank_auto_creates_and_submits_payment_entry(self) -> None:
+        si = self._make_sales_invoice(
+            "Bank", cash_account=None, custom_bank_account=self.bank_account, custom_bank_reference_no="TRF-1234"
+        )
+        si.submit()
+
+        self.assertEqual(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"), 0)
+        pe_names = self._linked_payment_entries("Sales Invoice", si.name)
+        self.assertEqual(len(pe_names), 1)
+        pe = frappe.db.get_value(
+            "Payment Entry",
+            pe_names[0],
+            ["docstatus", "payment_type", "paid_to", "mode_of_payment", "reference_no", "reference_date", "paid_amount"],
+            as_dict=True,
+        )
+        self.assertEqual(pe.docstatus, 1)
+        self.assertEqual(pe.payment_type, "Receive")
+        self.assertEqual(pe.paid_to, self.bank_account)
+        self.assertEqual(pe.mode_of_payment, self.bank_mode_of_payment)
+        self.assertEqual(pe.reference_no, "TRF-1234")
+        self.assertEqual(str(pe.reference_date), str(si.posting_date))
+        self.assertEqual(pe.paid_amount, 100)
+
+        gl = frappe.get_all(
+            "GL Entry",
+            filters={"voucher_no": pe_names[0], "is_cancelled": 0},
+            fields=["account", "debit", "credit"],
+        )
+        self.assertIn((self.bank_account, 100, 0), [(g.account, g.debit, g.credit) for g in gl])
+
+    def test_sales_invoice_bank_without_reference_uses_invoice_name(self) -> None:
+        si = self._make_sales_invoice("Bank", cash_account=None, custom_bank_account=self.bank_account)
+        si.submit()
+        pe_name = self._linked_payment_entries("Sales Invoice", si.name)[0]
+        self.assertEqual(frappe.db.get_value("Payment Entry", pe_name, "reference_no"), si.name)
+
+    def test_sales_invoice_bank_cancel_cascades_to_payment_entry(self) -> None:
+        si = self._make_sales_invoice("Bank", cash_account=None, custom_bank_account=self.bank_account)
+        si.submit()
+        pe_name = self._linked_payment_entries("Sales Invoice", si.name)[0]
+
+        si.reload()
+        si.flags.ignore_permissions = True
+        si.cancel()
+
+        self.assertEqual(frappe.db.get_value("Payment Entry", pe_name, "docstatus"), 2)
+
+    def test_sales_invoice_bank_without_bank_account_blocks_submit(self) -> None:
+        si = self._make_sales_invoice("Bank", cash_account=None)
+        with self.assertRaisesRegex(frappe.ValidationError, "no Bank Account was selected"):
+            si.submit()
+
+    def test_sales_invoice_bank_rejects_cash_type_account(self) -> None:
+        si = self._make_sales_invoice("Bank", cash_account=None, custom_bank_account=self.cash_account)
+        with self.assertRaisesRegex(frappe.ValidationError, "not a Bank-type account"):
             si.submit()
 
     # -- Purchase Invoice ---------------------------------------------------
