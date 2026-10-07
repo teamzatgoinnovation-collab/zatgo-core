@@ -389,6 +389,35 @@ class TestVansalexModuleAccess(IntegrationTestCase):
                 orders_api.pdf(invoice, print_format=PRINT_FORMAT_80MM_NAME)
             self.assertTrue(orders_api.pdf(invoice)["data"]["pdf_base64"])  # A4 still on
 
+    def test_item_rate_is_fixed_unless_edit_rate_is_on(self) -> None:
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 10)
+        try:
+            self.assertTrue(self._sell(payment_type="Credit")["data"]["erp_name"])  # 10 = standard
+            frappe.set_user("Administrator")
+            with self.assertRaises(frappe.PermissionError):
+                self._as_user()
+                create_order(
+                    client_id=f"test-rate-{random_string(8)}",
+                    customer=self.customer,
+                    items=[{"item_code": self.item_code, "qty": 1, "rate": 7.5}],
+                    payment_type="Credit",
+                )
+            frappe.set_user("Administrator")
+            with self._client(sales_invoice__edit_rate=1):
+                self._as_user()
+                res = create_order(
+                    client_id=f"test-rate-{random_string(8)}",
+                    customer=self.customer,
+                    items=[{"item_code": self.item_code, "qty": 1, "rate": 7.5}],
+                    payment_type="Credit",
+                )
+                frappe.set_user("Administrator")
+                inv = frappe.get_doc("Sales Invoice", res["data"]["erp_name"])
+                self.assertEqual(inv.items[0].rate, 7.5)
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+
     def test_split_payment_needs_the_feature(self) -> None:
         self._disable_for_user("sales_invoice.multiple_payment_modes")
         with self.assertRaises(frappe.PermissionError):

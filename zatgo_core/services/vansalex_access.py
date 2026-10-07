@@ -73,6 +73,8 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
     "sales_invoice.change_warehouse": (
         FEATURE, "Change warehouse", "sales_invoice", 0, "allow_warehouse_change",
     ),
+    # New functionality: off until an admin turns it on.
+    "sales_invoice.edit_rate": (FEATURE, "Edit item rate", "sales_invoice", 0, None),
     "collections.card": (FEATURE, "Card / non-cash collection", "collections", 1, None),
     "collections.multiple_payment_modes": (
         FEATURE, "Split collection across methods", "collections", 1, None,
@@ -103,6 +105,7 @@ APP_LOCATION: dict[str, str] = {
     "sales_invoice.credit_sale": "New Invoice → Cash / Credit",
     "sales_invoice.discount": "New Invoice → Discount %",
     "sales_invoice.change_warehouse": "New Invoice → Warehouse",
+    "sales_invoice.edit_rate": "New Invoice / New Order → Rate on each line",
     "collections.card": "New Collection → Card",
     "collections.multiple_payment_modes": "New Collection → Split payment",
 }
@@ -230,6 +233,33 @@ def check_payment_rows(rows: list[dict[str, Any]], company: str, scope: str) -> 
     if scope == "collections":
         for r in rows:
             check_collection_method(r["mode_of_payment"])
+
+
+def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) -> None:
+    """Without `sales_invoice.edit_rate`, a line's rate must be the item's
+    price — its standard selling rate (what the app shows), else its rate on
+    [price_list] (the customer's). 0 / blank lets ERPNext fill the price in.
+    An item with no price anywhere has nothing to compare against and is
+    left to the caller. With the feature, any positive rate is accepted."""
+    if is_enabled("sales_invoice.edit_rate"):
+        return
+    for row in rows:
+        rate = flt(row.get("rate"))
+        if rate <= 0:
+            continue
+        code = row.get("item_code")
+        price = flt(frappe.db.get_value("Item", code, "standard_rate"))
+        if price <= 0 and price_list:
+            price = flt(
+                frappe.db.get_value("Item Price", {"item_code": code, "price_list": price_list}, "price_list_rate")
+            )
+        if price > 0 and abs(rate - price) > 0.005:
+            frappe.throw(
+                f"Changing the rate isn't enabled for your account ({code}: "
+                f"{price:.2f}, not {rate:.2f}). Ask your admin to turn on 'Edit item rate' "
+                "in ERPNext → VanSaleX Settings → Modules & Features.",
+                frappe.PermissionError,
+            )
 
 
 def check_collection_method(mode_of_payment: str | None) -> None:

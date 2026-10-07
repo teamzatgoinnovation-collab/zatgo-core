@@ -222,6 +222,9 @@ def _build_direct_invoice(
     company_name = frappe.db.get_value("Warehouse", wh, "company") or _default_company(company)
     # Prefer customer default price list when item rates missing
     pl = frappe.db.get_value("Customer", party, "default_price_list")
+    from zatgo_core.services.vansalex_access import check_item_rates
+
+    check_item_rates(rows, pl)
     if pl:
         for row in rows:
             if flt(row.get("rate") or 0) <= 0:
@@ -457,6 +460,9 @@ def create_sales_order(
             )
     party = _resolve_customer(customer)
     rows = _normalize_items(items)
+    from zatgo_core.services.vansalex_access import check_item_rates
+
+    check_item_rates(rows, frappe.db.get_value("Customer", party, "default_price_list"))
     pct = _validated_discount_percentage(discount_percentage)
 
     # ERPNext's Sales Order controller requires a source warehouse on every
