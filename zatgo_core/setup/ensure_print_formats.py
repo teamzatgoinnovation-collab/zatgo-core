@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import frappe
 
 from zatgo_core.utils.logging import get_logger
@@ -1986,14 +1988,18 @@ KASIB_ASIA_TAX_INVOICE_NAME = "Kasib Asia Tax Invoice"
 _KASIB_ASIA_PAYMENT_BADGE_MARKER = "payment-type-badge"
 
 # Payment Type "Bank" (patches/v0_2_7). Sites that already have the badge
-# get just this branch, inserted before the Credit one; the badge CSS is left
-# as the site has it (kasibasia restyled it in Desk).
+# get just this branch, inserted before the Credit one at that line's own
+# indentation (kasibasia reformatted and restyled the badge in Desk, so the
+# Credit line is matched by pattern, not by the exact text injected here);
+# the badge CSS is left as the site has it.
 _KASIB_ASIA_BANK_BADGE_MARKER = 'doc.custom_payment_type == "Bank"'
 _KASIB_ASIA_BANK_BADGE_HTML = (
     '\n  {% elif doc.custom_payment_type == "Bank" %}'
     '\n  <div class="payment-type-badge bank">Payment Type: BANK</div>'
 )
-_KASIB_ASIA_CREDIT_BADGE_BRANCH = '\n  {% elif doc.custom_payment_type == "Credit" %}'
+_KASIB_ASIA_CREDIT_BADGE_RE = re.compile(
+    r'^([ \t]*)\{%-?\s*elif\s+doc\.custom_payment_type\s*==\s*["\']Credit["\']\s*-?%\}', re.MULTILINE
+)
 
 # Inserted right after the per-page copy-label div (Original/Duplicate/
 # Triplicate Copy) so it repeats on every physical page, same as that
@@ -2048,10 +2054,15 @@ def _ensure_kasib_asia_payment_badge() -> None:
         return
     doc = frappe.get_doc("Print Format", KASIB_ASIA_TAX_INVOICE_NAME)
     if _KASIB_ASIA_PAYMENT_BADGE_MARKER in (doc.html or ""):
-        if _KASIB_ASIA_BANK_BADGE_MARKER not in doc.html and doc.html.count(_KASIB_ASIA_CREDIT_BADGE_BRANCH) == 1:
-            doc.html = doc.html.replace(
-                _KASIB_ASIA_CREDIT_BADGE_BRANCH, _KASIB_ASIA_BANK_BADGE_HTML + _KASIB_ASIA_CREDIT_BADGE_BRANCH
+        credit = list(_KASIB_ASIA_CREDIT_BADGE_RE.finditer(doc.html))
+        if _KASIB_ASIA_BANK_BADGE_MARKER not in doc.html and len(credit) == 1:
+            indent = credit[0].group(1)
+            bank = (
+                f'{indent}{{% elif doc.custom_payment_type == "Bank" %}}\n'
+                f'{indent}  <div class="payment-type-badge bank">Payment Type: BANK</div>\n'
             )
+            at = credit[0].start()
+            doc.html = doc.html[:at] + bank + doc.html[at:]
             doc.save(ignore_permissions=True)
         return  # already applied
 
