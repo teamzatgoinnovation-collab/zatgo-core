@@ -39,7 +39,9 @@ Stable machine identifiers (never page titles).
 | `sales_invoice.multiple_payment_modes` | feature | Split an invoice's payment across methods |
 | `sales_invoice.multiple_payment_accounts` | feature | Pay into an account other than the method's default |
 | `sales_invoice.credit_sale` | feature | **= Allow Credit Sales** (settings + profile override) |
-| `sales_invoice.discount` | feature | **= Max Discount % > 0** |
+| `sales_invoice.discount` | feature | Discount % on the whole invoice (capped by Max Discount %; off while it is 0) |
+| `sales_invoice.line_discount` | feature | Disc % on each item line (capped by Max Discount %; off while it is 0); shown on the invoice line as ERPNext's own line discount |
+| `sales_invoice.edit_rate` | feature | Typed rate on each line; without it the server refuses a rate other than the item's price |
 | `sales_invoice.change_warehouse` | feature | **= Allow Changing Warehouse** (settings + profile override) |
 | `collections.card` | feature | Collect by a non-cash Mode of Payment (type ≠ Cash) |
 | `collections.multiple_payment_modes` | feature | Split a collection across methods |

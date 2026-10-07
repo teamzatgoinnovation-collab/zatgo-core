@@ -24,9 +24,18 @@ def ensure_vansalex_access() -> None:
     have = {r.access_key for r in doc.get("access") or []}
     missing = [k for k in ROW_KEYS if k not in have]
     current = {r.access_key: r.enabled for r in doc.get("access") or []}
+    from zatgo_core.services.vansalex_access import SEED_FROM_SETTING, _derived
+    from zatgo_core.services.vansalex_settings import _global_settings
+
+    settings = _global_settings()
     for key in missing:
-        kind, label, parent, default, _derived = CATALOG[key]
-        enabled = current.get(SPLIT_FROM[key], default) if key in SPLIT_FROM else default
+        kind, label, parent, default, _d = CATALOG[key]
+        if key in SPLIT_FROM:
+            enabled = current.get(SPLIT_FROM[key], default)
+        elif key in SEED_FROM_SETTING:
+            enabled = _derived(SEED_FROM_SETTING[key], settings)
+        else:
+            enabled = default
         doc.append("access", {"access_key": key, "kind": kind, "label": label, "enabled": enabled})
     # Rows follow the catalog's order (the app's order) — only their position
     # moves; nobody's on/off choice is touched. Labels / app locations are

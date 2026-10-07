@@ -69,7 +69,10 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
         FEATURE, "Choose payment account", "sales_invoice", 1, None,
     ),
     "sales_invoice.credit_sale": (FEATURE, "Credit sales", "sales_invoice", 1, "allow_credit_sales"),
-    "sales_invoice.discount": (FEATURE, "Discount", "sales_invoice", 1, "max_discount_percent"),
+    # Both discounts are also capped by VanSaleX Settings → Max Discount %
+    # (and off while it is 0) — see REQUIRES_SETTING.
+    "sales_invoice.discount": (FEATURE, "Total discount", "sales_invoice", 1, None),
+    "sales_invoice.line_discount": (FEATURE, "Discount per item line", "sales_invoice", 0, None),
     "sales_invoice.change_warehouse": (
         FEATURE, "Change warehouse", "sales_invoice", 0, "allow_warehouse_change",
     ),
@@ -103,11 +106,25 @@ APP_LOCATION: dict[str, str] = {
     "sales_invoice.multiple_payment_modes": "New Invoice → Split payment (several methods)",
     "sales_invoice.multiple_payment_accounts": "New Invoice → Split payment → Account",
     "sales_invoice.credit_sale": "New Invoice → Cash / Credit",
-    "sales_invoice.discount": "New Invoice → Discount %",
+    "sales_invoice.discount": "New Invoice / New Order → Discount % (whole invoice)",
+    "sales_invoice.line_discount": "New Invoice / New Order → Disc % on each line",
     "sales_invoice.change_warehouse": "New Invoice → Warehouse",
     "sales_invoice.edit_rate": "New Invoice / New Order → Rate on each line",
     "collections.card": "New Collection → Card",
     "collections.multiple_payment_modes": "New Collection → Split payment",
+}
+
+# Keys that also need a VanSaleX Settings value: on only while it is set
+# (Max Discount % above 0 for the discounts).
+REQUIRES_SETTING: dict[str, str] = {
+    "sales_invoice.discount": "max_discount_percent",
+    "sales_invoice.line_discount": "max_discount_percent",
+}
+
+# A key that used to be derived from a setting starts, as a row, from that
+# setting — so turning it into a switch changes nothing on upgrade.
+SEED_FROM_SETTING: dict[str, str] = {
+    "sales_invoice.discount": "max_discount_percent",
 }
 
 # Keys split out of an existing one: a site getting them starts from that
@@ -174,6 +191,8 @@ def effective(user: str | None = None) -> dict[str, Any]:
     base: dict[str, int] = {}
     for key, (_kind, _label, _parent, default, derived) in CATALOG.items():
         on = _derived(derived, settings) if derived else client.get(key, default)
+        if on and key in REQUIRES_SETTING:
+            on = _derived(REQUIRES_SETTING[key], settings)
         base[key] = 1 if on and (derived or key not in disabled) else 0
 
     def _on(key: str) -> bool:

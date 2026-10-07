@@ -177,6 +177,10 @@ def _validated_discount_percentage(discount_percentage: Any) -> float:
     pct = flt(discount_percentage or 0)
     if pct < 0 or pct > 100:
         frappe.throw("Discount percentage must be between 0 and 100.", frappe.ValidationError)
+    if pct > 0:
+        from zatgo_core.services.vansalex_access import require
+
+        require("sales_invoice.discount")
     if pct > 0 and not is_vansale_admin():
         from zatgo_core.services.vansalex_settings import resolve
 
@@ -184,6 +188,53 @@ def _validated_discount_percentage(discount_percentage: Any) -> float:
         if pct > cap:
             frappe.throw(f"Discount can't exceed {cap:g}% for your account.", frappe.ValidationError)
     return pct
+
+
+def _line_discounts(items: Any) -> list[float]:
+    """Per-line `discount_percentage` from the caller's items, in the same
+    order as `_parse_items` returns the rows."""
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list):
+        return []
+    return [flt(raw.get("discount_percentage") or 0) for raw in items if isinstance(raw, dict)]
+
+
+def _apply_line_discounts(rows: list[dict[str, Any]], discounts: list[float]) -> None:
+    """Discount per item line (VanSaleX `sales_invoice.line_discount`, capped
+    by Max Discount %): the line keeps the item's price as its list price
+    and carries ERPNext's own discount_percentage / discount_amount, so the
+    discount stays visible on the invoice line instead of vanishing into a
+    lower rate. Call after rates are final (price list filled in)."""
+    if not any(discounts):
+        return
+    from zatgo_core.services.vansalex_access import require
+
+    require("sales_invoice.line_discount")
+    cap = None
+    if not is_vansale_admin():
+        from zatgo_core.services.vansalex_settings import resolve
+
+        cap = flt(resolve()["max_discount_percent"])
+    for row, pct in zip(rows, discounts):
+        if not pct:
+            continue
+        if pct < 0 or pct > 100:
+            frappe.throw("Line discount must be between 0 and 100%.", frappe.ValidationError)
+        if cap is not None and pct > cap:
+            frappe.throw(
+                f"Line discount can't exceed {cap:g}% for your account ({row.get('item_code')}).",
+                frappe.ValidationError,
+            )
+        price = flt(row.get("rate"))
+        if price <= 0:
+            frappe.throw(f"{row.get('item_code')}: no price to discount — enter a rate.", frappe.ValidationError)
+        row["price_list_rate"] = price
+        row["discount_percentage"] = pct
+        row["rate"] = flt(price * (1 - pct / 100), 2)
+        row["discount_amount"] = flt(price - row["rate"], 2)
 
 
 def _build_direct_invoice(
@@ -214,6 +265,7 @@ def _build_direct_invoice(
             normalized.append(row)
         items = normalized
     rows = _parse_items(items)
+    line_discounts = _line_discounts(items)
     pct = _validated_discount_percentage(discount_percentage)
 
     # The invoice's company is the stock's company — a user-default or
@@ -235,6 +287,7 @@ def _build_direct_invoice(
                 )
                 if rate is not None:
                     row["rate"] = flt(rate)
+    _apply_line_discounts(rows, line_discounts)
 
     # No naming_series here: the Sales Invoice before_insert hook picks it from
     # the caller's rule in ZG Sales Invoice Naming Settings (or ERPNext's default).
@@ -460,6 +513,7 @@ def create_sales_order(
             )
     party = _resolve_customer(customer)
     rows = _normalize_items(items)
+    line_discounts = _line_discounts(items)
     from zatgo_core.services.vansalex_access import check_item_rates
 
     check_item_rates(rows, frappe.db.get_value("Customer", party, "default_price_list"))
@@ -493,6 +547,7 @@ def create_sales_order(
                 )
                 if rate is not None:
                     row["rate"] = flt(rate)
+    _apply_line_discounts(rows, line_discounts)
 
     doc_payload: dict[str, Any] = {
         "doctype": "Sales Order",

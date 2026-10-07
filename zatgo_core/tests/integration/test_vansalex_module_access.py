@@ -418,6 +418,96 @@ class TestVansalexModuleAccess(IntegrationTestCase):
             frappe.set_user("Administrator")
             frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
 
+    def _priced_line(self, discount: float, qty: float = 2) -> list[dict]:
+        return [{"item_code": self.item_code, "qty": qty, "rate": 10, "discount_percentage": discount}]
+
+    def test_line_discount_is_off_until_switched_on(self) -> None:
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 10)
+        try:
+            self._as_user()
+            with self.assertRaises(frappe.PermissionError):
+                create_order(
+                    client_id=f"test-ld-{random_string(8)}",
+                    customer=self.customer,
+                    items=self._priced_line(10),
+                    payment_type="Credit",
+                )
+            frappe.set_user("Administrator")
+            with self._client(sales_invoice__line_discount=1):
+                self._as_user()
+                res = create_order(
+                    client_id=f"test-ld-{random_string(8)}",
+                    customer=self.customer,
+                    items=self._priced_line(10),
+                    payment_type="Credit",
+                )
+                frappe.set_user("Administrator")
+                line = frappe.get_doc("Sales Invoice", res["data"]["erp_name"]).items[0]
+                # The item's price stays visible; ERPNext's own line discount.
+                self.assertEqual(line.price_list_rate, 10)
+                self.assertEqual(line.discount_percentage, 10)
+                self.assertEqual(line.rate, 9)
+                self.assertEqual(line.amount, 18)
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+
+    def test_line_discount_is_capped_by_max_discount(self) -> None:
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 10)
+        old = frappe.db.get_single_value("VanSaleX Settings", "max_discount_percent")
+        try:
+            frappe.db.set_single_value("VanSaleX Settings", "max_discount_percent", 5)
+            frappe.db.commit()
+            frappe.clear_document_cache("VanSaleX Settings", "VanSaleX Settings")
+            with self._client(sales_invoice__line_discount=1):
+                self._as_user()
+                with self.assertRaises(frappe.ValidationError):
+                    create_order(
+                        client_id=f"test-ld-{random_string(8)}",
+                        customer=self.customer,
+                        items=self._priced_line(10),
+                        payment_type="Credit",
+                    )
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_single_value("VanSaleX Settings", "max_discount_percent", old)
+            frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+            frappe.db.commit()
+            frappe.clear_document_cache("VanSaleX Settings", "VanSaleX Settings")
+
+    def test_line_discount_carries_from_order_to_invoice(self) -> None:
+        from zatgo_core.services.vansalex_service import confirm_order, create_sales_order
+
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 10)
+        try:
+            with self._client(sales_invoice__line_discount=1):
+                self._as_user()
+                so = create_sales_order(
+                    client_id=f"test-ld-so-{random_string(8)}",
+                    customer=self.customer,
+                    items=self._priced_line(20, qty=1),
+                )["data"]["erp_name"]
+                si = confirm_order(
+                    client_id=f"test-ld-si-{random_string(8)}",
+                    sales_order=so,
+                    payment_type="Credit",
+                )["data"]["erp_name"]
+                frappe.set_user("Administrator")
+                line = frappe.get_doc("Sales Invoice", si).items[0]
+                self.assertEqual(line.discount_percentage, 20)
+                self.assertEqual(line.rate, 8)
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+
+    def test_total_discount_has_its_own_switch(self) -> None:
+        with self._client(sales_invoice__discount=0):
+            self.assertFalse(access.effective(self.user)["features"]["sales_invoice.discount"])
+            with self.assertRaises(frappe.PermissionError):
+                self._sell(payment_type="Credit", discount_percentage=5)
+        frappe.set_user("Administrator")
+        self.assertTrue(self._sell(payment_type="Credit", discount_percentage=5)["data"]["erp_name"])
+
     def test_split_payment_needs_the_feature(self) -> None:
         self._disable_for_user("sales_invoice.multiple_payment_modes")
         with self.assertRaises(frappe.PermissionError):
