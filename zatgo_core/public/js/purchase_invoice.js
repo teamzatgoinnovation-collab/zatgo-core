@@ -42,7 +42,9 @@ function prefill_cash_account(frm) {
 		.get_value(
 			"Mode of Payment Account",
 			{ parent: "Cash", company: frm.doc.company },
-			"default_account"
+			"default_account",
+			null,
+			"Mode of Payment" // child table: Frappe refuses the read without its parent doctype
 		)
 		.then((r) => {
 			const account = r && r.message && r.message.default_account;
