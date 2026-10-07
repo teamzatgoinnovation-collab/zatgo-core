@@ -10,7 +10,7 @@ from frappe.utils import flt, getdate, nowdate, today
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
 from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_invoice_doc
-from zatgo_core.services.erpnext_writes import _default_company, _parse_items
+from zatgo_core.services.erpnext_writes import _apply_return_qtys, _default_company, _parse_items
 from zatgo_core.services.idempotency import find_by_client_id as _find_by_client_id
 from zatgo_core.services.idempotency import insert_idempotent
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
@@ -858,17 +858,7 @@ def create_sales_return(
             )
 
     doc = make_return_doc("Sales Invoice", original_name)
-    kept_items = []
-    for row in doc.items or []:
-        return_qty = requested_qty_by_item.get(row.item_code)
-        if not return_qty:
-            continue
-        row.qty = -abs(return_qty)
-        row.amount = row.qty * flt(row.rate)
-        kept_items.append(row)
-    if not kept_items:
-        frappe.throw("None of the requested items match the original invoice")
-    doc.items = kept_items
+    _apply_return_qtys(doc, requested_qty_by_item, original_name)
     doc.update_stock = 1
     doc.set_warehouse = wh
     doc.zatgo_client_id = cid

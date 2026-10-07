@@ -214,6 +214,41 @@ class TestVansalexReturn(IntegrationTestCase):
                 warehouse=self.own_warehouse,
             )
 
+    def test_partial_return_of_item_on_two_lines_credits_requested_qty_once(self) -> None:
+        # The same item on two invoice lines: returning 3 must credit 3 in
+        # total, not 3 on every line carrying that item (which credited 6).
+        # Two lines of one item need Selling Settings to allow it.
+        with self.change_settings("Selling Settings", allow_multiple_items=1, commit=True):
+            self._check_two_line_return()
+
+    def _check_two_line_return(self) -> None:
+        order = create_order(
+            client_id=f"test-return-order-{random_string(8)}",
+            customer=self.own_customer,
+            items=[
+                {"item_code": self.item_code, "qty": 2, "rate": 10},
+                {"item_code": self.item_code, "qty": 5, "rate": 10},
+            ],
+            warehouse=self.own_warehouse,
+            company=self.company,
+        )
+        self.assertTrue(order["success"], order.get("error"))
+        si_name = order["data"]["erp_name"]
+        self.assertEqual(len(frappe.get_doc("Sales Invoice", si_name).items), 2)
+
+        result = create_sales_return(
+            client_id=f"test-return-{random_string(8)}",
+            return_against=si_name,
+            items=[{"item_code": self.item_code, "qty": 3}],
+            warehouse=self.own_warehouse,
+        )
+        self.assertTrue(result["success"], result.get("error"))
+        ret = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(sum(row.qty for row in ret.items), -3)
+        self.assertEqual(ret.net_total, -30)
+        # Filled line by line, never past what a line has left to return.
+        self.assertEqual([row.qty for row in ret.items], [-2, -1])
+
     def test_van_user_returns_own_sale_into_default_warehouse(self) -> None:
         si_name = self._make_original_order(qty=3)
         frappe.db.set_value("Sales Invoice", si_name, "owner", self.van_user)

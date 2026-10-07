@@ -54,6 +54,41 @@ def _parse_items(items: Any) -> list[dict[str, Any]]:
     return rows
 
 
+def _apply_return_qtys(doc: Any, requested_qty_by_item: dict[str, float], against: str) -> None:
+    """Keep only the requested lines on [doc], a make_return_doc() result.
+
+    make_return_doc gives each line what that line still has left to return
+    (as a negative qty). One item can sit on several lines of the original, so
+    its requested qty is used up line by line, each line capped at its own
+    remainder -- never applied whole to every line carrying the item, which
+    credited (and restocked) it once per line."""
+    left = dict(requested_qty_by_item)
+    kept = []
+    for row in doc.items or []:
+        want = flt(left.get(row.item_code))
+        available = abs(flt(row.qty))
+        if want <= 1e-9 or available <= 1e-9:
+            continue
+        take = flt(min(want, available), row.precision("qty"))
+        row.qty = -take
+        row.amount = row.qty * flt(row.rate)
+        if row.meta.get_field("received_qty"):
+            # Purchase lines: ERPNext requires received = accepted + rejected.
+            row.received_qty = row.qty + flt(row.rejected_qty)
+        left[row.item_code] = want - take
+        kept.append(row)
+    for code, qty in left.items():
+        if qty > 1e-6:
+            frappe.throw(
+                f"Cannot return {flt(requested_qty_by_item[code]):g} of {code} — only "
+                f"{flt(requested_qty_by_item[code]) - qty:g} is left to return on {against}.",
+                frappe.ValidationError,
+            )
+    if not kept:
+        frappe.throw(f"None of the requested items are left to return on {against}")
+    doc.items = kept
+
+
 def _parse_quotation_items(items: Any) -> list[dict[str, Any]]:
     """Same shape as _parse_items, plus an optional free-text description
     and billing-type label (e.g. "One-time", "Annually") — Quotation-only
@@ -985,17 +1020,7 @@ def create_sales_return(
         requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
 
     doc = make_return_doc("Sales Invoice", original_name)
-    kept_items = []
-    for row in doc.items or []:
-        return_qty = requested_qty_by_item.get(row.item_code)
-        if not return_qty:
-            continue
-        row.qty = -abs(return_qty)
-        row.amount = row.qty * flt(row.rate)
-        kept_items.append(row)
-    if not kept_items:
-        frappe.throw("None of the requested items match the original invoice")
-    doc.items = kept_items
+    _apply_return_qtys(doc, requested_qty_by_item, original_name)
     if reason:
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
     # make_return_doc copies most fields from the original — the original's
@@ -1192,17 +1217,7 @@ def create_purchase_return(
         requested_qty_by_item[code] = requested_qty_by_item.get(code, 0) + qty
 
     doc = make_return_doc("Purchase Invoice", original_name)
-    kept_items = []
-    for row in doc.items or []:
-        return_qty = requested_qty_by_item.get(row.item_code)
-        if not return_qty:
-            continue
-        row.qty = -abs(return_qty)
-        row.amount = row.qty * flt(row.rate)
-        kept_items.append(row)
-    if not kept_items:
-        frappe.throw("None of the requested items match the original bill")
-    doc.items = kept_items
+    _apply_return_qtys(doc, requested_qty_by_item, original_name)
     if reason:
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
     doc.zatgo_client_id = cid

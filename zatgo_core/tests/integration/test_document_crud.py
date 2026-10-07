@@ -17,8 +17,10 @@ from zatgo_core.services.erpnext_writes import (
     _build_journal_entry_rows,
     create_customer,
     create_purchase_invoice,
+    create_purchase_return,
     create_quotation,
     create_sales_invoice,
+    create_sales_return,
     create_supplier,
     delete_account,
     delete_customer,
@@ -134,6 +136,49 @@ class TestDocumentCrud(IntegrationTestCase):
             update_purchase_invoice(name, remarks="should not apply")
         with self.assertRaises(frappe.ValidationError):
             delete_purchase_invoice(name)
+
+    # -- Returns: one item on two lines -----------------------------------
+
+    def _two_line_items(self) -> list[dict]:
+        return [
+            {"item_code": self.item_code, "qty": 2, "rate": 10},
+            {"item_code": self.item_code, "qty": 5, "rate": 10},
+        ]
+
+    def test_sales_return_spreads_qty_over_lines_of_the_same_item(self) -> None:
+        # Two lines of one item need Selling Settings to allow it.
+        with self.change_settings("Selling Settings", allow_multiple_items=1, commit=True):
+            self._check_sales_return_two_lines()
+
+    def _check_sales_return_two_lines(self) -> None:
+        created = create_sales_invoice(customer=self.customer, items=self._two_line_items(), company=self.company)
+        name = created["data"]["name"]
+        submit_sales_invoice(name)
+
+        result = create_sales_return(return_against=name, items=[{"item_code": self.item_code, "qty": 3}])
+        self.assertTrue(result["success"], result.get("error"))
+        ret = frappe.get_doc("Sales Invoice", result["data"]["name"])
+        self.assertEqual([row.qty for row in ret.items], [-2, -1])
+        self.assertEqual(ret.net_total, -30)
+
+        # 4 of the 7 are left; asking for 5 is refused, not silently capped.
+        with self.assertRaises(frappe.ValidationError):
+            create_sales_return(return_against=name, items=[{"item_code": self.item_code, "qty": 5}])
+
+    def test_purchase_return_spreads_qty_over_lines_of_the_same_item(self) -> None:
+        with self.change_settings("Buying Settings", allow_multiple_items=1, commit=True):
+            self._check_purchase_return_two_lines()
+
+    def _check_purchase_return_two_lines(self) -> None:
+        created = create_purchase_invoice(supplier=self.supplier, items=self._two_line_items(), company=self.company)
+        name = created["data"]["name"]
+        submit_purchase_invoice(name)
+
+        result = create_purchase_return(return_against=name, items=[{"item_code": self.item_code, "qty": 3}])
+        self.assertTrue(result["success"], result.get("error"))
+        ret = frappe.get_doc("Purchase Invoice", result["data"]["name"])
+        self.assertEqual([row.qty for row in ret.items], [-2, -1])
+        self.assertEqual(ret.net_total, -30)
 
     # -- Quotation --------------------------------------------------------
 
