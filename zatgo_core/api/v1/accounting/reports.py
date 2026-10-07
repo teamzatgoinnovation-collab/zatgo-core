@@ -8,7 +8,16 @@ import frappe
 from frappe.utils import flt, getdate, today
 
 from zatgo_core.api.response import ok
-from zatgo_core.api.validators import require_login
+from zatgo_core.api.validators import require_doc_permission, require_login
+
+
+def _require_read(doctype: str) -> None:
+    """Login plus read on the DocType a report is built from -- the same
+    gate ERPNext's own Desk reports apply. These read with get_all/SQL, which
+    skip permissions, so without it any logged-in user (a van driver, a
+    portal Website User) could pull the whole ledger."""
+    require_login()
+    require_doc_permission(doctype, "read")
 
 
 def _date_range(from_date: str | None, to_date: str | None) -> tuple[Any, Any]:
@@ -19,7 +28,7 @@ def _date_range(from_date: str | None, to_date: str | None) -> tuple[Any, Any]:
 
 @frappe.whitelist()
 def outstanding_receivable(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    require_login()
+    _require_read("Sales Invoice")
     rows = frappe.get_all(
         "Sales Invoice",
         filters={"docstatus": 1, "outstanding_amount": [">", 0]},
@@ -65,7 +74,7 @@ def outstanding_receivable(page: int | str = 1, page_size: int | str = 50) -> di
 
 @frappe.whitelist()
 def outstanding_payable(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    require_login()
+    _require_read("Purchase Invoice")
     rows = frappe.get_all(
         "Purchase Invoice",
         filters={"docstatus": 1, "outstanding_amount": [">", 0]},
@@ -118,7 +127,7 @@ def general_ledger(
     page: int | str = 1,
     page_size: int | str = 100,
 ) -> dict[str, Any]:
-    require_login()
+    _require_read("GL Entry")
     start, end = _date_range(from_date, to_date)
     filters: dict[str, Any] = {
         "posting_date": ["between", [start, end]],
@@ -190,7 +199,7 @@ def party_ledger(
     page_size: int | str = 100,
 ) -> dict[str, Any]:
     """GL Entry history for one Customer/Supplier, with a running balance."""
-    require_login()
+    _require_read("GL Entry")
     if party_type not in ("Customer", "Supplier"):
         frappe.throw("party_type must be Customer or Supplier")
     if not party:
@@ -271,7 +280,7 @@ def account_ledger(
     page_size: int | str = 100,
 ) -> dict[str, Any]:
     """GL Entry history for one ledger account, with a running balance."""
-    require_login()
+    _require_read("GL Entry")
     if not account:
         frappe.throw("account is required")
     start, end = _date_range(from_date, to_date)
@@ -356,7 +365,7 @@ def account_ledger(
 def trial_balance(from_date: str | None = None, to_date: str | None = None, company: str | None = None) -> dict[str, Any]:
     """Opening/period/closing debit+credit per account — raw sums from GL Entry,
     never netted or computed outside ERPNext's own ledger."""
-    require_login()
+    _require_read("GL Entry")
     start, end = _date_range(from_date, to_date)
     company_filter = "AND acc.company = %(company)s" if company else ""
     params: dict[str, Any] = {"start": start, "end": end}
@@ -448,7 +457,7 @@ def trial_balance(from_date: str | None = None, to_date: str | None = None, comp
 
 @frappe.whitelist()
 def profit_and_loss(from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
-    require_login()
+    _require_read("GL Entry")
     start, end = _date_range(from_date, to_date)
     rows = frappe.db.sql(
         """

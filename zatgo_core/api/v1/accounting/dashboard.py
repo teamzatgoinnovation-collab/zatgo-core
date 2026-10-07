@@ -8,7 +8,7 @@ import frappe
 from frappe.utils import date_diff, flt, getdate, today
 
 from zatgo_core.api.response import ok
-from zatgo_core.api.validators import require_login
+from zatgo_core.api.validators import require_doc_permission, require_login
 
 
 def _empty_aging() -> dict[str, float]:
@@ -42,6 +42,9 @@ def _aging_from_rows(rows: list[Any], today_d: Any) -> dict[str, float]:
 @frappe.whitelist()
 def summary() -> dict[str, Any]:
     require_login()
+    # Aggregates over both ledgers via get_all/SQL (no row permissions).
+    require_doc_permission("Sales Invoice", "read")
+    require_doc_permission("Purchase Invoice", "read")
     today_d = getdate(today())
 
     open_si = frappe.get_all(
