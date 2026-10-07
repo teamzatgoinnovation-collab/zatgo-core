@@ -70,7 +70,7 @@ def summary(
 ) -> dict[str, Any]:
     """Aging summary buckets across open Sales Invoices."""
     require_login()
-    require_access("reports", "collections", "dashboard")
+    require_access("reports", "collections", "dashboard", "my_performance")
     today_d = getdate(today())
     filters: dict[str, Any] = {"docstatus": 1, "outstanding_amount": [">", 0]}
     if customer:
@@ -145,7 +145,7 @@ def detail(
 ) -> dict[str, Any]:
     """Invoice-level aging detail for drill-down."""
     require_login()
-    require_access("reports", "collections", "dashboard")
+    require_access("reports", "collections", "dashboard", "my_performance")
     today_d = getdate(today())
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": 1, "outstanding_amount": [">", 0]}

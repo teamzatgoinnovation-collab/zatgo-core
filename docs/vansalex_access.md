@@ -28,8 +28,11 @@ Stable machine identifiers (never page titles).
 | `collections` | module | Customer payments |
 | `customers` | module | Browse / create / edit customers (the customer picker on a sale stays) |
 | `products` | module | Browse / create / edit products (the product picker on a sale stays) |
-| `route_plan` | module | Plan & Route, Activities, trips/visits |
-| `reports` | module | Reports, Aging, My Performance |
+| `route_plan` | module | More → Plan & Route (trips/visits) |
+| `reports` | module | More → Reports, Aging |
+| `activities` | module | More → Activities |
+| `documents` | module | More → Documents (list + print) |
+| `my_performance` | module | More → My Performance |
 | `inventory` | module | Van stock |
 | `sales_invoice.print_a4` | feature | A4 printing (invoices & credit notes) |
 | `sales_invoice.print_80mm` | feature | 80mm thermal printing (invoices & credit notes) |
@@ -40,6 +43,12 @@ Stable machine identifiers (never page titles).
 | `sales_invoice.change_warehouse` | feature | **= Allow Changing Warehouse** (settings + profile override) |
 | `collections.card` | feature | Collect by a non-cash Mode of Payment (type ≠ Cash) |
 | `collections.multiple_payment_modes` | feature | Split a collection across methods |
+
+Each row in VanSaleX Settings shows **Where in the app** it applies, and rows
+follow the app's order (every More-tab entry has its own row). Activities,
+Documents and My Performance were split out of Plan & Route, Sales Invoice
+and Reports on 2026-10-07; an app or server from before that treats them as
+part of the module they came from.
 
 **Bold** keys are *derived*: they mirror an existing VanSaleX setting, so
 there is still exactly one place to change them; they have no row in the

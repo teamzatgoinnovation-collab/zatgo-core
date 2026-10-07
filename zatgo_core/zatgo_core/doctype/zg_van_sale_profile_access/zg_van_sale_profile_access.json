@@ -14,7 +14,7 @@
    "fieldname": "access_key",
    "fieldtype": "Select",
    "label": "Module / Feature",
-   "options": "dashboard\nsales_invoice\nsales_return\ncollections\ncustomers\nproducts\nroute_plan\nreports\ninventory\nsales_invoice.print_a4\nsales_invoice.print_80mm\nsales_invoice.multiple_payment_modes\nsales_invoice.multiple_payment_accounts\ncollections.card\ncollections.multiple_payment_modes",
+   "options": "dashboard\nsales_invoice\nroute_plan\ncustomers\nsales_return\ncollections\nproducts\nreports\nactivities\ndocuments\nmy_performance\ninventory\nsales_invoice.print_a4\nsales_invoice.print_80mm\nsales_invoice.multiple_payment_modes\nsales_invoice.multiple_payment_accounts\ncollections.card\ncollections.multiple_payment_modes",
    "reqd": 1,
    "in_list_view": 1,
    "columns": 6
@@ -32,7 +32,7 @@
  "issingle": 0,
  "istable": 1,
  "links": [],
- "modified": "2026-10-04 00:00:00.000000",
+ "modified": "2026-10-07 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "ZG Van Sale Profile Access",

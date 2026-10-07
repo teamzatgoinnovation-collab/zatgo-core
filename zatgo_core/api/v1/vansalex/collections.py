@@ -80,7 +80,7 @@ def list(
 ) -> dict[str, Any]:
     """List Payment Entries (Receive) for VanSale."""
     require_login()
-    require_access("collections", "dashboard", "reports")
+    require_access("collections", "dashboard", "reports", "my_performance")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {
         "docstatus": ["<", 2],

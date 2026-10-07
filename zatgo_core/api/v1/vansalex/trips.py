@@ -102,7 +102,7 @@ def list(
     date_from: str | None = None,
     date_to: str | None = None,
 ) -> dict[str, Any]:
-    require_access("route_plan", "dashboard")
+    require_access("route_plan", "dashboard", "activities", "my_performance")
     fields = [
         "name",
         "title",

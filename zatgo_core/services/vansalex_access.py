@@ -44,16 +44,19 @@ FEATURE = "Feature"
 # key: (kind, label, parent module, default when the client has no row,
 #       derived-from setting or None)
 CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
-    # -- modules ---------------------------------------------------------------
+    # -- modules (in the order the app shows them; More-tab entries in its order)
     "dashboard": (MODULE, "Dashboard", None, 1, None),
     "sales_invoice": (MODULE, "Sales Invoice", None, 1, None),
     "sales_order": (MODULE, "Sales Orders (invoice later)", None, 1, "allow_orders"),
+    "route_plan": (MODULE, "Plan & Route", None, 1, None),
+    "customers": (MODULE, "Customers", None, 1, None),
     "sales_return": (MODULE, "Sales Returns", None, 1, None),
     "collections": (MODULE, "Collections", None, 1, None),
-    "customers": (MODULE, "Customers (browse / create / edit)", None, 1, None),
-    "products": (MODULE, "Products (browse / create / edit)", None, 1, None),
-    "route_plan": (MODULE, "Plan & Route / Activities", None, 1, None),
+    "products": (MODULE, "Products", None, 1, None),
     "reports": (MODULE, "Reports", None, 1, None),
+    "activities": (MODULE, "Activities", None, 1, None),
+    "documents": (MODULE, "Documents", None, 1, None),
+    "my_performance": (MODULE, "My Performance", None, 1, None),
     "inventory": (MODULE, "Van Stock", None, 1, None),
     # -- features ----------------------------------------------------------------
     # Printing covers invoices and credit notes alike, so no parent module.
@@ -74,6 +77,34 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
     "collections.multiple_payment_modes": (
         FEATURE, "Split collection across methods", "collections", 1, None,
     ),
+}
+
+# Where each key shows in the app — shown beside the switch in VanSaleX
+# Settings so an admin can match a row to the screen. "More → X" rows are
+# the app's More tab, in its order; Settings (with Logout) is always there.
+APP_LOCATION: dict[str, str] = {
+    "dashboard": "Home tab",
+    "sales_invoice": "Orders tab, More → Sales Orders, New Invoice",
+    "sales_order": "New Order, Convert to Invoice",
+    "route_plan": "More → Plan & Route",
+    "customers": "More → Customers, Customers quick action",
+    "sales_return": "More → Sales Returns, Sales Return quick action",
+    "collections": "Collection tab, More → Collections, New Collection",
+    "products": "More → Products, Products quick action",
+    "reports": "More → Reports (incl. aging report)",
+    "activities": "More → Activities",
+    "documents": "More → Documents",
+    "my_performance": "More → My Performance",
+    "inventory": "Home → Van Stock card and summary",
+    "sales_invoice.print_a4": "Print sheet → A4",
+    "sales_invoice.print_80mm": "Print sheet → 80mm thermal",
+    "sales_invoice.multiple_payment_modes": "New Invoice → Split payment (several methods)",
+    "sales_invoice.multiple_payment_accounts": "New Invoice → Split payment → Account",
+    "sales_invoice.credit_sale": "New Invoice → Cash / Credit",
+    "sales_invoice.discount": "New Invoice → Discount %",
+    "sales_invoice.change_warehouse": "New Invoice → Warehouse",
+    "collections.card": "New Collection → Card",
+    "collections.multiple_payment_modes": "New Collection → Split payment",
 }
 
 MODULE_KEYS = tuple(k for k, v in CATALOG.items() if v[0] == MODULE)

@@ -141,7 +141,7 @@ def list(
 ) -> dict[str, Any]:
     """List Sales Invoices for VanSale (admin: filterable; user: own)."""
     require_login()
-    require_access("sales_invoice", "sales_return", "dashboard", "reports")
+    require_access("sales_invoice", "sales_return", "dashboard", "reports", "documents", "my_performance")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 0}
     admin = is_vansale_admin()
@@ -210,7 +210,7 @@ def list_sales_orders(
     order receipt or offer Confirm straight from this list.
     """
     require_login()
-    require_access("sales_order", "sales_invoice", "dashboard")
+    require_access("sales_order", "sales_invoice", "dashboard", "documents", "my_performance")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2]}
     if is_vansale_admin():
@@ -327,7 +327,7 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     # VanSaleX feature: the thermal format is "80mm", anything else is A4.
     from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_80MM_NAME
 
-    require_access("sales_invoice", "sales_return")
+    require_access("sales_invoice", "sales_return", "documents")
     require_access(
         "sales_invoice.print_80mm" if fmt == PRINT_FORMAT_80MM_NAME else "sales_invoice.print_a4"
     )

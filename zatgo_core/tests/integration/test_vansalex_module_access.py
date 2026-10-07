@@ -197,6 +197,46 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         self.assertEqual(set(eff["features"]), set(access.FEATURE_KEYS))
         self.assertIsInstance(eff["config_version"], int)
 
+    def test_every_more_tab_entry_has_its_own_row_in_app_order(self) -> None:
+        rows = frappe.get_all(
+            "VanSaleX Access",
+            filters={"parenttype": "VanSaleX Settings"},
+            fields=["access_key", "label", "app_location", "enabled"],
+            order_by="idx",
+        )
+        keys = [r.access_key for r in rows]
+        self.assertEqual(keys, list(access.ROW_KEYS))
+        for key in ("activities", "documents", "my_performance"):
+            row = next(r for r in rows if r.access_key == key)
+            self.assertTrue(row.enabled)  # split out of existing functionality
+            self.assertIn("More →", row.app_location)
+        labels = {r.access_key: r.label for r in rows}
+        self.assertEqual(labels["route_plan"], "Plan & Route")
+        self.assertEqual(labels["reports"], "Reports")
+
+    def test_split_entries_are_switched_on_their_own(self) -> None:
+        # Activities alone still lists today's stops; switching it off too
+        # closes the endpoint (Dashboard / Plan & Route / My Performance off).
+        self._disable_for_user("dashboard", "route_plan", "my_performance")
+        self._as_user()
+        self.assertIn("data", trips_api.list())
+        frappe.set_user("Administrator")
+        self._disable_for_user("activities")
+        self._as_user()
+        with self.assertRaises(frappe.PermissionError):
+            trips_api.list()
+
+    def test_documents_alone_can_list_and_print(self) -> None:
+        invoice = self._sell(payment_type="Credit")["data"]["erp_name"]
+        from unittest.mock import patch
+
+        frappe.set_user("Administrator")
+        self._disable_for_user("sales_invoice", "sales_return", "dashboard", "reports", "my_performance")
+        self._as_user()
+        self.assertIn("data", orders_api.list())
+        with patch("frappe.utils.pdf.get_pdf", return_value=b"%PDF-stub"):
+            self.assertTrue(orders_api.pdf(invoice)["data"]["pdf_base64"])
+
     def test_disabling_a_module_turns_off_its_features(self) -> None:
         with self._client(collections=0):
             eff = access.effective(self.user)

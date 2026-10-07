@@ -105,7 +105,7 @@
   {
    "fieldname": "access_help",
    "fieldtype": "HTML",
-   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site. Unticked modules disappear from the app and the server rejects them. A feature only works while its module is on. Orders, credit sales, discount and warehouse change are controlled by the fields above. Per-user: switch items off on the user's ZG Van Sale Profile.</p>"
+   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site — one row per screen, in the app's order; \"Where in the app\" shows which tab or More-menu entry each row controls. Unticked entries disappear from the app and the server rejects them. A feature only works while its module is on. Settings (with Logout) is always shown. Orders, credit sales, discount and warehouse change are controlled by the fields above. Per user: switch entries off on the user's ZG Van Sale Profile.</p>"
   },
   {
    "fieldname": "access",
@@ -126,7 +126,7 @@
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-10-04 00:00:00.000000",
+ "modified": "2026-10-07 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "VanSaleX Settings",

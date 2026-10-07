@@ -50,7 +50,7 @@ def list(
 ) -> dict[str, Any]:
     """List Sales Returns for VanSale (admin: filterable; user: own)."""
     require_login()
-    require_access("sales_return", "dashboard", "reports")
+    require_access("sales_return", "dashboard", "reports", "my_performance")
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2], "is_return": 1}
     admin = is_vansale_admin()

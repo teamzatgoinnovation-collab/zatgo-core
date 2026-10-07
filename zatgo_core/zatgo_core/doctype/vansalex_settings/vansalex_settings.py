@@ -22,7 +22,7 @@ class VanSaleXSettings(Document):
         """Rows describe catalog keys only (label/kind/module come from the
         catalog, not the user); bump config_version when any switch changes
         so the app and support can tell configurations apart."""
-        from zatgo_core.services.vansalex_access import CATALOG, ROW_KEYS
+        from zatgo_core.services.vansalex_access import APP_LOCATION, CATALOG, ROW_KEYS
 
         seen: set[str] = set()
         for row in self.get("access") or []:
@@ -34,6 +34,7 @@ class VanSaleXSettings(Document):
             seen.add(key)
             kind, label, parent, _default, _derived = CATALOG[key]
             row.label, row.kind, row.parent_module = label, kind, parent or ""
+            row.app_location = APP_LOCATION.get(key, "")
 
         before = self.get_doc_before_save()
         old = {r.access_key: cint(r.enabled) for r in (before.get("access") if before else None) or []}

@@ -21,7 +21,7 @@ def list(
     page_size: int | str = 100,
 ) -> dict[str, Any]:
     require_login()
-    require_access("inventory", "sales_invoice", "products", "dashboard")
+    require_access("inventory", "sales_invoice", "products", "dashboard", "my_performance")
     wh = (warehouse or "").strip()
     if not is_vansale_admin():
         wh = allowed_warehouse(wh)
