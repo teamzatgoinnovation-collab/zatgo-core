@@ -5,7 +5,8 @@ yet, using the key's catalog default — never changes an existing row's
 on/off, so an admin's switch survives upgrades (rows are re-ordered to the
 app's order and their labels refreshed, nothing else). Existing functionality
 defaults on (a site upgraded to this keeps everything it had) — including
-keys split out of an existing one (Activities, Documents, My Performance);
+keys split out of an existing one (Activities, Documents, My Performance),
+which start from that key's current switch;
 genuinely new functionality defaults off.
 """
 
@@ -13,7 +14,7 @@ from __future__ import annotations
 
 import frappe
 
-from zatgo_core.services.vansalex_access import APP_LOCATION, CATALOG, ROW_KEYS, SETTINGS_DOCTYPE
+from zatgo_core.services.vansalex_access import APP_LOCATION, CATALOG, ROW_KEYS, SETTINGS_DOCTYPE, SPLIT_FROM
 
 
 def ensure_vansalex_access() -> None:
@@ -22,9 +23,11 @@ def ensure_vansalex_access() -> None:
     doc = frappe.get_single(SETTINGS_DOCTYPE)
     have = {r.access_key for r in doc.get("access") or []}
     missing = [k for k in ROW_KEYS if k not in have]
+    current = {r.access_key: r.enabled for r in doc.get("access") or []}
     for key in missing:
         kind, label, parent, default, _derived = CATALOG[key]
-        doc.append("access", {"access_key": key, "kind": kind, "label": label, "enabled": default})
+        enabled = current.get(SPLIT_FROM[key], default) if key in SPLIT_FROM else default
+        doc.append("access", {"access_key": key, "kind": kind, "label": label, "enabled": enabled})
     # Rows follow the catalog's order (the app's order) — only their position
     # moves; nobody's on/off choice is touched. Labels / app locations are
     # refreshed by the controller's validate().

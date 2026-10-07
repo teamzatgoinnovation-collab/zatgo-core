@@ -107,6 +107,14 @@ APP_LOCATION: dict[str, str] = {
     "collections.multiple_payment_modes": "New Collection → Split payment",
 }
 
+# Keys split out of an existing one: a site getting them starts from that
+# key's current switch, so nothing appears or disappears by upgrading.
+SPLIT_FROM: dict[str, str] = {
+    "activities": "route_plan",
+    "documents": "sales_invoice",
+    "my_performance": "reports",
+}
+
 MODULE_KEYS = tuple(k for k, v in CATALOG.items() if v[0] == MODULE)
 FEATURE_KEYS = tuple(k for k, v in CATALOG.items() if v[0] == FEATURE)
 # Keys with a row in VanSaleX Settings.access (derived keys have none).

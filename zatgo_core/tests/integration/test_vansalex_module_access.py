@@ -214,6 +214,30 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         self.assertEqual(labels["route_plan"], "Plan & Route")
         self.assertEqual(labels["reports"], "Reports")
 
+    def test_split_rows_start_from_the_switch_they_came_from(self) -> None:
+        settings = frappe.get_single("VanSaleX Settings")
+        snapshot = [(r.access_key, r.enabled) for r in settings.access]
+        try:
+            for r in settings.access:
+                if r.access_key == "route_plan":
+                    r.enabled = 0
+            settings.access = [r for r in settings.access if r.access_key != "activities"]
+            settings.save(ignore_permissions=True)
+            ensure_vansalex_access()
+            row = frappe.db.get_value(
+                "VanSaleX Access",
+                {"parenttype": "VanSaleX Settings", "access_key": "activities"},
+                "enabled",
+            )
+            self.assertEqual(cint(row), 0)  # hidden before the split, still hidden
+        finally:
+            settings = frappe.get_single("VanSaleX Settings")
+            old = dict(snapshot)
+            for r in settings.access:
+                r.enabled = old.get(r.access_key, r.enabled)
+            settings.save(ignore_permissions=True)
+            frappe.db.commit()
+
     def test_split_entries_are_switched_on_their_own(self) -> None:
         # Activities alone still lists today's stops; switching it off too
         # closes the endpoint (Dashboard / Plan & Route / My Performance off).
