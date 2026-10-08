@@ -1,7 +1,10 @@
 """Frappe hooks for ZatGo Core.
 
-API-only platform hub: whitelist RPC, settings DocTypes, registry.
-No Desk pages, workspaces, or module UI — keep invasive overrides rare.
+Platform hub: whitelist RPC, settings DocTypes, registry, ERPNext
+extensions. Also carries what used to be separate apps -- the SaaS Desk
+theme + login page and the language switcher (per site, see
+services/ui_apps.py) and the VanSaleX web page (/vansalex, www/vansalex.py).
+Keep invasive overrides rare.
 """
 
 app_name = "zatgo_core"
@@ -22,6 +25,12 @@ after_migrate = "zatgo_core.install.after_migrate"
 before_uninstall = "zatgo_core.install.before_uninstall"
 
 boot_session = "zatgo_core.events.boot.boot_session"
+
+# SaaS theme / language switcher, switched on per site in ZG System Settings
+# (services/ui_apps.py) -- deliberately not app_include_css/js, which would
+# load them on every site.
+before_request = ["zatgo_core.services.ui_apps.add_desk_includes"]
+page_renderer = ["zatgo_core.services.ui_apps.ThemedLoginPage"]
 
 # Payment Type (Cash/Credit) UX hint -- purely visual, see the files themselves.
 doctype_js = {

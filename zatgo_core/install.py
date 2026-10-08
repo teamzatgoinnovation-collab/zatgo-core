@@ -11,6 +11,7 @@ from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.ensure_vansalex_access import ensure_vansalex_access
+from zatgo_core.services.ui_apps import ensure_ui_apps
 from zatgo_core.setup.seed_defaults import (
     seed_application_settings,
     seed_feature_flags,
@@ -65,6 +66,10 @@ def after_install() -> None:
         purge_desk_ui_leftovers()
     except Exception:
         logger.exception("Desk UI leftover purge failed")
+    try:
+        ensure_ui_apps()
+    except Exception:
+        logger.exception("Theme / language switcher setup failed")
     logger.info("zatgo_core after_install completed")
 
 
@@ -106,6 +111,10 @@ def after_migrate() -> None:
         purge_desk_ui_leftovers()
     except Exception:
         logger.exception("Desk UI leftover purge failed")
+    try:
+        ensure_ui_apps()
+    except Exception:
+        logger.exception("Theme / language switcher setup failed")
 
 
 def before_uninstall() -> None:

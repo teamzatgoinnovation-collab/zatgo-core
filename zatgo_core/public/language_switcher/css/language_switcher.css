@@ -1,0 +1,92 @@
+/* Language Switcher — reuses Frappe's own dropdown/button classes and CSS
+ * variables so it matches the existing Desk visual language; only positioning and
+ * a couple of small layout rules are custom. */
+
+/* inline-flex, not flex: a plain flex box is still block-level and stretches to fill
+ * its container's full width, which leaves margin-inline-start:auto below nothing to
+ * push against -- the widget rendered pinned to the start edge instead of the end. */
+.language-switcher {
+	display: inline-flex;
+	align-items: center;
+}
+
+/* Fallback placement only (no real navbar icon row found — see _find_target in
+ * language_switcher.js). Appended straight to <body> and pinned to the viewport's
+ * top-center, same detached approach as the dropdown panel below: the fallback
+ * header's own CSS layout (block vs flex, stretched vs shrink-to-fit width) isn't
+ * predictable across pages/Frappe versions, so this doesn't depend on it at all.
+ * Top-center rather than top-right: a right-pinned position collided with
+ * document/form pages, whose own action-bar buttons (Save, Permissions, Password,
+ * etc.) are also right-aligned and got crowded/hidden behind it. Inside the real
+ * navbar's icon row this class isn't present: DOM order + that row's own gap
+ * already place the widget correctly among the other icons. */
+.language-switcher:not(.language-switcher-in-navbar) {
+	position: fixed;
+	top: var(--padding-md, 12px);
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1050;
+}
+
+.language-switcher-trigger {
+	display: flex;
+	align-items: center;
+	gap: var(--padding-xs, 4px);
+}
+
+/* Only the fallback (non-navbar) trigger needs its own boxed button look — inside the
+ * real navbar, .btn-reset.nav-link.text-muted already matches the bell/avatar buttons. */
+.language-switcher:not(.language-switcher-in-navbar) .language-switcher-trigger {
+	background: var(--navbar-bg, transparent);
+	color: var(--text-color);
+	border-color: var(--border-color);
+}
+
+.language-switcher-label {
+	white-space: nowrap;
+}
+
+/* Shown/hidden by our own JS (see language_switcher.js), not by Frappe's dropdown
+ * plugin — a widget injected after page load doesn't reliably get that plugin's
+ * positioning applied. top/left/right are set inline in JS from the trigger's actual
+ * getBoundingClientRect() every time the menu opens, not computed here — CSS position
+ * math depends on the ancestor context staying predictable, which has proven not to
+ * hold across the different pages/Frappe versions this widget ends up on. */
+.language-switcher-dropdown {
+	display: none;
+	position: fixed;
+	min-width: 160px;
+	/* Frappe's persistent sidebar (.body-sidebar) sits at z-index 1020, with its own
+	 * controls up to 1023 — higher than Bootstrap's default .dropdown-menu z-index
+	 * (1000), which rendered this menu behind it. 1050 matches Bootstrap's own modal
+	 * tier, comfortably clearing the sidebar while staying below actual dialogs/toasts. */
+	z-index: 1050;
+}
+
+/* The dropdown is appended to <body> (see language_switcher.js), not nested inside
+ * .language-switcher, so its own open state is tracked on itself directly. */
+.language-switcher-dropdown.language-switcher-open {
+	display: block;
+}
+
+.language-switcher-option {
+	display: flex;
+	align-items: center;
+	gap: var(--padding-xs, 6px);
+}
+
+.language-switcher-tick {
+	display: inline-flex;
+	width: 1em;
+	flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+	.language-switcher-label {
+		display: none;
+	}
+
+	.language-switcher {
+		margin-inline-end: var(--padding-sm, 8px);
+	}
+}

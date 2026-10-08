@@ -2,3 +2,7 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+
+# VanSaleX web build (scripts/deploy_web_build.sh) -- deployed, never committed.
+zatgo_core/public/vansalex/
+zatgo_core/www/vansalex.html
