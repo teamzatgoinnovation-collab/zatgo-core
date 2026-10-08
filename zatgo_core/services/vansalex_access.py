@@ -259,23 +259,31 @@ def check_payment_rows(rows: list[dict[str, Any]], company: str, scope: str) -> 
 def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) -> None:
     """Without `sales_invoice.edit_rate`, a line's rate must be the item's
     price — its standard selling rate (what the app shows), else its rate on
-    [price_list] (the customer's). 0 / blank lets ERPNext fill the price in.
-    An item with no price anywhere has nothing to compare against and is
-    left to the caller. With the feature, any positive rate is accepted."""
+    [price_list] (the customer's). A 0 / blank rate is set to that price
+    here: ERPNext only fills a price in from an Item Price, never from the
+    Standard Selling Rate, so leaving it 0 sold the item for nothing. An item
+    with no price anywhere has nothing to compare against and is left to the
+    caller. With the feature, any positive rate is accepted."""
     from zatgo_core.services.erpnext_reads import default_selling_rates
 
     if is_enabled("sales_invoice.edit_rate"):
         return
     for row in rows:
         rate = flt(row.get("rate"))
-        if rate <= 0:
-            continue
         code = row.get("item_code")
         price = flt(frappe.db.get_value("Item", code, "standard_rate"))
         if price <= 0 and price_list:
             price = flt(
                 frappe.db.get_value("Item Price", {"item_code": code, "price_list": price_list}, "price_list_rate")
             )
+        if rate <= 0:
+            if price <= 0:
+                # What the app's product list shows for an item without a
+                # Standard Selling Rate (0 when it has no price at all).
+                price = flt(default_selling_rates([code]).get(code))
+            if price > 0:
+                row["rate"] = price
+            continue
         if price > 0 and abs(rate - price) > 0.005:
             # The product list shows the default selling price list's rate
             # for items without a Standard Selling Rate: that is a price too.

@@ -418,6 +418,27 @@ class TestVansalexModuleAccess(IntegrationTestCase):
             frappe.set_user("Administrator")
             frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
 
+    def test_zero_rate_gets_the_items_price_without_edit_rate(self) -> None:
+        # "0 / blank lets ERPNext fill the price in" -- but ERPNext only fills
+        # from an Item Price, never from the Standard Selling Rate the app
+        # shows, so a 0 sent by a driver without Edit item rate was a free sale.
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 10)
+        try:
+            self._as_user()
+            res = create_order(
+                client_id=f"test-rate-{random_string(8)}",
+                customer=self.customer,
+                items=[{"item_code": self.item_code, "qty": 2, "rate": 0}],
+                payment_type="Credit",
+            )
+            frappe.set_user("Administrator")
+            inv = frappe.get_doc("Sales Invoice", res["data"]["erp_name"])
+            self.assertEqual(inv.items[0].rate, 10)
+            self.assertEqual(inv.net_total, 20)
+        finally:
+            frappe.set_user("Administrator")
+            frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+
     def _priced_line(self, discount: float, qty: float = 2) -> list[dict]:
         return [{"item_code": self.item_code, "qty": qty, "rate": 10, "discount_percentage": discount}]
 
