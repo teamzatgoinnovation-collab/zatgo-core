@@ -209,3 +209,27 @@ class TestVansalexCollectionAllocation(IntegrationTestCase):
             frappe.db.get_value("Sales Invoice", newer_si, "outstanding_amount"),
             newer_outstanding - partial_on_newer,
         )
+
+    def test_cancelling_one_invoice_keeps_a_collection_that_also_paid_another(self) -> None:
+        older_si, older_outstanding = self._make_invoice(qty=1)  # SAR 10
+        newer_si, newer_outstanding = self._make_invoice(qty=2)  # SAR 20
+        collection = create_collection(
+            client_id=f"test-collect-{random_string(8)}",
+            customer=self.customer,
+            amount=older_outstanding + newer_outstanding,
+        )
+        self.assertTrue(collection["success"], collection.get("error"))
+        pe_name = collection["data"]["erp_name"]
+
+        frappe.set_user("Administrator")
+        frappe.get_doc("Sales Invoice", older_si).cancel()
+
+        # The money was really collected: the Payment Entry stays submitted,
+        # still settles the other invoice, and ERPNext's own unlink leaves the
+        # cancelled invoice's share as unallocated (advance) on it.
+        self.assertEqual(frappe.db.get_value("Payment Entry", pe_name, "docstatus"), 1)
+        self.assertEqual(frappe.db.get_value("Sales Invoice", newer_si, "outstanding_amount"), 0)
+        refs = frappe.get_all(
+            "Payment Entry Reference", filters={"parent": pe_name}, pluck="reference_name"
+        )
+        self.assertEqual(refs, [newer_si])

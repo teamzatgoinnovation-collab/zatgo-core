@@ -39,15 +39,16 @@
 
 On cancel (before_cancel, so it runs while the invoice's own docstatus is
 still 1 in the database -- the same state a manual "cancel the Payment
-Entry, then cancel the invoice" flow would see), any submitted Payment
-Entry referencing the invoice is cancelled first through ERPNext's own
-PaymentEntry.cancel() so GL reversal follows ERPNext's tested logic, not
-a raw doc update. This isn't limited to Payment Entries this module
-created -- ERPNext already refuses to cancel an invoice that has *any*
-submitted Payment Entry against it (LinkExistsError from
-check_no_back_links_exist(), which runs right after on_cancel), so
-cascading the cancel here just turns an existing two-step manual
-requirement into one action.
+Entry, then cancel the invoice" flow would see), a submitted Payment Entry
+that pays this invoice and nothing else (the auto Cash / Bank one, or any
+one-invoice payment with no advance left on it) is cancelled first through
+ERPNext's own PaymentEntry.cancel() so GL reversal follows ERPNext's tested
+logic, not a raw doc update. A Payment Entry that also settles other
+invoices or holds an advance (a VanSaleX collection, a bulk receipt) is
+never cancelled here -- that would reverse money really received and
+reopen the other invoices; ERPNext's own on_cancel unlinks the invoice
+from it instead (Accounts Settings "Unlink Payment on Cancellation of
+Invoice"), or refuses the cancel when that setting is off.
 
 Duplicate-safe: before creating a Payment Entry, checks for an existing
 *submitted* Payment Entry already referencing this invoice's name. An
@@ -165,6 +166,21 @@ def cancel_linked_payment_entries(invoice: Document) -> None:
         payment_entry = frappe.get_doc("Payment Entry", pe_name)
         if payment_entry.docstatus != 1:
             continue
+        if not _pays_only(payment_entry, invoice):
+            # Also pays other invoices or holds an unallocated advance (a
+            # VanSaleX collection spread oldest-first, a bulk receipt):
+            # cancelling it would reverse money really received and reopen
+            # the other invoices. Left to ERPNext, whose on_cancel unlinks
+            # this invoice from it (Accounts Settings "Unlink Payment on
+            # Cancellation of Invoice") or refuses the cancel.
+            logger.info(
+                "Not auto-cancelling Payment Entry %s: it also settles other documents "
+                "or holds an advance (cancelling %s %s)",
+                pe_name,
+                invoice.doctype,
+                invoice.name,
+            )
+            continue
         payment_entry.flags.ignore_permissions = True
         payment_entry.cancel()
         logger.info(
@@ -173,6 +189,15 @@ def cancel_linked_payment_entries(invoice: Document) -> None:
             invoice.doctype,
             invoice.name,
         )
+
+
+def _pays_only(payment_entry: Document, invoice: Document) -> bool:
+    """Every reference row is [invoice] and nothing is left unallocated --
+    the shape of the auto Cash / Bank payment (or a one-invoice payment)."""
+    return all(
+        r.reference_doctype == invoice.doctype and r.reference_name == invoice.name
+        for r in payment_entry.references or []
+    ) and frappe.utils.flt(payment_entry.unallocated_amount) <= 0
 
 
 def _has_submitted_payment_entry(invoice_doctype: str, invoice_name: str) -> bool:
