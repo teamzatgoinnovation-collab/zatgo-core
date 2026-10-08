@@ -11,8 +11,8 @@ from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
 from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_invoice_doc
 from zatgo_core.services.erpnext_writes import _apply_return_qtys, _default_company, _parse_items
-from zatgo_core.services.idempotency import find_by_client_id as _find_by_client_id
-from zatgo_core.services.idempotency import insert_idempotent
+from zatgo_core.services.idempotency import find_by_client_id as _find_any_by_client_id
+from zatgo_core.services.idempotency import insert_idempotent as _insert_idempotent
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 
 
@@ -29,13 +29,48 @@ _STATUS_MAP = {
 }
 
 
+def _check_client_id_owner(doctype: str, name: str) -> None:
+    """A client_id is the caller's own idempotency key: replaying one must
+    give back the caller's own document -- never another user's, and never
+    submit another user's draft (the retry branches below do)."""
+    if is_vansale_admin():
+        return
+    if frappe.db.get_value(doctype, name, "owner") != frappe.session.user:
+        frappe.throw(
+            "This client_id already belongs to another user's document. Retry with a new one.",
+            frappe.PermissionError,
+        )
+
+
+def _find_by_client_id(doctype: str, client_id: str) -> str | None:
+    name = _find_any_by_client_id(doctype, client_id)
+    if name:
+        _check_client_id_owner(doctype, name)
+    return name
+
+
+def insert_idempotent(doc: Any, *, doctype: str, client_id: str) -> tuple[Any, bool]:
+    doc, created = _insert_idempotent(doc, doctype=doctype, client_id=client_id)
+    if not created:
+        _check_client_id_owner(doctype, doc.name)
+    return doc, created
+
+
 def _resolve_customer(customer: str) -> str:
     name = require_str(customer, "customer")
     if frappe.db.exists("Customer", name):
         return name
-    found = frappe.db.get_value("Customer", {"customer_name": name}, "name")
+    # By display name only when it names exactly one customer -- two
+    # customers can share a name, and picking either would post the sale or
+    # collection to the wrong account.
+    found = frappe.get_all("Customer", filters={"customer_name": name}, pluck="name", limit=2)
+    if len(found) == 1:
+        return found[0]
     if found:
-        return found
+        frappe.throw(
+            f"More than one customer is named {name}. Use the customer ID instead.",
+            frappe.ValidationError,
+        )
     frappe.throw(f"Customer not found: {name}")
 
 
@@ -1062,6 +1097,14 @@ def create_collection(
         pe.received_amount = paid
 
     pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
+    if pe.posting_date != getdate(nowdate()) and not is_vansale_admin():
+        # Money is collected today; a field user can't book it to another day
+        # (that would move it between cash-ups / accounting periods).
+        frappe.throw(
+            "A collection is posted with today's date. Ask an admin to record "
+            "one for another day.",
+            frappe.PermissionError,
+        )
     if method:
         pe.mode_of_payment = method
     ref = (reference or "").strip()

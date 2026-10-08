@@ -233,3 +233,70 @@ class TestVansalexCollectionAllocation(IntegrationTestCase):
             "Payment Entry Reference", filters={"parent": pe_name}, pluck="reference_name"
         )
         self.assertEqual(refs, [newer_si])
+
+    def test_field_user_cannot_backdate_a_collection(self) -> None:
+        from frappe.utils import add_days, nowdate
+
+        self._make_invoice(qty=1)
+        with self.assertRaises(frappe.PermissionError):
+            create_collection(
+                client_id=f"test-collect-{random_string(8)}",
+                customer=self.customer,
+                amount=5,
+                posting_date=add_days(nowdate(), -7),
+            )
+        # Today's date (or none) is fine.
+        res = create_collection(
+            client_id=f"test-collect-{random_string(8)}",
+            customer=self.customer,
+            amount=5,
+            posting_date=nowdate(),
+        )
+        self.assertTrue(res["success"], res.get("error"))
+
+    def test_client_id_of_another_users_document_is_refused(self) -> None:
+        cid = f"test-order-{random_string(8)}"
+        order = create_order(
+            client_id=cid,
+            customer=self.customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+            warehouse=self.warehouse,
+            company=self.company,
+        )
+        self.assertTrue(order["success"], order.get("error"))
+        # The owner's own retry is still idempotent ...
+        again = create_order(
+            client_id=cid,
+            customer=self.customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+            warehouse=self.warehouse,
+            company=self.company,
+        )
+        self.assertEqual(again["data"]["erp_name"], order["data"]["erp_name"])
+        # ... but another driver replaying the key gets nothing back.
+        frappe.set_user("Administrator")
+        other = self._make_van_user(self.warehouse)
+        frappe.set_user(other)
+        with self.assertRaises(frappe.PermissionError):
+            create_order(
+                client_id=cid,
+                customer=self.customer,
+                items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+                warehouse=self.warehouse,
+                company=self.company,
+            )
+
+    def test_customer_by_shared_display_name_is_refused(self) -> None:
+        from zatgo_core.services.vansalex_service import _resolve_customer
+
+        frappe.set_user("Administrator")
+        # A display name that is no customer's ID (as on naming-series sites).
+        shared = f"Shared Name {random_string(6)}"
+        first = self._make_customer(f"Alloc Name A {random_string(6)}")
+        frappe.db.set_value("Customer", first, "customer_name", shared)
+        self.assertEqual(_resolve_customer(shared), first)
+        second = self._make_customer(f"Alloc Name B {random_string(6)}")
+        frappe.db.set_value("Customer", second, "customer_name", shared)
+        with self.assertRaises(frappe.ValidationError):
+            _resolve_customer(shared)
+        self.assertEqual(_resolve_customer(first), first)  # by ID still works
