@@ -55,6 +55,26 @@ def _get_doctype(doctype: str, name: str, *, map_doc: Any = None) -> dict[str, A
     return ok(data, meta={"stub": False, "source": doctype})
 
 
+def default_selling_rates(item_codes: list[str]) -> dict[str, float]:
+    """ERPNext's selling price for items whose own Standard Selling Rate is
+    empty: the latest enabled Item Price on the default selling price list
+    (Selling Settings). Items without one are absent."""
+    price_list = frappe.db.get_single_value("Selling Settings", "selling_price_list")
+    if not price_list or not item_codes:
+        return {}
+    out: dict[str, float] = {}
+    rows = frappe.get_all(
+        "Item Price",
+        filters={"item_code": ["in", item_codes], "price_list": price_list, "selling": 1},
+        fields=["item_code", "price_list_rate"],
+        order_by="valid_from asc, modified asc",
+    )
+    for r in rows:  # later (newer) rows win
+        if float(r.price_list_rate or 0) > 0:
+            out[r.item_code] = float(r.price_list_rate)
+    return out
+
+
 def map_item_row(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": row.get("name"),
@@ -106,7 +126,7 @@ def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]
     ]
     if frappe.db.has_column("Item", "sku"):
         fields.append("sku")
-    return _list_doctype(
+    payload = _list_doctype(
         "Item",
         fields=fields,
         page=page,
@@ -114,10 +134,19 @@ def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]
         filters={"disabled": 0},
         map_row=map_item_row,
     )
+    # Items with no Standard Selling Rate still have an ERPNext selling price
+    # (Item Price): show that instead of 0.00.
+    missing = [r["item_code"] for r in payload["data"] if not r["standard_rate"]]
+    prices = default_selling_rates(missing)
+    for r in payload["data"]:
+        if not r["standard_rate"] and r["item_code"] in prices:
+            r["standard_rate"] = r["price"] = r["rate"] = prices[r["item_code"]]
+    return payload
 
 
 def get_item(name: str) -> dict[str, Any]:
     def map_doc(doc: Any) -> dict[str, Any]:
+        rate = doc.standard_rate or default_selling_rates([doc.name]).get(doc.name) or 0
         barcode = ""
         if getattr(doc, "barcodes", None):
             barcode = doc.barcodes[0].barcode if doc.barcodes else ""
@@ -129,7 +158,7 @@ def get_item(name: str) -> dict[str, Any]:
                 "name": doc.name,
                 "item_name": doc.item_name,
                 "item_group": doc.item_group,
-                "standard_rate": doc.standard_rate,
+                "standard_rate": rate,
                 "stock_uom": doc.stock_uom,
                 "disabled": doc.disabled,
                 "barcode": barcode,

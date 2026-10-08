@@ -262,6 +262,8 @@ def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) 
     [price_list] (the customer's). 0 / blank lets ERPNext fill the price in.
     An item with no price anywhere has nothing to compare against and is
     left to the caller. With the feature, any positive rate is accepted."""
+    from zatgo_core.services.erpnext_reads import default_selling_rates
+
     if is_enabled("sales_invoice.edit_rate"):
         return
     for row in rows:
@@ -275,6 +277,10 @@ def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) 
                 frappe.db.get_value("Item Price", {"item_code": code, "price_list": price_list}, "price_list_rate")
             )
         if price > 0 and abs(rate - price) > 0.005:
+            # The product list shows the default selling price list's rate
+            # for items without a Standard Selling Rate: that is a price too.
+            if abs(rate - flt(default_selling_rates([code]).get(code))) <= 0.005:
+                continue
             frappe.throw(
                 f"Changing the rate isn't enabled for your account ({code}: "
                 f"{price:.2f}, not {rate:.2f}). Ask your admin to turn on 'Edit item rate' "

@@ -38,7 +38,13 @@ class TestVansalexSettings(IntegrationTestCase):
     def setUpClass(cls) -> None:
         super().setUpClass()
         cls.company = get_or_create_test_company()
+        # "Cash" itself: this class also makes a second Cash account (Van
+        # Till), which a plain "first Cash account" lookup could pick up.
         cls.cash_account = frappe.db.get_value(
+            "Account",
+            {"company": cls.company, "account_type": "Cash", "is_group": 0, "account_name": "Cash"},
+            "name",
+        ) or frappe.db.get_value(
             "Account", {"company": cls.company, "account_type": "Cash", "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cls.cash_account)
@@ -542,3 +548,33 @@ class TestVansalexSettings(IntegrationTestCase):
         self.assertEqual(data["settings"]["bank_account"], self.bank_account)
         self.assertEqual(data["settings"]["allow_bank_payment"], 1)
         self.assertTrue(data["access"]["features"]["sales_invoice.bank_payment"])
+
+    # -- item selling rate -----------------------------------------------------
+
+    def test_item_list_shows_the_price_list_rate_when_standard_rate_is_empty(self) -> None:
+        from zatgo_core.services.erpnext_reads import list_items
+
+        price_list = frappe.db.get_value("Price List", {"selling": 1, "enabled": 1}, "name")
+        if not price_list:
+            self.skipTest("no selling price list on this site")
+        frappe.db.set_single_value("Selling Settings", "selling_price_list", price_list)
+        frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+        frappe.get_doc(
+            {
+                "doctype": "Item Price",
+                "item_code": self.item_code,
+                "price_list": price_list,
+                "price_list_rate": 37.5,
+            }
+        ).insert(ignore_permissions=True)
+        rows = list_items(page=1, page_size=500)["data"]
+        row = next(r for r in rows if r["item_code"] == self.item_code)
+        self.assertEqual(row["standard_rate"], 37.5)
+        self.assertEqual(row["rate"], 37.5)
+        # That price is the item's price: the rate check accepts it.
+        from zatgo_core.services.vansalex_access import check_item_rates
+
+        frappe.set_user(self.user)
+        check_item_rates([{"item_code": self.item_code, "rate": 37.5}])
+        with self.assertRaises(frappe.PermissionError):
+            check_item_rates([{"item_code": self.item_code, "rate": 30}], price_list)
