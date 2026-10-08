@@ -25,8 +25,9 @@
   frappe.model.base_document._get_missing_mandatory_fields only ever
   looks at the static `reqd` flag), so the throw below is the actual
   enforcement, not a formality.
-- Bank (Sales Invoice only -- patches/v0_2_7/add_bank_payment_fields.py):
-  the same as Cash, into `custom_bank_account` (Account Type = Bank,
+- Bank (patches/v0_2_7/add_bank_payment_fields.py for Sales Invoice,
+  patches/v0_2_8/add_purchase_invoice_bank_payment_fields.py for Purchase
+  Invoice): the same as Cash, via `custom_bank_account` (Account Type = Bank,
   required). ERPNext requires a reference no. and date on every bank
   Payment Entry: `custom_bank_reference_no` (transfer / cheque no.), else
   the invoice number, dated the invoice's posting date. Mode of Payment is

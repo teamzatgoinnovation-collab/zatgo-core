@@ -141,10 +141,11 @@ class TestInvoiceCashPayment(IntegrationTestCase):
         return si
 
     def _make_purchase_invoice(
-        self, payment_type: str, cash_account: str | None = "keep"
+        self, payment_type: str, cash_account: str | None = "keep", **extra
     ) -> "frappe.model.document.Document":
         pi = frappe.get_doc(
             {
+                **extra,
                 "doctype": "Purchase Invoice",
                 "supplier": self.supplier,
                 "company": self.company,
@@ -312,4 +313,61 @@ class TestInvoiceCashPayment(IntegrationTestCase):
     def test_purchase_invoice_cash_without_cash_account_blocks_submit(self) -> None:
         pi = self._make_purchase_invoice("Cash", cash_account=None)
         with self.assertRaises(frappe.ValidationError):
+            pi.submit()
+
+    def test_purchase_invoice_bank_auto_creates_and_submits_payment_entry(self) -> None:
+        pi = self._make_purchase_invoice(
+            "Bank", cash_account=None, custom_bank_account=self.bank_account, custom_bank_reference_no="CHQ-77"
+        )
+        pi.submit()
+
+        self.assertEqual(frappe.db.get_value("Purchase Invoice", pi.name, "outstanding_amount"), 0)
+        pe_names = self._linked_payment_entries("Purchase Invoice", pi.name)
+        self.assertEqual(len(pe_names), 1)
+        pe = frappe.db.get_value(
+            "Payment Entry",
+            pe_names[0],
+            ["docstatus", "payment_type", "paid_from", "mode_of_payment", "reference_no", "reference_date", "paid_amount"],
+            as_dict=True,
+        )
+        self.assertEqual(pe.docstatus, 1)
+        self.assertEqual(pe.payment_type, "Pay")
+        self.assertEqual(pe.paid_from, self.bank_account)
+        self.assertEqual(pe.mode_of_payment, self.bank_mode_of_payment)
+        self.assertEqual(pe.reference_no, "CHQ-77")
+        self.assertEqual(str(pe.reference_date), str(pi.posting_date))
+        self.assertEqual(pe.paid_amount, 40)
+
+        gl = frappe.get_all(
+            "GL Entry",
+            filters={"voucher_no": pe_names[0], "is_cancelled": 0},
+            fields=["account", "debit", "credit"],
+        )
+        self.assertIn((self.bank_account, 0, 40), [(g.account, g.debit, g.credit) for g in gl])
+
+    def test_purchase_invoice_bank_without_reference_uses_invoice_name(self) -> None:
+        pi = self._make_purchase_invoice("Bank", cash_account=None, custom_bank_account=self.bank_account)
+        pi.submit()
+        pe_name = self._linked_payment_entries("Purchase Invoice", pi.name)[0]
+        self.assertEqual(frappe.db.get_value("Payment Entry", pe_name, "reference_no"), pi.name)
+
+    def test_purchase_invoice_bank_cancel_cascades_to_payment_entry(self) -> None:
+        pi = self._make_purchase_invoice("Bank", cash_account=None, custom_bank_account=self.bank_account)
+        pi.submit()
+        pe_name = self._linked_payment_entries("Purchase Invoice", pi.name)[0]
+
+        pi.reload()
+        pi.flags.ignore_permissions = True
+        pi.cancel()
+
+        self.assertEqual(frappe.db.get_value("Payment Entry", pe_name, "docstatus"), 2)
+
+    def test_purchase_invoice_bank_without_bank_account_blocks_submit(self) -> None:
+        pi = self._make_purchase_invoice("Bank", cash_account=None)
+        with self.assertRaisesRegex(frappe.ValidationError, "no Bank Account was selected"):
+            pi.submit()
+
+    def test_purchase_invoice_bank_rejects_cash_type_account(self) -> None:
+        pi = self._make_purchase_invoice("Bank", cash_account=None, custom_bank_account=self.cash_account)
+        with self.assertRaisesRegex(frappe.ValidationError, "not a Bank-type account"):
             pi.submit()
