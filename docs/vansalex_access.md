@@ -37,8 +37,9 @@ Stable machine identifiers (never page titles).
 | `sales_invoice.print_a4` | feature | A4 printing (invoices & credit notes) |
 | `sales_invoice.print_80mm` | feature | 80mm thermal printing (invoices & credit notes) |
 | `sales_invoice.multiple_payment_modes` | feature | Split an invoice's payment across methods |
-| `sales_invoice.multiple_payment_accounts` | feature | Pay into an account other than the method's default |
+| `sales_invoice.multiple_payment_accounts` | feature | Pay into an account other than the default: the Cash / Bank account of a Cash / Bank sale, and the account of each split-payment row |
 | `sales_invoice.credit_sale` | feature | **= Allow Credit Sales** (settings + profile override) |
+| `sales_invoice.bank_payment` | feature | **= Allow Bank Payment** (settings + profile override): Bank beside Cash / Credit on New Invoice and Convert to Invoice |
 | `sales_invoice.discount` | feature | Discount % on the whole invoice (capped by Max Discount %; off while it is 0) |
 | `sales_invoice.line_discount` | feature | Disc % on each item line (capped by Max Discount %; off while it is 0); shown on the invoice line as ERPNext's own line discount |
 | `sales_invoice.edit_rate` | feature | Typed rate on each line; without it the server refuses a rate other than the item's price |
@@ -130,3 +131,17 @@ Every change is in the document's Version history (who, when, old → new).
    it creates documents.
 3. Mirror the key in the app's `feature_registry.dart` and gate the UI.
 4. `bench migrate` seeds the row on every site.
+
+## Cash / Bank accounts
+
+Cash and Bank sales pay into one ledger account (ERPNext's auto Payment
+Entry). Default, first match wins: the driver's `ZG Van Sale Profile`
+Cash / Bank Account → `VanSaleX Settings` Default Cash / Bank Account (if it
+belongs to the driver's company) → ERPNext (Mode of Payment "Cash" default;
+the company's Bank-type Mode of Payment default, "Bank" first). The app
+starts on that account; changing it needs `sales_invoice.multiple_payment_accounts`
+(`orders.payment_accounts` lists the choices: just the default without the
+feature, else all enabled Cash- / Bank-type ledger accounts of the company).
+The server checks the account's type and company before saving anything.
+Bank also takes an optional transfer / cheque no. (`bank_reference_no`, blank
+= the invoice no.).

@@ -16,7 +16,20 @@ class VanSaleXSettings(Document):
             frappe.throw("Max Discount % must be between 0 and 100.")
         if self.default_payment_type == "Credit" and not self.allow_credit_sales:
             frappe.throw("Default Payment Type can't be Credit while credit sales are not allowed.")
+        if self.default_payment_type == "Bank" and not self.allow_bank_payment:
+            frappe.throw("Default Payment Type can't be Bank while bank payment is not allowed.")
+        self._validate_accounts()
         self._validate_access()
+
+    def _validate_accounts(self) -> None:
+        """Default Cash / Bank Account: an enabled ledger account of that
+        type (the pickers filter the same way; this is the enforcement).
+        Checked when set or changed, so an old value can't block saving."""
+        from zatgo_core.services.vansalex_settings import check_account
+
+        for fieldname, account_type in (("default_cash_account", "Cash"), ("default_bank_account", "Bank")):
+            if self.has_value_changed(fieldname):
+                check_account(self.get(fieldname), account_type, self.meta.get_label(fieldname))
 
     def _validate_access(self) -> None:
         """Rows describe catalog keys only (label/kind/module come from the

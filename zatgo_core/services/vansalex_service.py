@@ -143,15 +143,17 @@ def _ensure_submitted_sales_invoice(
 
 
 def _apply_payment_type(target: Any, sale: dict[str, Any]) -> None:
-    """Cash / Credit onto a Sales Invoice (dict payload or doc). A Cash
-    invoice's Payment Entry is then auto-created on submit by the existing
-    zatgo_core hook (services/invoice_cash_payment_service.py)."""
+    """Cash / Bank / Credit onto a Sales Invoice (dict payload or doc). A
+    Cash or Bank invoice's Payment Entry is then auto-created on submit, into
+    its Cash / Bank account, by the existing zatgo_core hook
+    (services/invoice_cash_payment_service.py)."""
     meta = frappe.get_meta("Sales Invoice")
     if not sale.get("payment_type") or not meta.has_field("custom_payment_type"):
         return
     values = {"custom_payment_type": sale["payment_type"]}
-    if sale.get("cash_account") and meta.has_field("custom_cash_account"):
-        values["custom_cash_account"] = sale["cash_account"]
+    for key in ("cash_account", "bank_account", "bank_reference_no"):
+        if sale.get(key) and meta.has_field(f"custom_{key}"):
+            values[f"custom_{key}"] = sale[key]
     for key, value in values.items():
         if isinstance(target, dict):
             target[key] = value
@@ -362,6 +364,8 @@ def create_order(
     payment_type: str | None = None,
     cash_account: str | None = None,
     payment_details: Any = None,
+    bank_account: str | None = None,
+    bank_reference_no: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.vansalex_settings import resolve_sale
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
@@ -382,9 +386,15 @@ def create_order(
             frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
         return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
 
-    # Warehouse / Cash-Credit / cash account, validated against the user's
-    # effective VanSaleX settings (see services/vansalex_settings.py).
-    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
+    # Warehouse / Cash-Bank-Credit / its account, validated against the
+    # user's effective VanSaleX settings (see services/vansalex_settings.py).
+    sale = resolve_sale(
+        payment_type=payment_type,
+        warehouse=wh,
+        cash_account=cash_account,
+        bank_account=bank_account,
+        bank_reference_no=bank_reference_no,
+    )
     wh = sale["warehouse"]
 
     doc = _build_direct_invoice(customer, items, wh, company, discount_percentage, sale)
@@ -608,6 +618,8 @@ def confirm_order(
     payment_type: str | None = None,
     cash_account: str | None = None,
     payment_details: Any = None,
+    bank_account: str | None = None,
+    bank_reference_no: str | None = None,
 ) -> dict[str, Any]:
     """Convert a submitted Sales Order into a submitted Sales Invoice —
     the "Confirm Order" action. `client_id` here is the idempotency key
@@ -640,7 +652,13 @@ def confirm_order(
 
     if not frappe.db.exists("Sales Order", so_name):
         frappe.throw(f"Sales Order not found: {so_name}")
-    sale = resolve_sale(payment_type=payment_type, warehouse=wh, cash_account=cash_account)
+    sale = resolve_sale(
+        payment_type=payment_type,
+        warehouse=wh,
+        cash_account=cash_account,
+        bank_account=bank_account,
+        bank_reference_no=bank_reference_no,
+    )
     wh = sale["warehouse"]
     so = frappe.get_doc("Sales Order", so_name)
     if int(so.docstatus or 0) != 1:

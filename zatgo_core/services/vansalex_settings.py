@@ -7,9 +7,17 @@ first and zatgo_core's second:
 
 - warehouse:    Profile.warehouse → ZG Company Settings.default_warehouse
                 → ERPNext Stock Settings.default_warehouse
-- cash account: Profile.cash_account → ERPNext Mode of Payment "Cash"
-                default account for the company → ZG Company Settings
-                .default_cash_account
+- cash account: Profile.cash_account → VanSaleX Settings
+                .default_cash_account (if it is the company's) → ERPNext
+                Mode of Payment "Cash" default account for the company →
+                ZG Company Settings.default_cash_account
+- bank account: Profile.bank_account → VanSaleX Settings
+                .default_bank_account (if it is the company's) → the
+                company's default account on a Bank-type Mode of Payment
+                ("Bank" first, as the Sales Invoice form pre-fills it) →
+                ERPNext Company.default_bank_account
+  A driver may sell into another Cash / Bank account of the company only
+  with the "Choose payment account" feature (vansalex_access).
 - sales taxes:  ZG Company Settings.default_tax_template → the company's
                 default ERPNext Sales Taxes and Charges Template
                 (is_default) → its first enabled one
@@ -31,11 +39,18 @@ from frappe.utils import cint, flt
 SETTINGS_DOCTYPE = "VanSaleX Settings"
 PROFILE_DOCTYPE = "ZG Van Sale Profile"
 CASH_MODE_OF_PAYMENT = "Cash"
-PAYMENT_TYPES = ("Cash", "Credit")
+PAYMENT_TYPES = ("Cash", "Bank", "Credit")
+# Payment type -> the Sales Invoice field its account goes in, and the
+# Account Type that account must have (see invoice_cash_payment_service).
+ACCOUNT_PAYMENT_TYPES = {"Cash": "cash_account", "Bank": "bank_account"}
 
 _DEFAULTS: dict[str, Any] = {
     "default_payment_type": "Cash",
     "allow_credit_sales": 1,
+    # New: off until an admin turns it on.
+    "allow_bank_payment": 0,
+    "default_cash_account": "",
+    "default_bank_account": "",
     "show_payment_type_on_invoice": 1,
     "show_warehouse_on_invoice": 1,
     "allow_warehouse_change": 0,
@@ -107,9 +122,46 @@ def default_warehouse(company: str | None) -> str | None:
     return None
 
 
+def check_account(
+    account: str | None, account_type: str, label: str, company: str | None = None
+) -> None:
+    """[account] must be an enabled ledger (not group) account of
+    [account_type] -- and of [company], when given. Blank passes."""
+    if not account:
+        return
+    row = frappe.db.get_value(
+        "Account", account, ["company", "account_type", "is_group", "disabled"], as_dict=True
+    )
+    if not row:
+        frappe.throw(f"{label}: account {account} does not exist.")
+    if row.is_group or cint(row.disabled) or row.account_type != account_type:
+        frappe.throw(
+            f"{label}: {account} is not an enabled {account_type}-type ledger account "
+            f"(Account Type = {account_type}, not a group)."
+        )
+    if company and row.company != company:
+        frappe.throw(f"{label}: {account} belongs to {row.company}, not {company}.")
+
+
+def _usable_account(account: str | None, company: str | None, account_type: str) -> str | None:
+    """[account] if it can take [account_type] payments for [company]."""
+    if not account or not company:
+        return None
+    row = frappe.db.get_value(
+        "Account", account, ["company", "account_type", "is_group", "disabled"], as_dict=True
+    )
+    if not row or row.company != company or row.account_type != account_type:
+        return None
+    return None if row.is_group or cint(row.disabled) else account
+
+
 def default_cash_account(company: str | None) -> str | None:
-    """ERPNext's Mode of Payment "Cash" default account for the company,
-    then zatgo_core's ZG Company Settings.default_cash_account."""
+    """VanSaleX Settings' Default Cash Account (when it is this company's),
+    ERPNext's Mode of Payment "Cash" default account for the company, then
+    zatgo_core's ZG Company Settings.default_cash_account."""
+    account = _usable_account(_global_settings()["default_cash_account"], company, "Cash")
+    if account:
+        return account
     if company:
         account = frappe.db.get_value(
             "Mode of Payment Account",
@@ -119,6 +171,33 @@ def default_cash_account(company: str | None) -> str | None:
         if account:
             return account
     return _zg_company_setting(company, "default_cash_account")
+
+
+def default_bank_account(company: str | None) -> str | None:
+    """VanSaleX Settings' Default Bank Account (when it is this company's),
+    then the company's default account on an enabled Bank-type Mode of
+    Payment -- "Bank" first, then by name, as the Sales Invoice form
+    pre-fills it -- then ERPNext's Company.default_bank_account."""
+    account = _usable_account(_global_settings()["default_bank_account"], company, "Bank")
+    if account or not company:
+        return account
+    modes = frappe.get_all(
+        "Mode of Payment", filters={"type": "Bank", "enabled": 1}, pluck="name", order_by="name asc"
+    )
+    modes.sort(key=lambda m: m.lower() != "bank")
+    for mode in modes:
+        account = _usable_account(
+            frappe.db.get_value(
+                "Mode of Payment Account", {"parent": mode, "company": company}, "default_account"
+            ),
+            company,
+            "Bank",
+        )
+        if account:
+            return account
+    return _usable_account(
+        frappe.db.get_value("Company", company, "default_bank_account"), company, "Bank"
+    )
 
 
 def sales_tax_template(company: str | None) -> tuple[str | None, bool]:
@@ -180,16 +259,23 @@ def resolve(user: str | None = None) -> dict[str, Any]:
         company = frappe.db.get_value("Warehouse", warehouse, "company")
 
     allow_credit = _override(profile, "allow_credit_sales", glob["allow_credit_sales"])
+    allow_bank = _override(profile, "allow_bank_payment", glob["allow_bank_payment"])
     payment_type = (profile.get("default_payment_type") or glob["default_payment_type"] or "Cash").strip()
-    if payment_type not in PAYMENT_TYPES or (payment_type == "Credit" and not allow_credit):
+    if (
+        payment_type not in PAYMENT_TYPES
+        or (payment_type == "Credit" and not allow_credit)
+        or (payment_type == "Bank" and not allow_bank)
+    ):
         payment_type = "Cash"
 
     return {
         "company": company,
         "warehouse": warehouse,
         "cash_account": profile.get("cash_account") or default_cash_account(company),
+        "bank_account": profile.get("bank_account") or default_bank_account(company),
         "default_payment_type": payment_type,
         "allow_credit_sales": allow_credit,
+        "allow_bank_payment": allow_bank,
         "show_payment_type_on_invoice": _override(
             profile, "show_payment_type_on_invoice", glob["show_payment_type_on_invoice"]
         ),
@@ -262,17 +348,74 @@ def selectable_warehouses() -> list[dict[str, Any]]:
     ]
 
 
+def _account_choices(company: str | None, account_type: str, default: str | None, choose: bool) -> list[str]:
+    names = [default] if default else []
+    if choose and company:
+        for name in frappe.get_all(
+            "Account",
+            filters={"company": company, "account_type": account_type, "is_group": 0, "disabled": 0},
+            pluck="name",
+            order_by="name asc",
+        ):
+            if name not in names:
+                names.append(name)
+    return names
+
+
+def selectable_payment_accounts() -> dict[str, list[dict[str, Any]]]:
+    """Cash and Bank accounts the caller may sell into, default first: every
+    enabled Cash- / Bank-type ledger account of their company with the
+    "Choose payment account" feature, otherwise just the default."""
+    from zatgo_core.services.vansalex_access import is_enabled
+
+    eff = resolve()
+    choose = is_enabled("sales_invoice.multiple_payment_accounts")
+    out: dict[str, list[dict[str, Any]]] = {}
+    for ptype, key in ACCOUNT_PAYMENT_TYPES.items():
+        default = eff[key]
+        out[key] = [
+            {"name": n, "is_default": int(n == default)}
+            for n in _account_choices(eff["company"], ptype, default, choose)
+        ]
+    return out
+
+
+def _sale_account(ptype: str, *, requested: str | None, default: str | None, company: str | None) -> str:
+    """The Cash / Bank account a sale goes into: the one asked for -- which,
+    unless it is the default, needs "Choose payment account" -- else the
+    default. Checked here so a wrong one fails before anything is saved."""
+    from zatgo_core.services.vansalex_access import require
+
+    requested = (requested or "").strip()
+    if requested and requested != default:
+        require("sales_invoice.multiple_payment_accounts")
+    account = requested or default
+    if not account:
+        where = (
+            'a default account on Mode of Payment "Cash" for this company, a Default '
+            "Cash Account in VanSaleX Settings, or a Cash Account on the user's VanSale Profile"
+            if ptype == "Cash"
+            else "a Default Bank Account in VanSaleX Settings, or a Bank Account on the "
+            "user's VanSale Profile"
+        )
+        frappe.throw(f"No {ptype} account is set up for {company}: set {where}.")
+    check_account(account, ptype, f"{ptype} Account", company)
+    return account
+
+
 def resolve_sale(
     *,
     payment_type: str | None,
     warehouse: str | None,
     cash_account: str | None = None,
+    bank_account: str | None = None,
+    bank_reference_no: str | None = None,
     user: str | None = None,
 ) -> dict[str, Any]:
-    """Validate and complete the payment type / warehouse / cash account a
-    caller asked for against the user's effective settings. Throws on
-    anything the settings don't allow — the server is the enforcement point,
-    not the app's hidden toggles."""
+    """Validate and complete the payment type / warehouse / Cash or Bank
+    account a caller asked for against the user's effective settings.
+    Throws on anything the settings don't allow — the server is the
+    enforcement point, not the app's hidden toggles."""
     from zatgo_core.services.van_sale_access import is_vansale_admin
 
     eff = resolve(user)
@@ -285,24 +428,37 @@ def resolve_sale(
     # (the settings default when the toggle is hidden).
     ptype = (payment_type or "").strip().title() or None
     if ptype is not None and ptype not in PAYMENT_TYPES:
-        frappe.throw(f"Payment type must be Cash or Credit, not {payment_type!r}.")
+        frappe.throw(f"Payment type must be Cash, Bank or Credit, not {payment_type!r}.")
     if ptype == "Credit" and not eff["allow_credit_sales"] and not admin:
         frappe.throw("Credit sales are not allowed for your account.", frappe.PermissionError)
+    if ptype == "Bank" and not eff["allow_bank_payment"] and not admin:
+        frappe.throw("Bank payments are not allowed for your account.", frappe.PermissionError)
+    if ptype == "Bank" and not frappe.get_meta("Sales Invoice").has_field("custom_bank_account"):
+        frappe.throw("Bank payments need zatgo_core's Bank Account field on Sales Invoice: run bench migrate.")
 
     wh = allowed_warehouse(warehouse, eff=eff, admin=admin)
 
-    account = None
-    if ptype == "Cash":
+    sale: dict[str, Any] = {
+        "payment_type": ptype,
+        "warehouse": wh,
+        "cash_account": None,
+        "bank_account": None,
+        "bank_reference_no": None,
+    }
+    if ptype in ACCOUNT_PAYMENT_TYPES:
         company = frappe.db.get_value("Warehouse", wh, "company")
-        account = (cash_account or "").strip() if admin and cash_account else None
-        account = account or (
-            eff["cash_account"] if company == eff["company"] else default_cash_account(company)
+        key = ACCOUNT_PAYMENT_TYPES[ptype]
+        if company == eff["company"]:
+            default = eff[key]
+        else:
+            default = default_cash_account(company) if ptype == "Cash" else default_bank_account(company)
+        sale[key] = _sale_account(
+            ptype,
+            requested=cash_account if ptype == "Cash" else bank_account,
+            default=default,
+            company=company,
         )
-        if not account:
-            frappe.throw(
-                f"No Cash account is set up for {company}: set a default account on "
-                "Mode of Payment \"Cash\" for this company, or a Cash Account on the "
-                "user's VanSale Profile."
-            )
-
-    return {"payment_type": ptype, "warehouse": wh, "cash_account": account}
+    if ptype == "Bank":
+        # Transfer / cheque no. for the Payment Entry; blank = the invoice no.
+        sale["bank_reference_no"] = (bank_reference_no or "").strip()[:140] or None
+    return sale

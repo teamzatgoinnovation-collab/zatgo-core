@@ -5,6 +5,9 @@ Covers services/vansalex_settings.py and its use by create_order:
   and zatgo_core's second (ZG Company Settings default warehouse);
 - a Cash invoice gets its Payment Entry auto-created (existing
   invoice_cash_payment_service hook), a Credit invoice stays outstanding;
+- Bank (when allowed) pays into the Bank account, Cash into the Cash
+  account -- the default, or one the driver picks with "Choose payment
+  account";
 - per-user ZG Van Sale Profile overrides are enforced on the server — the
   app hiding a toggle is not the control.
 
@@ -19,7 +22,11 @@ from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import flt, random_string
 
 from zatgo_core.services.vansalex_service import create_collection, create_order
-from zatgo_core.services.vansalex_settings import resolve, selectable_warehouses
+from zatgo_core.services.vansalex_settings import (
+    resolve,
+    selectable_payment_accounts,
+    selectable_warehouses,
+)
 from zatgo_core.tests.integration._fixtures import (
     get_or_create_cash_mode_of_payment,
     get_or_create_test_company,
@@ -35,6 +42,9 @@ class TestVansalexSettings(IntegrationTestCase):
             "Account", {"company": cls.company, "account_type": "Cash", "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cls.cash_account)
+        cls.bank_account = cls._make_account("ZG Test Bank", "Bank")
+        cls.other_bank_account = cls._make_account("ZG Test Bank 2", "Bank")
+        cls.till_account = cls._make_account("Van Till", "Cash")
         cls.warehouse = cls._make_warehouse("VanSaleSettingsTest")
         cls.other_warehouse = cls._make_warehouse("VanSaleSettingsOther")
         cls.item_code = cls._make_stocked_item(cls.warehouse, qty=1000)
@@ -47,6 +57,28 @@ class TestVansalexSettings(IntegrationTestCase):
         frappe.set_user("Administrator")
 
     # -- fixtures (mirrors test_vansalex_collection_allocation.py) --------
+
+    @classmethod
+    def _make_account(cls, account_name: str, account_type: str) -> str:
+        """A ledger account of [account_type] under the company's group of
+        that type (as test_invoice_cash_payment.py makes its bank account)."""
+        name = frappe.db.get_value(
+            "Account", {"company": cls.company, "account_name": account_name, "is_group": 0}, "name"
+        )
+        if name:
+            return name
+        parent = frappe.db.get_value(
+            "Account", {"company": cls.company, "account_type": account_type, "is_group": 1}, "name"
+        ) or frappe.db.get_value("Account", cls.cash_account, "parent_account")
+        return frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": account_name,
+                "company": cls.company,
+                "parent_account": parent,
+                "account_type": account_type,
+            }
+        ).insert(ignore_permissions=True).name
 
     @classmethod
     def _make_warehouse(cls, label: str) -> str:
@@ -148,20 +180,8 @@ class TestVansalexSettings(IntegrationTestCase):
         self.assertEqual(eff["cash_account"], self.cash_account)
 
     def test_profile_cash_account_overrides_mode_of_payment(self) -> None:
-        abbr = frappe.db.get_value("Company", self.company, "abbr")
-        other = f"Van Till - {abbr}"
-        if not frappe.db.exists("Account", other):
-            frappe.get_doc(
-                {
-                    "doctype": "Account",
-                    "account_name": "Van Till",
-                    "company": self.company,
-                    "parent_account": frappe.db.get_value("Account", self.cash_account, "parent_account"),
-                    "account_type": "Cash",
-                }
-            ).insert(ignore_permissions=True)
-        self._set_profile(cash_account=other)
-        self.assertEqual(resolve(self.user)["cash_account"], other)
+        self._set_profile(cash_account=self.till_account)
+        self.assertEqual(resolve(self.user)["cash_account"], self.till_account)
 
     def test_profile_overrides_toggles(self) -> None:
         self._set_profile(
@@ -377,3 +397,148 @@ class TestVansalexSettings(IntegrationTestCase):
                 payment_type="Credit",
             )
 
+    # -- bank / account choice -----------------------------------------------
+
+    def _pe_for(self, si_name: str) -> frappe._dict:
+        names = frappe.get_all(
+            "Payment Entry Reference",
+            filters={"reference_name": si_name, "docstatus": 1},
+            pluck="parent",
+        )
+        self.assertEqual(len(names), 1)
+        return frappe.db.get_value(
+            "Payment Entry", names[0], ["paid_to", "reference_no", "mode_of_payment"], as_dict=True
+        )
+
+    def _choice_on_for_site(self) -> None:
+        from zatgo_core.services.vansalex_access import _client_rows
+
+        if not _client_rows().get("sales_invoice.multiple_payment_accounts", 1):
+            self.skipTest("this site has 'Choose payment account' switched off")
+
+    def test_bank_refused_unless_allowed(self) -> None:
+        self._set_profile(allow_bank_payment="No", bank_account=self.bank_account)
+        with self.assertRaises(frappe.PermissionError):
+            self._sell(warehouse=self.warehouse, payment_type="Bank")
+
+    def test_default_payment_type_bank_needs_bank_allowed(self) -> None:
+        self._set_profile(default_payment_type="Bank", allow_bank_payment="No")
+        self.assertEqual(resolve(self.user)["default_payment_type"], "Cash")
+        self._set_profile(allow_bank_payment="Yes")
+        eff = resolve(self.user)
+        self.assertEqual(eff["default_payment_type"], "Bank")
+        self.assertEqual(eff["allow_bank_payment"], 1)
+
+    def test_bank_invoice_pays_into_the_default_bank_account(self) -> None:
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        self.assertEqual(resolve(self.user)["bank_account"], self.bank_account)
+        result = self._sell(warehouse=self.warehouse, payment_type="Bank")
+        self.assertTrue(result["success"], result.get("error"))
+        si = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(si.custom_payment_type, "Bank")
+        self.assertEqual(si.custom_bank_account, self.bank_account)
+        self.assertFalse(si.custom_cash_account)
+        self.assertEqual(flt(si.outstanding_amount), 0)
+        pe = self._pe_for(si.name)
+        self.assertEqual(pe.paid_to, self.bank_account)
+        # No reference typed: ERPNext's required reference is the invoice no.
+        self.assertEqual(pe.reference_no, si.name)
+
+    def test_bank_reference_no_reaches_the_payment_entry(self) -> None:
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        result = self._sell(warehouse=self.warehouse, payment_type="Bank", bank_reference_no=" TRF-0077 ")
+        si = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(si.custom_bank_reference_no, "TRF-0077")
+        self.assertEqual(self._pe_for(si.name).reference_no, "TRF-0077")
+
+    def test_driver_picks_another_bank_account(self) -> None:
+        self._choice_on_for_site()
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        result = self._sell(
+            warehouse=self.warehouse, payment_type="Bank", bank_account=self.other_bank_account
+        )
+        si = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(si.custom_bank_account, self.other_bank_account)
+        self.assertEqual(self._pe_for(si.name).paid_to, self.other_bank_account)
+
+    def test_driver_picks_another_cash_account(self) -> None:
+        self._choice_on_for_site()
+        result = self._sell(warehouse=self.warehouse, payment_type="Cash", cash_account=self.till_account)
+        si = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(si.custom_cash_account, self.till_account)
+        self.assertEqual(self._pe_for(si.name).paid_to, self.till_account)
+
+    def test_account_choice_needs_the_feature(self) -> None:
+        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
+        doc = frappe.get_doc("ZG Van Sale Profile", name)
+        doc.append(
+            "access_overrides", {"access_key": "sales_invoice.multiple_payment_accounts", "disabled": 1}
+        )
+        doc.save(ignore_permissions=True)
+        with self.assertRaises(frappe.PermissionError):
+            self._sell(warehouse=self.warehouse, payment_type="Cash", cash_account=self.till_account)
+        # Naming the default account is not a choice.
+        result = self._sell(warehouse=self.warehouse, payment_type="Cash", cash_account=self.cash_account)
+        self.assertTrue(result["success"], result.get("error"))
+        frappe.set_user(self.user)
+        accounts = selectable_payment_accounts()
+        self.assertEqual([a["name"] for a in accounts["cash_account"]], [self.cash_account])
+
+    def test_account_of_the_wrong_type_is_refused(self) -> None:
+        self._choice_on_for_site()
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        with self.assertRaisesRegex(frappe.ValidationError, "not an enabled Bank-type"):
+            self._sell(warehouse=self.warehouse, payment_type="Bank", bank_account=self.cash_account)
+        self.assertFalse(
+            frappe.db.exists("Sales Invoice", {"customer": self.customer, "docstatus": ["<", 2]})
+        )
+
+    def test_selectable_accounts_default_first(self) -> None:
+        self._choice_on_for_site()
+        self._set_profile(bank_account=self.other_bank_account)
+        frappe.set_user(self.user)
+        accounts = selectable_payment_accounts()
+        bank = [a["name"] for a in accounts["bank_account"]]
+        self.assertEqual(bank[0], self.other_bank_account)
+        self.assertEqual(accounts["bank_account"][0]["is_default"], 1)
+        self.assertIn(self.bank_account, bank)
+        cash = [a["name"] for a in accounts["cash_account"]]
+        self.assertEqual(cash[0], self.cash_account)
+        self.assertIn(self.till_account, cash)
+        self.assertNotIn(self.bank_account, cash)
+
+    def test_convert_order_to_bank_invoice(self) -> None:
+        from zatgo_core.services.vansalex_service import confirm_order, create_sales_order
+
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        frappe.set_user(self.user)
+        so = create_sales_order(
+            client_id=f"test-settings-so-{random_string(8)}",
+            customer=self.customer,
+            items=[{"item_code": self.item_code, "qty": 1, "rate": 10}],
+        )["data"]["erp_name"]
+        result = confirm_order(
+            client_id=f"test-settings-cf-{random_string(8)}",
+            sales_order=so,
+            warehouse=self.warehouse,
+            payment_type="Bank",
+            bank_reference_no="CHQ-12",
+        )
+        si = frappe.get_doc("Sales Invoice", result["data"]["erp_name"])
+        self.assertEqual(si.custom_payment_type, "Bank")
+        self.assertEqual(si.custom_bank_account, self.bank_account)
+        self.assertEqual(self._pe_for(si.name).reference_no, "CHQ-12")
+
+    def test_profile_bank_account_must_be_a_bank_account(self) -> None:
+        with self.assertRaisesRegex(frappe.ValidationError, "not an enabled Bank-type"):
+            self._set_profile(bank_account=self.cash_account)
+
+    def test_context_exposes_bank_settings(self) -> None:
+        from zatgo_core.api.v1.vansalex.me import context
+
+        self._set_profile(allow_bank_payment="Yes", bank_account=self.bank_account)
+        frappe.set_user(self.user)
+        data = context()["data"]
+        self.assertEqual(data["settings"]["bank_account"], self.bank_account)
+        self.assertEqual(data["settings"]["allow_bank_payment"], 1)
+        self.assertTrue(data["access"]["features"]["sales_invoice.bank_payment"])

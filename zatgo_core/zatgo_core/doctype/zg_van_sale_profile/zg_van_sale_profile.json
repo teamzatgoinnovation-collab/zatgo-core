@@ -15,8 +15,10 @@
     "route_title",
     "app_section",
     "cash_account",
+    "bank_account",
     "default_payment_type",
     "allow_credit_sales",
+    "allow_bank_payment",
     "app_column",
     "show_payment_type_on_invoice",
     "show_warehouse_on_invoice",
@@ -84,18 +86,34 @@
       "fieldtype": "Link",
       "label": "Cash Account",
       "options": "Account",
-      "description": "Account that receives Cash invoices. Leave empty to use the company's Mode of Payment \"Cash\" default account."
+      "description": "Account that receives Cash invoices. Leave empty to use VanSaleX Settings' Default Cash Account, then the company's Mode of Payment \"Cash\" default account.",
+      "link_filters": "[[\"Account\", \"account_type\", \"=\", \"Cash\"], [\"Account\", \"is_group\", \"=\", 0]]"
+    },
+    {
+      "fieldname": "bank_account",
+      "fieldtype": "Link",
+      "label": "Bank Account",
+      "options": "Account",
+      "link_filters": "[[\"Account\", \"account_type\", \"=\", \"Bank\"], [\"Account\", \"is_group\", \"=\", 0]]",
+      "description": "Account that receives Bank invoices. Leave empty to use VanSaleX Settings' Default Bank Account."
     },
     {
       "fieldname": "default_payment_type",
       "fieldtype": "Select",
       "label": "Default Payment Type",
-      "options": "\nCash\nCredit"
+      "options": "\nCash\nBank\nCredit"
     },
     {
       "fieldname": "allow_credit_sales",
       "fieldtype": "Select",
       "label": "Allow Credit Sales",
+      "options": "Inherit\nYes\nNo",
+      "default": "Inherit"
+    },
+    {
+      "fieldname": "allow_bank_payment",
+      "fieldtype": "Select",
+      "label": "Allow Bank Payment",
       "options": "Inherit\nYes\nNo",
       "default": "Inherit"
     },
@@ -106,7 +124,7 @@
     {
       "fieldname": "show_payment_type_on_invoice",
       "fieldtype": "Select",
-      "label": "Show Cash / Credit on Invoice",
+      "label": "Show Cash / Bank / Credit on Invoice",
       "options": "Inherit\nYes\nNo",
       "default": "Inherit"
     },
@@ -162,7 +180,7 @@
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-10-04 00:00:00.000000",
+  "modified": "2026-10-08 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Van Sale Profile",

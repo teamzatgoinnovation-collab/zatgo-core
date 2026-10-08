@@ -69,6 +69,7 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
         FEATURE, "Choose payment account", "sales_invoice", 1, None,
     ),
     "sales_invoice.credit_sale": (FEATURE, "Credit sales", "sales_invoice", 1, "allow_credit_sales"),
+    "sales_invoice.bank_payment": (FEATURE, "Bank payment", "sales_invoice", 0, "allow_bank_payment"),
     # Both discounts are also capped by VanSaleX Settings → Max Discount %
     # (and off while it is 0) — see REQUIRES_SETTING.
     "sales_invoice.discount": (FEATURE, "Total discount", "sales_invoice", 1, None),
@@ -104,8 +105,9 @@ APP_LOCATION: dict[str, str] = {
     "sales_invoice.print_a4": "Print sheet → A4",
     "sales_invoice.print_80mm": "Print sheet → 80mm thermal",
     "sales_invoice.multiple_payment_modes": "New Invoice → Split payment (several methods)",
-    "sales_invoice.multiple_payment_accounts": "New Invoice → Split payment → Account",
-    "sales_invoice.credit_sale": "New Invoice → Cash / Credit",
+    "sales_invoice.multiple_payment_accounts": "New Invoice / Convert to Invoice → Cash / Bank account, Split payment → Account",
+    "sales_invoice.credit_sale": "New Invoice → Cash / Bank / Credit",
+    "sales_invoice.bank_payment": "New Invoice → Cash / Bank / Credit",
     "sales_invoice.discount": "New Invoice / New Order → Discount % (whole invoice)",
     "sales_invoice.line_discount": "New Invoice / New Order → Disc % on each line",
     "sales_invoice.change_warehouse": "New Invoice → Warehouse",

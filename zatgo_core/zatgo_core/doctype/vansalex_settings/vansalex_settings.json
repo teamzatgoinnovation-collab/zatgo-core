@@ -8,7 +8,11 @@
   "payment_section",
   "default_payment_type",
   "allow_credit_sales",
+  "allow_bank_payment",
   "show_payment_type_on_invoice",
+  "payment_column",
+  "default_cash_account",
+  "default_bank_account",
   "warehouse_section",
   "show_warehouse_on_invoice",
   "allow_warehouse_change",
@@ -26,15 +30,15 @@
   {
    "fieldname": "payment_section",
    "fieldtype": "Section Break",
-   "label": "Payment (Cash / Credit)"
+   "label": "Payment (Cash / Bank / Credit)"
   },
   {
    "fieldname": "default_payment_type",
    "fieldtype": "Select",
    "label": "Default Payment Type",
-   "options": "Cash\nCredit",
+   "options": "Cash\nBank\nCredit",
    "default": "Cash",
-   "description": "Cash invoices auto-create a Payment Entry on submit into the Cash account (ERPNext Mode of Payment \"Cash\" default account for the company, unless the user's VanSale Profile sets one)."
+   "description": "Cash and Bank invoices auto-create a Payment Entry on submit, into the Default Cash / Bank Account below (or the one the driver picks, when \"Choose payment account\" is on under Modules & Features)."
   },
   {
    "fieldname": "allow_credit_sales",
@@ -43,11 +47,38 @@
    "default": "1"
   },
   {
+   "fieldname": "allow_bank_payment",
+   "fieldtype": "Check",
+   "label": "Allow Bank Payment",
+   "default": "0",
+   "description": "Offer Bank (transfer / card into a bank account) besides Cash and Credit."
+  },
+  {
    "fieldname": "show_payment_type_on_invoice",
    "fieldtype": "Check",
-   "label": "Show Cash / Credit on Invoice",
+   "label": "Show Cash / Bank / Credit on Invoice",
    "default": "1",
    "description": "When hidden, the app always uses the default payment type."
+  },
+  {
+   "fieldname": "payment_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_cash_account",
+   "fieldtype": "Link",
+   "label": "Default Cash Account",
+   "options": "Account",
+   "link_filters": "[[\"Account\", \"account_type\", \"=\", \"Cash\"], [\"Account\", \"is_group\", \"=\", 0]]",
+   "description": "For drivers of this account's company, unless their VanSale Profile sets one. Empty = ERPNext Mode of Payment \"Cash\" default account."
+  },
+  {
+   "fieldname": "default_bank_account",
+   "fieldtype": "Link",
+   "label": "Default Bank Account",
+   "options": "Account",
+   "link_filters": "[[\"Account\", \"account_type\", \"=\", \"Bank\"], [\"Account\", \"is_group\", \"=\", 0]]",
+   "description": "For drivers of this account's company, unless their VanSale Profile sets one. Empty = the company's Bank-type Mode of Payment default account, then the Company's Default Bank Account."
   },
   {
    "fieldname": "warehouse_section",
@@ -105,7 +136,7 @@
   {
    "fieldname": "access_help",
    "fieldtype": "HTML",
-   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site — one row per screen, in the app's order; \"Where in the app\" shows which tab or More-menu entry each row controls. Unticked entries disappear from the app and the server rejects them. A feature only works while its module is on. Settings (with Logout) is always shown. Orders, credit sales, discount and warehouse change are controlled by the fields above. Per user: switch entries off on the user's ZG Van Sale Profile.</p>"
+   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site — one row per screen, in the app's order; \"Where in the app\" shows which tab or More-menu entry each row controls. Unticked entries disappear from the app and the server rejects them. A feature only works while its module is on. Settings (with Logout) is always shown. Orders, credit sales, bank payment, discount and warehouse change are controlled by the fields above. Per user: switch entries off on the user's ZG Van Sale Profile.</p>"
   },
   {
    "fieldname": "access",
@@ -126,7 +157,7 @@
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-10-07 00:00:00.000000",
+ "modified": "2026-10-08 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "VanSaleX Settings",

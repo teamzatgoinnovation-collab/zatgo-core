@@ -8,7 +8,7 @@ import frappe
 from frappe.utils import getdate
 
 from zatgo_core.services.vansalex_access import require as require_access
-from zatgo_core.api.response import paginated
+from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login
 from zatgo_core.services.erpnext_reads import map_sales_invoice_row
 from zatgo_core.services.vansalex_service import (
@@ -32,11 +32,15 @@ def create(
     payment_type: str | None = None,
     cash_account: str | None = None,
     payment_details: str | list | None = None,
+    bank_account: str | None = None,
+    bank_reference_no: str | None = None,
 ) -> dict[str, Any]:
     """Invoice — creates+submits a Sales Invoice immediately. Warehouse,
-    Cash/Credit and cash account are checked against the caller's VanSaleX
-    settings (services/vansalex_settings.resolve_sale); a Cash invoice gets
-    its Payment Entry auto-created on submit. `payment_details`
+    Cash/Bank/Credit and the Cash or Bank account (blank = the default; see
+    ``payment_accounts``) are checked against the caller's VanSaleX settings
+    (services/vansalex_settings.resolve_sale); a Cash or Bank invoice gets
+    its Payment Entry auto-created on submit, a Bank one with
+    `bank_reference_no` (else the invoice no.) as reference. `payment_details`
     ([{payment_method, account?, amount, reference_no?, remarks?}]) instead
     records the payment on the invoice itself, split across methods and
     accounts (services/payment_allocation.py)."""
@@ -53,7 +57,22 @@ def create(
         payment_type=payment_type,
         cash_account=cash_account,
         payment_details=payment_details,
+        bank_account=bank_account,
+        bank_reference_no=bank_reference_no,
     )
+
+
+@frappe.whitelist()
+def payment_accounts() -> dict[str, Any]:
+    """Read-only: the Cash and Bank accounts the caller may sell into,
+    default first (``{"cash_account": [{name, is_default}], "bank_account":
+    [...]}``) -- all of their company's with "Choose payment account", else
+    just the default."""
+    from zatgo_core.services.vansalex_settings import selectable_payment_accounts
+
+    require_login()
+    require_access("sales_invoice")
+    return ok(selectable_payment_accounts(), meta={"source": "Account"})
 
 
 @frappe.whitelist()
@@ -113,9 +132,12 @@ def confirm(
     payment_type: str | None = None,
     cash_account: str | None = None,
     payment_details: str | list | None = None,
+    bank_account: str | None = None,
+    bank_reference_no: str | None = None,
 ) -> dict[str, Any]:
     """Confirm a submitted Sales Order into a submitted Sales Invoice
-    (Cash/Credit, warehouse and payment_details as for ``create``)."""
+    (Cash/Bank/Credit and its account, warehouse and payment_details as for
+    ``create``)."""
     require_login()
     require_access("sales_invoice")
     return confirm_order(
@@ -127,6 +149,8 @@ def confirm(
         payment_type=payment_type,
         cash_account=cash_account,
         payment_details=payment_details,
+        bank_account=bank_account,
+        bank_reference_no=bank_reference_no,
     )
 
 
