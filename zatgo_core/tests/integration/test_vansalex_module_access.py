@@ -439,6 +439,19 @@ class TestVansalexModuleAccess(IntegrationTestCase):
             frappe.set_user("Administrator")
             frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
 
+    def test_unpriced_item_at_zero_rate_is_refused_without_edit_rate(self) -> None:
+        # A fresh item: earlier sales of the shared fixture can leave an Item
+        # Price behind (Stock Settings "Auto insert Item Price if missing").
+        unpriced = self._make_stocked_item(self.warehouse, qty=5)
+        self._as_user()
+        with self.assertRaises(frappe.ValidationError):
+            create_order(
+                client_id=f"test-rate-{random_string(8)}",
+                customer=self.customer,
+                items=[{"item_code": unpriced, "qty": 1, "rate": 0}],
+                payment_type="Credit",
+            )
+
     def _priced_line(self, discount: float, qty: float = 2) -> list[dict]:
         return [{"item_code": self.item_code, "qty": qty, "rate": 10, "discount_percentage": discount}]
 

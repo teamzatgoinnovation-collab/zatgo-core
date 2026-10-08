@@ -262,8 +262,9 @@ def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) 
     [price_list] (the customer's). A 0 / blank rate is set to that price
     here: ERPNext only fills a price in from an Item Price, never from the
     Standard Selling Rate, so leaving it 0 sold the item for nothing. An item
-    with no price anywhere has nothing to compare against and is left to the
-    caller. With the feature, any positive rate is accepted."""
+    with no price anywhere is refused at 0; a positive rate for it has
+    nothing to compare against and is left to the caller. With the feature,
+    any positive rate is accepted."""
     from zatgo_core.services.erpnext_reads import default_selling_rates
 
     if is_enabled("sales_invoice.edit_rate"):
@@ -281,8 +282,14 @@ def check_item_rates(rows: list[dict[str, Any]], price_list: str | None = None) 
                 # What the app's product list shows for an item without a
                 # Standard Selling Rate (0 when it has no price at all).
                 price = flt(default_selling_rates([code]).get(code))
-            if price > 0:
-                row["rate"] = price
+            if price <= 0:
+                # No price anywhere and no rate given: it would go out free.
+                frappe.throw(
+                    f"{code} has no price. Ask your admin to set its Standard Selling "
+                    "Rate or Item Price before selling it.",
+                    frappe.ValidationError,
+                )
+            row["rate"] = price
             continue
         if price > 0 and abs(rate - price) > 0.005:
             # The product list shows the default selling price list's rate
