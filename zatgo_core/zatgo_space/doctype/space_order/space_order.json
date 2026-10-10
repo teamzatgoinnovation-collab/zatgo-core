@@ -1,0 +1,170 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "slug",
+  "hostname",
+  "column_break_status",
+  "status",
+  "plan",
+  "payment_method",
+  "section_apps",
+  "apps",
+  "section_job",
+  "job_id",
+  "desk_url",
+  "error_message",
+  "admin_password_set",
+  "section_usage",
+  "ram_used_mb",
+  "disk_used_mb",
+  "usage_updated_at"
+ ],
+ "fields": [
+  {
+   "default": "SO-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "SO-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Slug",
+   "reqd": 1
+  },
+  {
+   "fieldname": "hostname",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Hostname",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nProvisioning\nActive\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "plan",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Plan",
+   "options": "Space Plan",
+   "reqd": 1
+  },
+  {
+   "default": "Mock",
+   "fieldname": "payment_method",
+   "fieldtype": "Select",
+   "label": "Payment Method",
+   "options": "Mock\nStripe\nPayPal"
+  },
+  {
+   "fieldname": "section_apps",
+   "fieldtype": "Section Break",
+   "label": "Apps"
+  },
+  {
+   "fieldname": "apps",
+   "fieldtype": "Table",
+   "label": "Apps",
+   "options": "Space Order App"
+  },
+  {
+   "fieldname": "section_job",
+   "fieldtype": "Section Break",
+   "label": "Job"
+  },
+  {
+   "fieldname": "job_id",
+   "fieldtype": "Data",
+   "label": "Job ID"
+  },
+  {
+   "fieldname": "desk_url",
+   "fieldtype": "Data",
+   "label": "Desk URL"
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Small Text",
+   "label": "Error Message"
+  },
+  {
+   "default": "0",
+   "description": "True after admin password was handed to the provisioner (never store the password)",
+   "fieldname": "admin_password_set",
+   "fieldtype": "Check",
+   "label": "Admin Password Set",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_usage",
+   "fieldtype": "Section Break",
+   "label": "Usage Snapshot"
+  },
+  {
+   "default": "0",
+   "fieldname": "ram_used_mb",
+   "fieldtype": "Int",
+   "label": "RAM Used (MB)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disk_used_mb",
+   "fieldtype": "Int",
+   "label": "Disk Used (MB)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "usage_updated_at",
+   "fieldtype": "Datetime",
+   "label": "Usage Updated At",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Space",
+ "name": "Space Order",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

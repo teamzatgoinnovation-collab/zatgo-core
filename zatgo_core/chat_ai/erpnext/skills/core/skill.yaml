@@ -1,0 +1,5 @@
+name: core
+label: Core
+description: Generic DocType CRUD and hybrid search fallback
+required_doctypes: []
+required_apps: []

@@ -1,0 +1,5 @@
+name: custom
+label: Custom
+description: Custom DocType metadata helpers
+required_doctypes: []
+required_apps: []

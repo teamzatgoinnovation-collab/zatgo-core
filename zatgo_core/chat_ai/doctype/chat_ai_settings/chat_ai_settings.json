@@ -1,0 +1,617 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "provider_section",
+  "provider",
+  "api_key",
+  "api_endpoint",
+  "column_break_prov",
+  "default_model",
+  "temperature",
+  "max_tokens",
+  "azure_deployment",
+  "azure_api_version",
+  "embedding_section",
+  "embedding_provider",
+  "embedding_model",
+  "embedding_api_key",
+  "conversation_section",
+  "default_language",
+  "max_history_length",
+  "memory_summarization_threshold",
+  "conversation_retention_days",
+  "prompt_bundle_version",
+  "limits_section",
+  "max_tool_calls",
+  "max_tool_rounds",
+  "max_iterations",
+  "max_retries",
+  "column_break_lim",
+  "request_timeout_seconds",
+  "tool_timeout_seconds",
+  "max_tools_per_request",
+  "max_messages_per_user_per_day",
+  "safety_section",
+  "allowed_tool_categories",
+  "require_confirmation_for_writes",
+  "confirm_delete",
+  "confirm_cancel",
+  "confirm_submit",
+  "confirm_workflow",
+  "confirm_financial",
+  "features_section",
+  "enable_streaming",
+  "enable_tool_calling",
+  "enable_conversation_memory",
+  "enable_audit_logs",
+  "enable_background_jobs",
+  "column_break_feat",
+  "enable_rest_tools",
+  "enable_mcp_tools",
+  "enable_plugin_tools",
+  "enable_integrations",
+  "enable_document_events",
+  "enable_workflow_events",
+  "enable_chat_notifications",
+  "enable_voice_input",
+  "enable_voice_output",
+  "auto_speak_replies",
+  "tts_section",
+  "tts_engine",
+  "voicebox_url",
+  "voicebox_profile",
+  "voicebox_engine",
+  "voicebox_via_server",
+  "platform_section",
+  "enable_plugin_discovery",
+  "enabled_plugins",
+  "enable_event_stream",
+  "enable_artifact_store",
+  "column_break_plat",
+  "max_parallel_tools",
+  "tool_max_retries",
+  "enable_background_turns",
+  "search_section",
+  "enable_erp_search",
+  "enable_global_search",
+  "enable_vector_search",
+  "enable_metadata_search",
+  "vector_top_k",
+  "reindex_on_migrate",
+  "assistants_section",
+  "default_assistant_mode",
+  "enabled_assistant_modes",
+  "cost_section",
+  "token_price_input",
+  "token_price_output"
+ ],
+ "fields": [
+  {
+   "fieldname": "provider_section",
+   "fieldtype": "Section Break",
+   "label": "LLM Provider"
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "\nOpenAI\nAnthropic\nGoogle Gemini\nAzure OpenAI\nOllama\nOpenRouter\nCustom OpenAI-compatible",
+   "default": "OpenAI"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key"
+  },
+  {
+   "fieldname": "api_endpoint",
+   "fieldtype": "Data",
+   "label": "API Endpoint"
+  },
+  {
+   "fieldname": "column_break_prov",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_model",
+   "fieldtype": "Data",
+   "label": "Default Model",
+   "default": ""
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Temperature",
+   "default": "0.2"
+  },
+  {
+   "fieldname": "max_tokens",
+   "fieldtype": "Int",
+   "label": "Max Tokens",
+   "default": "2048"
+  },
+  {
+   "fieldname": "azure_deployment",
+   "fieldtype": "Data",
+   "label": "Azure Deployment"
+  },
+  {
+   "fieldname": "azure_api_version",
+   "fieldtype": "Data",
+   "label": "Azure API Version"
+  },
+  {
+   "fieldname": "embedding_section",
+   "fieldtype": "Section Break",
+   "label": "Embeddings"
+  },
+  {
+   "fieldname": "embedding_provider",
+   "fieldtype": "Select",
+   "label": "Embedding Provider",
+   "options": "\nOpenAI\nAnthropic\nGoogle Gemini\nAzure OpenAI\nOllama\nOpenRouter\nCustom OpenAI-compatible"
+  },
+  {
+   "fieldname": "embedding_model",
+   "fieldtype": "Data",
+   "label": "Embedding Model"
+  },
+  {
+   "fieldname": "embedding_api_key",
+   "fieldtype": "Password",
+   "label": "Embedding API Key"
+  },
+  {
+   "fieldname": "conversation_section",
+   "fieldtype": "Section Break",
+   "label": "Conversation & Memory"
+  },
+  {
+   "fieldname": "default_language",
+   "fieldtype": "Select",
+   "label": "Default Language",
+   "options": "en\nar\nml",
+   "default": "en",
+   "description": "Chat reply language: en English, ar Arabic, ml Malayalam"
+  },
+  {
+   "fieldname": "max_history_length",
+   "fieldtype": "Int",
+   "label": "Max History Length",
+   "default": "40"
+  },
+  {
+   "fieldname": "memory_summarization_threshold",
+   "fieldtype": "Int",
+   "label": "Memory Summarization Threshold",
+   "default": "30"
+  },
+  {
+   "fieldname": "conversation_retention_days",
+   "fieldtype": "Int",
+   "label": "Conversation Retention Days",
+   "default": "90"
+  },
+  {
+   "fieldname": "prompt_bundle_version",
+   "fieldtype": "Select",
+   "label": "Prompt Bundle Version",
+   "options": "v1\nv2\nv3\nv4",
+   "default": "v4",
+   "description": "v4: planning, memory-aware context, and tighter tool selection (default)"
+  },
+  {
+   "fieldname": "limits_section",
+   "fieldtype": "Section Break",
+   "label": "Agent Loop Limits"
+  },
+  {
+   "fieldname": "max_tool_calls",
+   "fieldtype": "Int",
+   "label": "Max Tool Calls",
+   "default": "12"
+  },
+  {
+   "fieldname": "max_tool_rounds",
+   "fieldtype": "Int",
+   "label": "Max Tool Rounds",
+   "default": "8"
+  },
+  {
+   "fieldname": "max_iterations",
+   "fieldtype": "Int",
+   "label": "Max Iterations",
+   "default": "10"
+  },
+  {
+   "fieldname": "max_retries",
+   "fieldtype": "Int",
+   "label": "Max Retries",
+   "default": "2"
+  },
+  {
+   "fieldname": "column_break_lim",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "request_timeout_seconds",
+   "fieldtype": "Int",
+   "label": "Request Timeout (s)",
+   "default": "120"
+  },
+  {
+   "fieldname": "tool_timeout_seconds",
+   "fieldtype": "Int",
+   "label": "Tool Timeout (s)",
+   "default": "60"
+  },
+  {
+   "fieldname": "max_tools_per_request",
+   "fieldtype": "Int",
+   "label": "Max Tools Per Request",
+   "default": "24"
+  },
+  {
+   "fieldname": "max_messages_per_user_per_day",
+   "fieldtype": "Int",
+   "label": "Max Messages Per User Per Day",
+   "default": "500"
+  },
+  {
+   "fieldname": "safety_section",
+   "fieldtype": "Section Break",
+   "label": "Safety & Tools"
+  },
+  {
+   "fieldname": "allowed_tool_categories",
+   "fieldtype": "Data",
+   "label": "Allowed Tool Categories",
+   "default": "read,write",
+   "description": "Comma-separated: read, write, admin"
+  },
+  {
+   "fieldname": "require_confirmation_for_writes",
+   "fieldtype": "Check",
+   "label": "Require Confirmation For Writes",
+   "default": "1"
+  },
+  {
+   "fieldname": "confirm_delete",
+   "fieldtype": "Check",
+   "label": "Confirm Delete",
+   "default": "1"
+  },
+  {
+   "fieldname": "confirm_cancel",
+   "fieldtype": "Check",
+   "label": "Confirm Cancel",
+   "default": "1"
+  },
+  {
+   "fieldname": "confirm_submit",
+   "fieldtype": "Check",
+   "label": "Confirm Submit",
+   "default": "1"
+  },
+  {
+   "fieldname": "confirm_workflow",
+   "fieldtype": "Check",
+   "label": "Confirm Workflow",
+   "default": "1"
+  },
+  {
+   "fieldname": "confirm_financial",
+   "fieldtype": "Check",
+   "label": "Confirm Financial",
+   "default": "1"
+  },
+  {
+   "fieldname": "features_section",
+   "fieldtype": "Section Break",
+   "label": "Features"
+  },
+  {
+   "fieldname": "enable_streaming",
+   "fieldtype": "Check",
+   "label": "Enable Streaming",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_tool_calling",
+   "fieldtype": "Check",
+   "label": "Enable Tool Calling",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_conversation_memory",
+   "fieldtype": "Check",
+   "label": "Enable Conversation Memory",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_audit_logs",
+   "fieldtype": "Check",
+   "label": "Enable Audit Logs",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_background_jobs",
+   "fieldtype": "Check",
+   "label": "Enable Background Jobs",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_feat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "enable_rest_tools",
+   "fieldtype": "Check",
+   "label": "Enable REST Tools",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_mcp_tools",
+   "fieldtype": "Check",
+   "label": "Enable MCP Tools",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_plugin_tools",
+   "fieldtype": "Check",
+   "label": "Enable Plugin Tools",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_integrations",
+   "fieldtype": "Check",
+   "label": "Enable Integrations",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_document_events",
+   "fieldtype": "Check",
+   "label": "Enable Document Events",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_workflow_events",
+   "fieldtype": "Check",
+   "label": "Enable Workflow Events",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_chat_notifications",
+   "fieldtype": "Check",
+   "label": "Enable Chat Notifications",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_voice_input",
+   "fieldtype": "Check",
+   "label": "Enable Voice Input",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_voice_output",
+   "fieldtype": "Check",
+   "label": "Enable Voice Output (TTS)",
+   "default": "1"
+  },
+  {
+   "fieldname": "auto_speak_replies",
+   "fieldtype": "Check",
+   "label": "Auto-Speak Assistant Replies",
+   "default": "1",
+   "description": "When Voice Output (Speak) is on, read each assistant reply aloud automatically."
+  },
+  {
+   "fieldname": "tts_section",
+   "fieldtype": "Section Break",
+   "label": "Speech Engine (Voicebox)"
+  },
+  {
+   "fieldname": "tts_engine",
+   "fieldtype": "Select",
+   "label": "TTS Engine",
+   "options": "Voicebox\nBrowser TTS",
+   "default": "Voicebox",
+   "description": "Voicebox: https://github.com/jamiepine/voicebox — local AI voice studio (POST /speak)."
+  },
+  {
+   "fieldname": "voicebox_url",
+   "fieldtype": "Data",
+   "label": "Voicebox URL",
+   "default": "http://127.0.0.1:17493",
+   "description": "Running Voicebox API base URL (default port 17493)."
+  },
+  {
+   "fieldname": "voicebox_profile",
+   "fieldtype": "Data",
+   "label": "Voicebox Profile",
+   "description": "Optional voice profile name or id. Empty = Voicebox MCP/client default."
+  },
+  {
+   "fieldname": "voicebox_engine",
+   "fieldtype": "Select",
+   "label": "Voicebox Model Engine",
+   "options": "\nkokoro\nqwen\nqwen_custom_voice\nluxtts\nchatterbox\nchatterbox_turbo\ntada",
+   "description": "Optional engine override. Empty = profile / Voicebox default."
+  },
+  {
+   "fieldname": "voicebox_via_server",
+   "fieldtype": "Check",
+   "label": "Proxy Voicebox via ERP Server",
+   "default": "0",
+   "description": "On: Desk calls ERP, ERP calls Voicebox (Voicebox must be reachable from the server). Off: browser calls Voicebox URL directly (add Desk origin to VOICEBOX_CORS_ORIGINS)."
+  },
+  {
+   "fieldname": "platform_section",
+   "fieldtype": "Section Break",
+   "label": "Platform (v0.2.5)"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_plugin_discovery",
+   "fieldtype": "Check",
+   "label": "Enable Plugin Discovery"
+  },
+  {
+   "fieldname": "enabled_plugins",
+   "fieldtype": "Small Text",
+   "label": "Enabled Plugins",
+   "description": "Empty = all discovered. One plugin name per line."
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_event_stream",
+   "fieldtype": "Check",
+   "label": "Enable Event Stream (chat_ai:event)"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_artifact_store",
+   "fieldtype": "Check",
+   "label": "Enable Artifact Store"
+  },
+  {
+   "fieldname": "column_break_plat",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "max_parallel_tools",
+   "fieldtype": "Int",
+   "label": "Max Parallel Tools"
+  },
+  {
+   "default": "1",
+   "fieldname": "tool_max_retries",
+   "fieldtype": "Int",
+   "label": "Tool Max Retries"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable_background_turns",
+   "fieldtype": "Check",
+   "label": "Enable Background Turns"
+  },
+  {
+   "fieldname": "search_section",
+   "fieldtype": "Section Break",
+   "label": "Search"
+  },
+  {
+   "fieldname": "enable_erp_search",
+   "fieldtype": "Check",
+   "label": "Enable ERP Search",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_global_search",
+   "fieldtype": "Check",
+   "label": "Enable Global Search",
+   "default": "1"
+  },
+  {
+   "fieldname": "enable_vector_search",
+   "fieldtype": "Check",
+   "label": "Enable Vector Search",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_metadata_search",
+   "fieldtype": "Check",
+   "label": "Enable Metadata Search",
+   "default": "1"
+  },
+  {
+   "fieldname": "vector_top_k",
+   "fieldtype": "Int",
+   "label": "Vector Top K",
+   "default": "8"
+  },
+  {
+   "fieldname": "reindex_on_migrate",
+   "fieldtype": "Check",
+   "label": "Reindex On Migrate",
+   "default": "0"
+  },
+  {
+   "fieldname": "assistants_section",
+   "fieldtype": "Section Break",
+   "label": "Assistants"
+  },
+  {
+   "fieldname": "default_assistant_mode",
+   "fieldtype": "Select",
+   "label": "Default Assistant Mode",
+   "options": "Normal Chat\nERP Assistant\nDocument Assistant\nAnalytics Assistant\nDeveloper Assistant\nAdmin Assistant",
+   "default": "ERP Assistant"
+  },
+  {
+   "fieldname": "enabled_assistant_modes",
+   "fieldtype": "Small Text",
+   "label": "Enabled Assistant Modes",
+   "default": "Normal Chat\\nERP Assistant\\nDocument Assistant\\nAnalytics Assistant\\nDeveloper Assistant\\nAdmin Assistant"
+  },
+  {
+   "fieldname": "cost_section",
+   "fieldtype": "Section Break",
+   "label": "Cost Estimates"
+  },
+  {
+   "fieldname": "token_price_input",
+   "fieldtype": "Float",
+   "label": "Token Price Input (per 1M)",
+   "default": "0"
+  },
+  {
+   "fieldname": "token_price_output",
+   "fieldtype": "Float",
+   "label": "Token Price Output (per 1M)",
+   "default": "0"
+  }
+ ],
+ "issingle": 1,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "Chat AI Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,9 +1,10 @@
 """Frappe hooks for ZatGo Core.
 
 Platform hub: whitelist RPC, settings DocTypes, registry, ERPNext
-extensions. Also carries what used to be separate apps -- the SaaS Desk
-theme + login page and the language switcher (per site, see
-services/ui_apps.py) and the VanSaleX web page (/vansalex, www/vansalex.py).
+extensions. Also carries what used to be separate apps, each switched per
+site in ZG System Settings: the SaaS Desk theme + login page, the language
+switcher and the VanSaleX web page (services/ui_apps.py), and the Chat AI,
+Tracker and ZatGo Space modules (services/bundled_apps.py).
 Keep invasive overrides rare.
 """
 
@@ -100,6 +101,14 @@ doc_events = {
     "Mode of Payment": {
         "validate": "zatgo_core.services.payment_allocation.validate_mode_of_payment",
     },
+    # Chat AI (bundled module): on every doctype, but returns at once on
+    # sites where it is switched off (services/bundled_apps.py).
+    "*": {
+        "after_insert": "zatgo_core.services.bundled_apps.chat_ai_after_insert",
+        "on_update": "zatgo_core.services.bundled_apps.chat_ai_on_update",
+        "on_submit": "zatgo_core.services.bundled_apps.chat_ai_on_submit",
+        "on_cancel": "zatgo_core.services.bundled_apps.chat_ai_on_cancel",
+    },
 }
 
 # Mixins (Frappe v16) layered over ERPNext's classes -- and over hrms's
@@ -112,14 +121,34 @@ extend_doctype_class = {
 }
 
 scheduler_events = {
+    "hourly": [
+        "zatgo_core.services.bundled_apps.chat_ai_hourly",
+    ],
     "daily": [
         "zatgo_core.services.jobs.daily",
+        "zatgo_core.services.bundled_apps.chat_ai_daily",
     ],
 }
 
 permission_query_conditions = {
     "ZG Company Settings": "zatgo_core.permissions.company_scope.company_permission_query",
+    # Tracker (bundled module): no extra condition where it is switched off.
+    "Project": "zatgo_core.services.bundled_apps.tracker_project_query",
+    "Task": "zatgo_core.services.bundled_apps.tracker_task_query",
+    "Issue": "zatgo_core.services.bundled_apps.tracker_issue_query",
+    "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_query",
+    "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_query",
 }
+
+# Tracker (bundled module): no opinion (None) where it is switched off.
+has_permission = {
+    "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",
+    "Task": "zatgo_core.services.bundled_apps.tracker_task_has_permission",
+    "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
+    "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
+    "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
+}
+
 
 fixtures = [
     {

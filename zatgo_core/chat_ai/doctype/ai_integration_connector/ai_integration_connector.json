@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "service",
+  "label",
+  "enabled",
+  "auth_type",
+  "api_token",
+  "base_url",
+  "workspace_id",
+  "allowed_roles",
+  "scopes",
+  "notes",
+  "lifecycle_section",
+  "lifecycle_status",
+  "last_health_at",
+  "last_health_ok",
+  "latency_ms",
+  "last_error",
+  "retry_policy"
+ ],
+ "fields": [
+  {
+   "fieldname": "service",
+   "fieldtype": "Select",
+   "label": "Service",
+   "options": "GitHub\nSlack\nWhatsApp\nGoogle Drive\nJira\nGitLab\nNotion\nCustom",
+   "reqd": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "reqd": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "auth_type",
+   "fieldtype": "Select",
+   "label": "Auth Type",
+   "options": "Bearer\nOAuth2\nAPI Key\nBasic",
+   "default": "Bearer"
+  },
+  {
+   "fieldname": "api_token",
+   "fieldtype": "Password",
+   "label": "API Token"
+  },
+  {
+   "fieldname": "base_url",
+   "fieldtype": "Data",
+   "label": "Base URL"
+  },
+  {
+   "fieldname": "workspace_id",
+   "fieldtype": "Data",
+   "label": "Workspace ID"
+  },
+  {
+   "fieldname": "allowed_roles",
+   "fieldtype": "Small Text",
+   "label": "Allowed Roles"
+  },
+  {
+   "fieldname": "scopes",
+   "fieldtype": "Small Text",
+   "label": "Scopes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "lifecycle_section",
+   "fieldtype": "Section Break",
+   "label": "Lifecycle"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "lifecycle_status",
+   "fieldtype": "Select",
+   "label": "Lifecycle Status",
+   "options": "Draft\nTesting\nEnabled\nDisabled\nFailed"
+  },
+  {
+   "fieldname": "last_health_at",
+   "fieldtype": "Datetime",
+   "label": "Last Health At",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "last_health_ok",
+   "fieldtype": "Check",
+   "label": "Last Health OK",
+   "read_only": 1
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Latency (ms)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "retry_policy",
+   "fieldtype": "Data",
+   "label": "Retry Policy"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Integration Connector",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash",
+ "title_field": "label"
+}

@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "session",
+  "summary_text",
+  "message_count"
+ ],
+ "fields": [
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "options": "AI Chat Session",
+   "reqd": 1
+  },
+  {
+   "fieldname": "summary_text",
+   "fieldtype": "Long Text",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "message_count",
+   "fieldtype": "Int",
+   "label": "Message Count",
+   "default": "0"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Conversation Summary",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash"
+}

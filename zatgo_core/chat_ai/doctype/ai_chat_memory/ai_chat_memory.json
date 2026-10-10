@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "session",
+  "user",
+  "entities_json",
+  "context_snapshot"
+ ],
+ "fields": [
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "options": "AI Chat Session"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "entities_json",
+   "fieldtype": "Code",
+   "label": "Entities JSON",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "context_snapshot",
+   "fieldtype": "Code",
+   "label": "Context Snapshot",
+   "options": "JSON"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Chat Memory",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash"
+}

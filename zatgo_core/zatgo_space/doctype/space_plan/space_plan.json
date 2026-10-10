@@ -1,0 +1,119 @@
+{
+ "actions": [],
+ "autoname": "field:code",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "code",
+  "title",
+  "mock_price",
+  "is_active",
+  "sort_order",
+  "quotas_section",
+  "ram_limit_mb",
+  "disk_limit_mb",
+  "features"
+ ],
+ "fields": [
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mock_price",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mock Price",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "default": "0",
+   "fieldname": "sort_order",
+   "fieldtype": "Int",
+   "label": "Sort Order"
+  },
+  {
+   "fieldname": "quotas_section",
+   "fieldtype": "Section Break",
+   "label": "Soft Quotas"
+  },
+  {
+   "default": "1024",
+   "description": "Soft RAM allowance for sites on this plan (MB)",
+   "fieldname": "ram_limit_mb",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "RAM Limit (MB)",
+   "non_negative": 1
+  },
+  {
+   "default": "5120",
+   "description": "Soft disk allowance for sites on this plan (MB)",
+   "fieldname": "disk_limit_mb",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Disk Limit (MB)",
+   "non_negative": 1
+  },
+  {
+   "description": "JSON array of feature strings",
+   "fieldname": "features",
+   "fieldtype": "Long Text",
+   "label": "Features (JSON)"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Space",
+ "name": "Space Plan",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "All",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "sort_order",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

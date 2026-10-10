@@ -1,0 +1,5 @@
+name: crm
+label: Crm
+description: CRM leads and customers
+required_doctypes: ['Lead', 'Customer']
+required_apps: []

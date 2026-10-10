@@ -1,0 +1,5 @@
+name: sales
+label: Sales
+description: Sales orders and customers
+required_doctypes: ['Sales Order', 'Customer']
+required_apps: []

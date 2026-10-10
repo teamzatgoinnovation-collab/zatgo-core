@@ -1,0 +1,5 @@
+name: support
+label: Support
+description: Support issues
+required_doctypes: ['Issue']
+required_apps: []

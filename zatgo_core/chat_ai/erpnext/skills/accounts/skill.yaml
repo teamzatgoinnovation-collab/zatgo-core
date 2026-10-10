@@ -1,0 +1,5 @@
+name: accounts
+label: Accounts
+description: Invoices and receivables
+required_doctypes: ['Sales Invoice']
+required_apps: []

@@ -1,0 +1,5 @@
+name: purchase
+label: Purchase
+description: Purchase orders and suppliers
+required_doctypes: ['Purchase Order', 'Supplier']
+required_apps: []

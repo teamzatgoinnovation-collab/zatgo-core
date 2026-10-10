@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-07-23 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "order",
+  "job_id",
+  "stage",
+  "status",
+  "message",
+  "log_text"
+ ],
+ "fields": [
+  {
+   "fieldname": "order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Space Order",
+   "options": "Space Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "job_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Job ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stage",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stage"
+  },
+  {
+   "default": "pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "pending\nrunning\nsucceeded\nfailed\nskipped"
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message"
+  },
+  {
+   "fieldname": "log_text",
+   "fieldtype": "Long Text",
+   "label": "Log"
+  }
+ ],
+ "links": [],
+ "modified": "2026-07-23 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Space",
+ "name": "Space Job Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

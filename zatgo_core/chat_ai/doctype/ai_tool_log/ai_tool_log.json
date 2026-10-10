@@ -1,0 +1,137 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "session",
+  "user",
+  "tool_name",
+  "source",
+  "category",
+  "args_json",
+  "result_json",
+  "permission_ok",
+  "success",
+  "error",
+  "latency_ms"
+ ],
+ "fields": [
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "options": "AI Chat Session"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "fieldname": "tool_name",
+   "fieldtype": "Data",
+   "label": "Tool Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "erp\nplugin\nrest\nmcp\npython"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "Category",
+   "options": "read\nwrite\nadmin"
+  },
+  {
+   "fieldname": "args_json",
+   "fieldtype": "Code",
+   "label": "Args",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "result_json",
+   "fieldtype": "Code",
+   "label": "Result",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "permission_ok",
+   "fieldtype": "Check",
+   "label": "Permission OK",
+   "default": "1"
+  },
+  {
+   "fieldname": "success",
+   "fieldtype": "Check",
+   "label": "Success",
+   "default": "1"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error"
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Latency (ms)",
+   "default": "0"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Tool Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash"
+}

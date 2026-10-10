@@ -1,0 +1,5 @@
+"""Docs config."""
+
+
+def get_context(context):
+	context.brand_html = "Tracker"

@@ -1,0 +1,5 @@
+name: inventory
+label: Inventory
+description: Stock and items
+required_doctypes: ['Item']
+required_apps: []

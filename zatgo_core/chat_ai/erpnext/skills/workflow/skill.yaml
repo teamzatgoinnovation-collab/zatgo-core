@@ -1,0 +1,5 @@
+name: workflow
+label: Workflow
+description: Approvals via Approval Engine
+required_doctypes: []
+required_apps: []

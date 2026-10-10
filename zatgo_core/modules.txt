@@ -1,1 +1,4 @@
 ZatGo Core
+Chat AI
+Tracker
+ZatGo Space

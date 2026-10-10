@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "creation": "2026-07-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "pool_section",
+  "ram_pool_mb",
+  "disk_pool_mb"
+ ],
+ "fields": [
+  {
+   "fieldname": "pool_section",
+   "fieldtype": "Section Break",
+   "label": "Server Pool (soft)"
+  },
+  {
+   "default": "10240",
+   "description": "Total RAM budget for all Active Space sites (MB). Default 10 GB.",
+   "fieldname": "ram_pool_mb",
+   "fieldtype": "Int",
+   "label": "RAM Pool (MB)",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "default": "102400",
+   "description": "Total disk budget for all Active Space sites (MB). Default 100 GB.",
+   "fieldname": "disk_pool_mb",
+   "fieldtype": "Int",
+   "label": "Disk Pool (MB)",
+   "non_negative": 1,
+   "reqd": 1
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-24 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Space",
+ "name": "Space Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "All",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

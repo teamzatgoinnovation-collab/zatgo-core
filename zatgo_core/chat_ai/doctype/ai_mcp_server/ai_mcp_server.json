@@ -1,0 +1,158 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "label",
+  "transport",
+  "url",
+  "command",
+  "enabled",
+  "allowed_roles",
+  "discovered_tools",
+  "lifecycle_section",
+  "lifecycle_status",
+  "last_health_at",
+  "last_health_ok",
+  "latency_ms",
+  "last_error",
+  "retry_policy"
+ ],
+ "fields": [
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "reqd": 1
+  },
+  {
+   "fieldname": "transport",
+   "fieldtype": "Select",
+   "label": "Transport",
+   "options": "sse\nstdio\nhttp",
+   "default": "sse"
+  },
+  {
+   "fieldname": "url",
+   "fieldtype": "Small Text",
+   "label": "URL"
+  },
+  {
+   "fieldname": "command",
+   "fieldtype": "Small Text",
+   "label": "Command"
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "0"
+  },
+  {
+   "fieldname": "allowed_roles",
+   "fieldtype": "Small Text",
+   "label": "Allowed Roles"
+  },
+  {
+   "fieldname": "discovered_tools",
+   "fieldtype": "Code",
+   "label": "Discovered Tools",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "lifecycle_section",
+   "fieldtype": "Section Break",
+   "label": "Lifecycle"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "lifecycle_status",
+   "fieldtype": "Select",
+   "label": "Lifecycle Status",
+   "options": "Draft\nTesting\nEnabled\nDisabled\nFailed"
+  },
+  {
+   "fieldname": "last_health_at",
+   "fieldtype": "Datetime",
+   "label": "Last Health At",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "last_health_ok",
+   "fieldtype": "Check",
+   "label": "Last Health OK",
+   "read_only": 1
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Latency (ms)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "retry_policy",
+   "fieldtype": "Data",
+   "label": "Retry Policy"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI MCP Server",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash",
+ "title_field": "label"
+}

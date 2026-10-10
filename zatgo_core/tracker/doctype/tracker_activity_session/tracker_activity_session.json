@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-07-19 00:00:00.000000",
+ "default_view": "List",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "user",
+  "employee",
+  "status",
+  "column_break_main",
+  "company",
+  "project",
+  "task",
+  "activity_type",
+  "timer_section",
+  "started_on",
+  "paused_on",
+  "ended_on",
+  "column_break_timer",
+  "duration_seconds",
+  "timesheet"
+ ],
+ "fields": [
+  {
+   "default": "TRK-ACT-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "TRK-ACT-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "default": "Running",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Running\nPaused\nStopped",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "search_index": 1
+  },
+  {
+   "fieldname": "task",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Task",
+   "options": "Task",
+   "search_index": 1
+  },
+  {
+   "default": "Execution",
+   "fieldname": "activity_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Activity Type",
+   "options": "Activity Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "timer_section",
+   "fieldtype": "Section Break",
+   "label": "Timer"
+  },
+  {
+   "fieldname": "started_on",
+   "fieldtype": "Datetime",
+   "label": "Started On"
+  },
+  {
+   "fieldname": "paused_on",
+   "fieldtype": "Datetime",
+   "label": "Paused On"
+  },
+  {
+   "fieldname": "ended_on",
+   "fieldtype": "Datetime",
+   "label": "Ended On"
+  },
+  {
+   "fieldname": "column_break_timer",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "duration_seconds",
+   "fieldtype": "Float",
+   "label": "Duration (seconds)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "timesheet",
+   "fieldtype": "Link",
+   "label": "Timesheet",
+   "options": "Timesheet",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-07-19 02:55:00.000000",
+ "modified_by": "Administrator",
+ "module": "Tracker",
+ "name": "Tracker Activity Session",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Tracker Worker",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

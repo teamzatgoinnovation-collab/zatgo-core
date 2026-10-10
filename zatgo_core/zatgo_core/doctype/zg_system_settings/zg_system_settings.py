@@ -15,6 +15,20 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
     def validate(self) -> None:
         self._validate_defaults()
 
+    def on_update(self) -> None:
+        # Audit trail + cache invalidation (the mixins) first.
+        super().on_update()
+        # Bundled modules switched on / off: set up or take away their Desk
+        # entries now, not at the next migrate (services/bundled_apps.py).
+        from zatgo_core.services.bundled_apps import BUNDLED, sync_bundled_apps
+
+        before = self.get_doc_before_save()
+        if before is None or any(
+            bool(self.get(f"enable_{key}")) != bool(before.get(f"enable_{key}")) for key in BUNDLED
+        ):
+            frappe.clear_document_cache(self.doctype, self.name)
+            sync_bundled_apps()
+
     def _validate_defaults(self) -> None:
         if self.default_warehouse and self.default_company:
             warehouse_company = frappe.db.get_value(

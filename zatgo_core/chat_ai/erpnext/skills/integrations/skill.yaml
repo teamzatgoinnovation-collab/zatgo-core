@@ -1,0 +1,5 @@
+name: integrations
+label: Integrations
+description: External REST, MCP, and service connectors
+required_doctypes: []
+required_apps: []

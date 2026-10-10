@@ -1,0 +1,158 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">AI Admin</span>\",\"col\":12}},{\"id\":\"spacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"card_monitor\",\"type\":\"card\",\"data\":{\"card_name\":\"Monitoring\",\"col\":4}},{\"id\":\"card_tools\",\"type\":\"card\",\"data\":{\"card_name\":\"Tools\",\"col\":4}}]",
+ "creation": "2026-07-20 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "solid-color",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "AI Admin",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Chat AI Settings",
+   "link_to": "Chat AI Settings",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Monitoring",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Chat Session",
+   "link_to": "AI Chat Session",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Tool Log",
+   "link_to": "AI Tool Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Usage Daily",
+   "link_to": "AI Usage Daily",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Provider Health Log",
+   "link_to": "AI Provider Health Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tools",
+   "link_count": 4,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI REST Tool",
+   "link_to": "AI REST Tool",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI MCP Server",
+   "link_to": "AI MCP Server",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Integration Connector",
+   "link_to": "AI Integration Connector",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependent": 0,
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "AI Search Index",
+   "link_to": "AI Search Index",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-07-20 04:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Admin",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "restrict_to_domain": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Chat AI Manager"
+  }
+ ],
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "Chat AI Settings",
+   "link_to": "Chat AI Settings",
+   "stats_filter": "",
+   "type": "DocType"
+  }
+ ],
+ "title": "AI Admin"
+}

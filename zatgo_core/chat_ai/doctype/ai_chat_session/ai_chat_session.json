@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "user",
+  "assistant_mode",
+  "language",
+  "status",
+  "is_pinned",
+  "last_message_at",
+  "summary"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "assistant_mode",
+   "fieldtype": "Select",
+   "label": "Assistant Mode",
+   "options": "Normal Chat\nERP Assistant\nDocument Assistant\nAnalytics Assistant\nDeveloper Assistant\nAdmin Assistant",
+   "default": "ERP Assistant"
+  },
+  {
+   "fieldname": "language",
+   "fieldtype": "Select",
+   "label": "Language",
+   "options": "en\nar\nml",
+   "default": "en"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nArchived",
+   "default": "Active"
+  },
+  {
+   "fieldname": "is_pinned",
+   "fieldtype": "Check",
+   "label": "Pinned",
+   "default": "0"
+  },
+  {
+   "fieldname": "last_message_at",
+   "fieldtype": "Datetime",
+   "label": "Last Message At"
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Link",
+   "label": "Summary",
+   "options": "AI Conversation Summary"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Chat Session",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash",
+ "title_field": "title"
+}

@@ -31,7 +31,12 @@
     "enable_saas_theme",
     "column_break_appearance",
     "enable_language_switcher",
-    "enable_vansalex_web"
+    "enable_vansalex_web",
+    "bundled_apps_section",
+    "enable_chat_ai",
+    "enable_tracker",
+    "column_break_bundled",
+    "enable_zatgo_space"
   ],
   "fields": [
     {
@@ -189,13 +194,42 @@
       "fieldtype": "Check",
       "label": "Enable VanSaleX Web",
       "description": "Serve the VanSaleX web app at /vansalex on this site. The web build is compiled for one site's address, so switch it on only where that build belongs."
+    },
+    {
+      "fieldname": "bundled_apps_section",
+      "fieldtype": "Section Break",
+      "label": "Bundled Apps",
+      "description": "Modules that used to be separate apps. Off: no hooks, jobs, Desk entries or setup run on this site (their tables stay, empty)."
+    },
+    {
+      "default": "0",
+      "fieldname": "enable_chat_ai",
+      "fieldtype": "Check",
+      "label": "Enable Chat AI"
+    },
+    {
+      "default": "0",
+      "fieldname": "enable_tracker",
+      "fieldtype": "Check",
+      "label": "Enable Tracker",
+      "description": "Also adds an Org Role field on Employee and Tracker's permission rules on Project / Task / Issue / Timesheet."
+    },
+    {
+      "fieldname": "column_break_bundled",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "0",
+      "fieldname": "enable_zatgo_space",
+      "fieldtype": "Check",
+      "label": "Enable ZatGo Space"
     }
   ],
   "index_web_pages_for_search": 0,
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-08 12:30:00.000000",
+  "modified": "2026-10-08 13:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG System Settings",

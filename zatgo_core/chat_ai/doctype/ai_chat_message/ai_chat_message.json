@@ -1,0 +1,155 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "session",
+  "role",
+  "content",
+  "content_json",
+  "tool_calls",
+  "model",
+  "provider",
+  "prompt_version",
+  "tokens_in",
+  "tokens_out",
+  "latency_ms",
+  "cost_estimate",
+  "error",
+  "attachments"
+ ],
+ "fields": [
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "options": "AI Chat Session",
+   "reqd": 1
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "label": "Role",
+   "options": "user\nassistant\nsystem\ntool",
+   "reqd": 1
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Long Text",
+   "label": "Content"
+  },
+  {
+   "fieldname": "content_json",
+   "fieldtype": "Code",
+   "label": "Content JSON",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "tool_calls",
+   "fieldtype": "Code",
+   "label": "Tool Calls",
+   "options": "JSON"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Data",
+   "label": "Provider"
+  },
+  {
+   "fieldname": "prompt_version",
+   "fieldtype": "Data",
+   "label": "Prompt Version"
+  },
+  {
+   "fieldname": "tokens_in",
+   "fieldtype": "Int",
+   "label": "Tokens In",
+   "default": "0"
+  },
+  {
+   "fieldname": "tokens_out",
+   "fieldtype": "Int",
+   "label": "Tokens Out",
+   "default": "0"
+  },
+  {
+   "fieldname": "latency_ms",
+   "fieldtype": "Int",
+   "label": "Latency (ms)",
+   "default": "0"
+  },
+  {
+   "fieldname": "cost_estimate",
+   "fieldtype": "Float",
+   "label": "Cost Estimate",
+   "default": "0"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Small Text",
+   "label": "Error"
+  },
+  {
+   "fieldname": "attachments",
+   "fieldtype": "Long Text",
+   "label": "Attachments"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Chat Message",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash"
+}

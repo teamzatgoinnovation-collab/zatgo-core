@@ -1,0 +1,129 @@
+{
+ "actions": [],
+ "creation": "2026-07-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "usage_date",
+  "user",
+  "provider",
+  "model",
+  "tokens_in",
+  "tokens_out",
+  "cost_estimate",
+  "request_count",
+  "error_count",
+  "avg_latency_ms"
+ ],
+ "fields": [
+  {
+   "fieldname": "usage_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Data",
+   "label": "Provider"
+  },
+  {
+   "fieldname": "model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "tokens_in",
+   "fieldtype": "Int",
+   "label": "Tokens In",
+   "default": "0"
+  },
+  {
+   "fieldname": "tokens_out",
+   "fieldtype": "Int",
+   "label": "Tokens Out",
+   "default": "0"
+  },
+  {
+   "fieldname": "cost_estimate",
+   "fieldtype": "Float",
+   "label": "Cost Estimate",
+   "default": "0"
+  },
+  {
+   "fieldname": "request_count",
+   "fieldtype": "Int",
+   "label": "Request Count",
+   "default": "0"
+  },
+  {
+   "fieldname": "error_count",
+   "fieldtype": "Int",
+   "label": "Error Count",
+   "default": "0"
+  },
+  {
+   "fieldname": "avg_latency_ms",
+   "fieldtype": "Float",
+   "label": "Avg Latency (ms)",
+   "default": "0"
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-07-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Usage Daily",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "hash"
+}

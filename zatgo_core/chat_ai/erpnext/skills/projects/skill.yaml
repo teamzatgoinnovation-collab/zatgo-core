@@ -1,0 +1,5 @@
+name: projects
+label: Projects
+description: Projects and tasks
+required_doctypes: ['Project', 'Task']
+required_apps: []

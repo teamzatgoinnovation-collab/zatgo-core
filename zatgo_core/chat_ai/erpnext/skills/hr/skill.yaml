@@ -1,0 +1,5 @@
+name: hr
+label: Hr
+description: HR employees and leave
+required_doctypes: ['Employee']
+required_apps: []
