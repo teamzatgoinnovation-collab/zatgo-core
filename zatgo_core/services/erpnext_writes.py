@@ -261,7 +261,11 @@ def create_customer(
         }
     )
     if not doc.customer_group:
-        doc.customer_group = frappe.db.get_single_value("Selling Settings", "customer_group") or "All Customer Groups"
+        # Selling Settings default, else a leaf group -- never the "All
+        # Customer Groups" root, which ERPNext refuses on a Customer.
+        from zatgo_core.services.customer_sync_service import _default_customer_group
+
+        doc.customer_group = _default_customer_group()
     if not doc.territory:
         doc.territory = frappe.db.get_single_value("Selling Settings", "territory") or "All Territories"
     if cid:
