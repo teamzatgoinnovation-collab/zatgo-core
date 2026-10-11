@@ -163,7 +163,7 @@ class TestVansalexPurchases(IntegrationTestCase):
             frappe.db.commit()
 
     def _on(self):
-        return self._modules(purchase_invoice=1, purchase_order=1)
+        return self._modules(purchase_invoice=1, purchase_order=1, purchase_return=1)
 
     def _stock(self) -> float:
         return flt(
@@ -429,3 +429,107 @@ class TestVansalexPurchases(IntegrationTestCase):
             modules = context()["data"]["access"]["modules"]
             self.assertTrue(modules["purchase_invoice"])
             self.assertTrue(modules["purchase_order"])
+
+    # -- returns ---------------------------------------------------------------
+
+    def _return(self, against: str, qty: float = 2, **kwargs) -> dict:
+        frappe.set_user(self.user)
+        args = {
+            "client_id": f"test-pr-{random_string(8)}",
+            "return_against": against,
+            "items": [{"item_code": self.item_code, "qty": qty}],
+        }
+        args.update(kwargs)
+        return api.create_return(**args)
+
+    def test_return_module_is_off_by_default_and_independent(self) -> None:
+        with self._modules(purchase_invoice=1, purchase_order=1, purchase_return=0):
+            name = self._buy()["data"]["erp_name"]
+            with self.assertRaises(frappe.PermissionError):
+                self._return(name)
+            with self.assertRaises(frappe.PermissionError):
+                api.returnable(purchase_invoice=name)
+
+    def test_partial_return_sends_stock_back_and_lowers_the_payable(self) -> None:
+        with self._on():
+            name = self._buy(payment_type="Credit")["data"]["erp_name"]
+            before = self._stock()
+            result = self._return(name, qty=2, reason="Damaged")
+            self.assertTrue(result["success"], result.get("error"))
+            data = result["data"]
+            self.assertEqual(data["kind"], "return")
+            self.assertEqual(data["return_against"], name)
+            self.assertEqual(self._stock(), before - 2)
+            self.assertEqual(data["items"][0]["qty"], -2)
+            note = frappe.get_doc("Purchase Invoice", data["erp_name"])
+            self.assertEqual(note.is_return, 1)
+            self.assertIn("Damaged", note.remarks or "")
+            # 5 bought at 10 = 50; the 2 returned (20) sit on the debit note as
+            # a negative outstanding, which ERPNext nets against the supplier.
+            self.assertEqual(flt(note.outstanding_amount), -20)
+            self.assertEqual(flt(note.grand_total), -20)
+
+    def test_returnable_quantity_is_capped_across_returns(self) -> None:
+        with self._on():
+            name = self._buy()["data"]["erp_name"]
+            self._return(name, qty=3)
+            frappe.set_user(self.user)
+            left = api.returnable(purchase_invoice=name)["data"]["items"][0]
+            self.assertEqual(left["bought_qty"], 5)
+            self.assertEqual(left["returned_qty"], 3)
+            self.assertEqual(left["returnable_qty"], 2)
+            with self.assertRaises(frappe.ValidationError):
+                self._return(name, qty=3)
+            with self.assertRaises(frappe.ValidationError):
+                self._return(name, items=[{"item_code": "NOT-BOUGHT", "qty": 1}])
+
+    def test_return_replay_makes_no_second_debit_note(self) -> None:
+        with self._on():
+            name = self._buy()["data"]["erp_name"]
+            cid = f"test-pr-{random_string(8)}"
+            first = self._return(name, qty=1, client_id=cid)
+            stock = self._stock()
+            again = self._return(name, qty=1, client_id=cid)
+            self.assertEqual(again["data"]["erp_name"], first["data"]["erp_name"])
+            self.assertTrue(again["meta"]["idempotent"])
+            self.assertEqual(self._stock(), stock)
+
+    def test_a_driver_returns_only_their_own_purchases(self) -> None:
+        with self._on():
+            name = self._buy()["data"]["erp_name"]
+            # Same van warehouse (the sales rule) is allowed; another van is not.
+            mate = self._make_van_user(self.warehouse)
+            frappe.set_user(mate)
+            self.assertEqual(api.returnable(purchase_invoice=name)["data"]["name"], name)
+            stranger = self._make_van_user(self._make_warehouse("VanPurchaseOther"))
+            frappe.set_user(stranger)
+            with self.assertRaises(frappe.PermissionError):
+                api.returnable(purchase_invoice=name)
+            with self.assertRaises(frappe.PermissionError):
+                api.create_return(
+                    client_id=f"test-pr-{random_string(8)}",
+                    return_against=name,
+                    items=[{"item_code": self.item_code, "qty": 1}],
+                )
+
+    def test_returns_have_their_own_list_and_stay_out_of_invoices(self) -> None:
+        with self._on():
+            name = self._buy()["data"]["erp_name"]
+            note = self._return(name, qty=1)["data"]["erp_name"]
+            frappe.set_user(self.user)
+            invoices = [r["name"] for r in api.list(kind="invoice")["data"]]
+            returns = [r["name"] for r in api.list(kind="return")["data"]]
+            self.assertIn(name, invoices)
+            self.assertNotIn(note, invoices)
+            self.assertIn(note, returns)
+
+    def test_direct_debit_note_insert_needs_the_return_module(self) -> None:
+        from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+        with self._modules(purchase_invoice=1, purchase_order=1, purchase_return=1):
+            name = self._buy()["data"]["erp_name"]
+            frappe.set_user("Administrator")
+            note = make_return_doc("Purchase Invoice", name)
+        frappe.set_user(self.user)
+        with self.assertRaises(frappe.PermissionError):
+            note.insert(ignore_permissions=True)

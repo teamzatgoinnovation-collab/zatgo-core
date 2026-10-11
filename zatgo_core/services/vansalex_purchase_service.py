@@ -22,6 +22,7 @@ else the item's last purchase rate.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
@@ -29,7 +30,7 @@ from frappe.utils import flt, getdate, today
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
-from zatgo_core.services.erpnext_writes import _default_company, _parse_items
+from zatgo_core.services.erpnext_writes import _apply_return_qtys, _default_company, _parse_items
 from zatgo_core.services.van_sale_access import (
     is_vansale_admin,
     is_vansale_user,
@@ -39,7 +40,8 @@ from zatgo_core.services.vansalex_service import _find_by_client_id, insert_idem
 
 INVOICE = "Purchase Invoice"
 ORDER = "Purchase Order"
-KINDS = {"invoice": INVOICE, "order": ORDER}
+# A return is a Purchase Invoice with is_return=1 (a debit note).
+KINDS = {"invoice": INVOICE, "order": ORDER, "return": INVOICE}
 
 
 def require_purchase_user() -> None:
@@ -149,8 +151,9 @@ def _submit(doc: Any, failure: str) -> None:
 
 
 def map_purchase(doc: Any) -> dict[str, Any]:
-    kind = "order" if doc.doctype == ORDER else "invoice"
+    kind = "order" if doc.doctype == ORDER else "return" if doc.get("is_return") else "invoice"
     return {
+        "return_against": doc.get("return_against") or "",
         "name": doc.name,
         "erp_name": doc.name,
         "kind": kind,
@@ -408,6 +411,8 @@ def list_purchases(kind: str, page: int | str = 1, page_size: int | str = 20) ->
     require_purchase_user()
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"docstatus": ["<", 2]}
+    if doctype == INVOICE:
+        filters["is_return"] = 1 if kind.strip().lower() == "return" else 0
     if not is_vansale_admin():
         filters["owner"] = frappe.session.user
     total = frappe.db.count(doctype, filters)
@@ -456,3 +461,159 @@ def purchase_pdf(kind: str, name: str, print_format: str | None = None) -> dict[
         },
         meta={"source": "vansalex.purchases.pdf"},
     )
+
+
+# -- returns (debit notes) ---------------------------------------------------------
+
+
+@contextmanager
+def _as_administrator():
+    """ERPNext's return mapper checks create permission on Purchase Invoice,
+    which field users don't hold (the `purchase_return` module switch
+    authorized this). Used only around building the unsaved return document;
+    it is inserted and submitted as the driver."""
+    user = frappe.session.user
+    frappe.set_user("Administrator")
+    try:
+        yield
+    finally:
+        frappe.set_user(user)
+
+
+def _returnable_original(name: str) -> Any:
+    """The submitted, non-return Purchase Invoice [name], if the caller may
+    return against it: admins any; a field user only their own purchases or
+    ones received into their van's warehouse."""
+    if not frappe.db.exists(INVOICE, name):
+        frappe.throw(f"Purchase Invoice not found: {name}", frappe.DoesNotExistError)
+    original = frappe.get_doc(INVOICE, name)
+    if int(original.docstatus or 0) != 1:
+        frappe.throw(f"Purchase Invoice {name} is not submitted.", frappe.ValidationError)
+    if int(original.get("is_return") or 0):
+        frappe.throw(f"Purchase Invoice {name} is itself a return.", frappe.ValidationError)
+    if not is_vansale_admin():
+        from zatgo_core.services.vansalex_settings import resolve
+
+        own_wh = resolve().get("warehouse")
+        if original.owner != frappe.session.user and not (
+            own_wh and (original.get("set_warehouse") or "") == own_wh
+        ):
+            frappe.throw(
+                "Access denied: you can only return items against your own van's purchases.",
+                frappe.PermissionError,
+            )
+    return original
+
+
+def returnable_lines(original: Any) -> list[dict[str, Any]]:
+    """Per item of [original]: bought qty, qty already returned by submitted
+    debit notes, and what is left to return."""
+    bought: dict[str, dict[str, Any]] = {}
+    for row in original.items or []:
+        line = bought.setdefault(
+            row.item_code,
+            {
+                "item_code": row.item_code,
+                "item_name": row.item_name,
+                "uom": row.uom,
+                "rate": flt(row.rate),
+                "bought_qty": 0.0,
+            },
+        )
+        line["bought_qty"] += flt(row.qty)
+    returns = frappe.get_all(
+        INVOICE,
+        filters={"return_against": original.name, "is_return": 1, "docstatus": 1},
+        pluck="name",
+    )
+    returned: dict[str, float] = {}
+    if returns:
+        for r in frappe.get_all(
+            "Purchase Invoice Item", filters={"parent": ["in", returns]}, fields=["item_code", "qty"]
+        ):
+            returned[r.item_code] = returned.get(r.item_code, 0) + abs(flt(r.qty))
+    out = []
+    for code, line in bought.items():
+        line["returned_qty"] = returned.get(code, 0.0)
+        line["returnable_qty"] = max(line["bought_qty"] - line["returned_qty"], 0.0)
+        out.append(line)
+    return out
+
+
+def get_returnable(purchase_invoice: str) -> dict[str, Any]:
+    """What can still be returned against [purchase_invoice] (for the app's
+    New Purchase Return screen)."""
+    require_purchase_user()
+    original = _returnable_original(require_str(purchase_invoice, "purchase_invoice"))
+    return {
+        "name": original.name,
+        "supplier": original.supplier,
+        "supplier_name": original.get("supplier_name") or original.supplier,
+        "posting_date": str(original.posting_date or ""),
+        "grand_total": flt(original.grand_total),
+        "items": returnable_lines(original),
+    }
+
+
+def create_return(
+    client_id: str, return_against: str, items: Any, reason: str | None = None
+) -> dict[str, Any]:
+    """A debit note (Purchase Invoice return) for part or all of a purchase:
+    the returned quantities leave the stock they were received into, and the
+    amount is taken off what is owed to the supplier. Capped at what is left
+    to return. Any refund the supplier pays is not recorded here."""
+    from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+    require_purchase_user()
+    cid = require_str(client_id, "client_id")
+    failure = "Could not create and submit the Purchase Return. Check the stock, then retry."
+
+    existing = _find_by_client_id(INVOICE, cid)
+    if existing:
+        return _replay(INVOICE, existing, cid, failure)
+
+    original_name = require_str(return_against, "return_against")
+    original = _returnable_original(original_name)
+    if isinstance(items, str):
+        import json
+
+        items = json.loads(items)
+    if not isinstance(items, list) or not items:
+        frappe.throw("At least one line item is required")
+
+    returnable = {r["item_code"]: r for r in returnable_lines(original)}
+    wanted: dict[str, float] = {}
+    for raw in items:
+        if not isinstance(raw, dict):
+            continue
+        code = require_str(raw.get("item_code") or raw.get("item"), "item_code")
+        qty = flt(raw.get("qty") or 0)
+        if qty <= 0:
+            frappe.throw("Return qty must be greater than zero")
+        if code not in returnable:
+            frappe.throw(f"Item {code} was not bought on {original_name}")
+        wanted[code] = wanted.get(code, 0) + qty
+    for code, qty in wanted.items():
+        left = returnable[code]["returnable_qty"]
+        if qty > left + 1e-6:
+            frappe.throw(
+                f"Cannot return {qty:g} of {code} — only {left:g} of the "
+                f"{returnable[code]['bought_qty']:g} bought on {original_name} is left to return.",
+                frappe.ValidationError,
+            )
+
+    with _as_administrator():
+        doc = make_return_doc(INVOICE, original_name)
+    _apply_return_qtys(doc, wanted, original_name)
+    doc.zatgo_client_id = cid
+    if reason:
+        doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
+    doc.run_method("calculate_taxes_and_totals")
+    doc.flags.ignore_permissions = True
+
+    doc, created = insert_idempotent(doc, doctype=INVOICE, client_id=cid)
+    if not created:
+        return _replay(INVOICE, doc.name, cid, failure)
+    _submit(doc, failure)
+    doc.reload()
+    return _ack(doc, cid, idempotent=False, created=True)

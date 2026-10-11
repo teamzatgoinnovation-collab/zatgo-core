@@ -52,6 +52,7 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
     # turns it on (fail-closed), like every key added after the first release.
     "purchase_invoice": (MODULE, "Purchase Invoice", None, 0, None),
     "purchase_order": (MODULE, "Purchase Orders (invoice later)", None, 0, None),
+    "purchase_return": (MODULE, "Purchase Returns (debit notes)", None, 0, None),
     "route_plan": (MODULE, "Plan & Route", None, 1, None),
     "customers": (MODULE, "Customers", None, 1, None),
     "sales_return": (MODULE, "Sales Returns", None, 1, None),
@@ -98,6 +99,7 @@ APP_LOCATION: dict[str, str] = {
     "sales_order": "New Order, Convert to Invoice",
     "purchase_invoice": "More → Purchases → New Purchase Invoice, Purchase list",
     "purchase_order": "More → Purchases → New Purchase Order, Convert to Invoice",
+    "purchase_return": "More → Purchase Returns",
     "route_plan": "More → Plan & Route",
     "customers": "More → Customers, Customers quick action",
     "sales_return": "More → Sales Returns, Sales Return quick action",
@@ -345,7 +347,7 @@ def check_doc_access(doc, method=None) -> None:
     elif dt == "Sales Order":
         require("sales_order")
     elif dt == "Purchase Invoice":
-        require("purchase_invoice")
+        require("purchase_return" if cint(doc.get("is_return")) else "purchase_invoice")
     elif dt == "Purchase Order":
         require("purchase_order")
     elif dt == "Payment Entry":

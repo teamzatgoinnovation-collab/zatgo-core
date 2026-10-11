@@ -26,6 +26,7 @@ Stable machine identifiers (never page titles).
 | `sales_order` | module | Order (invoice later) + Convert to Invoice — **= `allow_orders`** |
 | `purchase_invoice` | module | More → Purchases: New Purchase Invoice (stock received into the van warehouse) and the purchase list. **Default off** |
 | `purchase_order` | module | More → Purchases: New Purchase Order + Convert to Invoice. **Default off** |
+| `purchase_return` | module | More → Purchase Returns: a debit note against a purchase (stock goes back out of the warehouse it was received into). **Default off** |
 | `sales_return` | module | Sales Returns (credit notes) |
 | `collections` | module | Customer payments |
 | `customers` | module | Browse / create / edit customers (the customer picker on a sale stays) |
@@ -168,3 +169,11 @@ auto Payment Entry is built as Administrator and re-owned by the driver
 (`invoice_cash_payment_service._reader_for`). Same `client_id` idempotency as
 a sale (`zatgo_client_id` on Purchase Invoice and, new, Purchase Order —
 `patches/v0_3_0`). The DocType backstop covers direct inserts.
+
+**Purchase returns** (`purchase_return`): a debit note (Purchase Invoice with
+`is_return`) for part or all of a purchase, built with ERPNext's
+`make_return_doc`; quantities are capped at what is left to return, a driver
+returns only against their own van's purchases, and the returned stock leaves
+the warehouse it was received into. The amount sits on the debit note as a
+negative outstanding that ERPNext nets against the supplier; a refund the
+supplier pays is not recorded here. Lists: `purchases.list(kind=invoice|order|return)`.

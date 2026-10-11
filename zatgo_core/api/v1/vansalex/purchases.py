@@ -13,7 +13,11 @@ from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.services import vansalex_purchase_service as svc
 
-_KIND_MODULE = {"invoice": "purchase_invoice", "order": "purchase_order"}
+_KIND_MODULE = {
+    "invoice": "purchase_invoice",
+    "order": "purchase_order",
+    "return": "purchase_return",
+}
 
 
 def _module(kind: str) -> str:
@@ -101,7 +105,8 @@ def confirm(
 
 @frappe.whitelist()
 def list(kind: str = "invoice", page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
-    """The caller's purchase invoices (kind=invoice) or orders (kind=order)."""
+    """The caller's purchase invoices (kind=invoice), orders (kind=order) or
+    returns / debit notes (kind=return)."""
     require_login()
     require_access(_module(kind))
     return svc.list_purchases(kind, page, page_size)
@@ -113,3 +118,29 @@ def pdf(kind: str, name: str, print_format: str | None = None) -> dict[str, Any]
     require_login()
     require_access(_module(kind))
     return svc.purchase_pdf(kind, name, print_format)
+
+
+@frappe.whitelist()
+def returnable(purchase_invoice: str) -> dict[str, Any]:
+    """Lines of [purchase_invoice] with bought / already returned /
+    returnable qty."""
+    require_login()
+    require_access("purchase_return")
+    return ok(svc.get_returnable(purchase_invoice), meta={"source": "vansalex.purchases.returnable"})
+
+
+@frappe.whitelist()
+def create_return(
+    client_id: str,
+    return_against: str,
+    items: str | list | None = None,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Debit note against a submitted purchase: the returned stock leaves the
+    warehouse it was received into; quantities are capped at what is left to
+    return on that invoice. `items`: [{item_code, qty}]."""
+    require_login()
+    require_access("purchase_return")
+    return svc.create_return(
+        client_id=client_id, return_against=return_against, items=items, reason=reason
+    )
