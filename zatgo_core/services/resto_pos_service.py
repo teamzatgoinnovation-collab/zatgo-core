@@ -645,13 +645,15 @@ def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
             try:
                 si.submit()
                 frappe.db.commit()
-            except Exception:
+            except Exception as exc:
+                # The insert above isn't committed either: the rollback
+                # removes the invoice too (it used to reload it -> "not found",
+                # hiding the real reason, and claimed a draft was kept).
                 frappe.db.rollback()
-                si.reload()
                 frappe.log_error(title="Resto POS Sales Invoice submit failed", message=frappe.get_traceback())
                 frappe.throw(
-                    f"Could not submit the invoice for order {doc.order_number}. "
-                    f"It was saved as a draft ({si.name}) — fix the underlying issue and retry."
+                    f"Could not post the invoice for order {doc.order_number}: {_reason(exc)} "
+                    "Nothing was recorded -- fix this and retry."
                 )
         doc.sales_invoice = si.name
 
@@ -675,13 +677,14 @@ def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
                 try:
                     pe.submit()
                     frappe.db.commit()
-                except Exception:
+                except Exception as exc:
+                    # Rolls back the uncommitted payment insert; the invoice
+                    # itself was committed above and stays posted (unpaid).
                     frappe.db.rollback()
-                    pe.reload()
                     frappe.log_error(title="Resto POS Payment Entry submit failed", message=frappe.get_traceback())
                     frappe.throw(
                         f"The invoice for order {doc.order_number} posted, but recording the "
-                        f"payment failed. It was saved as a draft ({pe.name}) — retry payment."
+                        f"payment failed: {_reason(exc)} Retry the payment."
                     )
         doc.payment_entry = pe.name
 
@@ -696,6 +699,18 @@ def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
         },
         meta={"stub": False, "created": si_created, "source": "ZG Order"},
     )
+
+
+def _reason(exc: Exception) -> str:
+    """The user-facing reason of a failed submit (Frappe validation messages
+    are meant for users; anything else gets a generic line)."""
+    if isinstance(exc, frappe.ValidationError):
+        from frappe.utils import strip_html
+
+        text = strip_html(str(exc)).strip()
+        if text:
+            return text if text.endswith(".") else f"{text}."
+    return "an unexpected error (see Error Log)."
 
 
 def _map_payment_record(order: Any, si: Any, pe: Any, method_key: str) -> dict[str, Any]:

@@ -232,3 +232,26 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         self.assertEqual(
             frappe.db.get_value("Sales Invoice", si_name, "customer"), "Walk-in Customer"
         )
+
+    def test_failed_invoice_submit_reports_the_reason_and_records_nothing(self) -> None:
+        # In stock elsewhere only: posting the invoice fails on stock.
+        other_wh = self._make_warehouse("RestoPosTestOther")
+        item = self._make_stocked_item(other_wh, qty=5)
+        created = svc.create_order(
+            company=self.company,
+            channel="counter",
+            items=[{"item_code": item, "qty": 1, "rate": 10}],
+            client_id=f"test-nostock-{random_string(8)}",
+        )
+        order_id = created["data"]["id"]
+        pay_cid = f"test-nostock-pay-{random_string(8)}"
+        with self.assertRaises(frappe.ValidationError) as ctx:
+            svc.pay(order_id, "cash", pay_cid)
+        message = str(ctx.exception)
+        # The real reason, not "Sales Invoice ... not found" from reloading
+        # the rolled-back invoice, and no claim that a draft was kept.
+        self.assertNotIsInstance(ctx.exception, frappe.DoesNotExistError)
+        self.assertIn("Nothing was recorded", message)
+        self.assertIn(item, message)
+        self.assertFalse(frappe.db.exists("Sales Invoice", {"zatgo_client_id": pay_cid}))
+        self.assertFalse(frappe.db.get_value("ZG Order", order_id, "sales_invoice"))
