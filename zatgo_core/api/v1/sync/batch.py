@@ -42,12 +42,18 @@ def batch(operations: str | list | None = None) -> dict[str, Any]:
         frappe.throw("operations must be a list")
 
     results: list[dict[str, Any]] = []
-    for raw in ops[:50]:
+    for index, raw in enumerate(ops[:50]):
         if not isinstance(raw, dict):
             results.append({"success": False, "error": "invalid_op"})
             continue
         local_id = raw.get("id")
         entity = str(raw.get("entity_type") or "").strip().lower()
+        # Each op commits when it succeeds; one that fails half-way (e.g. the
+        # customer saved, its address not) must leave nothing behind --
+        # otherwise the next op's commit (or the request's) would persist the
+        # half-done write.
+        save_point = f"zatgo_sync_op_{index}"
+        frappe.db.savepoint(save_point)
         try:
             if entity == "customer":
                 resp = sync_customer_op(
@@ -91,6 +97,7 @@ def batch(operations: str | list | None = None) -> dict[str, Any]:
                 }
             )
         except Exception as exc:
+            frappe.db.rollback(save_point=save_point)
             frappe.log_error(title="VanSale batch sync op failed")
             results.append(
                 {
