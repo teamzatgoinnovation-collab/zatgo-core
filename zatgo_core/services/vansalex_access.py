@@ -48,6 +48,10 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
     "dashboard": (MODULE, "Dashboard", None, 1, None),
     "sales_invoice": (MODULE, "Sales Invoice", None, 1, None),
     "sales_order": (MODULE, "Sales Orders (invoice later)", None, 1, "allow_orders"),
+    # Buying into the van's warehouse. New functionality: off until an admin
+    # turns it on (fail-closed), like every key added after the first release.
+    "purchase_invoice": (MODULE, "Purchase Invoice", None, 0, None),
+    "purchase_order": (MODULE, "Purchase Orders (invoice later)", None, 0, None),
     "route_plan": (MODULE, "Plan & Route", None, 1, None),
     "customers": (MODULE, "Customers", None, 1, None),
     "sales_return": (MODULE, "Sales Returns", None, 1, None),
@@ -92,6 +96,8 @@ APP_LOCATION: dict[str, str] = {
     "dashboard": "Home tab",
     "sales_invoice": "Orders tab, More → Sales Orders, New Invoice",
     "sales_order": "New Order, Convert to Invoice",
+    "purchase_invoice": "More → Purchases → New Purchase Invoice, Purchase list",
+    "purchase_order": "More → Purchases → New Purchase Order, Convert to Invoice",
     "route_plan": "More → Plan & Route",
     "customers": "More → Customers, Customers quick action",
     "sales_return": "More → Sales Returns, Sales Return quick action",
@@ -325,7 +331,8 @@ def _is_field_user(user: str) -> bool:
 
 
 def check_doc_access(doc, method=None) -> None:
-    """before_insert on Sales Invoice / Sales Order / Payment Entry, before_save
+    """before_insert on Sales Invoice / Sales Order / Purchase Invoice / Purchase
+    Order / Payment Entry, before_save
     (create and edit) on Customer / Item. Only for field users (enabled ZG Van Sale Profile, not Admin):
     covers the shared accounting/warehouse endpoints, /api/resource and Desk,
     which the vansalex endpoint checks don't."""
@@ -337,6 +344,10 @@ def check_doc_access(doc, method=None) -> None:
         require("sales_return" if cint(doc.get("is_return")) else "sales_invoice")
     elif dt == "Sales Order":
         require("sales_order")
+    elif dt == "Purchase Invoice":
+        require("purchase_invoice")
+    elif dt == "Purchase Order":
+        require("purchase_order")
     elif dt == "Payment Entry":
         # The Cash invoice's own Payment Entry is part of the sale, not a
         # collection (invoice_cash_payment_service sets this flag).

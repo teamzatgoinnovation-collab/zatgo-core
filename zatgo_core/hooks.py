@@ -79,7 +79,10 @@ doc_events = {
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
     },
     "Purchase Invoice": {
-        "before_insert": "zatgo_core.events.return_naming.sync_naming_series",
+        "before_insert": [
+            "zatgo_core.services.vansalex_access.check_doc_access",
+            "zatgo_core.events.return_naming.sync_naming_series",
+        ],
         "on_submit": "zatgo_core.events.purchase_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.purchase_invoice_payment.before_cancel",
     },
@@ -97,6 +100,7 @@ doc_events = {
     # VanSaleX Modules & Features backstop for field users on any entry
     # point (services/vansalex_access.py); Sales Invoice / Payment Entry above.
     "Sales Order": {"before_insert": "zatgo_core.services.vansalex_access.check_doc_access"},
+    "Purchase Order": {"before_insert": "zatgo_core.services.vansalex_access.check_doc_access"},
     # before_save: create AND edit (the app edits through the shared
     # accounting.customers / warehouse.items endpoints).
     "Customer": {"before_save": "zatgo_core.services.vansalex_access.check_doc_access"},

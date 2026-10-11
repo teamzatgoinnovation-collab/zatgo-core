@@ -559,6 +559,7 @@ class TestVansalexSettings(IntegrationTestCase):
             self.skipTest("no selling price list on this site")
         frappe.db.set_single_value("Selling Settings", "selling_price_list", price_list)
         frappe.db.set_value("Item", self.item_code, "standard_rate", 0)
+        frappe.db.delete("Item Price", {"item_code": self.item_code, "price_list": price_list})
         frappe.get_doc(
             {
                 "doctype": "Item Price",
@@ -567,8 +568,14 @@ class TestVansalexSettings(IntegrationTestCase):
                 "price_list_rate": 37.5,
             }
         ).insert(ignore_permissions=True)
-        rows = list_items(page=1, page_size=500)["data"]
-        row = next(r for r in rows if r["item_code"] == self.item_code)
+        # Newest first, capped per page: look through the pages for the item.
+        row = None
+        for page in range(1, 10):
+            data = list_items(page=page, page_size=100)["data"]
+            row = next((r for r in data if r["item_code"] == self.item_code), None)
+            if row or len(data) < 100:
+                break
+        self.assertIsNotNone(row, "item not listed")
         self.assertEqual(row["standard_rate"], 37.5)
         self.assertEqual(row["rate"], 37.5)
         # That price is the item's price: the rate check accepts it.

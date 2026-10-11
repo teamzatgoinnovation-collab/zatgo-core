@@ -71,7 +71,7 @@ def payment_accounts() -> dict[str, Any]:
     from zatgo_core.services.vansalex_settings import selectable_payment_accounts
 
     require_login()
-    require_access("sales_invoice")
+    require_access("sales_invoice", "purchase_invoice", "purchase_order")
     return ok(selectable_payment_accounts(), meta={"source": "Account"})
 
 

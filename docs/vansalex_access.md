@@ -24,6 +24,8 @@ Stable machine identifiers (never page titles).
 | `dashboard` | module | Dashboard |
 | `sales_invoice` | module | Invoice create/list/print, Documents |
 | `sales_order` | module | Order (invoice later) + Convert to Invoice — **= `allow_orders`** |
+| `purchase_invoice` | module | More → Purchases: New Purchase Invoice (stock received into the van warehouse) and the purchase list. **Default off** |
+| `purchase_order` | module | More → Purchases: New Purchase Order + Convert to Invoice. **Default off** |
 | `sales_return` | module | Sales Returns (credit notes) |
 | `collections` | module | Customer payments |
 | `customers` | module | Browse / create / edit customers (the customer picker on a sale stays) |
@@ -145,3 +147,24 @@ feature, else all enabled Cash- / Bank-type ledger accounts of the company).
 The server checks the account's type and company before saving anything.
 Bank also takes an optional transfer / cheque no. (`bank_reference_no`, blank
 = the invoice no.).
+
+## Purchases (buying into the van)
+
+`purchase_invoice` / `purchase_order` mirror the sales flow
+(`services/vansalex_purchase_service.py`, `api/v1/vansalex/purchases.py`):
+a **Purchase Invoice** is submitted at once with `update_stock` into the van
+warehouse; a **Purchase Order** moves no stock until *Convert to Invoice*
+(ERPNext's own mapper). Cash / Bank / Credit and the pay-from account are
+validated by the same `resolve_sale` as a sale (so *Allow Credit Sales*,
+*Allow Bank Payment* and *Choose payment account* apply to purchases too); a
+Cash or Bank bill gets its Payment Entry (Pay) on submit. Rates are the buying
+price: typed, else the item's last purchase rate (none on record = refused).
+Optional supplier invoice no. (`bill_no`) and Bank reference no.
+
+Field users have no ERPNext permission on purchase documents: the module
+switch is the authorization, writes run with `ignore_permissions`, and a driver
+only lists / prints / converts their **own** documents (admins: all). The
+auto Payment Entry is built as Administrator and re-owned by the driver
+(`invoice_cash_payment_service._reader_for`). Same `client_id` idempotency as
+a sale (`zatgo_client_id` on Purchase Invoice and, new, Purchase Order —
+`patches/v0_3_0`). The DocType backstop covers direct inserts.

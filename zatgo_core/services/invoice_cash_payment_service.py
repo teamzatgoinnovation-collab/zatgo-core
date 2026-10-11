@@ -58,6 +58,7 @@ clean for it.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 import frappe
@@ -76,6 +77,25 @@ AUTO_PAYMENT_TYPES = {
     "Cash": ("custom_cash_account", "Cash Account", "Cash"),
     "Bank": ("custom_bank_account", "Bank Account", "Bank"),
 }
+
+
+@contextmanager
+def _reader_for(invoice: Document):
+    """get_payment_entry() reads the invoice as the session user. A VanSaleX
+    driver buying through the app has no ERPNext permission on Purchase
+    Invoice (the VanSaleX module switch authorized the purchase, and the
+    payment is part of it): ERPNext re-reads the invoice while building,
+    inserting and submitting the Payment Entry, so that block runs as
+    Administrator (the caller restores the driver as the entry's owner)."""
+    if frappe.has_permission(invoice.doctype, "read", doc=invoice.name):
+        yield
+        return
+    user = frappe.session.user
+    frappe.set_user("Administrator")
+    try:
+        yield
+    finally:
+        frappe.set_user(user)
 
 
 def create_cash_payment_entry(invoice: Document) -> None:
@@ -118,17 +138,21 @@ def create_cash_payment_entry(invoice: Document) -> None:
 
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-    payment_entry = get_payment_entry(invoice.doctype, invoice.name, bank_account=account)
-    if payment_type == "Cash":
-        payment_entry.mode_of_payment = CASH_MODE_OF_PAYMENT
-    else:
-        payment_entry.mode_of_payment = _bank_mode_of_payment(account, invoice.company)
-        payment_entry.reference_no = (invoice.get("custom_bank_reference_no") or "").strip() or invoice.name
-        payment_entry.reference_date = invoice.posting_date
-    # Part of the sale, not a VanSaleX "collection" (vansalex_access backstop).
-    payment_entry.flags.zatgo_auto_cash_payment = True
-    payment_entry.insert(ignore_permissions=True)
-    payment_entry.submit()
+    driver = frappe.session.user
+    with _reader_for(invoice):
+        payment_entry = get_payment_entry(invoice.doctype, invoice.name, bank_account=account)
+        if payment_type == "Cash":
+            payment_entry.mode_of_payment = CASH_MODE_OF_PAYMENT
+        else:
+            payment_entry.mode_of_payment = _bank_mode_of_payment(account, invoice.company)
+            payment_entry.reference_no = (invoice.get("custom_bank_reference_no") or "").strip() or invoice.name
+            payment_entry.reference_date = invoice.posting_date
+        # Part of the sale, not a VanSaleX "collection" (vansalex_access backstop).
+        payment_entry.flags.zatgo_auto_cash_payment = True
+        payment_entry.insert(ignore_permissions=True)
+        payment_entry.submit()
+    if frappe.session.user == driver and payment_entry.owner != driver:
+        frappe.db.set_value("Payment Entry", payment_entry.name, "owner", driver, update_modified=False)
 
     logger.info(
         "Auto-created Payment Entry %s (%s) for %s %s",
