@@ -145,7 +145,7 @@ _HTML = r"""
       {%- set qty = frappe.utils.flt(item.qty) -%}
       {%- set rate = frappe.utils.flt(item.rate) -%}
       {%- set net = frappe.utils.flt(item.net_amount or item.amount) -%}
-      {%- set tax_amt = frappe.utils.flt(item.get("tax_amount") or 0) -%}
+      {%- set tax_amt = frappe.utils.flt(item.get("vansale_line_vat_amount") or item.get("tax_amount") or 0) -%}
       {%- if not tax_amt and doc.total and doc.total_taxes_and_charges and n_items -%}
         {%- set tax_amt = frappe.utils.flt(doc.total_taxes_and_charges) * (net / frappe.utils.flt(doc.total)) -%}
       {%- endif -%}
