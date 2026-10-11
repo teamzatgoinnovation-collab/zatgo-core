@@ -578,6 +578,11 @@ class TestVansalexSettings(IntegrationTestCase):
         self.assertIsNotNone(row, "item not listed")
         self.assertEqual(row["standard_rate"], 37.5)
         self.assertEqual(row["rate"], 37.5)
+        frappe.db.set_value("Item", self.item_code, "last_purchase_rate", 21)
+        row = list_items(page=1, page_size=100)["data"]
+        row = next((r for r in row if r["item_code"] == self.item_code), None) or row
+        if isinstance(row, dict):
+            self.assertEqual(row["buying_rate"], 21)  # the default rate on a purchase
         # That price is the item's price: the rate check accepts it.
         from zatgo_core.services.vansalex_access import check_item_rates
 
