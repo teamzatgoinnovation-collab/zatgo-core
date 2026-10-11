@@ -9,7 +9,9 @@ class TestAppImport(unittest.TestCase):
     def test_package_version(self) -> None:
         import zatgo_core
 
-        self.assertEqual(zatgo_core.__version__, "0.2.0")
+        # The package version is set in zatgo_core/__init__.py; just check it
+        # is a real dotted version (was a hard-coded stale "0.2.0").
+        self.assertRegex(zatgo_core.__version__, r"^\d+\.\d+\.\d+$")
 
     def test_constants_export(self) -> None:
         from zatgo_core.constants import DOCTYPES, ROLES

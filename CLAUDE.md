@@ -15,7 +15,3 @@ Custom Frappe app extending ERPNext for ZatGo's Van Sales / Accounting / Invento
   - UI (`services/ui_apps.py`): SaaS Desk theme + login page (`page_renderer`), EN/AR language switcher (`api/v1/language.py`), VanSaleX web page `/vansalex` (`www/vansalex.py`; build via `scripts/deploy_web_build.sh`). Desk JS/CSS are added per request by a `before_request` hook — never use `app_include_css/js` in hooks.py for site-optional assets, they load on every site.
   - Modules with DocTypes (`services/bundled_apps.py`): `chat_ai/`, `tracker/`, `zatgo_space/`. Every hook goes through a gated wrapper there; their setup lives in `<module>/install.py::bootstrap` and their workspace/sidebar JSON in `<module>/desk_records/` (deliberately outside Frappe's synced folders). A new hook for one of them must be a wrapper in `bundled_apps.py` that returns at once when switched off.
 - Deploying a change to `modules.txt`: run `bench --site X clear-cache` **before** `migrate` — migrate syncs DocTypes only for modules in the cached module map and silently skips new ones. Module Defs are created by `install-app` only; `ensure_ui_apps` creates the bundled ones on migrate.
-
-## Known pre-existing issue (not fixed, don't be confused by it)
-
-`zatgo_core/tests/unit/test_app_import.py::test_package_version` asserts `__version__ == "0.2.0"` but `hooks.py` has `app_version = "0.2.2"` — stale assertion, unrelated to whatever you're working on unless specifically asked to fix it.

@@ -143,6 +143,9 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
     def test_walk_in_flow(self) -> None:
         item = self._make_stocked_item(self.warehouse, qty=10)
         created = svc.create_order(
+            # The test company: the user's default company (any on a shared
+            # bench) would pick a warehouse without this test's stock.
+            company=self.company,
             channel="counter",
             items=[{"item_code": item, "qty": 1, "rate": 10}],
             client_id=f"test-walkin-{random_string(8)}",
@@ -158,6 +161,9 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
     def test_pay_is_idempotent(self) -> None:
         item = self._make_stocked_item(self.warehouse, qty=10)
         created = svc.create_order(
+            # The test company: the user's default company (any on a shared
+            # bench) would pick a warehouse without this test's stock.
+            company=self.company,
             channel="counter",
             items=[{"item_code": item, "qty": 1, "rate": 10}],
             client_id=f"test-idem-order-{random_string(8)}",
@@ -187,6 +193,9 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         table = self._make_table("Void Test Table")
         item = self._make_stocked_item(self.warehouse, qty=10)
         created = svc.create_order(
+            # The test company: the user's default company (any on a shared
+            # bench) would pick a warehouse without this test's stock.
+            company=self.company,
             table=table,
             channel="dine_in",
             items=[{"item_code": item, "qty": 1, "rate": 10}],
@@ -207,6 +216,9 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
 
         item = self._make_stocked_item(self.warehouse, qty=10)
         created = svc.create_order(
+            # The test company: the user's default company (any on a shared
+            # bench) would pick a warehouse without this test's stock.
+            company=self.company,
             channel="counter",
             items=[{"item_code": item, "qty": 1, "rate": 10}],
             client_id=f"test-walkincust-{random_string(8)}",
