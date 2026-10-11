@@ -30,7 +30,11 @@ boot_session = "zatgo_core.events.boot.boot_session"
 # SaaS theme / language switcher, switched on per site in ZG System Settings
 # (services/ui_apps.py) -- deliberately not app_include_css/js, which would
 # load them on every site.
-before_request = ["zatgo_core.services.ui_apps.add_desk_includes"]
+before_request = [
+    # Whitelisted methods of switched-off bundled modules -> 404.
+    "zatgo_core.services.bundled_apps.gate_module_api",
+    "zatgo_core.services.ui_apps.add_desk_includes",
+]
 page_renderer = ["zatgo_core.services.ui_apps.ThemedLoginPage"]
 
 # Payment Type (Cash/Credit) UX hint -- purely visual, see the files themselves.
@@ -138,16 +142,26 @@ permission_query_conditions = {
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_query",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_query",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_query",
+    # Bundled modules' own DocTypes: no rows where the module is switched off.
+    "*": "zatgo_core.services.bundled_apps.module_query_conditions",
 }
 
-# Tracker (bundled module): no opinion (None) where it is switched off.
+# Tracker (bundled module): no objection (True) where it is switched off --
+# never None, which Frappe reads as a denial.
 has_permission = {
     "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_has_permission",
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
+    # Bundled modules' own DocTypes: nobody's where the module is switched off.
+    "*": "zatgo_core.services.bundled_apps.module_doc_has_permission",
 }
+
+# Old method paths of the merged apps (chat_ai.*, tracker.*, zatgo_space.*)
+# -> zatgo_core.<module>.*, for clients built against the old apps.
+from zatgo_core.compat_methods import OLD_METHOD_PATHS as override_whitelisted_methods  # noqa: E402
+
 
 
 fixtures = [

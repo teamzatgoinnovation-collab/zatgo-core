@@ -274,12 +274,20 @@ def run_turn(
 	publish_progress(session_name, "planning")
 
 	# --- Token-based tool confirmation resume ---
+	# A confirmed tool runs ONLY from a server-issued confirmation token, with
+	# the tool and arguments stored when the user was asked -- never from the
+	# client's pending_tool / pending_args (that ran any tool, writes included,
+	# with no confirmation at all).
+	token_tool = None
 	if confirmation_token and confirmed:
 		stored = consume_token(session_name, confirmation_token, expected_kind="tool")
-		if stored:
-			pending_tool = stored.get("tool") or pending_tool
-			pending_args = stored.get("args") or pending_args or {}
-			confirmed = True
+		if stored and stored.get("tool"):
+			token_tool = stored["tool"]
+			pending_tool = token_tool
+			pending_args = stored.get("args") or {}
+	if not token_tool:
+		pending_tool = None
+		pending_args = None
 
 	# --- Token-based plan approval resume ---
 	approved_plan = None

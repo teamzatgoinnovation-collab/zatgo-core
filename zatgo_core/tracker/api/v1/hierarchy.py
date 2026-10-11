@@ -145,6 +145,23 @@ def assign_org_member(
 					_("You can only assign members under your subordinate tree."),
 					frappe.PermissionError,
 				)
+		# Nor may a Sub take over someone already in the system: an existing
+		# user's Employee would otherwise be moved under them (company and
+		# reports_to overwritten, tracker roles reset) -- only people already
+		# in their tree, and only within their own company.
+		own_company = frappe.db.get_value("Employee", creator_emp, "company")
+		if company != own_company:
+			frappe.throw(_("You can only assign members in your own company."), frappe.PermissionError)
+		existing_user = frappe.db.get_value("User", {"name": email.strip()}, "name") or frappe.db.get_value(
+			"User", {"email": email.strip()}, "name"
+		)
+		if existing_user:
+			existing_emp = frappe.db.get_value("Employee", {"user_id": existing_user}, "name")
+			if existing_emp and existing_emp not in get_subordinate_employees(creator_emp):
+				frappe.throw(
+					_("{0} already belongs to someone outside your team.").format(email),
+					frappe.PermissionError,
+				)
 
 	result = _provision_member(
 		email=email.strip(),

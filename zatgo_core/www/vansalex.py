@@ -25,6 +25,9 @@ def get_context(context):
     # The build is compiled for one site's address (FRAPPE_BASE_URL): on a
     # site it doesn't belong to it would talk to that other site.
     if not switches()["vansalex_web"]:
+        # Don't let Frappe cache this 404 (website_404): it would outlive
+        # switching the page on.
+        frappe.local.no_cache = 1
         raise frappe.PageDoesNotExistError
     headers = getattr(frappe.local, "response_headers", None)
     if headers is not None:

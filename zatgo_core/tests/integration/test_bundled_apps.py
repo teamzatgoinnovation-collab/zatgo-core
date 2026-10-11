@@ -48,16 +48,99 @@ class TestBundledApps(IntegrationTestCase):
             on_update.assert_called_once()
             hourly.assert_called_once()
 
-    def test_tracker_permissions_have_no_say_where_switched_off(self) -> None:
-        self.assertEqual(bundled_apps.tracker_project_query("someone@example.com"), "")
-        self.assertEqual(bundled_apps.tracker_task_query("someone@example.com"), "")
-        self.assertIsNone(bundled_apps.tracker_task_has_permission(frappe._dict(), "someone@example.com"))
+    def _user(self, *roles: str) -> str:
+        from frappe.utils import random_string
+
+        email = f"bundled.test.{random_string(6).lower()}@zatgo.test"
+        frappe.get_doc(
+            {
+                "doctype": "User",
+                "email": email,
+                "first_name": "Bundled",
+                "send_welcome_email": 0,
+                "roles": [{"role": r} for r in roles],
+            }
+        ).insert(ignore_permissions=True)
+        return email
+
+    def test_tracker_off_leaves_erpnext_project_permissions_alone(self) -> None:
+        # Regression: the wrappers returned None when off, which Frappe's
+        # has_controller_permissions reads as a DENIAL -- every user but
+        # Administrator lost Project / Task / Issue / Timesheet.
+        from frappe.utils import random_string
+
+        from zatgo_core.tests.integration._fixtures import get_or_create_test_company
+
+        project = frappe.get_doc(
+            {
+                "doctype": "Project",
+                "project_name": f"Bundled Test {random_string(6)}",
+                "company": get_or_create_test_company(),
+            }
+        ).insert(ignore_permissions=True)
+        user = self._user("Projects User", "Projects Manager")
+        self.assertTrue(frappe.has_permission("Project", "read", doc=project, user=user))
+        self.assertTrue(frappe.has_permission("Project", "write", doc=project, user=user))
+        self.assertEqual(bundled_apps.tracker_project_query(user), "")
         with patch(
             "zatgo_core.tracker.permissions.queries.project_permission_query", return_value="1=0"
         ) as query:
             self._set(enable_tracker=1)
-            self.assertEqual(bundled_apps.tracker_project_query("someone@example.com"), "1=0")
+            self.assertEqual(bundled_apps.tracker_project_query(user), "1=0")
             query.assert_called_once()
+
+    def test_module_doctypes_are_nobodys_where_switched_off(self) -> None:
+        user = self._user("System Manager", "Chat AI Manager")
+        self.assertFalse(frappe.has_permission("Chat AI Settings", "read", doc=frappe.get_single("Chat AI Settings"), user=user))
+        self.assertEqual(bundled_apps.module_query_conditions(user, doctype="AI Chat Session"), "1=0")
+        self.assertEqual(bundled_apps.module_query_conditions(user, doctype="Sales Invoice"), "")
+        self.assertTrue(bundled_apps.module_doc_has_permission(frappe._dict(doctype="Sales Invoice")))
+        self._set(enable_chat_ai=1)
+        self.assertEqual(bundled_apps.module_query_conditions(user, doctype="AI Chat Session"), "")
+        self.assertTrue(bundled_apps.module_doc_has_permission(frappe._dict(doctype="AI Chat Session")))
+
+    def _call_gate(self, path: str) -> None:
+        had = hasattr(frappe.local, "request")
+        orig = getattr(frappe.local, "request", None)
+        try:
+            frappe.local.request = frappe._dict(path=path)
+            bundled_apps.gate_module_api()
+        finally:
+            if had:
+                frappe.local.request = orig
+            else:
+                del frappe.local.request
+
+    def test_module_api_is_404_where_switched_off(self) -> None:
+        for path in (
+            "/api/method/zatgo_core.zatgo_space.api.v1.space.list_catalog",
+            "/api/v2/method/zatgo_space.api.v1.space.list_catalog",  # old app path
+            "/api/method/zatgo_core.chat_ai.api.chat.send",
+            "/api/method/tracker.api.v1.hierarchy.org_tree",
+        ):
+            with self.assertRaises(frappe.DoesNotExistError, msg=path):
+                self._call_gate(path)
+        self._call_gate("/api/method/zatgo_core.api.v1.vansalex.me.context")  # not a module
+        self._call_gate("/desk/sales-invoice")
+        self._set(enable_zatgo_space=1)
+        self._call_gate("/api/method/zatgo_core.zatgo_space.api.v1.space.list_catalog")
+
+    def test_old_method_paths_map_to_the_merged_modules(self) -> None:
+        from zatgo_core.compat_methods import OLD_METHOD_PATHS
+
+        self.assertEqual(
+            OLD_METHOD_PATHS["tracker.api.v1.tasks.list_tasks"], "zatgo_core.tracker.api.v1.tasks.list_tasks"
+        )
+        for new in OLD_METHOD_PATHS.values():
+            self.assertTrue(callable(frappe.get_attr(new)), new)
+
+    def test_status_brief_refuses_a_company_the_user_cannot_read(self) -> None:
+        from zatgo_core.chat_ai.erpnext.skills.analytics import tools
+
+        self._set(enable_chat_ai=1)
+        with patch.object(frappe, "has_permission", return_value=False):
+            with self.assertRaises(frappe.PermissionError):
+                tools._company_status_brief(company="Some Other Company")
 
     def test_desk_assets_only_where_switched_on(self) -> None:
         from zatgo_core.services.ui_apps import desk_includes

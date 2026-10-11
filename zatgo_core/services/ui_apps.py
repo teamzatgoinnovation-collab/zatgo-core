@@ -69,9 +69,18 @@ def asset_url(relpath: str) -> str:
     return f"/assets/zatgo_core/{relpath}?v={version}"
 
 
+# Old separate apps that still inject their own copy while installed
+# (between the migrate that carries their switch over and their uninstall).
+OLD_UI_APPS = {"saas_theme": ("saas_theme",), "language_switcher": ("language_switcher", "modifyme")}
+
+
 def desk_includes() -> tuple[list[str], list[str]]:
     """(css, js) this site adds to Desk."""
     on = switches()
+    installed = set(frappe.get_installed_apps())
+    for key, old_apps in OLD_UI_APPS.items():
+        if installed.intersection(old_apps):
+            on[key] = False  # the old app's own hooks load it -- never twice
     css: list[str] = []
     js: list[str] = []
     if on["saas_theme"]:
@@ -89,12 +98,18 @@ def desk_includes() -> tuple[list[str], list[str]]:
     return css, js
 
 
+# Requests that never render the Desk page.
+_NOT_DESK = ("api/", "assets/", "files/", "private/", "socket.io", "backups")
+
+
 def add_desk_includes() -> None:
-    """before_request hook: only the Desk page (/desk..., /app redirects
-    there) reads these; every other request is left alone."""
+    """before_request hook. Only the Desk page (frappe/www/desk.py) reads
+    these, but it is served at /desk... and also at "/" itself for a System
+    User (the home page resolves to "desk"), so every page request gets them
+    -- harmless elsewhere; API / asset / file requests are skipped."""
     request = getattr(frappe.local, "request", None)
     path = (getattr(request, "path", "") or "").strip("/")
-    if not (path == "desk" or path.startswith("desk/")):
+    if path.startswith(_NOT_DESK):
         return
     css, js = desk_includes()
     if not (css or js):
@@ -146,6 +161,7 @@ def ensure_ui_apps() -> None:
     Arabic selectable where the switcher is on, bundled modules set up /
     taken off the Desk per their switch."""
     _adopt_old_bundled_modules()
+    _ensure_bundled_doctypes()
     if switches()["language_switcher"]:
         from zatgo_core.api.v1.language import enable_supported_languages
 
@@ -186,3 +202,22 @@ def _adopt_old_bundled_modules() -> None:
     if changed:
         frappe.clear_document_cache(SETTINGS, SETTINGS)
         frappe.clear_cache()
+
+
+def _ensure_bundled_doctypes() -> None:
+    """migrate syncs DocTypes only for the modules in the CACHED module map
+    (frappe.local.app_modules): on the first migrate after the bundled
+    modules were added to modules.txt it can silently skip all of them. If
+    one is missing, rebuild the map and sync zatgo_core again."""
+    from frappe.model.sync import sync_for
+
+    if all(frappe.db.exists("DocType", dt) for dt in ("Chat AI Settings", "Tracker Settings", "Space Settings")):
+        return
+    frappe.cache.delete_value("app_modules")
+    try:
+        frappe.client_cache.delete_value("installed_app_modules")
+    except Exception:
+        pass
+    frappe.setup_module_map()
+    sync_for("zatgo_core", force=False)
+    frappe.clear_cache()

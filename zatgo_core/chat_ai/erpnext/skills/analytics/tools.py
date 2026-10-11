@@ -42,12 +42,16 @@ def _summary():
 	out = {}
 	for dt in ("Task", "Issue", "Sales Invoice", "Project", "Lead"):
 		if frappe.db.exists("DocType", dt) and frappe.has_permission(dt, "read"):
-			out[dt] = frappe.db.count(dt)
+			out[dt] = _count(dt)
 	return out
 
 
 def _company_status_brief(company: str | None = None, **kwargs):
 	company = (company or kwargs.get("company") or _default_company() or "").strip()
+	# The company comes from the caller: it must be one they may read (User
+	# Permissions on Company), or another company's books would be summarised.
+	if company and not frappe.has_permission("Company", "read", doc=company):
+		frappe.throw(frappe._("Not permitted to view company {0}").format(company), frappe.PermissionError)
 	sections = []
 	actions = []
 	omitted = []
@@ -145,12 +149,18 @@ def _default_company() -> str:
 	except Exception:
 		pass
 	try:
-		rows = frappe.get_all("Company", pluck="name", limit_page_length=2)
+		rows = frappe.get_list("Company", pluck="name", limit_page_length=2)
 		if len(rows) == 1:
 			return rows[0]
 		return rows[0] if rows else ""
 	except Exception:
 		return ""
+
+
+def _count(dt: str, filters: dict | None = None) -> int:
+	"""Like frappe.db.count, but only rows this user may read (get_list
+	applies User Permissions and permission query conditions)."""
+	return len(frappe.get_list(dt, filters=filters or {}, pluck="name", limit_page_length=10000))
 
 
 def _can(dt: str) -> bool:
@@ -163,7 +173,7 @@ def _receivables(company: str):
 	filters = {"docstatus": 1, "outstanding_amount": (">", 0)}
 	if company:
 		filters["company"] = company
-	rows = frappe.get_all(
+	rows = frappe.get_list(
 		"Sales Invoice",
 		filters=filters,
 		fields=["name", "customer", "due_date", "outstanding_amount", "grand_total", "currency"],
@@ -223,7 +233,7 @@ def _payables(company: str):
 	filters = {"docstatus": 1, "outstanding_amount": (">", 0)}
 	if company:
 		filters["company"] = company
-	rows = frappe.get_all(
+	rows = frappe.get_list(
 		"Purchase Invoice",
 		filters=filters,
 		fields=["name", "supplier", "due_date", "outstanding_amount"],
@@ -262,7 +272,9 @@ def _cash_bank(company: str):
 	filters = {"account_type": ("in", ["Cash", "Bank"]), "is_group": 0}
 	if company:
 		filters["company"] = company
-	accounts = frappe.get_all("Account", filters=filters, fields=["name", "account_type"], limit_page_length=30)
+	# get_list: only accounts this user may read (User Permissions on Company /
+	# Account apply); the GL sums below are per listed account only.
+	accounts = frappe.get_list("Account", filters=filters, fields=["name", "account_type"], limit_page_length=30)
 	rows_out = []
 	total = 0.0
 	for a in accounts:
@@ -303,15 +315,13 @@ def _low_stock(company: str):
 		return None
 	# Actual qty <= 0 or below reserved; top N by negative/zero
 	try:
-		bins = frappe.db.sql(
-			"""
-			select item_code, warehouse, actual_qty, reserved_qty
-			from `tabBin`
-			where actual_qty <= 0
-			order by actual_qty asc
-			limit 25
-			""",
-			as_dict=True,
+		# get_list, not raw SQL: Warehouse / Company User Permissions apply.
+		bins = frappe.get_list(
+			"Bin",
+			filters={"actual_qty": ("<=", 0)},
+			fields=["item_code", "warehouse", "actual_qty", "reserved_qty"],
+			order_by="actual_qty asc",
+			limit_page_length=25,
 		)
 	except Exception:
 		return None
@@ -339,11 +349,11 @@ def _crm_open():
 	parts = []
 	meta = {}
 	if _can("Lead"):
-		n = frappe.db.count("Lead", {"status": ("not in", ["Converted", "Do Not Contact"])})
+		n = _count("Lead", {"status": ("not in", ["Converted", "Do Not Contact"])})
 		meta["open_leads"] = n
 		parts.append(["Lead", n])
 	if _can("Opportunity"):
-		n = frappe.db.count("Opportunity", {"status": ("not in", ["Closed", "Converted", "Lost"])})
+		n = _count("Opportunity", {"status": ("not in", ["Closed", "Converted", "Lost"])})
 		meta["open_opportunities"] = n
 		parts.append(["Opportunity", n])
 	if not parts:
@@ -362,15 +372,15 @@ def _projects_tasks():
 	meta = {}
 	rows = []
 	if _can("Project"):
-		n = frappe.db.count("Project", {"status": ("not in", ["Completed", "Cancelled"])})
+		n = _count("Project", {"status": ("not in", ["Completed", "Cancelled"])})
 		meta["open_projects"] = n
 		rows.append(["Project", n, ""])
 	if _can("Task"):
-		open_n = frappe.db.count("Task", {"status": ("not in", ["Completed", "Cancelled"])})
+		open_n = _count("Task", {"status": ("not in", ["Completed", "Cancelled"])})
 		meta["open_tasks"] = open_n
 		overdue = 0
 		try:
-			overdue = frappe.db.count(
+			overdue = _count(
 				"Task",
 				{
 					"status": ("not in", ["Completed", "Cancelled"]),
@@ -393,7 +403,7 @@ def _hr_optional():
 	if not _can("Leave Application"):
 		return None
 	try:
-		n = frappe.db.count("Leave Application", {"status": "Open"})
+		n = _count("Leave Application", {"status": "Open"})
 	except Exception:
 		return None
 	return {

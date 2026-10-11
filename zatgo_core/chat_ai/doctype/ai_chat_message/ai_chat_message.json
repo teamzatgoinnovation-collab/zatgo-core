@@ -104,7 +104,7 @@
  "issingle": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-11 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Chat AI",
  "name": "AI Chat Message",
@@ -144,7 +144,8 @@
    "export": 0,
    "print": 0,
    "report": 0,
-   "share": 0
+   "share": 0,
+   "if_owner": 1
   }
  ],
  "sort_field": "modified",

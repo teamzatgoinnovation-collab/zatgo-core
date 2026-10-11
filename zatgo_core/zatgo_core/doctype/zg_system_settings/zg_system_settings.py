@@ -23,6 +23,14 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
         from zatgo_core.services.bundled_apps import BUNDLED, sync_bundled_apps
 
         before = self.get_doc_before_save()
+        # /login and /vansalex depend on these: drop cached pages (incl. a
+        # cached 404 for /vansalex from while it was off).
+        if before is None or any(
+            bool(self.get(f)) != bool(before.get(f)) for f in ("enable_saas_theme", "enable_vansalex_web")
+        ):
+            from frappe.website.utils import clear_website_cache
+
+            clear_website_cache()
         if before is None or any(
             bool(self.get(f"enable_{key}")) != bool(before.get(f"enable_{key}")) for key in BUNDLED
         ):
