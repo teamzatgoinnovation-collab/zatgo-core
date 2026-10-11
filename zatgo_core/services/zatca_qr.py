@@ -15,7 +15,13 @@ from frappe.utils import flt, get_datetime
 
 
 def _tlv(tag: int, value: str) -> bytes:
+    """One TLV field: 1-byte tag, 1-byte length, UTF-8 value. The length is a
+    single byte, so a value over 255 bytes (a long Arabic seller name is 2-3
+    bytes a letter) is cut at the last whole character that fits -- it used
+    to raise, and the invoice got no QR at all."""
     encoded = (value or "").encode("utf-8")
+    if len(encoded) > 255:
+        encoded = encoded[:255].decode("utf-8", errors="ignore").encode("utf-8")
     return bytes([tag, len(encoded)]) + encoded
 
 
@@ -59,7 +65,9 @@ def _invoice_timestamp(doc: Any) -> str:
     if posting_date and posting_time:
         try:
             dt = get_datetime(f"{posting_date} {posting_time}")
-            return dt.isoformat()
+            # Whole seconds: ERPNext's posting_time carries microseconds
+            # ("09:11:15.360562"), which ZATCA's timestamp field does not take.
+            return dt.replace(microsecond=0).isoformat()
         except Exception:
             pass
     if posting_date:
