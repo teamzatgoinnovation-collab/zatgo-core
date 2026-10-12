@@ -2142,6 +2142,188 @@ def _ensure_kasib_asia_previous_balance() -> None:
     doc.save(ignore_permissions=True)
 
 
+# --- Customer Arabic name / CR Number / wider invoice-number box (2026-10) ---
+#
+# Codifies four edits made to kasibasia's "Kasib Asia Tax Invoice" in Desk,
+# on top of the original hand-built template (which had a half-finished,
+# non-rendering CR block). Each step only fires on the exact known "before"
+# shape and is otherwise a no-op, so a site that edited the format further
+# is never overwritten -- anything unrecognised is logged and left alone.
+
+_KASIB_ASIA_CR_LOOKUP_RE = re.compile(
+    r'(set\s+customer_cr\s*=\s*frappe\.db\.get_value\(\s*"Customer",\s*doc\.customer,\s*)"tax_id"'
+)
+
+_KASIB_ASIA_NAME_AR_RE = re.compile(r'\{\{\s*doc\.customer_name_arabic\s+or\s+doc\.customer\s+or\s+""\s*\}\}')
+_KASIB_ASIA_NAME_AR_INIT_RE = re.compile(r'(\{%\s*set\s+customer_cr\s*=\s*""\s*%\}\n)')
+_KASIB_ASIA_NAME_AR_LOOKUP_RE = re.compile(
+    r'(\{%\s*set\s+customer_cr\s*=\s*frappe\.db\.get_value\(.*?\)\s+or\s+""\s*%\})', re.DOTALL
+)
+_KASIB_ASIA_NAME_AR_LOOKUP_HTML = """
+  {% set customer_name_ar =
+    frappe.db.get_value(
+      "Customer",
+      doc.customer,
+      "zatgo_customer_name_ar"
+    ) or ""
+  %}"""
+
+# A typo left in the pre-printed Arabic contact line ("...٠cr"), on the first
+# number only.
+_KASIB_ASIA_STRAY_CR_RE = re.compile(r"([\u0660-\u0669]{4,})cr\b")
+
+# The original block: tag attributes interleaved with a stray <span>, so it
+# never rendered, and its value came from the same lookup as the VAT number.
+_KASIB_ASIA_BROKEN_CR_BLOCK_RE = re.compile(
+    r'<div\s*<span>[^<]*</span>\s*class="dynamic-field customer-cr center"\s*dir="ltr"\s*>\s*'
+    r"\{\{\s*customer_cr\s*\}\}\s*</div>"
+)
+_KASIB_ASIA_CR_BLOCK_HTML = """{% if customer_cr %}
+    <div
+      class="dynamic-field customer-cr"
+      dir="rtl"
+    >
+      <span class="cr-label">رقم السجل التجاري :</span>
+      <span class="cr-value" dir="ltr">{{ customer_cr }}</span>
+      <span class="cr-en" dir="ltr">CR :</span>
+    </div>
+    {% endif %}"""
+
+_KASIB_ASIA_OLD_CR_CSS = """.customer-cr {
+    right: 3.9%;
+    top: 24.93%;
+
+    width: 35.46%;
+    height: 3.00%;
+
+    font-size: 10pt;
+
+    line-height: 8.92mm;
+}"""
+_KASIB_ASIA_NEW_CR_CSS = """.customer-cr {
+    right: 3.9%;
+    top: 24.93%;
+
+    width: 30%;
+    height: 3.00%;
+
+    font-size: 9pt;
+
+    line-height: 8.92mm;
+}
+
+.customer-cr .cr-label {
+    font-weight: bold;
+    margin-left: 2mm;
+}
+
+.customer-cr .cr-value {
+    font-size: 10pt;
+}
+
+.customer-cr .cr-en {
+    font-weight: bold;
+    margin-right: 2mm;
+}"""
+
+# "ACC-SINV-RET-2026-00167" (24 chars) was cut off at 10pt in the original
+# 16.75%-wide box. The widened box still sits between the printed "Invo. No :"
+# label (ends ~64%) and the Arabic label (starts ~87%); long numbers step
+# the font down instead of being clipped.
+_KASIB_ASIA_INVOICE_NO_RE = re.compile(
+    r'<div class="dynamic-field invoice-number center">\s*\{\{\s*doc\.name or ""\s*\}\}\s*</div>'
+)
+_KASIB_ASIA_INVOICE_NO_HTML = """{% set inv_no_len = (doc.name or "")|length %}
+
+    <div
+      class="dynamic-field invoice-number center"
+      style="{% if inv_no_len > 20 %}font-size: 8pt;{% elif inv_no_len > 16 %}font-size: 9pt;{% endif %}"
+    >
+      {{ doc.name or "" }}
+    </div>"""
+_KASIB_ASIA_OLD_INVOICE_NO_CSS = ".invoice-number {\n    left: 69.51%;\n    top: 19.44%;\n\n    width: 16.75%;"
+_KASIB_ASIA_NEW_INVOICE_NO_CSS = ".invoice-number {\n    left: 66%;\n    top: 19.44%;\n\n    width: 20.5%;"
+
+
+def _kasib_asia_customer_ids_transform(html: str, css: str) -> tuple[str, str, list[str]]:
+    """Pure string transform behind _ensure_kasib_asia_customer_ids().
+
+    Returns (html, css, skipped) -- `skipped` names every step whose "before"
+    shape was neither found nor already applied, so the caller can warn.
+    """
+    skipped: list[str] = []
+
+    # 1. CR value must come from zatgo_cr_number, not the VAT field.
+    if _KASIB_ASIA_CR_LOOKUP_RE.search(html):
+        html = _KASIB_ASIA_CR_LOOKUP_RE.sub(r'\1"zatgo_cr_number"', html)
+    elif "zatgo_cr_number" not in html:
+        skipped.append("customer_cr lookup")
+
+    # 2. Arabic name from the real Customer field (was a nonexistent
+    # doc.customer_name_arabic, so it always fell back to the English name).
+    if (
+        _KASIB_ASIA_NAME_AR_RE.search(html)
+        and _KASIB_ASIA_NAME_AR_INIT_RE.search(html)
+        and _KASIB_ASIA_NAME_AR_LOOKUP_RE.search(html)
+    ):
+        html = _KASIB_ASIA_NAME_AR_RE.sub(lambda _m: "{{ customer_name_ar }}", html)
+        html = _KASIB_ASIA_NAME_AR_INIT_RE.sub(lambda m: m.group(1) + '{% set customer_name_ar = "" %}\n', html, count=1)
+        html = _KASIB_ASIA_NAME_AR_LOOKUP_RE.sub(
+            lambda m: m.group(1) + _KASIB_ASIA_NAME_AR_LOOKUP_HTML, html, count=1
+        )
+    elif "customer_name_ar" not in html:
+        skipped.append("customer Arabic name")
+
+    # 3. CR block (markup + css).
+    if _KASIB_ASIA_BROKEN_CR_BLOCK_RE.search(html):
+        html = _KASIB_ASIA_BROKEN_CR_BLOCK_RE.sub(lambda _m: _KASIB_ASIA_CR_BLOCK_HTML, html)
+    elif "cr-label" not in html:
+        skipped.append("CR block markup")
+    if _KASIB_ASIA_OLD_CR_CSS in css:
+        css = css.replace(_KASIB_ASIA_OLD_CR_CSS, _KASIB_ASIA_NEW_CR_CSS)
+    elif ".cr-label" not in css:
+        skipped.append("CR block css")
+
+    # 4. Wider invoice-number box that shrinks long numbers instead of clipping.
+    if _KASIB_ASIA_INVOICE_NO_RE.search(html):
+        html = _KASIB_ASIA_INVOICE_NO_RE.sub(lambda _m: _KASIB_ASIA_INVOICE_NO_HTML, html)
+    elif "inv_no_len" not in html:
+        skipped.append("invoice number markup")
+    if _KASIB_ASIA_OLD_INVOICE_NO_CSS in css:
+        css = css.replace(_KASIB_ASIA_OLD_INVOICE_NO_CSS, _KASIB_ASIA_NEW_INVOICE_NO_CSS)
+    elif "left: 66%;" not in css:
+        skipped.append("invoice number css")
+
+    # 5. Stray "cr" typo in the Arabic contact numbers.
+    html = _KASIB_ASIA_STRAY_CR_RE.sub(r"\1", html)
+
+    return html, css, skipped
+
+
+def _ensure_kasib_asia_customer_ids() -> None:
+    """Customer Arabic name + CR Number + wider invoice-number box on
+    "Kasib Asia Tax Invoice". Same targeted, idempotent, html/css-only
+    approach as the badge/previous-balance injections above (module/standard
+    metadata untouched; no-op on sites without this print format). Needs
+    Customer.zatgo_cr_number / zatgo_customer_name_ar, which zatgo_core's
+    custom-field setup already creates.
+    """
+    if not frappe.db.exists("Print Format", KASIB_ASIA_TAX_INVOICE_NAME):
+        return
+    doc = frappe.get_doc("Print Format", KASIB_ASIA_TAX_INVOICE_NAME)
+    html, css, skipped = _kasib_asia_customer_ids_transform(doc.html or "", doc.css or "")
+    for step in skipped:
+        logger.warning(
+            "%s: %s not in the expected shape, left as-is (template may have been edited since this was written)",
+            KASIB_ASIA_TAX_INVOICE_NAME,
+            step,
+        )
+    if html != (doc.html or "") or css != (doc.css or ""):
+        doc.html = html
+        doc.css = css
+        doc.save(ignore_permissions=True)
+
+
 _KASIB_ASIA_SINGLE_COPY_MARKER = "get_copy_label"
 
 
@@ -2340,6 +2522,10 @@ def ensure_print_formats() -> None:
         _ensure_kasib_asia_previous_balance()
     except Exception:
         logger.exception("Kasib Asia Tax Invoice previous-balance injection failed")
+    try:
+        _ensure_kasib_asia_customer_ids()
+    except Exception:
+        logger.exception("Kasib Asia Tax Invoice customer-ids injection failed")
     try:
         _ensure_kasib_asia_single_copy_print_tracking()
     except Exception:
