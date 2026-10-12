@@ -51,6 +51,7 @@ def ensure_custom_fields() -> None:
     _run("purchase order client_id field", _ensure_purchase_order_client_id_field)
     _run("multi payment fields", _ensure_multi_payment_fields)
     _run("narration fields", _ensure_narration_fields)
+    _run("supplier cr number field", _ensure_supplier_cr_number_field)
 
 
 def _run(label: str, fn) -> None:
@@ -164,6 +165,12 @@ def _ensure_purchase_invoice_bank_payment_fields() -> None:
 
 def _ensure_purchase_order_client_id_field() -> None:
     from zatgo_core.patches.v0_3_0.add_purchase_order_client_id import execute
+
+    execute()
+
+
+def _ensure_supplier_cr_number_field() -> None:
+    from zatgo_core.patches.v0_3_1.add_supplier_cr_number import execute
 
     execute()
 
