@@ -52,6 +52,7 @@ def ensure_custom_fields() -> None:
     _run("multi payment fields", _ensure_multi_payment_fields)
     _run("narration fields", _ensure_narration_fields)
     _run("supplier cr number field", _ensure_supplier_cr_number_field)
+    _run("hide duplicate customer arabic name", _ensure_duplicate_customer_arabic_name_hidden)
 
 
 def _run(label: str, fn) -> None:
@@ -173,6 +174,23 @@ def _ensure_supplier_cr_number_field() -> None:
     from zatgo_core.patches.v0_3_1.add_supplier_cr_number import execute
 
     execute()
+
+
+def _ensure_duplicate_customer_arabic_name_hidden() -> None:
+    """zatca_erpgulf's fixture adds a second "Customer Name Arabic" field
+    (zatca_customer_name_in_arabic) beside ours (zatgo_customer_name_ar).
+    Ours feeds the customer sync API; the ZATCA one is never read for
+    customers. Hide it with a Property Setter, which (unlike editing the
+    Custom Field) survives that app's fixture re-sync on every migrate."""
+    import frappe
+    from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+    if not frappe.db.has_column("Customer", "zatca_customer_name_in_arabic"):
+        return
+    make_property_setter(
+        "Customer", "zatca_customer_name_in_arabic", "hidden", 1, "Check", validate_fields_for_doctype=False
+    )
+    frappe.db.commit()
 
 
 def _ensure_multi_payment_fields() -> None:
