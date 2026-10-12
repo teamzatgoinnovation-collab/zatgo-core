@@ -35,7 +35,9 @@ from zatgo_core.services.erpnext_writes import (
     update_purchase_invoice,
     update_quotation,
     update_sales_invoice,
+    update_supplier,
 )
+from zatgo_core.services.erpnext_reads import get_supplier, list_suppliers
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
 
@@ -246,6 +248,23 @@ class TestDocumentCrud(IntegrationTestCase):
         deleted = delete_supplier(supplier)
         self.assertTrue(deleted["success"], deleted.get("error"))
         self.assertFalse(frappe.db.exists("Supplier", supplier))
+
+    def test_supplier_cr_number_roundtrip(self) -> None:
+        name = f"CRUD CR Supplier {random_string(6)}"
+        created = create_supplier(supplier_name=name, supplier_type="Company", cr_number=" 1010123456 ")
+        self.assertEqual(created["data"]["cr_number"], "1010123456")
+        sid = created["data"]["id"]
+
+        updated = update_supplier(sid, {"cr_number": "2050999888"})
+        self.assertEqual(updated["data"]["cr_number"], "2050999888")
+        self.assertEqual(get_supplier(sid)["data"]["cr_number"], "2050999888")
+        listed = list_suppliers(page=1, page_size=500)["data"]
+        self.assertEqual({r["id"]: r["cr_number"] for r in listed}[sid], "2050999888")
+
+        # Omitting cr_number on update leaves it untouched; blank clears it.
+        self.assertEqual(update_supplier(sid, {"phone": "0500000000"})["data"]["cr_number"], "2050999888")
+        self.assertIsNone(update_supplier(sid, {"cr_number": "  "})["data"]["cr_number"])
+        delete_supplier(sid)
 
     def test_delete_customer_blocked_when_linked_to_a_submitted_invoice(self) -> None:
         created = create_sales_invoice(customer=self.customer, items=self._items(), company=self.company)

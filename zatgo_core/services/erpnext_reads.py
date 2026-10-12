@@ -639,9 +639,12 @@ def get_quotation(name: str) -> dict[str, Any]:
 
 
 def list_suppliers(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+    fields = ["name", "supplier_name", "supplier_type", "supplier_group", "disabled", "country"]
+    if frappe.db.has_column("Supplier", "zatgo_cr_number"):
+        fields.append("zatgo_cr_number")
     return _list_doctype(
         "Supplier",
-        fields=["name", "supplier_name", "supplier_type", "supplier_group", "disabled", "country"],
+        fields=fields,
         page=page,
         page_size=page_size,
         filters={"disabled": 0},
@@ -652,6 +655,7 @@ def list_suppliers(page: int | str = 1, page_size: int | str = 20) -> dict[str, 
             "supplier_type": r.supplier_type,
             "supplier_group": r.supplier_group,
             "country": r.country,
+            "cr_number": r.get("zatgo_cr_number"),
         },
     )
 
@@ -667,6 +671,7 @@ def get_supplier(name: str) -> dict[str, Any]:
             "supplier_type": d.supplier_type,
             "supplier_group": d.supplier_group,
             "country": d.country,
+            "cr_number": getattr(d, "zatgo_cr_number", None),
             "email": getattr(d, "email_id", None),
             "phone": getattr(d, "mobile_no", None),
             "disabled": int(getattr(d, "disabled", 0) or 0),

@@ -638,6 +638,7 @@ def create_supplier(
     email: str | None = None,
     phone: str | None = None,
     client_id: str | None = None,
+    cr_number: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_reads import get_supplier
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
@@ -661,6 +662,8 @@ def create_supplier(
             "zatgo_client_id": cid,
         }
     )
+    if frappe.db.has_column("Supplier", "zatgo_cr_number"):
+        doc.zatgo_cr_number = (cr_number or "").strip() or None
     if not doc.supplier_group:
         doc.supplier_group = (
             frappe.db.get_single_value("Buying Settings", "supplier_group") or "All Supplier Groups"
@@ -690,9 +693,13 @@ def update_supplier(name: str, values: Any = None) -> dict[str, Any]:
         "mobile_no": "mobile_no",
         "disabled": "disabled",
     }
+    if frappe.db.has_column("Supplier", "zatgo_cr_number"):
+        mapping["cr_number"] = "zatgo_cr_number"
     for key, field in mapping.items():
         if key in data and data[key] is not None:
             value = data[key]
+            if field == "zatgo_cr_number":
+                value = str(value).strip() or None
             if field == "disabled":
                 value = 1 if str(value) not in ("0", "false", "False", "") else 0
             setattr(doc, field, value)
