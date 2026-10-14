@@ -1,4 +1,3 @@
-    
 /* =========================================================
    KASIB ASIA - ERPNext SALES INVOICE
    A4 / Saudi VAT / Arabic + English
@@ -7,7 +6,7 @@
 
 
 /* =========================================================
-   FONT
+   1. FONTS
    ========================================================= */
 
 @font-face {
@@ -19,20 +18,22 @@
 
 
 /* =========================================================
-   GLOBAL
+   2. GLOBAL RESET
    ========================================================= */
 
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 html,
 body {
-    margin: 0 !important;
-    padding: 0 !important;
-
     width: 210mm;
     min-height: 297mm;
+
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 @page {
@@ -40,17 +41,16 @@ body {
     margin: 0;
 }
 
+
+/* =========================================================
+   3. ERPNEXT PRINT FORMAT
+   Keep longhand margins for wkhtmltopdf compatibility.
+   ========================================================= */
+
 .print-format {
     width: 210mm !important;
     min-height: 297mm !important;
 
-    /* Longhand, not shorthand: Frappe's PDF engine scrapes these four
-       exact property names out of .print-format to set wkhtmltopdf's
-       CLI margins. A shorthand `margin: 0` here is invisible to that
-       scrape, so it silently falls back to a 15mm left/right default -
-       which both crops content on the right and, compounded across
-       multiple copies, pushes enough overflow to add a phantom blank
-       page per copy. */
     margin-top: 0mm !important;
     margin-bottom: 0mm !important;
     margin-left: 0mm !important;
@@ -63,7 +63,7 @@ body {
 
 
 /* =========================================================
-   INVOICE PAGE
+   4. INVOICE PAGE
    ========================================================= */
 
 .invoice-page {
@@ -78,8 +78,7 @@ body {
     overflow: hidden;
 
     background: #ffffff;
-
-    color: #000000;
+    color: #686868;
 
     font-family:
         "KasibArabic",
@@ -88,7 +87,8 @@ body {
         Arial,
         sans-serif;
 
-    font-size: 10pt; font-weight: bold ;
+    font-size: 10pt;
+    font-weight: bold;
 
     page-break-after: always;
     page-break-inside: avoid;
@@ -104,7 +104,7 @@ body {
 
 
 /* =========================================================
-   BACKGROUND
+   5. BACKGROUND IMAGE
    ========================================================= */
 
 .invoice-background {
@@ -124,13 +124,12 @@ body {
     z-index: 0;
 
     pointer-events: none;
-
     user-select: none;
 }
 
 
 /* =========================================================
-   COMMON DYNAMIC FIELD
+   6. COMMON DYNAMIC FIELDS
    ========================================================= */
 
 .dynamic-field {
@@ -141,14 +140,12 @@ body {
     margin: 0;
     padding: 0;
 
-    color: #000000;
-
+    color: #686868;
     font-weight: 400;
 
     overflow: hidden;
 
     white-space: nowrap;
-
     text-overflow: clip;
 }
 
@@ -158,11 +155,6 @@ body {
     line-height: 1.25;
 
     overflow: hidden;
-
-    /* A single long unbroken run (a long area/district name with no
-       spaces) must wrap within the box instead of overflowing past its
-       right edge into whatever the pre-printed form has next to it --
-       confirmed happening on a real render before this was added. */
     overflow-wrap: anywhere;
     word-break: break-word;
 }
@@ -181,20 +173,14 @@ body {
 
 .dynamic-field.ltr {
     direction: ltr;
-
     unicode-bidi: embed;
-
     text-align: left;
 }
 
 
 /* =========================================================
-   PRINTER COPY LABEL (Original / Duplicate / Triplicate)
-
-   Pixel-scanned against the source artwork (x 900-1780, y 0-144
-   of the 1787x2526 background is genuinely blank white, above
-   where the Arabic "KA" logo block starts) - every other gap in
-   the header is a few px between text lines, not a real margin.
+   7. PRINTER COPY LABEL
+   Original / Duplicate / Triplicate
    ========================================================= */
 
 .copy-label {
@@ -211,7 +197,7 @@ body {
     margin: 0;
     padding: 0;
 
-    color: #000000;
+    color: #686868;
 
     font-weight: bold;
     font-size: 10pt;
@@ -226,28 +212,125 @@ body {
 }
 
 
+/* =========================================================
+   8. PAYMENT TYPE BADGE
+   ========================================================= */
+
+.payment-type-badge {
+    position: absolute;
+
+    left: 3%;
+    top: 1%;
+
+    width: 26%;
+    height: 6%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: bold;
+
+    color: #686868;
+
+    text-align: left;
+    line-height: 3.5mm;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.payment-type-badge.cash {
+    color: #686868;
+}
+
+.payment-type-badge.bank {
+    color: #686868;
+}
+
+.payment-type-badge.credit {
+    color: #686868;
+}
 
 
 /* =========================================================
-   ZATCA QR
+   9. ARABIC CONTACT NUMBERS
+   ========================================================= */
+
+.arabic-contact-numbers {
+    position: absolute;
+
+    top: 8.35%;
+    right: 5.7%;
+
+    width: 48%;
+    height: 3.5%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #292826;
+
+    font-family:
+        "KasibArabic",
+        "Noto Sans Arabic",
+        "DejaVu Sans",
+        Arial,
+        sans-serif;
+
+    font-size: 10pt;
+    font-weight: bold;
+
+    line-height: 1.8;
+
+    text-align: right;
+    direction: rtl;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.arabic-contact-numbers .contact-number {
+    display: inline-block;
+
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: bold;
+
+    direction: ltr;
+    unicode-bidi: embed;
+
+    color: #21201D;
+}
+
+.arabic-contact-numbers .contact-separator {
+    display: inline-block;
+
+    margin: 0 2mm;
+
+    color: #686868;
+}
+
+
+/* =========================================================
+   10. ZATCA QR CODE
    ========================================================= */
 
 .zatca-qr {
     position: absolute;
 
-    /* Pixel-scanned against the source artwork: the reserved blank box is
-       x 25-281, y 614-913 of the 1787x2526 background. width was 22% here
-       before - nearly double the box (14.33%) - which spilled the QR over
-       the "Date:" / "Customer Name:" / "Cust. Address:" label text to its
-       right. Inset slightly within the box rather than filling it edge to
-       edge, for a clean visual margin. */
-    left: 2.57%;
-    top: 25.99%;
+    left: 3.30%;
+    top: 18.45%;
 
-    width: 12.03%;
-    height: 8.51%;
+    width: 14.03%;
+    height: 13.51%;
 
-    z-index: 15;
+    z-index: 10;
 
     display: flex;
 
@@ -261,12 +344,7 @@ body {
 
     background: transparent;
 }
-.zatca-qr {
-    position: absolute;
-    left: 4.3%; top: 20.9%;
-    width: 12.38%; height: 8.75%;
-    z-index: 10;
-  }
+
 .zatca-qr img,
 .zatca-qr svg {
     display: block;
@@ -285,7 +363,7 @@ body {
 
 
 /* =========================================================
-   ITEM CELL
+   11. ITEM CELLS
    ========================================================= */
 
 .item-cell {
@@ -298,10 +376,16 @@ body {
     padding-left: 4px;
     padding-right: 3px;
 
-    color: #000000;
+    color: #686868;
 
-    font-size: 8.5pt;
+    font-family:
+        "KasibArabic",
+        "Noto Sans Arabic",
+        "DejaVu Sans",
+        Arial,
+        sans-serif;
 
+    font-size: 10pt;
     font-weight: 400;
 
     text-align: center;
@@ -309,78 +393,353 @@ body {
     overflow: hidden;
 
     white-space: nowrap;
-
     text-overflow: clip;
 }
 
 
 /* =========================================================
-   ITEM DESCRIPTION
+   12. ITEM DESCRIPTION
    ========================================================= */
 
 .item-cell.desc {
-
     padding-top: 3.75mm;
 
+    font-size: 8.5pt;
+
     text-align: left;
+
     white-space: normal;
 
     overflow: hidden;
-
-    /* Long English/Arabic item names must wrap within this row's fixed
-       height rather than pushing later rows off their printed
-       positions -- overflow:hidden above still caps it at 2 lines. */
     overflow-wrap: anywhere;
     word-break: break-word;
+
     line-height: 1.15;
+
     max-height: 100%;
 }
 
+.item-cell.desc [dir="auto"] {
+    unicode-bidi: plaintext;
+}
 
-  .invoice-date       { left: 24.57%; top: 19.44%; width: 22.06%; height: 2.81%; font-size: 10pt; line-height: 8.34mm; }
-  .invoice-number     { left: 69.51%; top: 19.44%; width: 16.75%; height: 2.81%; font-size: 9pt;  line-height: 8.34mm; }
-  .customer-name      { left: 46.90%; top: 22.24%; width: 49.41%; height: 2.69%; font-size: 10pt; line-height: 7.98mm; }
-  .customer-vat       { left: 60.86%; top: 24.93%; width: 35.46%; height: 3.00%; font-size: 10pt; line-height: 8.92mm; }
-  .customer-address   { left: 44.5%; top: 27.93%; width: 13.5%; height: 3.20%; font-size: 8pt;  padding-top: 2.2mm; line-height: 1.2; }
-  .customer-mobile    { left: 69.79%; top: 27.93%; width: 16.47%; height: 3.20%; font-size: 9pt;  line-height: 9.5mm; }
+.item-cell.desc .ar-line {
+    font-family:
+        "KasibArabic",
+        "Noto Sans Arabic",
+        "DejaVu Sans",
+        Arial,
+        sans-serif;
+
+    font-size: 8.5pt;
+    font-weight: 400;
+
+    direction: rtl;
+    text-align: right;
+
+    unicode-bidi: plaintext;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
 
 
 /* =========================================================
-   TOTAL BEFORE VAT
+   13. INVOICE DATE
    ========================================================= */
 
+.invoice-date {
+    left: 24.57%;
+    top: 19.44%;
 
+    width: 22.06%;
+    height: 2.81%;
 
-.total-ex-vat, .total-vat, .discount {
-    position: absolute;
-    left: 86.52%; width: 7.87%;
-    font-size: 9.5pt;  
-    white-space: nowrap; overflow: hidden; direction: ltr;
-  }
-  .grand-total {
-    position: absolute;
-    left: 86.52%; width: 7.87%;
-    font-size: 10pt;  
-    white-space: nowrap; overflow: hidden; direction: ltr;font-weight: bold;
-  }
-  .total-ex-vat  { top: 78.37%; height: 3.12%; line-height: 9.27mm; color: #000000; }
-  .total-vat     { top: 80.69%; height: 3.28%; line-height: 9.74mm; color: #000000; }
-  .discount      { top: 83.17%; height: 3.28%; line-height: 9.74mm; color: #000000; }
-  .grand-total   { top: 86.95%; height: 4.11%; line-height: 12.2mm; color: #000000; }
+    font-size: 10pt;
+    font-weight: bold;
 
-
+    line-height: 8.34mm;
+}
 
 
 /* =========================================================
-   REMARKS / TERMS
+   14. INVOICE NUMBER
    ========================================================= */
-  /* ---- Remarks ---- */
-  .remarks { left: 4.75%; top: 80.40%; width: 75.00%; height: 5%; font-size: 9pt; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 5mm; font-style: italic}
 
+.invoice-number {
+    left: 66%;
+    top: 19.44%;
+
+    width: 20.5%;
+    height: 2.81%;
+
+    font-size: 10pt;
+    font-weight: bold;
+
+    line-height: 8.34mm;
+}
 
 
 /* =========================================================
-   PAYMENT CHECK MARK
+   15. CUSTOMER NAME
+   ========================================================= */
+
+.customer-name {
+    left: 42.30%;
+    top: 22.24%;
+
+    width: 49.41%;
+    height: 2.69%;
+
+    font-size: 9pt;
+    font-weight: bold;
+
+    line-height: 7.98mm;
+}
+
+.customer-name-arabic {
+    right: 3.90%;
+    top: 22.24%;
+
+    width: 49.41%;
+    height: 2.69%;
+
+    font-size: 9pt;
+    font-weight: bold;
+
+    line-height: 7.98mm;
+}
+
+
+/* =========================================================
+   16. CUSTOMER VAT & CR NUMBER
+   ========================================================= */
+
+.customer-vat {
+    left: 38.86%;
+    top: 24.93%;
+
+    width: 35.46%;
+    height: 3.00%;
+
+    font-size: 10pt;
+
+    line-height: 8.92mm;
+}
+
+.customer-cr {
+    right: 3.9%;
+    top: 24.93%;
+
+    width: 30%;
+    height: 3.00%;
+
+    font-size: 9pt;
+
+    line-height: 8.92mm;
+}
+
+.customer-cr .cr-label {
+    font-weight: bold;
+    margin-left: 2mm;
+}
+
+.customer-cr .cr-value {
+    font-size: 10pt;
+}
+
+.customer-cr .cr-en {
+    font-weight: bold;
+    margin-right: 2mm;
+}
+
+
+/* =========================================================
+   17. CUSTOMER ADDRESS
+   ========================================================= */
+
+.customer-address {
+    left: 44.5%;
+    top: 27.53%;
+
+    width: 13.5%;
+    height: 3.20%;
+
+    padding-top: 2.2mm;
+
+    font-size: 8.5pt;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   18. CUSTOMER MOBILE
+   ========================================================= */
+
+.customer-mobile {
+    left: 71.79%;
+    top: 27.93%;
+
+    width: 16.47%;
+    height: 3.20%;
+
+    font-size: 10pt;
+
+    line-height: 9.5mm;
+}
+
+
+/* =========================================================
+   19. TOTALS BEFORE VAT
+   ========================================================= */
+
+.total-ex-vat,
+.total-vat,
+.discount {
+    position: absolute;
+
+    left: 86.52%;
+    width: 7.87%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #686868;
+
+    font-size: 10pt;
+    font-weight: 400;
+
+    direction: ltr;
+    text-align: left;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.total-ex-vat {
+    top: 78.37%;
+    height: 3.12%;
+    line-height: 9.27mm;
+}
+
+.total-vat {
+    top: 80.69%;
+    height: 3.28%;
+    line-height: 9.74mm;
+}
+
+.discount {
+    top: 83.17%;
+    height: 3.28%;
+    line-height: 9.74mm;
+}
+
+
+/* =========================================================
+   20. GRAND TOTAL
+   ========================================================= */
+
+.grand-total {
+    position: absolute;
+
+    left: 86.52%;
+    top: 86.95%;
+
+    width: 10.87%;
+    height: 4.11%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #686868;
+
+    font-size: 11pt;
+    font-weight: bold;
+
+    line-height: 12.2mm;
+
+    direction: ltr;
+    text-align: left;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   21. REMARKS / TERMS / AMOUNT IN WORDS
+   ========================================================= */
+
+.remarks {
+    position: absolute;
+
+    left: 4.75%;
+    top: 80.40%;
+
+    width: 75.00%;
+    height: 5%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #686868;
+
+    font-size: 9pt;
+    font-weight: 400;
+
+    font-style: italic;
+
+    line-height: 5mm;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   22. PREVIOUS BALANCE
+   ========================================================= */
+
+.prev-balance {
+    position: absolute;
+
+    left: 32.7%;
+    top: 83.8%;
+
+    width: 14%;
+    height: 1.7%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #686868;
+
+    font-size: 10pt;
+    font-weight: bold;
+
+    text-align: left;
+    line-height: 4.8mm;
+
+    direction: ltr;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   23. PAYMENT CHECK MARK
    ========================================================= */
 
 .paid-mark {
@@ -394,75 +753,63 @@ body {
     margin: 0;
     padding: 0;
 
-    color: #000000;
+    color: #686868;
 
     text-align: center;
 
-    font-size: 12pt;
-
+    font-family: Arial, sans-serif;
+    font-size: 20pt;
     font-weight: bold;
 
     line-height: 4.75mm;
 }
-
-
-/* =========================================================
-   CASH
-   ========================================================= */
 
 .paid-mark.cash {
     left: 47.83%;
     top: 83.97%;
 }
 
-
-/* =========================================================
-   BANK
-   ========================================================= */
-
-/*.paid-mark.bank {*/
-/*    left: 47.83%;*/
-/*    top: 83.97%;*/
-/*}*/
-
-
-/* =========================================================
-   OTHER PAYMENT
-   ========================================================= */
-
-/*.paid-mark.other {*/
-/*    left: 47.83%;*/
-/*    top: 83.97%;*/
-/*}*/
-
-/* ---------- Payment Type badge (patches/v0_2_2) ---------- */
-.payment-type-badge {
-  position: absolute;
-  left: 3%; top: 0.6%; width: 40%; height: 2.8%;
-  z-index: 10;
-  font-size: 11pt;
-  font-weight: bold;
-  text-align: left;
-  line-height: 2.4mm;
-}
-.payment-type-badge.cash { color: #000000; }
-.payment-type-badge.credit { color: #000000; }
-
-/* ---------- Previous Balance (patches/v0_2_2) ---------- */
-.prev-balance {
-  position: absolute;
-  left: 32.7%; top: 83.8%; width: 14%; height: 1.7%;
-  z-index: 10;
-  font-size: 8.5pt;
-  font-weight: bold;
-  color: #000000;
-  text-align: left;
-  line-height: 4.8mm;
-  direction: ltr;
+.paid-mark.other {
+    left: 47.83%;
+    top: 83.97%;
 }
 
+
 /* =========================================================
-   RTL SUPPORT
+   24. BANK TRANSFER PAYMENT AMOUNT
+   ========================================================= */
+
+.payment-box.bank-transfer {
+    position: absolute;
+
+    left: 47.83%;
+    top: 83.97%;
+
+    width: 14%;
+    height: 2%;
+
+    z-index: 10;
+
+    margin: 0;
+    padding: 0;
+
+    color: #686868;
+
+    font-size: 10pt;
+    font-weight: bold;
+
+    text-align: left;
+    line-height: 5mm;
+
+    direction: ltr;
+
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   25. RTL SUPPORT
    ========================================================= */
 
 [dir="rtl"] {
@@ -475,10 +822,11 @@ body {
 
 
 /* =========================================================
-   ARABIC TEXT SAFETY
+   26. ARABIC TEXT FONT SAFETY
    ========================================================= */
 
 .ar-line,
+.arabic-contact-numbers,
 [dir="rtl"] {
     font-family:
         "KasibArabic",
@@ -490,18 +838,18 @@ body {
 
 
 /* =========================================================
-   PRINT SAFETY
+   27. PRINT SAFETY
    ========================================================= */
 
 @media print {
 
     html,
     body {
-        margin: 0 !important;
-        padding: 0 !important;
-
         width: 210mm;
         min-height: 297mm;
+
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .print-format {
@@ -523,18 +871,17 @@ body {
         margin: 0;
         padding: 0;
 
+        overflow: hidden;
+
         page-break-after: always;
         page-break-inside: avoid;
 
         break-after: page;
         break-inside: avoid;
-
-        overflow: hidden;
     }
 
     .invoice-page.last-page {
         page-break-after: auto;
-
         break-after: auto;
     }
 
@@ -542,5 +889,65 @@ body {
         width: 210mm;
         height: 297mm;
     }
+
+    .arabic-contact-numbers {
+        direction: rtl;
+        text-align: right;
+
+        font-family:
+            "KasibArabic",
+            "Noto Sans Arabic",
+            "DejaVu Sans",
+            Arial,
+            sans-serif;
+
+        font-size: 10pt;
+        font-weight: bold;
+
+        color: #686868;
+
+        white-space: nowrap;
+    }
+
+    .arabic-contact-numbers .contact-number {
+        direction: ltr;
+        unicode-bidi: embed;
+
+        display: inline-block;
+
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+    }
+
+    .arabic-contact-numbers .contact-separator {
+        margin: 0 2mm;
+    }
 }
 
+
+/* =========================================================
+   23. SECOND BANK ACCOUNT (RIYADH BANK)
+   Right half of the pre-printed "Bank Account Details" box.
+   ========================================================= */
+
+.bank-riyadh {
+    left: 41.5%;
+    top: 89.6%;
+
+    width: 29%;
+    height: 2.6%;
+
+    font-family: Arial, sans-serif;
+    color: #686868;
+    font-size: 6.5pt;
+    line-height: 3.7mm;
+
+    direction: ltr;
+    text-align: left;
+}
+
+.bank-riyadh,
+.bank-riyadh div,
+.bank-riyadh span {
+    color: #686868 !important;
+}

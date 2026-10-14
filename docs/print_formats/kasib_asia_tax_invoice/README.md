@@ -123,3 +123,12 @@ missed entirely.
 - Long English (140-char, ERPNext's own Item Name field limit) + long Arabic
   (`custom_item_name_ar`, 140-char) + mixed English/Arabic item name → renders
   without error, stays on 1 page (2 items).
+
+## Update 2026-10-14: snapshot re-synced to live + Riyadh Bank details
+
+The HTML/CSS here were re-exported from the live doc on kasibasia (they had
+drifted well behind it since 2026-09-24), so this commit's diff is large.
+New in the live format: a `.bank-riyadh` block (last page only) in the empty
+right half of the pre-printed "Bank Account Details" box, which only carries
+Al Rajhi on the background artwork -- "Bank Details : Riyadh Bank A/C" /
+"IBAN : SA6120000001576153409940".
