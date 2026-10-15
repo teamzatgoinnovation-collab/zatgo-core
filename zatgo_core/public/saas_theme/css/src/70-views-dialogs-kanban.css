@@ -71,8 +71,8 @@
 }
 
 .dt-row-header .dt-cell {
-	background: var(--card-bg) !important;
-	border-bottom: 1px solid var(--border-color) !important;
+	background: var(--card-bg);
+	border-bottom: 1px solid var(--border-color);
 	color: var(--text-muted);
 	font-size: 11px;
 	font-weight: 600;
@@ -81,15 +81,15 @@
 }
 
 .dt-row-filter .dt-cell {
-	background: var(--subtle-fg) !important;
+	background: var(--subtle-fg);
 }
 
 .dt-cell {
-	border-color: var(--border-color) !important;
+	border-color: var(--border-color);
 }
 
 .dt-cell--sticky {
-	background: var(--gray-50) !important;
+	background: var(--gray-50);
 }
 
 .dt-row:not(.dt-row-header):not(.dt-row-filter):hover .dt-cell {
@@ -97,7 +97,7 @@
 }
 
 .dt-input {
-	border-radius: var(--border-radius-sm) !important;
+	border-radius: var(--border-radius-sm);
 	font-size: 12px;
 }
 
@@ -113,7 +113,7 @@
 }
 
 [data-theme="dark"] .dt-cell--sticky {
-	background: var(--gray-800) !important;
+	background: var(--gray-800);
 }
 
 /* ============================================
