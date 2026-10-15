@@ -36,6 +36,7 @@ from zatgo_core.chat_ai.core.tool_enrichment import enrich_tool_args
 from zatgo_core.chat_ai.core.artifacts import ArtifactBuilder, persist_artifacts
 from zatgo_core.chat_ai.core.tool_pipeline import clear_cancel
 from zatgo_core.chat_ai.erpnext.context.defaults import filter_user_visible_assumptions, strip_using_preamble
+from zatgo_core.chat_ai.erpnext.streaming import stream_round
 from zatgo_core.chat_ai.erpnext.events.realtime_events import publish_progress, publish_stream, publish_typed_stream
 from zatgo_core.chat_ai.erpnext.settings import get_settings_dict
 from zatgo_core.chat_ai.plugin.loader import load_all as load_plugins
@@ -437,20 +438,36 @@ def run_turn(
 	rounds = 0
 	while rounds < limits.max_tool_rounds:
 		rounds += 1
-		result = provider.chat(messages, tools=openai_tools or None)
+		rnd = stream_round(
+			provider, messages, tools=openai_tools or None, settings=settings, session=session_name
+		)
+		result = rnd.result
 		total_in += result.tokens_in
 		total_out += result.tokens_out
 
-		if not result.tool_calls:
-			md = _stream_final_answer(
-				provider,
-				messages,
-				settings,
-				session_name,
-				fallback=result.content or "Done.",
-				assumptions=plan.assumptions,
-				already_content=result.content,
+		if rnd.stopped or rnd.interrupted:
+			note = "\n\n_(stopped)_" if rnd.stopped else "\n\n_(the connection to the AI provider was interrupted)_"
+			resp = AssistantResponse(markdown=strip_using_preamble(result.content or "").strip() + note)
+			publish_progress(session_name, "done")
+			publish_stream(session_name, "", done=True)
+			return _persist(
+				session, memory, user_message, resp, settings, tokens=(total_in, total_out),
+				model=result.model, tool_results=tool_results, error=rnd.interrupted,
 			)
+
+		if not result.tool_calls:
+			if rnd.streamed:
+				md = result.content or "Done."
+			else:
+				md = _stream_final_answer(
+					provider,
+					messages,
+					settings,
+					session_name,
+					fallback=result.content or "Done.",
+					assumptions=plan.assumptions,
+					already_content=result.content,
+				)
 			md = strip_using_preamble(md)
 			# Do not prepend Using Company/Currency/FY lines to chat replies
 			resp = AssistantResponse(markdown=md)
@@ -471,6 +488,9 @@ def run_turn(
 				tool_results=tool_results,
 			)
 
+		if rnd.streamed and result.content:
+			# The model narrated before calling tools; the final answer starts fresh.
+			publish_stream(session_name, "", reset=True)
 		messages.append(
 			LLMMessage(role="assistant", content=result.content or "", tool_calls=result.tool_calls)
 		)
@@ -596,29 +616,16 @@ def _direct_answer(provider, settings, msg, context, history, plan):
 			"No tools. No long documentation. No 'Using …' preamble.)",
 		)
 	)
-	session_name = ""
-	try:
-		# best-effort streaming for simple answers when session is known via settings
-		session_name = settings.get("_stream_session") or ""
-	except Exception:
-		session_name = ""
-	if settings.get("enable_streaming", 1) and session_name and hasattr(provider, "chat_stream"):
-		parts: list[str] = []
-		try:
-			for chunk in provider.chat_stream(messages):
-				if chunk:
-					parts.append(chunk)
-			md = strip_using_preamble("".join(parts) or plan.raw_content or "Done.")
-			publish_typed_stream(session_name, md, chunk_size=5)
-		except Exception:
-			result = provider.chat(messages)
-			md = strip_using_preamble(result.content or plan.raw_content or "Done.")
-			publish_typed_stream(session_name, md, chunk_size=5)
-	else:
-		result = provider.chat(messages)
-		md = strip_using_preamble(result.content or plan.raw_content or "Done.")
-		if settings.get("enable_streaming", 1) and session_name:
-			publish_typed_stream(session_name, md, chunk_size=5)
+	session_name = settings.get("_stream_session") or ""
+	rnd = stream_round(provider, messages, settings=settings, session=session_name)
+	md = strip_using_preamble(rnd.result.content or plan.raw_content or "Done.")
+	if rnd.stopped:
+		md += "\n\n_(stopped)_"
+	if session_name:
+		if settings.get("enable_streaming", 1) and not rnd.streamed:
+			publish_typed_stream(session_name, md, chunk_size=5)  # provider could not stream
+		else:
+			publish_stream(session_name, "", done=True)
 	return AssistantResponse(markdown=md)
 
 

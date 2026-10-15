@@ -7,7 +7,7 @@ import urllib.error
 import urllib.request
 from typing import Any, Iterator
 
-from zatgo_core.chat_ai.core.providers.base import LLMMessage, LLMProvider, LLMResult
+from zatgo_core.chat_ai.core.providers.base import LLMMessage, LLMProvider, LLMResult, StreamEvent
 from zatgo_core.chat_ai.core.providers.capabilities import PROVIDER_DEFAULTS
 from zatgo_core.chat_ai.core.providers.errors import from_exception, from_http_status
 
@@ -195,6 +195,102 @@ class OpenAICompatProvider(LLMProvider):
 			text = result.content or ""
 			if text:
 				yield text
+
+	def chat_events(
+		self,
+		messages: list[LLMMessage],
+		*,
+		tools: list[dict] | None = None,
+		response_format: str | None = None,
+		reasoning: bool = False,
+		**opts: Any,
+	) -> Iterator[StreamEvent]:
+		"""SSE streaming with tool calls: yields text deltas as they arrive, then
+		one "result" event with the assembled content, tool_calls and usage."""
+		if not getattr(self.capabilities, "streaming", True):
+			yield from super().chat_events(
+				messages, tools=tools, response_format=response_format, reasoning=reasoning, **opts
+			)
+			return
+		payload = self._build_payload(
+			messages, tools=tools, stream=True, response_format=response_format, **opts
+		)
+		payload["stream_options"] = {"include_usage": True}
+		headers = self._headers()
+		headers["Accept"] = "text/event-stream"
+		req = urllib.request.Request(
+			self._chat_url(), data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST"
+		)
+		content: list[str] = []
+		calls: dict[int, dict] = {}
+		usage: dict = {}
+		model = self.model
+		try:
+			resp = urllib.request.urlopen(req, timeout=self.timeout)
+		except urllib.error.HTTPError as exc:
+			body = exc.read().decode("utf-8", errors="replace")
+			if exc.code in (400, 404, 501) and "stream_options" in body.lower():
+				payload.pop("stream_options", None)  # provider rejects usage-in-stream; retry plain
+				req = urllib.request.Request(
+					self._chat_url(), data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST"
+				)
+				try:
+					resp = urllib.request.urlopen(req, timeout=self.timeout)
+				except urllib.error.HTTPError as exc2:
+					raise from_http_status(exc2.code, exc2.read().decode("utf-8", errors="replace")[:500]) from exc2
+			else:
+				raise from_http_status(exc.code, body[:500]) from exc
+		except (urllib.error.URLError, OSError) as exc:
+			raise from_exception(exc) from exc
+		try:
+			with resp:
+				while True:
+					raw_line = resp.readline()
+					if not raw_line:
+						break
+					line = raw_line.decode("utf-8", errors="replace").strip()
+					if not line.startswith("data:"):
+						continue
+					data_str = line[5:].strip()
+					if data_str == "[DONE]":
+						break
+					try:
+						obj = json.loads(data_str)
+					except json.JSONDecodeError:
+						continue
+					model = obj.get("model") or model
+					if obj.get("usage"):
+						usage = obj["usage"]
+					for choice in obj.get("choices") or []:
+						delta = choice.get("delta") or {}
+						text = delta.get("content")
+						if text:
+							content.append(text)
+							yield StreamEvent("text", text=text)
+						for tc in delta.get("tool_calls") or []:
+							slot = calls.setdefault(
+								tc.get("index", 0),
+								{"id": "", "type": "function", "function": {"name": "", "arguments": ""}},
+							)
+							if tc.get("id"):
+								slot["id"] = tc["id"]
+							fn = tc.get("function") or {}
+							if fn.get("name"):
+								slot["function"]["name"] += fn["name"]
+							if fn.get("arguments"):
+								slot["function"]["arguments"] += fn["arguments"]
+		except (urllib.error.URLError, OSError) as exc:
+			raise from_exception(exc) from exc
+		yield StreamEvent(
+			"result",
+			result=LLMResult(
+				content="".join(content),
+				tool_calls=[calls[i] for i in sorted(calls)],
+				tokens_in=int(usage.get("prompt_tokens") or 0),
+				tokens_out=int(usage.get("completion_tokens") or 0),
+				model=model,
+			),
+		)
 
 	def embed(self, texts: list[str]) -> list[list[float]]:
 		if not self.capabilities.embedding:

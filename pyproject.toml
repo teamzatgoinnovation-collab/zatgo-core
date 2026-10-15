@@ -5,7 +5,7 @@ description = "ZatGo Core — API-only platform hub: settings, flags, integratio
 authors = [{ name = "ZatGo Innovation" }]
 requires-python = ">=3.11"
 license = { text = "MIT" }
-dependencies = ["qrcode[pil]"]
+dependencies = ["qrcode[pil]", "anthropic>=1.0", "pypdf>=4.0", "python-docx>=1.1"]
 
 [build-system]
 requires = ["setuptools>=61", "wheel"]

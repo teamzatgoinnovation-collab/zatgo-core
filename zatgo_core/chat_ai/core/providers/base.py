@@ -28,6 +28,21 @@ class LLMResult:
 	model: str = ""
 
 
+@dataclass
+class StreamEvent:
+	"""One step of a streamed completion.
+
+	kind "text"      -> `text` is a content delta, show it immediately
+	kind "reasoning" -> `text` is a reasoning delta (only if the provider exposes it)
+	kind "result"    -> `result` is the complete LLMResult (content + assembled tool_calls
+	                    + usage); always the last event
+	"""
+
+	kind: str
+	text: str = ""
+	result: "LLMResult | None" = None
+
+
 class LLMProvider(ABC):
 	name: str = "base"
 	capabilities: Capabilities = Capabilities()
@@ -48,6 +63,24 @@ class LLMProvider(ABC):
 	def chat_stream(self, messages: list[LLMMessage], **opts: Any) -> Iterator[str]:
 		result = self.chat(messages, stream=False, **opts)
 		yield result.content
+
+	def chat_events(
+		self,
+		messages: list[LLMMessage],
+		*,
+		tools: list[dict] | None = None,
+		response_format: str | None = None,
+		reasoning: bool = False,
+		**opts: Any,
+	) -> Iterator[StreamEvent]:
+		"""Stream a completion, tools included. Providers without streaming
+		fall back to one blocking call, reported as a single text event."""
+		result = self.chat(
+			messages, tools=tools, response_format=response_format, reasoning=reasoning, **opts
+		)
+		if result.content:
+			yield StreamEvent("text", text=result.content)
+		yield StreamEvent("result", result=result)
 
 	def embed(self, texts: list[str]) -> list[list[float]]:
 		raise NotImplementedError(f"{self.name} does not support embedding")

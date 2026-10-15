@@ -11,5 +11,5 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
-    install_requires=["qrcode[pil]"],
+    install_requires=["qrcode[pil]", "anthropic>=1.0", "pypdf>=4.0", "python-docx>=1.1"],
 )

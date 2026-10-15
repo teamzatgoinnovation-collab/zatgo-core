@@ -31,7 +31,7 @@ def get_capabilities(label: str) -> Capabilities:
 
 _DEFAULT_MODELS = {
 	"OpenAI": "gpt-4o",
-	"Anthropic": "claude-sonnet-4-20250514",
+	"Anthropic": "claude-sonnet-5-5",
 	"Google Gemini": "gemini-2.0-flash",
 	"Azure OpenAI": "gpt-4o",
 	"Ollama": "llama3.2",
@@ -76,6 +76,21 @@ def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> L
 
 	if label in _REGISTRY:
 		return _REGISTRY[label](settings)
+
+	if label == "Anthropic":
+		from zatgo_core.chat_ai.core.providers.anthropic_native import AnthropicProvider, sdk_available
+
+		if sdk_available():
+			return AnthropicProvider(
+				api_key=api_key,
+				api_endpoint=settings.get("api_endpoint") or "",
+				model=model,
+				temperature=float(settings.get("temperature") or 0.2),
+				max_tokens=int(settings.get("max_tokens") or 2048),
+				timeout=timeout,
+				thinking_budget=int(settings.get("thinking_budget") or 0),
+			)
+		# SDK missing: degrade to Anthropic's OpenAI-compatible endpoint below.
 
 	# Anthropic uses messages API — use compat endpoint override if user set OpenAI-compat proxy,
 	# else OpenAICompat with Anthropic-shaped endpoint note (users can set custom endpoint).

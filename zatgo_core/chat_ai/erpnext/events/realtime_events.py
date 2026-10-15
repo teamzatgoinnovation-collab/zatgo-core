@@ -47,10 +47,12 @@ def publish_progress(session: str, stage: str, detail: str = "", tool: str = "")
 		pub.tool_progress(tool or detail or "", detail or label, stage)
 
 
-def publish_stream(session: str, chunk: str, done: bool = False):
+def publish_stream(session: str, chunk: str, done: bool = False, reset: bool = False):
+	"""reset=True tells the client to drop the text streamed so far for this turn
+	(e.g. the model narrated before calling a tool)."""
 	frappe.publish_realtime(
 		"chat_ai:stream",
-		{"session": session, "chunk": chunk, "done": done},
+		{"session": session, "chunk": chunk, "done": done, "reset": reset},
 		user=frappe.session.user,
 	)
 	_publisher(session).assistant_message(chunk or "", done=done)
