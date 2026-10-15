@@ -18,7 +18,7 @@ class TestIndustryRegistry(unittest.TestCase):
 
     def test_only_pilots_are_implemented(self) -> None:
         self.assertEqual(
-            {k for k, i in registry.INDUSTRIES.items() if i.implemented}, {"jewellery", "gym", "restaurant"}
+            {k for k, i in registry.INDUSTRIES.items() if i.implemented}, {"jewellery", "gym", "restaurant", "textile"}
         )
 
     def test_doctype_owner_is_unique_and_mapped(self) -> None:

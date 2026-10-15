@@ -84,12 +84,12 @@ class TestIndustryActivation(IndustryTestBase):
         doc = frappe.get_doc(SETTINGS)
         ensure_rows(doc)
         for row in doc.enabled_industries:
-            row.enabled = 1 if row.industry == "textile" else 0
+            row.enabled = 1 if row.industry == "salon" else 0
         # ensure_rows on validate clears the flag of a not-yet-available industry
         doc.save(ignore_permissions=True)
         self.assertEqual(gate.enabled_keys(), set())
         with self.assertRaises(frappe.ValidationError):
-            gate.validate_selection({"textile"})
+            gate.validate_selection({"salon"})
         with self.assertRaises(frappe.ValidationError):
             gate.validate_selection({"not-an-industry"})
 
@@ -390,3 +390,37 @@ class TestZatGoDeskEntry(IndustryTestBase):
         ensure_core_desk()
         for dt in ("Workspace", "Workspace Sidebar", "Desktop Icon"):
             self.assertTrue(frappe.db.exists(dt, "ZatGo"), dt)
+
+
+class TestTextileIndustry(IndustryTestBase):
+    def test_enable_shows_item_fields_and_workspace(self) -> None:
+        _set_industries("textile")
+        for fn in ("zg_textile_fabric", "zg_textile_roll_length", "zg_textile_width"):
+            self.assertEqual(frappe.db.get_value("Custom Field", {"dt": "Item", "fieldname": fn}, "hidden"), 0, fn)
+        self.assertTrue(frappe.db.exists("Workspace", "ZatGo Textile"))
+
+    def test_fields_saved_on_item_and_hidden_when_off(self) -> None:
+        _set_industries("textile")
+        code = f"TX-{random_string(5)}"
+        frappe.get_doc(
+            {
+                "doctype": "Item",
+                "item_code": code,
+                "item_name": code,
+                "item_group": frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "All Item Groups",
+                "stock_uom": "Nos",
+                "is_stock_item": 0,
+                "zg_textile_fabric": "Cotton",
+                "zg_textile_is_roll": 1,
+                "zg_textile_roll_length": 50,
+                "zg_textile_width": 150,
+            }
+        ).insert(ignore_permissions=True)
+        self.assertEqual(frappe.db.get_value("Item", code, ["zg_textile_fabric", "zg_textile_roll_length"]), ("Cotton", 50))
+        _set_industries()
+        self.assertEqual(frappe.db.get_value("Custom Field", {"dt": "Item", "fieldname": "zg_textile_fabric"}, "hidden"), 1)
+        self.assertFalse(frappe.db.exists("Workspace", "ZatGo Textile"))
+        self.assertEqual(frappe.db.get_value("Item", code, "zg_textile_fabric"), "Cotton")  # data kept
+
+    def test_no_special_roles_or_gated_doctypes(self) -> None:
+        self.assertEqual(registry.INDUSTRIES["textile"].doctypes, ())

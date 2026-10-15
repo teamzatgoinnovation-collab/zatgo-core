@@ -11,6 +11,8 @@
   Item custom fields `zg_jewellery_*` (hidden unless Jewellery is on).
 - Patches: `v0_4_0.create_industry_roles` (pre-model-sync), `v0_4_0.enable_restaurant_where_used`.
 
+- Textile industry ready: Item fields `zg_textile_*` (hidden unless Textile is on), workspace; variants via ERPNext attributes.
+
 ### Changed
 
 - Version aligned to 0.4.0 across `hooks.py`, `__init__.py`, `pyproject.toml`.

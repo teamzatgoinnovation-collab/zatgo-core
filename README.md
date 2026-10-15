@@ -12,7 +12,7 @@ ERPNext / Frappe **API-only platform hub** (`zatgo_core`) for client apps
 `/zatgo_space`), the SaaS Desk theme and the language switcher are modules of this app, each switched per site in
 ZG System Settings (`services/bundled_apps.py`, `services/ui_apps.py`). Their old separate apps are archived.
 
-**Industries:** optional industry modules (Restaurant, Jewellery, Gym ready; 14 more registered) are switched per site in
+**Industries:** optional industry modules (Restaurant, Jewellery, Gym, Textile ready; 13 more registered) are switched per site in
 ZG System Settings → Industries — see [`docs/industries.md`](docs/industries.md).
 
 **Desk UI:** core is API-first; Desk workspaces exist only for the VanSaleX settings and for bundled modules /

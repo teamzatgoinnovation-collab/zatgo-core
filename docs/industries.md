@@ -48,7 +48,8 @@ Effective access = **Frappe role permission AND industry enabled** (a user permi
 | Restaurant | Ready — gates the existing Resto POS (`api/v1/resto_pos`, ZG Table / ZG Order / ZG KDS Ticket). On upgrade, sites that already hold Resto data get it switched on by `patches/v0_4_0/enable_restaurant_where_used`. |
 | Jewellery | Ready — Item fields (metal, purity, gross / stone / net weight, making charge, wastage, hallmark), `ZG Metal Rate`, price API. Barcodes, sale, purchase and return use the standard Item barcodes and invoices. |
 | Gym | Ready — `ZG Gym Plan`, `ZG Gym Membership` (members are Customers; end date, renewal, billing through Sales Invoice with an idempotent `zatgo_client_id`), `ZG Gym Attendance`. |
-| Textile, Supermarket, Salon, Electrical, Retail, Wholesale, Distribution, Pharmacy, Electronics, Hardware, Mobile, Automobile, Service, Manufacturing | Registered, **not implemented** ("Coming soon"); cannot be switched on. |
+| Textile | Ready — Item fields (fabric, pattern, design no., GSM, sold-by-roll, roll length in m, width in cm), shown only while on. Brand, colour and size use ERPNext's Item Brand and variant attributes (Color / Size), so variants, barcodes, purchase, sale and stock are standard. No API or DocTypes of its own. |
+| Supermarket, Salon, Electrical, Retail, Wholesale, Distribution, Pharmacy, Electronics, Hardware, Mobile, Automobile, Service, Manufacturing | Registered, **not implemented** ("Coming soon"); cannot be switched on. |
 
 ## Add a new industry — example: Pharmacy
 
