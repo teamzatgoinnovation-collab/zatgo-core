@@ -1,0 +1,36 @@
+/* ============================================
+   31. ACCESSIBILITY & MOTION
+   ============================================ */
+
+/* One visible keyboard-focus ring for anything interactive that has no own focus style.
+   :where() keeps specificity at zero so component rules above still win. */
+:where(a, button, [role="button"], [role="menuitem"], [role="tab"], summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+:where(input, select, textarea):focus-visible {
+	outline: none; /* inputs get the box-shadow ring from the controls layer */
+}
+
+/* Motion: honour the OS setting */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;   /* beats Frappe's per-component durations */
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* Higher contrast: stronger borders and ring */
+@media (prefers-contrast: more) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--border-color: var(--gray-500);
+		--dark-border-color: var(--gray-700);
+		--zg-focus-offset: 3px;
+	}
+}

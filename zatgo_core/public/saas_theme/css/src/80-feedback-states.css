@@ -1,0 +1,56 @@
+/* ============================================
+   30. FEEDBACK — toasts, alerts, empty / loading states
+   ============================================ */
+
+/* Toast (frappe.show_alert): compact, left accent bar carries the status */
+.desk-alert {
+	width: min(400px, calc(100vw - 24px));
+	border: 1px solid var(--border-color);
+	border-left: 3px solid var(--zg-info-fg);
+	border-radius: var(--zg-radius-md);
+	box-shadow: var(--shadow-lg);
+	animation-duration: var(--zg-duration-base);
+}
+.desk-alert.green  { border-left-color: var(--zg-success-fg); }
+.desk-alert.red    { border-left-color: var(--zg-danger-fg); }
+.desk-alert.yellow,
+.desk-alert.orange { border-left-color: var(--zg-warning-fg); }
+.desk-alert .alert-message-container { padding: var(--zg-space-3) var(--zg-space-8) var(--zg-space-3) var(--zg-space-4); }
+.desk-alert .alert-message { font-size: var(--zg-text-base); }
+.desk-alert .alert-subtitle { font-size: var(--zg-text-sm); }
+
+/* Inline Bootstrap alerts share the same status palette */
+.alert {
+	border-radius: var(--zg-radius-md);
+	border-width: 1px;
+	font-size: var(--zg-text-base);
+}
+.alert.alert-info    { border-color: color-mix(in srgb, var(--zg-info-fg) 25%, transparent); }
+.alert.alert-success { border-color: color-mix(in srgb, var(--zg-success-fg) 25%, transparent); }
+.alert.alert-warning { border-color: color-mix(in srgb, var(--zg-warning-fg) 25%, transparent); }
+.alert.alert-danger  { border-color: color-mix(in srgb, var(--zg-danger-fg) 25%, transparent); }
+
+/* Empty / no-result blocks (list, report, kanban share Frappe's .msg-box) */
+.msg-box {
+	padding: var(--zg-space-8) var(--zg-space-4);
+	color: var(--text-muted);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+}
+.msg-box .null-state { opacity: 0.85; }
+.msg-box .msg-box-action,
+.msg-box p { margin-top: var(--zg-space-2); }
+
+/* Skeleton loader — opt-in utility; animation is disabled under reduced motion (see 90-a11y) */
+.zg-skeleton {
+	display: block;
+	min-height: 1em;
+	border-radius: var(--zg-radius-sm);
+	background: linear-gradient(90deg, var(--subtle-fg) 25%, var(--subtle-accent) 50%, var(--subtle-fg) 75%);
+	background-size: 200% 100%;
+	animation: zg-skeleton 1.4s linear infinite;
+}
+@keyframes zg-skeleton {
+	from { background-position: 200% 0; }
+	to   { background-position: -200% 0; }
+}
