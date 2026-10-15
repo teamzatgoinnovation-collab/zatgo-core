@@ -1,0 +1,118 @@
+{
+ "app": "zatgo_core",
+ "charts": [],
+ "content": "[{\"id\": \"zg_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo</b></span>\", \"col\": 12}}, {\"id\": \"zg_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"System Settings & Industries\", \"col\": 3}}, {\"id\": \"zg_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"zg_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Company Settings\", \"col\": 3}}, {\"id\": \"zg_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Branch Settings\", \"col\": 3}}, {\"id\": \"zg_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Invoice Naming\", \"col\": 3}}, {\"id\": \"zg_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Settings\", \"col\": 3}}, {\"id\": \"zg_s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Security\", \"col\": 3}}, {\"id\": \"zg_s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Applications\", \"col\": 3}}, {\"id\": \"zg_s8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Feature Flags\", \"col\": 3}}, {\"id\": \"zg_s9\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Audit Log\", \"col\": 3}}]",
+ "creation": "2026-10-15 00:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "setting",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "ZatGo",
+ "modified": "2026-10-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "ZatGo",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "ZG Application Admin"
+  },
+  {
+   "role": "ZG Company Admin"
+  },
+  {
+   "role": "ZG Branch Admin"
+  },
+  {
+   "role": "ZG Read Only"
+  }
+ ],
+ "sequence_id": 1.0,
+ "title": "ZatGo",
+ "type": "Workspace",
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "System Settings & Industries",
+   "link_to": "ZG System Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Blue",
+   "doc_view": "",
+   "label": "VanSaleX Settings",
+   "link_to": "VanSaleX Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Company Settings",
+   "link_to": "ZG Company Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Branch Settings",
+   "link_to": "ZG Branch Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "label": "Invoice Naming",
+   "link_to": "ZG Sales Invoice Naming Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "",
+   "label": "Payment Settings",
+   "link_to": "ZG Payment Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "",
+   "label": "Security",
+   "link_to": "ZG Security Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Applications",
+   "link_to": "ZG Application Settings",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Feature Flags",
+   "link_to": "ZG Feature Flag",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Audit Log",
+   "link_to": "ZG Audit Log",
+   "type": "DocType"
+  }
+ ],
+ "links": []
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import frappe
 
 from zatgo_core.plugins.discover import discover_and_register_manifests
+from zatgo_core.setup.ensure_core_desk import ensure_core_desk
 from zatgo_core.setup.ensure_custom_fields import ensure_custom_fields
 from zatgo_core.setup.ensure_mode_of_payment import ensure_mode_of_payment
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
@@ -72,6 +73,10 @@ def after_install() -> None:
     except Exception:
         logger.exception("Theme / language switcher setup failed")
     try:
+        ensure_core_desk()
+    except Exception:
+        logger.exception("ZatGo Desk entry failed")
+    try:
         sync_industries()
     except Exception:
         logger.exception("Industry sync failed")
@@ -120,6 +125,10 @@ def after_migrate() -> None:
         ensure_ui_apps()
     except Exception:
         logger.exception("Theme / language switcher setup failed")
+    try:
+        ensure_core_desk()
+    except Exception:
+        logger.exception("ZatGo Desk entry failed")
     try:
         sync_industries()
     except Exception:

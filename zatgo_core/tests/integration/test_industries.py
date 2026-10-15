@@ -365,3 +365,16 @@ class TestRestaurantIndustry(IndustryTestBase):
         sync_industries()
         sync_industries()
         self.assertEqual(frappe.db.count("Workspace", {"name": "ZatGo Restaurant"}), 1)
+
+
+class TestZatGoDeskEntry(IndustryTestBase):
+    def test_zatgo_entry_survives_migrate_purge(self) -> None:
+        from zatgo_core.install import after_migrate
+
+        after_migrate()
+        self.assertTrue(frappe.db.exists("Workspace", "ZatGo"))
+        self.assertTrue(frappe.db.exists("Workspace Sidebar", "ZatGo"))
+        icon = frappe.db.get_value("Desktop Icon", "ZatGo", ["link_type", "link_to", "hidden"], as_dict=True)
+        self.assertEqual((icon.link_type, icon.link_to, icon.hidden), ("Workspace Sidebar", "ZatGo", 0))
+        items = frappe.get_doc("Workspace Sidebar", "ZatGo").items
+        self.assertIn("ZG System Settings", [i.link_to for i in items])
