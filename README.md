@@ -8,18 +8,15 @@ ERPNext / Frappe **API-only platform hub** (`zatgo_core`) for client apps
 - Product client RPC hub: `zatgo_core.api.v1.<product>.*`
 - Shared ZG DocTypes (delivery, KDS, fleet stubs, …) until each product owns a domain app under `CustomApps/erpnext/<Product>/`
 
-**Exceptions — own domain APIs (not this hub):**
+**Bundled modules (merged 2026-10-08):** Chat AI, Tracker and ZatGo Space (`zatgo_core/chat_ai`, `/tracker`,
+`/zatgo_space`), the SaaS Desk theme and the language switcher are modules of this app, each switched per site in
+ZG System Settings (`services/bundled_apps.py`, `services/ui_apps.py`). Their old separate apps are archived.
 
-| Product | Package | Client RPC |
-|---------|---------|------------|
-| Tracker | `tracker` (`CustomApps/erpnext/Tracker`) | `tracker.api.v1.*` |
-| Chat AI | `chat_ai` (`CustomApps/erpnext/ChatAI`) | `chat_ai.api.*` |
+**Industries:** optional industry modules (Restaurant, Jewellery, Gym ready; 14 more registered) are switched per site in
+ZG System Settings → Industries — see [`docs/industries.md`](docs/industries.md).
 
-Those apps live on ERPNext with their own DocTypes + Desk + whitelist APIs.
-Clients for Tracker / Chat AI call those packages directly; do not add
-`zatgo_core.api.v1.tracker` or `zatgo_core.api.v1.chat_ai` facades.
-
-**No Desk module UI** — no pages, workspaces, desktop icons, reports, or dashboards. Operators edit settings DocTypes via AwesomeBar / List when needed.
+**Desk UI:** core is API-first; Desk workspaces exist only for the VanSaleX settings and for bundled modules /
+industries a site has switched on.
 
 `zatgo_api` was merged into this app — do not install it separately.
 

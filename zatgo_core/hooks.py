@@ -17,7 +17,7 @@ app_description = (
 )
 app_email = "engineering@zatgo.local"
 app_license = "mit"
-app_version = "0.2.3"
+app_version = "0.4.0"
 
 required_apps = ["erpnext"]
 
@@ -33,6 +33,8 @@ boot_session = "zatgo_core.events.boot.boot_session"
 before_request = [
     # Whitelisted methods of switched-off bundled modules -> 404.
     "zatgo_core.services.bundled_apps.gate_module_api",
+    # Whitelisted methods of switched-off industries -> 404.
+    "zatgo_core.industries.gate.gate_industry_api",
     "zatgo_core.services.ui_apps.add_desk_includes",
 ]
 page_renderer = ["zatgo_core.services.ui_apps.ThemedLoginPage"]
@@ -147,7 +149,11 @@ permission_query_conditions = {
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_query",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_query",
     # Bundled modules' own DocTypes: no rows where the module is switched off.
-    "*": "zatgo_core.services.bundled_apps.module_query_conditions",
+    "*": [
+        "zatgo_core.services.bundled_apps.module_query_conditions",
+        # Industries' own DocTypes: no rows where the industry is off.
+        "zatgo_core.industries.gate.industry_query_conditions",
+    ],
 }
 
 # Tracker (bundled module): no objection (True) where it is switched off --
@@ -159,7 +165,11 @@ has_permission = {
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
     # Bundled modules' own DocTypes: nobody's where the module is switched off.
-    "*": "zatgo_core.services.bundled_apps.module_doc_has_permission",
+    "*": [
+        "zatgo_core.services.bundled_apps.module_doc_has_permission",
+        # Industries' own DocTypes: nobody's where the industry is off.
+        "zatgo_core.industries.gate.industry_doc_has_permission",
+    ],
 }
 
 # Old method paths of the merged apps (chat_ai.*, tracker.*, zatgo_space.*)

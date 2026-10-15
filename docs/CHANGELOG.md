@@ -1,5 +1,21 @@
 # Changelog — ZatGo Core
 
+## 0.4.0 — 2026-10-15
+
+### Added
+
+- Multi-industry layer (`zatgo_core/industries/`): registry of 17 industries, per-site switch in
+  ZG System Settings → Industries, server-side gating (API 404, DocType permissions, jobs), dependency validation.
+  Pilots: Restaurant (gates existing Resto POS), Jewellery, Gym. See `docs/industries.md`.
+- DocTypes `ZG Enabled Industry`, `ZG Gym Plan`, `ZG Gym Membership`, `ZG Gym Attendance`, `ZG Metal Rate`;
+  Item custom fields `zg_jewellery_*` (hidden unless Jewellery is on).
+- Patches: `v0_4_0.create_industry_roles` (pre-model-sync), `v0_4_0.enable_restaurant_where_used`.
+
+### Changed
+
+- Version aligned to 0.4.0 across `hooks.py`, `__init__.py`, `pyproject.toml`.
+
+
 ## 0.2.2 — 2026-07-22
 
 ### Removed

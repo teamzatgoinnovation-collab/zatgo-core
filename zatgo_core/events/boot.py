@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
+from zatgo_core.industries.gate import enabled_keys
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
@@ -40,6 +41,9 @@ def boot_session(bootinfo: Any) -> None:
             "system": system,
             "feature_flags": flags,
             "version": __version__,
+            # Industries switched on for this site (UI hint only; the
+            # server enforces, industries/gate.py).
+            "industries": sorted(enabled_keys()),
             # This user's own invoice/return series per company, for the
             # Sales Invoice form (public/js/sales_invoice.js).
             "sales_invoice_naming": get_session_user_series(),

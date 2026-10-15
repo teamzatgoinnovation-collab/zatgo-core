@@ -11,6 +11,7 @@ from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.ensure_vansalex_access import ensure_vansalex_access
+from zatgo_core.industries.sync import sync_industries
 from zatgo_core.services.ui_apps import ensure_ui_apps
 from zatgo_core.setup.seed_defaults import (
     seed_application_settings,
@@ -70,6 +71,10 @@ def after_install() -> None:
         ensure_ui_apps()
     except Exception:
         logger.exception("Theme / language switcher setup failed")
+    try:
+        sync_industries()
+    except Exception:
+        logger.exception("Industry sync failed")
     logger.info("zatgo_core after_install completed")
 
 
@@ -115,6 +120,10 @@ def after_migrate() -> None:
         ensure_ui_apps()
     except Exception:
         logger.exception("Theme / language switcher setup failed")
+    try:
+        sync_industries()
+    except Exception:
+        logger.exception("Industry sync failed")
 
 
 def before_uninstall() -> None:

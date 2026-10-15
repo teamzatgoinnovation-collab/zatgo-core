@@ -1,0 +1,93 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "field:plan_name",
+  "creation": "2026-10-15 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "plan_name",
+    "is_active",
+    "duration_days",
+    "price",
+    "item"
+  ],
+  "fields": [
+    {
+      "fieldname": "plan_name",
+      "fieldtype": "Data",
+      "label": "Plan Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": "1",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "duration_days",
+      "fieldtype": "Int",
+      "label": "Duration (days)",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "price",
+      "fieldtype": "Currency",
+      "label": "Price",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item",
+      "fieldtype": "Link",
+      "label": "Billing Item",
+      "options": "Item",
+      "description": "Item used on the membership's Sales Invoice."
+    }
+  ],
+  "module": "ZatGo Core",
+  "name": "ZG Gym Plan",
+  "owner": "Administrator",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Gym Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Gym User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    }
+  ],
+  "title_field": "plan_name"
+}

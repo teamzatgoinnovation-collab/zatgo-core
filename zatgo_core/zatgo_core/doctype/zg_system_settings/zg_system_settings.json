@@ -36,7 +36,9 @@
     "enable_chat_ai",
     "enable_tracker",
     "column_break_bundled",
-    "enable_zatgo_space"
+    "enable_zatgo_space",
+    "industries_section",
+    "enabled_industries"
   ],
   "fields": [
     {
@@ -223,6 +225,20 @@
       "fieldname": "enable_zatgo_space",
       "fieldtype": "Check",
       "label": "Enable ZatGo Space"
+    },
+    {
+      "fieldname": "industries_section",
+      "fieldtype": "Section Break",
+      "label": "Industries",
+      "description": "Industry modules switched on for this site. Core accounting, stock, sales and purchase are always available."
+    },
+    {
+      "fieldname": "enabled_industries",
+      "fieldtype": "Table",
+      "label": "Enabled Industries",
+      "options": "ZG Enabled Industry",
+      "cannot_add_rows": 1,
+      "cannot_delete_rows": 1
     }
   ],
   "index_web_pages_for_search": 0,

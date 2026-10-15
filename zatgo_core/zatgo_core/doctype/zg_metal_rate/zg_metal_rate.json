@@ -1,0 +1,85 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "JRATE-.#####",
+  "creation": "2026-10-15 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "metal",
+    "purity",
+    "rate_date",
+    "rate_per_gram"
+  ],
+  "fields": [
+    {
+      "fieldname": "metal",
+      "fieldtype": "Select",
+      "label": "Metal",
+      "options": "Gold\nSilver\nPlatinum",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "purity",
+      "fieldtype": "Data",
+      "label": "Purity",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "e.g. 24K, 22K, 925"
+    },
+    {
+      "fieldname": "rate_date",
+      "fieldtype": "Date",
+      "label": "Rate Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "rate_per_gram",
+      "fieldtype": "Currency",
+      "label": "Rate per Gram",
+      "reqd": 1,
+      "in_list_view": 1
+    }
+  ],
+  "module": "ZatGo Core",
+  "name": "ZG Metal Rate",
+  "owner": "Administrator",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Jewellery Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Jewellery User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    }
+  ]
+}

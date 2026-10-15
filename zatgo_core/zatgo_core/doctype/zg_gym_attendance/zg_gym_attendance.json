@@ -1,0 +1,83 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "GYM-ATT-.#####",
+  "creation": "2026-10-15 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "membership",
+    "member_name",
+    "check_in",
+    "check_out"
+  ],
+  "fields": [
+    {
+      "fieldname": "membership",
+      "fieldtype": "Link",
+      "label": "Membership",
+      "options": "ZG Gym Membership",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "member_name",
+      "fieldtype": "Data",
+      "label": "Member",
+      "fetch_from": "membership.member_name",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "check_in",
+      "fieldtype": "Datetime",
+      "label": "Check In",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "check_out",
+      "fieldtype": "Datetime",
+      "label": "Check Out"
+    }
+  ],
+  "module": "ZatGo Core",
+  "name": "ZG Gym Attendance",
+  "owner": "Administrator",
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Gym Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    },
+    {
+      "role": "ZG Gym User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "report": 1,
+      "export": 1,
+      "print": 1
+    }
+  ]
+}

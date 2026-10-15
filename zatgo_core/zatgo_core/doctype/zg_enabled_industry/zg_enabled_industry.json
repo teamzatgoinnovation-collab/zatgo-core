@@ -1,0 +1,65 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-15 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "istable": 1,
+  "editable_grid": 1,
+  "module": "ZatGo Core",
+  "name": "ZG Enabled Industry",
+  "owner": "Administrator",
+  "field_order": [
+    "enabled",
+    "industry",
+    "industry_label",
+    "availability",
+    "description"
+  ],
+  "fields": [
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "Enabled",
+      "in_list_view": 1,
+      "columns": 1
+    },
+    {
+      "fieldname": "industry",
+      "fieldtype": "Data",
+      "label": "Key",
+      "read_only": 1,
+      "reqd": 1,
+      "in_list_view": 1,
+      "columns": 2
+    },
+    {
+      "fieldname": "industry_label",
+      "fieldtype": "Data",
+      "label": "Industry",
+      "read_only": 1,
+      "in_list_view": 1,
+      "columns": 2
+    },
+    {
+      "fieldname": "availability",
+      "fieldtype": "Data",
+      "label": "Availability",
+      "read_only": 1,
+      "in_list_view": 1,
+      "columns": 1
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description",
+      "read_only": 1,
+      "in_list_view": 1,
+      "columns": 4
+    }
+  ],
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": []
+}

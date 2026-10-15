@@ -12,8 +12,19 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Global ERP foundation settings for the ZatGo ecosystem."""
 
+    def onload(self) -> None:
+        # Existing sites: show a row for every registered industry.
+        from zatgo_core.industries.sync import ensure_rows
+
+        ensure_rows(self)
+
     def validate(self) -> None:
         self._validate_defaults()
+        from zatgo_core.industries.gate import validate_selection
+        from zatgo_core.industries.sync import ensure_rows
+
+        ensure_rows(self)
+        validate_selection({r.industry for r in self.enabled_industries if r.enabled})
 
     def on_update(self) -> None:
         # Audit trail + cache invalidation (the mixins) first.
@@ -36,6 +47,12 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
         ):
             frappe.clear_document_cache(self.doctype, self.name)
             sync_bundled_apps()
+        # Industries switched on / off: roles, fields and Desk entries now.
+        from zatgo_core.industries.sync import industries_changed, sync_industries
+
+        if before is None or industries_changed(before, self):
+            frappe.clear_document_cache(self.doctype, self.name)
+            sync_industries()
 
     def _validate_defaults(self) -> None:
         if self.default_warehouse and self.default_company:
