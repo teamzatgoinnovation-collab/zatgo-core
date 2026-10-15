@@ -61,7 +61,9 @@ def _purge_old_conversations():
 			pluck="name",
 			limit=200,
 		)
+		from zatgo_core.chat_ai.erpnext.sessions import purge_session
+
 		for name in sessions:
-			frappe.delete_doc("AI Chat Session", name, ignore_permissions=True, force=True)
+			purge_session(name)
 	except Exception:
 		frappe.log_error(title="chat_ai retention purge")

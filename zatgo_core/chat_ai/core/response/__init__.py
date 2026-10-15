@@ -24,6 +24,8 @@ class AssistantResponse:
 	pending_plan: list = field(default_factory=list)
 	pending_assumptions: list = field(default_factory=list)
 	confirmation_token: str = ""
+	sources: list = field(default_factory=list)  # web/file references this answer used
+	meta: dict = field(default_factory=dict)  # model used, routing slot, fallback notice
 
 	def to_content_json(self) -> dict:
 		return {
@@ -37,6 +39,8 @@ class AssistantResponse:
 			"pending_plan": self.pending_plan,
 			"pending_assumptions": self.pending_assumptions,
 			"confirmation_token": self.confirmation_token,
+			"sources": self.sources,
+			"meta": self.meta,
 		}
 
 

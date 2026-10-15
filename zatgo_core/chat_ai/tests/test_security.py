@@ -177,16 +177,45 @@ class TestQuota(IntegrationTestCase):
 		frappe.cache.delete_value("chat_ai_rate:Administrator")
 
 	def test_burst_limit(self):
-		with mock.patch.dict(frappe.conf, {"chat_ai_max_per_minute": 3}):
+		with mock.patch.object(frappe.db, "get_single_value", return_value=3):
 			for _ in range(3):
 				quota.enforce("Administrator")
 			with self.assertRaises(quota.QuotaExceeded):
 				quota.enforce("Administrator")
 
 	def test_burst_limit_zero_disables(self):
-		with mock.patch.dict(frappe.conf, {"chat_ai_max_per_minute": 0}):
+		with mock.patch.object(frappe.db, "get_single_value", return_value=0):
 			for _ in range(50):
 				quota.enforce("Administrator")
+
+	def test_token_caps(self):
+		frappe.set_user("Administrator")
+		user = _user("chat_tokens@example.com")
+		frappe.get_doc(
+			{
+				"doctype": "AI Usage Daily", "usage_date": frappe.utils.today(), "user": user,
+				"provider": "t", "model": "t", "tokens_in": 600, "tokens_out": 500,
+			}
+		).insert(ignore_permissions=True)
+		settings = {"max_tokens_per_user_per_day": 1000, "max_tokens_per_user_per_month": 0}
+		with mock.patch.object(frappe.db, "get_single_value", side_effect=lambda dt, f: settings.get(f, 0)):
+			with self.assertRaises(quota.QuotaExceeded):
+				quota.enforce(user)
+		settings = {"max_tokens_per_user_per_day": 0, "max_tokens_per_user_per_month": 1100}
+		with mock.patch.object(frappe.db, "get_single_value", side_effect=lambda dt, f: settings.get(f, 0)):
+			with self.assertRaises(quota.QuotaExceeded):
+				quota.enforce(user)
+		settings = {"max_tokens_per_user_per_day": 5000, "max_tokens_per_user_per_month": 5000}
+		with mock.patch.object(frappe.db, "get_single_value", side_effect=lambda dt, f: settings.get(f, 0)):
+			quota.enforce(user)
+
+	def test_upload_limit(self):
+		frappe.cache.delete_value("chat_ai_upload_rate:Administrator")
+		for _ in range(2):
+			quota.enforce_upload("Administrator", limit=2)
+		with self.assertRaises(quota.QuotaExceeded):
+			quota.enforce_upload("Administrator", limit=2)
+		frappe.cache.delete_value("chat_ai_upload_rate:Administrator")
 
 	def test_daily_cap(self):
 		frappe.set_user("Administrator")

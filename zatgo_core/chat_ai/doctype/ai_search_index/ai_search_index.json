@@ -10,7 +10,12 @@
   "chunk_text",
   "embedding_json",
   "model",
-  "checksum"
+  "checksum",
+  "source_type",
+  "attachment",
+  "owner_user",
+  "session",
+  "chunk_index"
  ],
  "fields": [
   {
@@ -50,6 +55,40 @@
    "fieldname": "checksum",
    "fieldtype": "Data",
    "label": "Checksum"
+  },
+  {
+   "fieldname": "source_type",
+   "fieldtype": "Select",
+   "label": "Source Type",
+   "options": "Record\nAttachment",
+   "default": "Record"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Link",
+   "label": "Attachment",
+   "options": "AI Attachment",
+   "search_index": 1
+  },
+  {
+   "fieldname": "owner_user",
+   "fieldtype": "Link",
+   "label": "Owner",
+   "options": "User",
+   "search_index": 1
+  },
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Session",
+   "options": "AI Chat Session",
+   "search_index": 1
+  },
+  {
+   "fieldname": "chunk_index",
+   "fieldtype": "Int",
+   "label": "Chunk Index",
+   "default": "0"
   }
  ],
  "issingle": 0,

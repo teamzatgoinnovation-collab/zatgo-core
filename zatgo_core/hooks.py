@@ -156,6 +156,7 @@ permission_query_conditions = {
     "AI Usage Daily": "zatgo_core.chat_ai.permissions.query_ai_usage_daily",
     "AI Chat Message": "zatgo_core.chat_ai.permissions.query_ai_chat_message",
     "AI Conversation Summary": "zatgo_core.chat_ai.permissions.query_ai_conversation_summary",
+    "AI Attachment": "zatgo_core.chat_ai.permissions.query_ai_attachment",
     # Bundled modules' own DocTypes: no rows where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_query_conditions",
@@ -180,6 +181,7 @@ has_permission = {
     "AI Usage Daily": "zatgo_core.chat_ai.permissions.perm_ai_usage_daily",
     "AI Chat Message": "zatgo_core.chat_ai.permissions.perm_ai_chat_message",
     "AI Conversation Summary": "zatgo_core.chat_ai.permissions.perm_ai_conversation_summary",
+    "AI Attachment": "zatgo_core.chat_ai.permissions.perm_ai_attachment",
     # Bundled modules' own DocTypes: nobody's where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_doc_has_permission",

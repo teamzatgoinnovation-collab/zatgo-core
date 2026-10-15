@@ -91,30 +91,30 @@ def _ms(start: float) -> int:
 
 
 def _invoke(fn: Callable, args: dict):
-	try:
-		import inspect
+	"""Call a tool handler exactly once.
 
-		sig = inspect.signature(fn)
-		params = sig.parameters
-		if not params:
-			return fn()
-		if any(p.kind == p.VAR_KEYWORD for p in params.values()):
-			return fn(**args)
-		kwargs = {k: v for k, v in args.items() if k in params}
-		# positional-only single "args" bag
-		if len(params) == 1:
-			name = next(iter(params))
-			p = params[name]
-			if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and name not in args:
-				return fn(args)
-		return fn(**kwargs)
-	except TypeError:
-		try:
-			return fn(**args)
-		except TypeError:
-			return fn(args)
-	except Exception:
+	The call style is decided from the signature *before* calling. A handler that
+	raises propagates to the pipeline (which records the failure); it is never
+	retried here -- a second call could repeat a write that half-succeeded.
+	"""
+	import inspect
+
+	try:
+		params = inspect.signature(fn).parameters
+	except (TypeError, ValueError):  # builtins / C callables without a signature
 		return fn(**args)
+	if not params:
+		return fn()
+	if any(p.kind == p.VAR_KEYWORD for p in params.values()):
+		return fn(**args)
+	kwargs = {k: v for k, v in args.items() if k in params}
+	if len(params) == 1:
+		name = next(iter(params))
+		p = params[name]
+		# a single "args bag" parameter that the model did not name
+		if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and name not in args:
+			return fn(args)
+	return fn(**kwargs)
 
 
 def _confirmation_message(tool: ToolSpec, args: dict) -> str:

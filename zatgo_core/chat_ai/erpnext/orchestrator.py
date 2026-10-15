@@ -13,6 +13,9 @@ from zatgo_core.chat_ai.core.agent_limits import AgentLimits
 from zatgo_core.chat_ai.core.memory import ConversationMemory
 from zatgo_core.chat_ai.core.planner import plan as run_planner
 from zatgo_core.chat_ai.core.providers.base import LLMMessage
+from zatgo_core.chat_ai.core.providers.errors import ProviderError
+from zatgo_core.chat_ai.core.routing import allowed_models, pick_model
+from zatgo_core.chat_ai.erpnext import attachments as attachments_svc
 from zatgo_core.chat_ai.core.providers.registry import ProviderRegistry
 from zatgo_core.chat_ai.core.response import (
 	AssistantResponse,
@@ -107,6 +110,11 @@ def get_prompt_text(settings: dict, skill_prompts: list[str] | None = None) -> s
 # Core helpers always kept when shortlisting tools
 _CORE_HELPER_TOOLS = frozenset(
 	{
+		"file_search",
+		"analyze_table",
+		"calculator",
+		"web_search",
+		"fetch_url",
 		"search",
 		"erp_search",
 		"global_search",
@@ -131,8 +139,9 @@ def collect_tools(
 		load_skills()
 		skills = list_skills()
 	wanted = set(skill_names or [s.name for s in skills])
-	# Always include core
+	# Always include core and the workspace tools (files / calculator / web)
 	wanted.add("core")
+	wanted.add("workspace")
 	tools: list[ToolSpec] = []
 	for s in skills:
 		if s.name not in wanted:
@@ -183,8 +192,14 @@ def run_turn(
 	plan_confirmed: bool = False,
 	confirmation_token: str | None = None,
 	execution_mode: str | None = None,
+	attachments: list | None = None,
+	model: str | None = None,
+	web: bool | None = None,
+	regenerate: bool = False,
 ) -> dict:
 	settings = get_settings_dict()
+	settings["_turn_start"] = time.time()
+	settings["_skip_user_insert"] = bool(regenerate)
 	# Reload plugins every turn (cold worker + discovery)
 	try:
 		load_plugins(settings)
@@ -225,6 +240,14 @@ def run_turn(
 		}
 
 	clear_cancel(session_name)
+
+	# Per-request context for workspace tools (session scope, collected references).
+	frappe.flags.chat_ai_session = session_name
+	frappe.flags.chat_ai_refs = []
+	frappe.flags.chat_ai_user_message = user_message or ""
+	if web is not None and not web:
+		settings["enable_web_search"] = 0  # the user switched the web toggle off for this message
+	settings["_web_requested"] = bool(web)
 
 	from zatgo_core.chat_ai.core.i18n import normalize_language
 
@@ -328,7 +351,41 @@ def run_turn(
 		)
 		return _persist(session, memory, user_message, resp, settings, tokens=(0, 0))
 
+	atts = attachments_svc.load_for_turn(attachments, session_name)
+	images = [a for a in atts if a["kind"] == "image"]
+	manual_model = (model or "").strip()
+	if manual_model and manual_model not in allowed_models(settings):
+		frappe.throw("That model is not available.", frappe.ValidationError)
+	routed, slot = (None, "manual") if manual_model else pick_model(
+		settings, user_message or "", has_images=bool(images)
+	)
+	chosen = manual_model or routed
+	if chosen:
+		settings["default_model"] = chosen
+	settings["_model_manual"] = bool(manual_model)
+	settings["_route_slot"] = slot
 	provider = ProviderRegistry.get_active(settings)
+	if images and not (provider.capabilities.vision and settings.get("enable_vision", 1)):
+		resp = AssistantResponse(
+			markdown="The selected model can't read images. Choose a vision-capable model or remove the image."
+		)
+		return _persist(session, memory, user_message, resp, settings, tokens=(0, 0), error=True)
+	if settings.get("_web_requested") and settings.get("enable_web_search") and not settings.get("web_search_api_key"):
+		resp = AssistantResponse(
+			markdown="Web search is turned on but no search API key is configured. Ask an administrator to set it in Chat AI Settings."
+		)
+		return _persist(session, memory, user_message, resp, settings, tokens=(0, 0), error=True)
+	settings["_attachments"] = atts
+	attachment_ctx = attachments_svc.prompt_context(atts)
+	session_files = frappe.get_all(
+		"AI Attachment", filters={"session": session_name, "status": "Ready"}, fields=["name", "file_name", "kind", "status", "chunk_count"], limit_page_length=25,
+	)
+	settings["_has_files"] = bool(session_files)
+	earlier = [f for f in session_files if f["name"] not in {a["name"] for a in atts}]
+	if earlier:
+		attachment_ctx = (attachment_ctx + "\n\n" if attachment_ctx else "") + (
+			"Earlier files in this conversation (use file_search / analyze_table):\n" + attachments_svc.manifest(earlier)
+		)
 	neg = ProviderRegistry.requires(provider, "chat")
 	if not neg.ok:
 		resp = AssistantResponse(markdown="Configured LLM provider cannot chat. Check Chat AI Settings.")
@@ -338,8 +395,14 @@ def run_turn(
 	history = memory.window(int(settings.get("max_history_length") or 40))
 	# Tool names for planner shortlist (skills only; external tools added after plan)
 	probe_tools = collect_tools(available, settings={**settings, "enable_rest_tools": 0, "enable_mcp_tools": 0, "enable_integrations": 0})
+	plan_provider = provider
+	if settings.get("enable_model_routing") and (settings.get("model_fast") or "").strip() and not manual_model:
+		try:  # classification doesn't need the big model
+			plan_provider = ProviderRegistry.get_active({**settings, "default_model": settings["model_fast"].strip()})
+		except Exception:
+			plan_provider = provider
 	plan = run_planner(
-		provider,
+		plan_provider,
 		user_message=msg,
 		system_prompt=get_prompt_text(settings),
 		context=context,
@@ -358,10 +421,15 @@ def run_turn(
 		resp = clarification(plan.clarification_question or "Could you provide more details?")
 		return _persist(session, memory, user_message, resp, settings, tokens=(plan.tokens_in, plan.tokens_out), model=plan.model)
 
-	# Simple question — direct answer without tools
-	if plan.is_simple_question and not plan.needs_plan_approval:
+	# Simple question — direct answer without tools (not when files need searching)
+	if plan.is_simple_question and not plan.needs_plan_approval and "[Approved plan]" not in msg and not (
+		settings.get("_has_files") and "too large to include" in attachment_ctx
+	):
 		settings["_stream_session"] = session_name
-		resp = _direct_answer(provider, settings, msg, context, history, plan)
+		resp = _direct_answer(
+			provider, settings, msg + (("\n\n" + attachment_ctx) if attachment_ctx else ""), context, history, plan,
+			images=attachments_svc.image_data_urls(atts),
+		)
 		return _persist(session, memory, user_message, resp, settings, tokens=(plan.tokens_in, plan.tokens_out), model=plan.model)
 
 	# Plan approval gate (unless already approved via token)
@@ -398,7 +466,9 @@ def run_turn(
 			skill_prompts.append(s.prompt)
 
 	publish_progress(session_name, "routing")
-	tools = collect_tools(candidates, candidate_tools=tool_shortlist, settings=settings)
+	tools = _filter_workspace_tools(
+		collect_tools(candidates, candidate_tools=tool_shortlist, settings=settings), settings
+	)
 	router = ToolRouter(tools, **_router_kwargs)
 	risk_level = plan.risk_level or "medium"
 
@@ -431,16 +501,36 @@ def run_turn(
 	]
 	for h in _history_for_llm(history, 10):
 		messages.append(LLMMessage(role=h["role"], content=h["content"]))
-	messages.append(LLMMessage(role="user", content=msg))
+	web_hint = (
+		"\n\n(The user asked you to use web search for this message.)"
+		if settings.get("_web_requested") and settings.get("enable_web_search")
+		else ""
+	)
+	messages.append(
+		LLMMessage(
+			role="user",
+			content=msg + (("\n\n" + attachment_ctx) if attachment_ctx else "") + web_hint,
+			images=attachments_svc.image_data_urls(atts) or None,
+		)
+	)
 
 	tool_results = []
 	total_in, total_out = plan.tokens_in, plan.tokens_out
 	rounds = 0
 	while rounds < limits.max_tool_rounds:
 		rounds += 1
-		rnd = stream_round(
-			provider, messages, tools=openai_tools or None, settings=settings, session=session_name
-		)
+		try:
+			rnd = stream_round(
+				provider, messages, tools=openai_tools or None, settings=settings, session=session_name
+			)
+		except ProviderError as exc:
+			fallback = _fallback_provider(settings, exc)
+			if fallback is None:
+				raise
+			provider = fallback
+			rnd = stream_round(
+				provider, messages, tools=openai_tools or None, settings=settings, session=session_name
+			)
 		result = rnd.result
 		total_in += result.tokens_in
 		total_out += result.tokens_out
@@ -593,7 +683,7 @@ def _history_for_llm(history: list | None, limit: int = 6) -> list:
 	return out
 
 
-def _direct_answer(provider, settings, msg, context, history, plan):
+def _direct_answer(provider, settings, msg, context, history, plan, images=None):
 	"""Answer simple how-to / explanation questions without tool calls."""
 	messages = [
 		LLMMessage(role="system", content=get_prompt_text(settings)),
@@ -614,10 +704,17 @@ def _direct_answer(provider, settings, msg, context, history, plan):
 			content=msg
 			+ "\n\n(Answer like a helpful coworker: natural, short, and clear. "
 			"No tools. No long documentation. No 'Using …' preamble.)",
+			images=images or None,
 		)
 	)
 	session_name = settings.get("_stream_session") or ""
-	rnd = stream_round(provider, messages, settings=settings, session=session_name)
+	try:
+		rnd = stream_round(provider, messages, settings=settings, session=session_name)
+	except ProviderError as exc:
+		fallback = _fallback_provider(settings, exc)
+		if fallback is None:
+			raise
+		rnd = stream_round(fallback, messages, settings=settings, session=session_name)
 	md = strip_using_preamble(rnd.result.content or plan.raw_content or "Done.")
 	if rnd.stopped:
 		md += "\n\n_(stopped)_"
@@ -652,15 +749,30 @@ def _load_memory(session_name: str) -> ConversationMemory:
 def _persist(session, memory, user_message, resp: AssistantResponse, settings, tokens=(0, 0), model="", error=False, tool_results=None):
 	start = time.time()
 	resp.markdown = strip_using_preamble(resp.markdown)
-	# user message
-	frappe.get_doc(
-		{
-			"doctype": "AI Chat Message",
-			"session": session.name,
-			"role": "user",
-			"content": user_message,
-		}
-	).insert(ignore_permissions=True)
+	turn_start = settings.get("_turn_start") or start
+	refs = list(getattr(frappe.flags, "chat_ai_refs", None) or [])
+	if refs and not resp.sources:
+		resp.sources = refs[:20]
+	resp.meta = {
+		**(resp.meta or {}),
+		"model": model or settings.get("default_model"),
+		"route": settings.get("_route_slot"),
+		**({"fallback_from": settings["_fallback_from"]} if settings.get("_fallback_from") else {}),
+	}
+	atts = settings.get("_attachments") or []
+	# user message (a regenerate keeps the existing one)
+	if not settings.get("_skip_user_insert"):
+		frappe.get_doc(
+			{
+				"doctype": "AI Chat Message",
+				"session": session.name,
+				"role": "user",
+				"content": user_message,
+				"attachments": frappe.as_json(
+					[{"name": a["name"], "file_name": a["file_name"], "kind": a["kind"]} for a in atts]
+				) if atts else "",
+			}
+		).insert(ignore_permissions=True)
 
 	# Enrich blocks from company status / tool results
 	if tool_results:
@@ -697,7 +809,7 @@ def _persist(session, memory, user_message, resp: AssistantResponse, settings, t
 			"prompt_version": settings.get("prompt_bundle_version") or "v4",
 			"tokens_in": tokens[0],
 			"tokens_out": tokens[1],
-			"latency_ms": int((time.time() - start) * 1000),
+			"latency_ms": int((time.time() - turn_start) * 1000),
 			"cost_estimate": cost,
 			"error": "1" if error else "",
 		}
@@ -745,7 +857,43 @@ def _persist(session, memory, user_message, resp: AssistantResponse, settings, t
 		"pending_plan": resp.pending_plan,
 		"pending_assumptions": resp.pending_assumptions,
 		"confirmation_token": resp.confirmation_token,
+		"sources": resp.sources,
+		"meta": resp.meta,
 	}
+
+
+def _fallback_provider(settings: dict, exc: ProviderError):
+	"""Provider for the configured fallback model, or None.
+
+	Only for failures a different model can fix, never when the user picked the
+	model themselves (they get the error and a retry), and the switch is recorded
+	so the UI can say so."""
+	if settings.get("_model_manual") or exc.code in ("auth", "bad_request", "not_configured"):
+		return None
+	fb = (settings.get("fallback_model") or "").strip()
+	if not fb or fb == settings.get("default_model"):
+		return None
+	try:
+		provider = ProviderRegistry.get_active({**settings, "default_model": fb})
+	except Exception:
+		return None
+	settings["_fallback_from"] = settings.get("default_model")
+	settings["default_model"] = fb
+	frappe.log_error(title=f"chat_ai fallback to {fb} ({exc.code})", message=exc.detail or str(exc))
+	return provider
+
+
+def _filter_workspace_tools(tools: list, settings: dict) -> list:
+	"""Offer workspace tools only where they can work: web tools need the switch and a
+	key, file tools need files in the conversation."""
+	web_ok = bool(settings.get("enable_web_search") and settings.get("web_search_api_key"))
+	files_ok = bool(settings.get("_has_files"))
+	hide = set()
+	if not web_ok:
+		hide |= {"web_search", "fetch_url"}
+	if not files_ok:
+		hide |= {"file_search", "analyze_table"}
+	return [t for t in tools if t.name not in hide]
 
 
 def _save_memory(session_name: str, memory: ConversationMemory):

@@ -28,6 +28,7 @@ def bootstrap():
 	_ensure_roles()
 	_ensure_admin_roles()
 	_ensure_settings()
+	_ensure_schema()
 	_sanitize_provider_settings()
 	_ensure_desk_entry()
 	_bootstrap_connectors()
@@ -36,6 +37,15 @@ def bootstrap():
 		frappe.clear_cache()
 	except Exception:
 		frappe.log_error(title="chat_ai clear_cache")
+
+
+def _ensure_schema():
+	try:
+		from zatgo_core.chat_ai.schema import ensure_schema
+
+		ensure_schema()
+	except Exception:
+		frappe.log_error(title="chat_ai schema ensure")
 
 
 def _bootstrap_connectors():

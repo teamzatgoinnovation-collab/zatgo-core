@@ -86,7 +86,30 @@
   "enabled_assistant_modes",
   "cost_section",
   "token_price_input",
-  "token_price_output"
+  "token_price_output",
+  "workspace_section",
+  "enable_file_upload",
+  "enable_vision",
+  "max_upload_mb",
+  "column_break_ws",
+  "enable_web_search",
+  "web_search_provider",
+  "web_search_api_key",
+  "web_search_max_results",
+  "routing_section",
+  "enable_model_routing",
+  "model_fast",
+  "model_reasoning",
+  "model_vision",
+  "model_coding",
+  "column_break_rt",
+  "fallback_model",
+  "thinking_budget",
+  "context_window_tokens",
+  "quota_section",
+  "max_messages_per_minute",
+  "max_tokens_per_user_per_day",
+  "max_tokens_per_user_per_month"
  ],
  "fields": [
   {
@@ -574,6 +597,144 @@
    "fieldtype": "Float",
    "label": "Token Price Output (per 1M)",
    "default": "0"
+  },
+  {
+   "fieldname": "workspace_section",
+   "fieldtype": "Section Break",
+   "label": "Files, Web & Model Routing"
+  },
+  {
+   "fieldname": "enable_file_upload",
+   "fieldtype": "Check",
+   "label": "Enable File Upload",
+   "default": "1",
+   "description": "Attach PDF, DOCX, XLSX, CSV, TXT, Markdown and images to messages."
+  },
+  {
+   "fieldname": "enable_vision",
+   "fieldtype": "Check",
+   "label": "Enable Vision (images)",
+   "default": "1",
+   "description": "Send images to vision-capable models. Off = images are refused."
+  },
+  {
+   "fieldname": "max_upload_mb",
+   "fieldtype": "Int",
+   "label": "Max Upload Size (MB)",
+   "default": "15"
+  },
+  {
+   "fieldname": "column_break_ws",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "enable_web_search",
+   "fieldtype": "Check",
+   "label": "Enable Web Search",
+   "default": "0",
+   "description": "Needs a Web Search API key below."
+  },
+  {
+   "fieldname": "web_search_provider",
+   "fieldtype": "Select",
+   "label": "Web Search Provider",
+   "options": "Brave",
+   "default": "Brave"
+  },
+  {
+   "fieldname": "web_search_api_key",
+   "fieldtype": "Password",
+   "label": "Web Search API Key"
+  },
+  {
+   "fieldname": "web_search_max_results",
+   "fieldtype": "Int",
+   "label": "Web Search Results",
+   "default": "5"
+  },
+  {
+   "fieldname": "routing_section",
+   "fieldtype": "Section Break",
+   "label": "Model Routing & Reasoning"
+  },
+  {
+   "fieldname": "enable_model_routing",
+   "fieldtype": "Check",
+   "label": "Enable Automatic Model Routing",
+   "default": "0",
+   "description": "Pick the model by task. Users who choose a model manually are never rerouted."
+  },
+  {
+   "fieldname": "model_fast",
+   "fieldtype": "Data",
+   "label": "Fast Model"
+  },
+  {
+   "fieldname": "model_reasoning",
+   "fieldtype": "Data",
+   "label": "Reasoning Model"
+  },
+  {
+   "fieldname": "model_vision",
+   "fieldtype": "Data",
+   "label": "Vision Model"
+  },
+  {
+   "fieldname": "model_coding",
+   "fieldtype": "Data",
+   "label": "Coding Model"
+  },
+  {
+   "fieldname": "column_break_rt",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "fallback_model",
+   "fieldtype": "Data",
+   "label": "Fallback Model",
+   "description": "Same provider and key. Used only when the user did not pick a model; the reply says it was used."
+  },
+  {
+   "fieldname": "thinking_budget",
+   "fieldtype": "Int",
+   "label": "Reasoning Budget (tokens)",
+   "default": "0",
+   "description": "Anthropic extended thinking; 0 = off, minimum 1024."
+  },
+  {
+   "fieldname": "context_window_tokens",
+   "fieldtype": "Int",
+   "label": "Context Window (tokens)",
+   "default": "100000",
+   "description": "Budget for prompt history; older turns are summarised to fit."
+  },
+  {
+   "fieldname": "quota_section",
+   "fieldtype": "Section Break",
+   "label": "Usage Limits"
+  },
+  {
+   "fieldname": "max_messages_per_minute",
+   "fieldtype": "Int",
+   "label": "Max Messages per User per Minute",
+   "default": "20",
+   "description": "0 = no burst limit."
+  },
+  {
+   "fieldname": "max_tokens_per_user_per_day",
+   "fieldtype": "Int",
+   "label": "Max Tokens per User per Day",
+   "default": "0",
+   "description": "0 = unlimited."
+  },
+  {
+   "fieldname": "max_tokens_per_user_per_month",
+   "fieldtype": "Int",
+   "label": "Max Tokens per User per Month",
+   "default": "0",
+   "description": "0 = unlimited."
   }
  ],
  "issingle": 1,

@@ -22,7 +22,12 @@ class QuotaExceeded(frappe.ValidationError):
 
 
 def _burst_limit() -> int:
-	return frappe.utils.cint(frappe.conf.get("chat_ai_max_per_minute", DEFAULT_PER_MINUTE))
+	"""Chat AI Settings.max_messages_per_minute (0 = off); unset -> site_config
+	`chat_ai_max_per_minute`, else the default."""
+	value = frappe.db.get_single_value("Chat AI Settings", "max_messages_per_minute")
+	if value in (None, ""):
+		value = frappe.conf.get("chat_ai_max_per_minute", DEFAULT_PER_MINUTE)
+	return frappe.utils.cint(value)
 
 
 def _check_burst(user: str) -> None:
@@ -50,8 +55,46 @@ def _check_daily(user: str) -> None:
 		raise QuotaExceeded(_("Daily message limit reached. It resets tomorrow."))
 
 
+def _check_tokens(user: str) -> None:
+	"""Token caps per user per day / calendar month, from AI Usage Daily."""
+	day = frappe.utils.cint(frappe.db.get_single_value("Chat AI Settings", "max_tokens_per_user_per_day"))
+	month = frappe.utils.cint(frappe.db.get_single_value("Chat AI Settings", "max_tokens_per_user_per_month"))
+	if day <= 0 and month <= 0:
+		return
+	today = frappe.utils.today()
+	if day > 0 and _tokens_since(user, today) >= day:
+		raise QuotaExceeded(_("Daily usage limit reached. It resets tomorrow."))
+	if month > 0 and _tokens_since(user, today[:8] + "01") >= month:
+		raise QuotaExceeded(_("Monthly usage limit reached. It resets next month."))
+
+
+def _tokens_since(user: str, start: str) -> int:
+	row = frappe.db.sql(
+		"""select coalesce(sum(coalesce(tokens_in, 0) + coalesce(tokens_out, 0)), 0)
+		from `tabAI Usage Daily` where user = %s and usage_date >= %s""",
+		(user, start),
+	)
+	return frappe.utils.cint(row[0][0])
+
+
 def enforce(user: str | None = None) -> None:
 	"""Raise QuotaExceeded when the user is over a limit; otherwise count the send."""
 	user = user or frappe.session.user
 	_check_daily(user)
+	_check_tokens(user)
 	_check_burst(user)
+
+
+def enforce_upload(user: str | None = None, *, limit: int | None = None, window: int = 3600) -> None:
+	"""At most `limit` uploads per user per hour (site_config `chat_ai_max_uploads_per_hour`, default 30)."""
+	user = user or frappe.session.user
+	limit = limit if limit is not None else frappe.utils.cint(frappe.conf.get("chat_ai_max_uploads_per_hour", 30))
+	if limit <= 0:
+		return
+	key = f"chat_ai_upload_rate:{user}"
+	now = time.time()
+	hits = [t for t in (frappe.cache.get_value(key) or []) if now - t < window]
+	if len(hits) >= limit:
+		raise QuotaExceeded(_("Too many uploads. Please try again later."))
+	hits.append(now)
+	frappe.cache.set_value(key, hits, expires_in_sec=window)

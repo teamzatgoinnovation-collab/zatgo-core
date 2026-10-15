@@ -12,7 +12,7 @@ def get_settings_dict() -> dict:
 		return {}
 	data = doc.as_dict()
 	# Resolve passwords
-	for field in ("api_key", "embedding_api_key"):
+	for field in ("api_key", "embedding_api_key", "web_search_api_key"):
 		try:
 			data[field] = doc.get_password(field) if doc.get(field) else ""
 		except Exception:
