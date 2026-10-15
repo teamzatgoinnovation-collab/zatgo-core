@@ -1,0 +1,524 @@
+/* ============================================
+   DASHBOARD WIDGETS — Polished Cards
+   ============================================ */
+
+/* --- All widgets: base card style --- */
+.widget {
+	border-radius: var(--border-radius-sm) !important;
+	border: 1px solid var(--border-color) !important;
+	background: var(--fg-color) !important;
+	box-shadow: var(--shadow-xs) !important;
+	transition: box-shadow 0.2s ease, border-color 0.2s ease;
+	overflow: hidden;
+}
+
+.widget:hover {
+	box-shadow: var(--shadow-base) !important;
+	border-color: var(--primary-tint-15) !important;
+}
+
+/* --- Widget head — subtle bg + bottom border --- */
+.widget .widget-head {
+	padding: 10px 14px !important;
+	background: rgba(0, 0, 0, 0.015) !important;
+	border-bottom: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .widget .widget-head {
+	background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.widget .widget-head .widget-title {
+	font-weight: 600 !important;
+	font-size: 12px !important;
+	color: var(--gray-600) !important;
+	letter-spacing: 0.01em;
+}
+
+.widget .widget-head .widget-subtitle {
+	font-size: 11px !important;
+	color: var(--gray-400) !important;
+}
+
+/* --- Widget control (menu) --- */
+.widget .widget-control .card-actions a,
+.widget .widget-control .chart-actions .chart-menu {
+	border-radius: var(--border-radius-sm) !important;
+	transition: background 0.15s ease;
+}
+
+.widget .widget-control .card-actions a:hover,
+.widget .widget-control .chart-actions .chart-menu:hover {
+	background: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* --- Number card --- */
+.widget.number-widget-box {
+	padding: 0 !important;
+	min-height: 90px !important;
+}
+
+.widget.number-widget-box .widget-head {
+	padding: 10px 14px !important;
+}
+
+.widget.number-widget-box .widget-body {
+	padding: 12px 14px !important;
+}
+
+.widget.number-widget-box .number {
+	font-size: 26px !important;
+	font-weight: 700 !important;
+	line-height: 1.2;
+}
+
+.widget.number-widget-box .card-stats {
+	margin-top: 4px;
+}
+
+.widget.number-widget-box .stat-period {
+	font-size: 11px !important;
+	color: var(--gray-400) !important;
+}
+
+.widget.number-widget-box .percentage-stat-area .indicator-pill-round {
+	font-size: 11px !important;
+	padding: 2px 6px !important;
+	border-radius: var(--border-radius-sm) !important;
+}
+
+/* --- Chart widget --- */
+.widget.dashboard-widget-box {
+	padding: 0 !important;
+}
+
+.widget.dashboard-widget-box .widget-head {
+	padding: 10px 14px !important;
+}
+
+.widget.dashboard-widget-box .widget-title {
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	color: var(--gray-600) !important;
+}
+
+.widget.dashboard-widget-box .widget-body {
+	padding: 0 8px 8px !important;
+}
+
+/* Chart colors — use primary */
+.widget.dashboard-widget-box .line-graph-path {
+	stroke: var(--primary) !important;
+}
+
+.widget.dashboard-widget-box .region-fill {
+	fill: var(--primary) !important;
+	opacity: 0.05;
+}
+
+.widget.dashboard-widget-box .bar {
+	fill: var(--primary) !important;
+}
+
+.widget.dashboard-widget-box .data-point-list .circle {
+	fill: var(--primary) !important;
+	stroke: var(--primary) !important;
+}
+
+/* Chart filter buttons */
+.widget.dashboard-widget-box .filter-chart,
+.widget.dashboard-widget-box .time-interval-filter,
+.widget.dashboard-widget-box .timespan-filter {
+	border-radius: var(--border-radius-sm) !important;
+	font-size: 11px !important;
+}
+
+/* --- Shortcut widget --- */
+.widget.shortcut-widget-box {
+	padding: 0 !important;
+	border-radius: var(--border-radius-sm) !important;
+}
+
+.widget.shortcut-widget-box .widget-head {
+	padding: 10px 14px !important;
+}
+
+.widget.shortcut-widget-box:hover {
+	border-color: var(--primary) !important;
+}
+
+.widget.shortcut-widget-box .widget-title {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: var(--heading-color) !important;
+}
+
+.widget.shortcut-widget-box .indicator-pill {
+	font-size: 11px !important;
+	border-radius: var(--border-radius-sm) !important;
+	padding: 2px 8px !important;
+}
+
+/* --- Quick list widget --- */
+.widget.quick-list-widget-box .quick-list-item {
+	border-radius: var(--border-radius-sm) !important;
+	padding: 8px 12px !important;
+	transition: background 0.15s ease;
+}
+
+.widget.quick-list-widget-box .quick-list-item:hover {
+	background: var(--subtle-fg) !important;
+}
+
+/* --- Links widget --- */
+.widget.links-widget-box .link-item {
+	border-radius: var(--border-radius-sm) !important;
+	transition: background 0.15s ease;
+}
+
+.widget.links-widget-box .link-item:hover {
+	background: var(--subtle-fg) !important;
+}
+
+/* --- Widget group titles --- */
+.widget-group-head .widget-group-title {
+	font-size: 15px !important;
+	font-weight: 700 !important;
+	color: var(--heading-color) !important;
+}
+
+/* --- Dark mode --- */
+[data-theme="dark"] .widget {
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="dark"] .widget:hover {
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+	border-color: rgba(113, 149, 236, 0.2) !important;
+}
+
+/* Note: section numbers below repeat/skip (8, 9 reappear; "DASHBOARD WIDGETS"
+   above is unnumbered) due to historical accretion. They're wayfinding labels,
+   not a unique index — don't rely on them to locate a section, use search. */
+
+/* ============================================
+   8. CONNECTIONS TAB (Form Dashboard Links)
+   ============================================ */
+
+/* --- Masonry-style columns layout --- */
+.form-links .form-documents {
+	column-count: 3 !important;
+	column-gap: 16px !important;
+	margin-top: 12px !important;
+}
+
+.form-links .form-documents .row {
+	display: contents !important;
+	margin: 0 !important;
+}
+
+.form-links .form-documents .col-md-4 {
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: none !important;
+	padding: 0 !important;
+	margin-bottom: 16px !important;
+	break-inside: avoid !important;
+	display: inline-block !important;
+	background: none !important;
+	border: none !important;
+}
+
+/* --- Card border via individual elements --- */
+.form-links .form-documents .col-md-4 > .form-link-title:first-child {
+	border: 1px solid var(--gray-200) !important;
+	border-bottom: none !important;
+	border-radius: var(--border-radius-md) var(--border-radius-md) 0 0 !important;
+}
+
+.form-links .form-documents .col-md-4 > .document-link:last-of-type {
+	border-bottom: 1px solid var(--gray-200) !important;
+	border-left: 1px solid var(--gray-200) !important;
+	border-right: 1px solid var(--gray-200) !important;
+	border-radius: 0 0 var(--border-radius-md) var(--border-radius-md) !important;
+}
+
+.form-links .form-documents .col-md-4 > .document-link:not(:last-of-type) {
+	border-left: 1px solid var(--gray-200) !important;
+	border-right: 1px solid var(--gray-200) !important;
+}
+
+/* --- Section title as card header --- */
+.form-links .form-link-title {
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.06em !important;
+	color: var(--gray-600) !important;
+	margin: 0 !important;
+	padding: 10px 14px !important;
+	background: rgba(0, 0, 0, 0.015) !important;
+	border-bottom: 1px solid var(--gray-200) !important;
+}
+
+/* --- Document link rows inside card --- */
+.form-links .document-link {
+	border: none !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	padding: 6px 14px !important;
+	margin: 0 !important;
+	max-width: none !important;
+	border-bottom: 1px solid var(--gray-100) !important;
+	transition: background 0.12s ease !important;
+}
+
+.form-links .document-link:last-child {
+	border-bottom: none !important;
+}
+
+.form-links .document-link:hover {
+	background: var(--gray-50) !important;
+	box-shadow: none !important;
+}
+
+/* --- Badge link text --- */
+.form-links .document-link .badge-link {
+	color: var(--text-color) !important;
+	font-weight: 500 !important;
+	font-size: 13px !important;
+	text-decoration: none !important;
+}
+
+.form-links .document-link:hover .badge-link {
+	color: var(--primary) !important;
+}
+
+.form-links .document-link .badge-link:hover {
+	text-decoration: underline !important;
+}
+
+/* --- Count badge --- */
+.form-links .document-link .count {
+	background: var(--primary-tint-08) !important;
+	color: var(--primary) !important;
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	padding: 1px 7px !important;
+	border-radius: var(--border-radius-sm) !important;
+	min-width: 20px !important;
+	text-align: center !important;
+}
+
+/* --- Open notification badge --- */
+.form-links .document-link .open-notification {
+	background: #fff3e0 !important;
+	color: #e65100 !important;
+	font-weight: 600 !important;
+	border-radius: 4px !important;
+	font-size: 11px !important;
+	padding: 1px 7px !important;
+}
+
+/* --- New button --- */
+.form-links .document-link .btn-new {
+	border: none !important;
+	border-radius: var(--border-radius-sm) !important;
+	background: transparent !important;
+	color: var(--gray-400) !important;
+	box-shadow: none !important;
+	transition: all 0.15s ease !important;
+}
+
+.form-links .document-link .btn-new:hover {
+	background: var(--primary-tint-08) !important;
+	color: var(--primary) !important;
+}
+
+.form-links .document-link .btn-new:hover .icon {
+	stroke: var(--primary) !important;
+}
+
+/* --- Dark mode --- */
+[data-theme="dark"] .form-links .form-documents .col-md-4 {
+	background: var(--fg-color) !important;
+	border-color: var(--gray-700) !important;
+}
+
+[data-theme="dark"] .form-links .form-link-title {
+	background: rgba(255, 255, 255, 0.03) !important;
+	border-bottom-color: var(--gray-700) !important;
+	color: var(--gray-400) !important;
+}
+
+[data-theme="dark"] .form-links .document-link {
+	border-bottom-color: var(--gray-800) !important;
+}
+
+[data-theme="dark"] .form-links .document-link:hover {
+	background: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-theme="dark"] .form-links .document-link .count {
+	background: var(--primary-tint-15) !important;
+	color: var(--primary) !important;
+}
+
+[data-theme="dark"] .form-links .document-link .open-notification {
+	background: rgba(230, 81, 0, 0.15) !important;
+	color: #ff9800 !important;
+}
+
+/* ============================================
+   9. CHILD TABLE ROW — Right Sheet (Slide-in)
+   ============================================ */
+
+/* --- Override the centered modal to a right-side sheet --- */
+.grid-row-open .form-in-grid {
+	top: 0 !important;
+	right: 0 !important;
+	left: auto !important;
+	bottom: 0 !important;
+	transform: translateX(0) !important;
+	width: 50% !important;
+	max-width: 720px !important;
+	height: 100vh !important;
+	border-radius: 0 !important;
+	border-left: 1px solid var(--gray-200) !important;
+	box-shadow: var(--shadow-panel-left) !important;
+	padding: 0 !important;
+	display: flex !important;
+	flex-direction: column !important;
+	animation: st-slide-in-right 0.25s ease-out !important;
+}
+
+@keyframes st-slide-in-right {
+	from {
+		transform: translateX(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateX(0);
+		opacity: 1;
+	}
+}
+
+/* --- Scrollable body --- */
+.grid-row-open .form-in-grid .grid-form-body {
+	max-height: none !important;
+	overflow-y: auto !important;
+	flex: 1 !important;
+	padding: var(--padding-md) !important;
+}
+
+/* --- Header toolbar --- */
+.grid-row-open .form-in-grid .grid-form-heading {
+	padding: 12px 16px !important;
+	border-bottom: 1px solid var(--gray-200) !important;
+	background: rgba(0, 0, 0, 0.015) !important;
+	flex-shrink: 0 !important;
+}
+
+/* --- Footer toolbar --- */
+.grid-row-open .form-in-grid .grid-footer-toolbar {
+	padding: 10px 16px !important;
+	border-top: 1px solid var(--gray-200) !important;
+	background: rgba(0, 0, 0, 0.015) !important;
+	flex-shrink: 0 !important;
+}
+
+/* --- Overlay dimmer --- */
+#freeze.grid-form {
+	z-index: 1020 !important;
+	background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* --- Responsive: full width on smaller screens --- */
+@media (max-width: 992px) {
+	.grid-row-open .form-in-grid {
+		width: 85% !important;
+		max-width: none !important;
+	}
+}
+
+@media (max-width: 576px) {
+	.grid-row-open .form-in-grid {
+		width: 100% !important;
+	}
+}
+
+/* --- Close button (repurpose collapse-row) --- */
+.grid-row-open .form-in-grid .grid-collapse-row {
+	width: 32px !important;
+	height: 32px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: var(--border-radius-md) !important;
+	border: none !important;
+	background: transparent !important;
+	color: var(--gray-500) !important;
+	transition: background 0.15s ease !important;
+	order: 99 !important;
+}
+
+.grid-row-open .form-in-grid .grid-collapse-row:hover {
+	background: var(--gray-100) !important;
+	color: var(--gray-700) !important;
+}
+
+/* Replace the down-arrow icon with an X via CSS */
+.grid-row-open .form-in-grid .grid-collapse-row .icon {
+	display: none !important;
+}
+
+.grid-row-open .form-in-grid .grid-collapse-row::after {
+	content: "\00D7" !important;
+	font-size: 22px !important;
+	line-height: 1 !important;
+	font-weight: 400 !important;
+}
+
+/* --- Header layout fix for close button alignment --- */
+.grid-row-open .form-in-grid .grid-header-toolbar {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+}
+
+.grid-row-open .form-in-grid .grid-header-toolbar .row-actions {
+	display: flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	flex-wrap: wrap !important;
+}
+
+/* Ensure all action buttons are visible and remove pull-right float */
+.grid-row-open .form-in-grid .grid-header-toolbar .row-actions .btn {
+	float: none !important;
+}
+
+/* Show hidden-xs buttons inside sheet */
+.grid-row-open .form-in-grid .grid-header-toolbar .row-actions .hidden-xs {
+	display: inline-flex !important;
+}
+
+/* --- Dark mode --- */
+[data-theme="dark"] .grid-row-open .form-in-grid .grid-collapse-row:hover {
+	background: var(--gray-800) !important;
+	color: var(--gray-300) !important;
+}
+
+/* --- Dark mode --- */
+[data-theme="dark"] .grid-row-open .form-in-grid {
+	border-left-color: var(--gray-700) !important;
+	box-shadow: var(--shadow-panel-left) !important;
+}
+
+[data-theme="dark"] .grid-row-open .form-in-grid .grid-form-heading,
+[data-theme="dark"] .grid-row-open .form-in-grid .grid-footer-toolbar {
+	background: rgba(255, 255, 255, 0.03) !important;
+	border-color: var(--gray-700) !important;
+}
+

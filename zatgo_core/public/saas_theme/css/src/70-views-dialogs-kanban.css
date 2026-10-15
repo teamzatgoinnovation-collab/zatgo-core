@@ -1,0 +1,282 @@
+/* ============================================
+   26. LIST VIEW
+   ============================================ */
+
+/* Status/indicator pills — shared base so list view row status pills
+   (.indicator-pill.green/red/...) match the already-styled dashboard
+   widget pills instead of a third near-duplicate rule. */
+.indicator-pill {
+	border-radius: var(--border-radius-sm);
+	font-size: 11px;
+	padding: 2px 8px;
+	font-weight: 500;
+}
+
+.list-row-container {
+	border-bottom: 1px solid var(--border-color);
+	transition: background 0.12s ease;
+}
+
+.list-row-container:hover {
+	background: var(--fg-hover-color);
+}
+
+.list-row-container .list-row-head {
+	border-bottom: 1px solid var(--border-color);
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+}
+
+.list-row-checkbox {
+	accent-color: var(--primary);
+}
+
+.list-row .like-action .like-icon {
+	color: var(--gray-400);
+	transition: color 0.15s ease;
+}
+
+.list-row .like-action:hover .like-icon,
+.list-row .like-action.liked .like-icon {
+	color: var(--primary);
+}
+
+/* Frappe's .page-head is already position:sticky site-wide — just give it
+   a background + resting shadow so content doesn't visually run under it. */
+.page-head {
+	background: var(--card-bg);
+	box-shadow: var(--shadow-xs);
+}
+
+.list-paging-area .btn,
+.sort-selector .btn {
+	border-radius: var(--border-radius-sm);
+}
+
+/* ============================================
+   27. REPORT VIEW
+   ============================================ */
+
+.datatable-wrapper {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	overflow: hidden;
+}
+
+.dt-scrollable {
+	background: var(--card-bg);
+}
+
+.dt-row-header .dt-cell {
+	background: var(--card-bg) !important;
+	border-bottom: 1px solid var(--border-color) !important;
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+}
+
+.dt-row-filter .dt-cell {
+	background: var(--subtle-fg) !important;
+}
+
+.dt-cell {
+	border-color: var(--border-color) !important;
+}
+
+.dt-cell--sticky {
+	background: var(--gray-50) !important;
+}
+
+.dt-row:not(.dt-row-header):not(.dt-row-filter):hover .dt-cell {
+	background: var(--fg-hover-color) !important;
+}
+
+.dt-input {
+	border-radius: var(--border-radius-sm) !important;
+	font-size: 12px;
+}
+
+.dt-dropdown-container .dt-dropdown__list {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	box-shadow: var(--shadow-lg);
+	background: var(--card-bg);
+}
+
+.dt-dropdown__list-item:hover {
+	background: var(--fg-hover-color);
+}
+
+[data-theme="dark"] .dt-cell--sticky {
+	background: var(--gray-800) !important;
+}
+
+/* ============================================
+   28. DIALOGS & MODALS (frappe.ui.Dialog / frappe.get_modal)
+   ============================================ */
+
+.modal-content {
+	border-radius: var(--border-radius-2xl);
+	border: 1px solid var(--border-color);
+	box-shadow: var(--shadow-xl);
+	background: var(--modal-bg);
+	overflow: hidden;
+}
+
+.modal-header {
+	padding: 14px 20px;
+	border-bottom: 1px solid var(--border-color);
+	background: var(--modal-bg);
+}
+
+.modal-header .modal-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--heading-color);
+}
+
+.modal-header .modal-actions .btn-modal-minimize,
+.modal-header .modal-actions .btn-modal-close {
+	border-radius: var(--border-radius-md);
+	transition: background 0.12s ease;
+}
+
+.modal-header .modal-actions .btn-modal-minimize:hover,
+.modal-header .modal-actions .btn-modal-close:hover {
+	background: var(--fg-hover-color);
+}
+
+.modal-footer {
+	background: var(--subtle-accent);
+	border-top: 1px solid var(--border-color);
+	border-radius: 0 0 var(--border-radius-2xl) var(--border-radius-2xl);
+}
+
+/* Branded overlay tint instead of the generic bootstrap black */
+.modal-backdrop.show {
+	background-color: var(--gray-900);
+	opacity: 0.45;
+}
+
+/* ============================================
+   29. KANBAN BOARD
+   ============================================ */
+
+.kanban {
+	padding: 4px 2px;
+}
+
+.kanban-column {
+	background: var(--subtle-accent);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-lg);
+	padding: 10px;
+}
+
+.kanban-column.add-new-column {
+	background: transparent;
+	border-style: dashed;
+}
+
+.kanban-column-header {
+	padding: 4px 6px 10px;
+}
+
+.kanban-column-title,
+.kanban-column-title.compose-column {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--st-text-primary);
+}
+
+.kanban-title {
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	font-size: 11.5px;
+	color: var(--gray-600);
+}
+
+.kanban-column .column-options a {
+	border-radius: var(--border-radius-sm);
+	transition: background 0.12s ease;
+}
+
+.kanban-column .column-options a:hover {
+	background: var(--fg-hover-color);
+}
+
+.kanban-column .dropdown-menu {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	box-shadow: var(--shadow-lg);
+	background: var(--card-bg);
+}
+
+.kanban-column .dropdown-menu .dropdown-item:hover {
+	background: var(--fg-hover-color);
+}
+
+.add-card {
+	border-radius: var(--border-radius-md);
+	padding: 6px 8px;
+	color: var(--text-muted);
+	font-size: 12.5px;
+	transition: background 0.12s ease, color 0.12s ease;
+}
+
+.add-card:hover {
+	background: var(--fg-hover-color);
+	color: var(--text-color);
+}
+
+.kanban-card-wrapper {
+	margin-bottom: 8px;
+}
+
+.kanban-card-wrapper .kanban-card.content {
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	box-shadow: var(--shadow-xs);
+	padding: 10px 12px;
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.kanban-card-wrapper .kanban-card.content:hover {
+	box-shadow: var(--shadow-base);
+	border-color: var(--primary-tint-15);
+}
+
+.kanban-card-title {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--heading-color);
+}
+
+.kanban-card-doc {
+	font-size: 12px;
+	margin-top: 2px;
+}
+
+.kanban-card-meta {
+	margin-top: 8px;
+}
+
+.kanban-image img {
+	border-radius: var(--border-radius-sm);
+}
+
+.kanban-empty-state {
+	color: var(--text-muted);
+	font-size: 12.5px;
+	padding: 24px 0;
+}
+
+[data-theme="dark"] .kanban-column {
+	background: var(--surface-gray-1);
+}

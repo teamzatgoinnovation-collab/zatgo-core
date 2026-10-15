@@ -1,0 +1,911 @@
+/* ============================================
+   8. SIDEBAR — CONTAINER
+   ============================================ */
+
+.body-sidebar-container {
+	height: 100vh;
+}
+
+.body-sidebar-container .body-sidebar-placeholder {
+	width: 50px;
+}
+
+.body-sidebar-container.expanded .body-sidebar-placeholder {
+	width: var(--st-sidebar-width);
+}
+
+.body-sidebar {
+	background: var(--st-sidebar-bg) !important;
+	border-right: 1px solid var(--st-sidebar-border) !important;
+	padding: 14px 12px 14px 12px;
+	gap: 4px;
+	width: 50px;
+	transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.body-sidebar-container.expanded .body-sidebar {
+	width: var(--st-sidebar-width);
+}
+
+/* ============================================
+   9. SIDEBAR HEADER
+   ============================================ */
+
+.sidebar-header {
+	padding: 8px 10px;
+	height: 52px;
+	border-radius: var(--st-radius);
+	transition: background 0.15s ease;
+	margin-bottom: 4px;
+}
+
+.sidebar-header:hover {
+	background: var(--st-item-hover);
+}
+
+.header-logo {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.header-logo .icon-container {
+	border-radius: 8px;
+}
+
+.header-logo-container {
+	border-radius: 8px;
+}
+
+.sidebar-item-icon[style*="background-color"] {
+	border-radius: 8px !important;
+}
+
+.header-title {
+	font-weight: 600 !important;
+	font-size: 14.5px !important;
+	color: var(--st-text-primary) !important;
+	line-height: 1.25 !important;
+}
+
+.header-subtitle {
+	font-size: 12px !important;
+	color: var(--st-text-muted) !important;
+	line-height: 1.25 !important;
+	margin-top: 2px !important;
+}
+
+.title-container {
+	margin-left: 10px;
+}
+
+/* Header chevron — visible */
+.body-sidebar .sidebar-header .drop-icon {
+	opacity: 0.5 !important;
+	transition: opacity 0.15s ease;
+}
+
+.body-sidebar .sidebar-header .drop-icon svg,
+.body-sidebar .sidebar-header .drop-icon .icon {
+	color: var(--st-text-muted) !important;
+}
+
+.body-sidebar .sidebar-header:hover .drop-icon {
+	opacity: 0.8 !important;
+}
+
+/* ============================================
+   10. SEARCH
+   ============================================ */
+
+.standard-items-sections {
+	padding: 0 2px;
+	margin-bottom: 2px;
+}
+
+.body-sidebar .standard-items-sections .sidebar-item-container:first-child .standard-sidebar-item {
+	margin-bottom: 4px;
+}
+
+.body-sidebar-container.expanded .standard-items-sections .sidebar-item-container:first-child .item-anchor {
+	background: var(--st-search-bg);
+	border: 1px solid var(--st-search-border);
+	border-radius: var(--st-radius);
+	padding: 0 12px;
+	height: 36px;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.body-sidebar-container.expanded .standard-items-sections .sidebar-item-container:first-child .item-anchor:hover {
+	border-color: var(--gray-300);
+	background: var(--card-bg);
+}
+
+.body-sidebar-container.expanded .standard-items-sections .sidebar-item-container:first-child .sidebar-item-icon {
+	padding: 4px;
+}
+
+.body-sidebar-container.expanded .standard-items-sections .sidebar-item-container:first-child .sidebar-item-label {
+	color: var(--st-text-muted) !important;
+	font-weight: 400;
+}
+
+/* ============================================
+   11. SIDEBAR ITEMS
+   ============================================ */
+
+.body-sidebar .body-sidebar-top {
+	gap: 2px;
+	padding: 0 2px;
+}
+
+.body-sidebar .standard-sidebar-item {
+	margin-bottom: 0;
+}
+
+.body-sidebar .standard-sidebar-item .item-anchor {
+	height: 36px;
+	padding: 0 10px;
+	border-radius: var(--st-radius);
+	color: var(--st-text-secondary) !important;
+	gap: 8px;
+	transition: all 0.15s ease;
+}
+
+.body-sidebar .standard-sidebar-item:not(.active-sidebar):has(a:not(.section-break)):hover {
+	background: var(--st-item-hover) !important;
+	border-radius: var(--st-radius) !important;
+}
+
+.body-sidebar .standard-sidebar-item .sidebar-item-icon {
+	padding: 4px;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border-radius: 6px;
+	transition: background 0.15s ease;
+}
+
+.body-sidebar .standard-sidebar-item .sidebar-item-icon svg,
+.body-sidebar .standard-sidebar-item .sidebar-item-icon .icon {
+	color: var(--st-text-muted) !important;
+}
+
+.body-sidebar .standard-sidebar-item .sidebar-item-label {
+	font-size: 13.5px;
+	font-weight: 500;
+	color: var(--st-text-secondary) !important;
+	line-height: 1;
+}
+
+/* Hover: darken text + icon */
+.body-sidebar .standard-sidebar-item:not(.active-sidebar):hover .sidebar-item-label {
+	color: var(--st-text-primary) !important;
+}
+
+.body-sidebar .standard-sidebar-item:not(.active-sidebar):hover .sidebar-item-icon svg,
+.body-sidebar .standard-sidebar-item:not(.active-sidebar):hover .sidebar-item-icon .icon {
+	color: var(--st-text-secondary) !important;
+}
+
+/* Keyboard shortcuts */
+.sidebar-item-suffix .keyboard-shortcut {
+	background: var(--st-kbd-bg) !important;
+	color: var(--st-kbd-color) !important;
+	font-size: 11px !important;
+	font-weight: 500 !important;
+	padding: 2px 6px;
+	border-radius: 3px;
+	line-height: 1.4;
+	font-family: inherit;
+}
+
+/* ============================================
+   12. ACTIVE ITEM — Blue bg, white text
+   Higher specificity to beat frappe defaults
+   ============================================ */
+
+.body-sidebar .standard-sidebar-item.active-sidebar {
+	background: var(--st-item-active-bg) !important;
+	box-shadow: 0 1px 3px rgba(41, 82, 227, 0.2) !important;
+	border-radius: var(--st-radius) !important;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor {
+	color: var(--st-item-active-text) !important;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-label {
+	font-weight: 600 !important;
+	color: var(--st-item-active-text) !important;
+}
+
+/*
+ * Icons — outlined, not filled.
+ * frappe icons use stroke="currentColor" for line icons (es-line).
+ * We set color + stroke, but NOT fill, so outlines stay outlined.
+ */
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon svg,
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon .icon,
+.body-sidebar .active-sidebar .sidebar-item-icon svg,
+.body-sidebar .active-sidebar .sidebar-item-icon .icon {
+	color: var(--st-item-active-text) !important;
+	stroke: var(--st-item-active-text) !important;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon .text-ink-gray-7,
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon .current-color,
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon span,
+.body-sidebar .active-sidebar .sidebar-item-icon span {
+	color: var(--st-item-active-text) !important;
+}
+
+/* SVG use elements */
+.body-sidebar .active-sidebar .sidebar-item-icon svg use {
+	stroke: var(--st-item-active-text) !important;
+	color: var(--st-item-active-text) !important;
+}
+
+/* Nested active items */
+.body-sidebar .sidebar-item-container .active-sidebar .sidebar-item-label {
+	color: var(--st-item-active-text) !important;
+}
+
+.body-sidebar .sidebar-item-container .active-sidebar .sidebar-item-icon svg {
+	color: var(--st-item-active-text) !important;
+	stroke: var(--st-item-active-text) !important;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-suffix .keyboard-shortcut {
+	background: rgba(255, 255, 255, 0.2) !important;
+	color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ============================================
+   13. SECTION BREAKS
+   ============================================ */
+
+.section-break {
+	color: var(--st-section-color) !important;
+	margin-left: 10px !important;
+	margin-top: 2px;
+	padding-top: 12px;
+}
+
+.body-sidebar .section-item .divider {
+	border-top: 1px solid var(--st-divider) !important;
+	margin: 8px 10px !important;
+}
+
+.body-sidebar .section-item .divider.hidden {
+	display: none;
+}
+
+.section-break .sidebar-item-label {
+	font-size: 10.5px !important;
+	font-weight: 650 !important;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--st-section-color) !important;
+}
+
+.section-break .sidebar-item-control {
+	margin-left: auto;
+}
+
+.body-sidebar .section-break .sidebar-item-control .drop-icon,
+.body-sidebar .section-break .sidebar-item-control .btn-reset {
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	display: flex !important;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.12s ease;
+	opacity: 0.5;
+}
+
+.body-sidebar .section-break .sidebar-item-control .drop-icon svg,
+.body-sidebar .section-break .sidebar-item-control .btn-reset svg {
+	color: var(--st-section-color) !important;
+}
+
+.body-sidebar .section-item:hover .sidebar-item-control .drop-icon,
+.body-sidebar .section-item:hover .sidebar-item-control .btn-reset {
+	opacity: 0.8;
+}
+
+.section-break .sidebar-item-control .drop-icon:hover {
+	background: var(--st-item-hover);
+}
+
+/* Nested items */
+.sidebar-child-item.nested-container {
+	padding-left: 0;
+}
+
+.indent + .nested-container {
+	margin-left: 12px;
+}
+
+/* Divider */
+.body-sidebar .divider {
+	border-top-color: var(--st-divider) !important;
+	margin: 8px 10px !important;
+}
+
+/* ============================================
+   14. BOTTOM SECTION
+   ============================================ */
+
+.body-sidebar .body-sidebar-bottom {
+	padding: 8px 4px 4px;
+	border-top: 1px solid var(--st-divider);
+	margin-top: 4px;
+}
+
+.body-sidebar .collapse-sidebar-link {
+	padding: 6px 10px;
+	border-radius: var(--st-radius);
+	color: var(--st-text-muted) !important;
+	font-size: 13px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	transition: background 0.15s ease;
+}
+
+.body-sidebar .collapse-sidebar-link svg {
+	flex-shrink: 0;
+	color: var(--st-text-muted) !important;
+}
+
+.body-sidebar .collapse-sidebar-link span {
+	font-weight: 500;
+	color: var(--st-text-muted) !important;
+}
+
+.body-sidebar .collapse-sidebar-link:hover {
+	background: var(--st-item-hover);
+	text-decoration: none;
+}
+
+.body-sidebar .collapse-sidebar-link:hover span,
+.body-sidebar .collapse-sidebar-link:hover svg {
+	color: var(--st-text-secondary) !important;
+}
+
+.body-sidebar .onboarding-sidebar {
+	padding: 6px 10px;
+	border-radius: var(--st-radius);
+	color: var(--st-text-muted) !important;
+	font-size: 13px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	transition: background 0.15s ease;
+}
+
+.body-sidebar .onboarding-sidebar:hover {
+	background: var(--st-item-hover);
+}
+
+.body-sidebar .onboarding-sidebar svg,
+.body-sidebar .onboarding-sidebar span {
+	color: var(--st-text-muted) !important;
+}
+
+/* ============================================
+   15. USER PROFILE
+   ============================================ */
+
+.body-sidebar .dropdown-navbar-user {
+	margin-left: 0 !important;
+	margin-top: 8px !important;
+	border-top: 1px solid var(--st-divider);
+	padding-top: 12px;
+}
+
+.body-sidebar .dropdown-navbar-user .sidebar-user-button {
+	padding: 8px !important;
+	border-radius: var(--st-radius) !important;
+	transition: background 0.15s ease;
+}
+
+.body-sidebar .dropdown-navbar-user:hover {
+	background: var(--st-item-hover) !important;
+	border-radius: var(--st-radius) !important;
+}
+
+.body-sidebar .dropdown-navbar-user .avatar-name-email {
+	margin-left: 10px !important;
+}
+
+.body-sidebar .dropdown-navbar-user .avatar-name-email span:first-child {
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--st-text-primary) !important;
+}
+
+.body-sidebar .dropdown-navbar-user .avatar-name-email .text-secondary {
+	font-size: 11.5px !important;
+	color: var(--st-text-muted) !important;
+	margin-top: 1px;
+}
+
+.body-sidebar .dropdown-navbar-user .avatar-medium {
+	width: 36px !important;
+	height: 36px !important;
+	border-radius: 8px !important;
+}
+
+.body-sidebar .dropdown-navbar-user .sidebar-user-button::after {
+	content: "";
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	margin-left: auto;
+	flex-shrink: 0;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A3ACB9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 15l5-5 5 5'/%3E%3Cpath d='M7 9l5 5 5-5'/%3E%3C/svg%3E");
+	background-size: contain;
+	background-repeat: no-repeat;
+	opacity: 0.5;
+	transition: opacity 0.15s ease;
+}
+
+.body-sidebar .dropdown-navbar-user:hover .sidebar-user-button::after {
+	opacity: 0.8;
+}
+
+/* ============================================
+   16. DROPDOWNS & MENUS
+   ============================================ */
+
+.body-sidebar .dropdown-notifications {
+	border-radius: var(--st-radius);
+	overflow: visible;
+}
+
+/* Notification panel always positioned to the right of the sidebar */
+.body-sidebar .dropdown-notifications .notifications-list {
+	border-radius: 8px;
+	box-shadow: var(--shadow-lg);
+	border: 1px solid var(--st-sidebar-border);
+	left: 100% !important;
+	position: fixed;
+	top: 0;
+	height: 100vh;
+}
+
+/* When sidebar is collapsed (not in dual mode), position after the rail */
+.body-sidebar-container:not(.expanded) .dropdown-notifications .notifications-list {
+	left: 56px !important;
+}
+
+/* In dual sidebar mode, position after the rail + sidebar */
+body.st-dual-sidebar .dropdown-notifications .notifications-list {
+	left: calc(var(--st-rail-width) + 240px) !important;
+}
+
+body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notifications .notifications-list {
+	left: calc(var(--st-rail-width) + 50px) !important;
+}
+
+.hover {
+	background-color: var(--st-item-hover) !important;
+	border-radius: var(--st-radius) !important;
+}
+
+.body-sidebar .promotional-banners {
+	margin: 4px 0 !important;
+}
+
+.body-sidebar .promotional-banner {
+	font-size: 13px;
+	padding: 6px 10px;
+	border-radius: var(--st-radius);
+	color: var(--st-text-muted);
+	transition: all 0.15s ease;
+}
+
+.body-sidebar .promotional-banner:hover {
+	background: var(--st-item-hover);
+	color: var(--st-text-secondary);
+}
+
+/* Scrollbar */
+.body-sidebar .body-sidebar-top::-webkit-scrollbar {
+	width: 3px;
+}
+
+.body-sidebar .body-sidebar-top::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.body-sidebar .body-sidebar-top::-webkit-scrollbar-thumb {
+	background: var(--st-divider);
+	border-radius: 3px;
+}
+
+.body-sidebar .body-sidebar-top::-webkit-scrollbar-thumb:hover {
+	background: var(--gray-400);
+}
+
+/* App switcher dropdown */
+.sidebar-header-menu {
+	border-radius: var(--border-radius-lg) !important;
+	box-shadow: var(--shadow-lg) !important;
+	border: 1px solid var(--st-sidebar-border) !important;
+	padding: 6px !important;
+	background: var(--st-sidebar-bg) !important;
+}
+
+.sidebar-header-menu .dropdown-menu-item {
+	border-radius: var(--st-radius);
+	padding: 0;
+}
+
+.sidebar-header-menu .dropdown-menu-item a {
+	padding: 8px 10px;
+	border-radius: var(--st-radius);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--st-text-primary) !important;
+	font-size: 13.5px;
+	font-weight: 500;
+	text-decoration: none;
+	transition: background 0.12s ease;
+}
+
+.sidebar-header-menu .dropdown-menu-item a:hover {
+	background: var(--st-item-hover);
+}
+
+.sidebar-header-menu .dropdown-menu-item .sidebar-item-icon {
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+/* ============================================
+   17. COLLAPSED SIDEBAR
+   ============================================ */
+
+.body-sidebar-container:not(.expanded) .body-sidebar {
+	width: 56px !important;
+	padding: 14px 6px;
+	align-items: center;
+	overflow: hidden;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar-placeholder {
+	width: 56px !important;
+}
+
+/* Hide all text and controls */
+.body-sidebar-container:not(.expanded) .body-sidebar .sidebar-item-label,
+.body-sidebar-container:not(.expanded) .body-sidebar .sidebar-item-suffix,
+.body-sidebar-container:not(.expanded) .body-sidebar .section-break,
+.body-sidebar-container:not(.expanded) .body-sidebar .sidebar-item-control,
+.body-sidebar-container:not(.expanded) .body-sidebar .title-container,
+.body-sidebar-container:not(.expanded) .body-sidebar .drop-icon,
+.body-sidebar-container:not(.expanded) .body-sidebar .divider,
+.body-sidebar-container:not(.expanded) .body-sidebar .avatar-name-email,
+.body-sidebar-container:not(.expanded) .body-sidebar .section-item .section-break,
+.body-sidebar-container:not(.expanded) .body-sidebar .sidebar-item-edit-controls {
+	display: none !important;
+}
+
+/* Hide section items entirely in collapsed mode */
+.body-sidebar-container:not(.expanded) .body-sidebar .section-item {
+	display: none !important;
+}
+
+/* Header — center the logo */
+.body-sidebar-container:not(.expanded) .sidebar-header {
+	justify-content: center;
+	padding: 4px;
+	margin-bottom: 4px;
+	width: 44px;
+	height: 44px;
+}
+
+/* Items — centered icon squares */
+.body-sidebar-container:not(.expanded) .body-sidebar .standard-sidebar-item {
+	width: 44px;
+	margin: 0 auto;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .standard-sidebar-item .item-anchor {
+	justify-content: center;
+	padding: 0;
+	height: 40px;
+	width: 44px;
+	margin: 0 auto;
+	border-radius: var(--st-radius);
+	gap: 0;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .standard-sidebar-item .sidebar-item-icon {
+	padding: 0;
+	width: 20px;
+	height: 20px;
+}
+
+/* Active item in collapsed */
+.body-sidebar-container:not(.expanded) .body-sidebar .standard-sidebar-item.active-sidebar {
+	width: 44px;
+	margin: 0 auto;
+}
+
+/* Bottom section */
+.body-sidebar-container:not(.expanded) .body-sidebar .body-sidebar-bottom {
+	border-top: 1px solid var(--st-divider);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	padding: 6px 0 0;
+}
+
+/* Collapse link */
+.body-sidebar-container:not(.expanded) .body-sidebar .collapse-sidebar-link {
+	justify-content: center;
+	width: 44px;
+	height: 40px;
+	padding: 0;
+	margin: 0 auto;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .collapse-sidebar-link span {
+	display: none !important;
+}
+
+/* Onboarding */
+.body-sidebar-container:not(.expanded) .body-sidebar .onboarding-sidebar span {
+	display: none !important;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .onboarding-sidebar {
+	justify-content: center;
+	width: 44px;
+	height: 40px;
+	padding: 0;
+	margin: 0 auto;
+}
+
+/* User profile */
+.body-sidebar-container:not(.expanded) .body-sidebar .dropdown-navbar-user {
+	border-top: none;
+	padding-top: 6px !important;
+	margin-top: 4px !important;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .dropdown-navbar-user .sidebar-user-button {
+	justify-content: center;
+	width: 44px;
+	padding: 4px !important;
+}
+
+/* Hide the user chevron */
+.body-sidebar-container:not(.expanded) .body-sidebar .dropdown-navbar-user .sidebar-user-button::after {
+	display: none !important;
+}
+
+/* Promotional banners */
+.body-sidebar-container:not(.expanded) .body-sidebar .promotional-banners {
+	display: none !important;
+}
+
+/* Cards */
+.body-sidebar-container:not(.expanded) .body-sidebar .body-sidebar-cards {
+	display: none !important;
+}
+
+.body-sidebar-container:not(.expanded) .body-sidebar .dropdown-navbar-user .sidebar-user-button::after {
+	display: none;
+}
+
+/* ============================================
+   18. TOOLTIP
+   ============================================ */
+
+.tooltip .tooltip-inner {
+	background: var(--gray-900);
+	border-radius: var(--border-radius-sm);
+	font-size: 12px;
+	font-weight: 500;
+	padding: 5px 10px;
+}
+
+/* ============================================
+   19. RESPONSIVE
+   ============================================ */
+
+@media (max-width: 576px) {
+	.body-sidebar-container.expanded .body-sidebar {
+		width: var(--st-sidebar-width);
+		padding: 14px 12px 14px;
+	}
+}
+
+/* ============================================
+   20. EDIT MODE
+   ============================================ */
+
+.body-sidebar-container[data-mode="edit"] .body-sidebar {
+	background: var(--st-sidebar-bg) !important;
+}
+
+.body-sidebar .bottom-edit-controls {
+	gap: 8px;
+	padding: 8px 0;
+}
+
+.body-sidebar .bottom-edit-controls .btn {
+	border-radius: 4px;
+	font-size: 13px;
+}
+
+/* ============================================
+   21. SIDEBAR CARDS
+   ============================================ */
+
+.body-sidebar .body-sidebar-cards .sidebar-card {
+	border-radius: var(--st-radius) !important;
+	border: 1px solid var(--st-divider);
+	margin: 4px 4px;
+}
+
+/* ============================================
+   22. USER MENU POPOVER
+   ============================================ */
+
+.saas-user-menu {
+	position: absolute;
+	bottom: 64px;
+	left: 10px;
+	right: 10px;
+	background: var(--st-sidebar-bg);
+	border: 1px solid var(--st-sidebar-border);
+	border-radius: var(--border-radius-lg);
+	box-shadow: var(--shadow-xl);
+	z-index: 1050;
+	padding: 8px;
+	animation: saas-menu-in 0.15s ease-out;
+}
+
+@keyframes saas-menu-in {
+	from { opacity: 0; transform: translateY(6px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.saas-user-menu-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 6px;
+}
+
+.saas-user-menu-avatar {
+	flex-shrink: 0;
+}
+
+.saas-user-menu-avatar .avatar-large {
+	width: 38px !important;
+	height: 38px !important;
+	border-radius: 8px;
+}
+
+.saas-user-menu-info {
+	overflow: hidden;
+}
+
+.saas-user-menu-name {
+	font-weight: 600;
+	font-size: 13.5px;
+	color: var(--st-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.saas-user-menu-email {
+	font-size: 12px;
+	color: var(--st-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-top: 2px;
+}
+
+.saas-user-menu-divider {
+	height: 1px;
+	background: var(--st-divider);
+	margin: 6px 0;
+}
+
+.saas-user-menu-items {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.saas-user-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 8px;
+	border-radius: var(--st-radius);
+	color: var(--st-text-secondary);
+	font-size: 13.5px;
+	font-weight: 500;
+	cursor: pointer;
+	text-decoration: none !important;
+	transition: all 0.12s ease;
+}
+
+.saas-user-menu-item:hover {
+	background: var(--st-item-hover);
+	color: var(--st-text-primary);
+	text-decoration: none;
+}
+
+.saas-menu-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+	color: var(--st-text-muted);
+}
+
+.saas-user-menu-item.highlight {
+	background: var(--st-update-bg);
+	color: var(--st-update-color);
+	font-weight: 500;
+}
+
+.saas-user-menu-item.highlight:hover {
+	background: var(--st-update-bg);
+	opacity: 0.9;
+}
+
+.saas-menu-dot {
+	width: 8px;
+	height: 8px;
+	background: var(--st-update-color);
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.saas-user-menu-footer {
+	padding: 8px 8px 4px;
+	font-size: 11px;
+	color: var(--st-text-muted);
+	text-align: left;
+}
+
+/* ============================================
+   23. NOTIFICATION DOT
+   ============================================ */
+
+.st-notification-dot {
+	width: 7px;
+	height: 7px;
+	background: #DF1B41;
+	border-radius: 50%;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+

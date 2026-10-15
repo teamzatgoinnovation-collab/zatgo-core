@@ -1,0 +1,26 @@
+/* ============================================
+   6. LINKS
+   ============================================ */
+
+a {
+	color: var(--primary);
+}
+a:hover {
+	color: var(--primary-active);
+}
+
+/* ============================================
+   7. PAGE & CARDS
+   ============================================ */
+
+.main-section {
+	background: var(--bg-color);
+}
+
+.frappe-card,
+.frappe-control .frappe-card {
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	box-shadow: var(--shadow-sm);
+}
+
