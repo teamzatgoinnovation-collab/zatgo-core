@@ -342,6 +342,82 @@ body {
 }
 
 /* ============================================
+   2b. SEMANTIC DESIGN TOKENS (--zg-*)
+   Scales + status colours that new rules use instead of one-off values.
+   Brand colour itself stays in 00-tokens (--primary); everything here derives from it.
+   ============================================ */
+
+:root,
+[data-theme="light"] {
+	/* Spacing (4px base) */
+	--zg-space-1: 4px;
+	--zg-space-2: 8px;
+	--zg-space-3: 12px;
+	--zg-space-4: 16px;
+	--zg-space-6: 24px;
+	--zg-space-8: 32px;
+
+	/* Type scale */
+	--zg-text-xs: 11px;
+	--zg-text-sm: 12px;
+	--zg-text-base: 13px;
+	--zg-text-md: 14px;
+	--zg-text-lg: 16px;
+	--zg-text-xl: 20px;
+	--zg-leading-tight: 1.3;
+	--zg-leading-normal: 1.5;
+
+	/* Radius */
+	--zg-radius-sm: 4px;
+	--zg-radius-md: 6px;
+	--zg-radius-lg: 8px;
+	--zg-radius-pill: 999px;
+
+	/* Motion */
+	--zg-duration-fast: 120ms;
+	--zg-duration-base: 180ms;
+	--zg-ease: cubic-bezier(0.2, 0, 0, 1);
+
+	/* Stacking (above Frappe's modal 1050 / popover 1060 / alerts 2000 only where noted) */
+	--zg-z-rail: 1020;
+	--zg-z-drawer: 1040;
+
+	/* Focus */
+	--zg-focus-ring: #2952E3;
+	--zg-focus-offset: 2px;
+
+	/* Status — semantic, shared by alerts, toasts, badges */
+	--zg-success-bg: var(--alert-bg-success);
+	--zg-success-fg: var(--alert-text-success);
+	--zg-warning-bg: var(--alert-bg-warning);
+	--zg-warning-fg: var(--alert-text-warning);
+	--zg-danger-bg: var(--alert-bg-danger);
+	--zg-danger-fg: var(--alert-text-danger);
+	--zg-info-bg: var(--alert-bg-info);
+	--zg-info-fg: var(--alert-text-info);
+
+	/* Placeholder text — the legacy value above is a background tint, unreadable as text */
+	--placeholder-color: #8792A2;
+}
+
+[data-theme="dark"] {
+	--zg-focus-ring: #7195EC;
+
+	/* Frappe's dark alert tokens are overridden by the light :root block above, so restate them */
+	--alert-bg-info: rgba(113, 149, 236, 0.14);
+	--alert-text-info: #A9C0F6;
+	--alert-bg-success: rgba(52, 199, 110, 0.14);
+	--alert-text-success: #6EDC9A;
+	--alert-bg-danger: rgba(255, 99, 125, 0.14);
+	--alert-text-danger: #FF8FA1;
+	--alert-bg-warning: rgba(240, 177, 0, 0.14);
+	--alert-text-warning: #F5C451;
+
+	--code-block-bg: #0D1117;
+	--code-block-text: #C9D1D9;
+	--placeholder-color: #6E7681;
+}
+/* ============================================
    4. BUTTONS
    ============================================ */
 
@@ -3361,4 +3437,96 @@ body.st-dual-sidebar .onb-panel {
 
 [data-theme="dark"] .kanban-column {
 	background: var(--surface-gray-1);
+}
+/* ============================================
+   30. FEEDBACK — toasts, alerts, empty / loading states
+   ============================================ */
+
+/* Toast (frappe.show_alert): compact, left accent bar carries the status */
+.desk-alert {
+	width: min(400px, calc(100vw - 24px));
+	border: 1px solid var(--border-color);
+	border-left: 3px solid var(--zg-info-fg);
+	border-radius: var(--zg-radius-md);
+	box-shadow: var(--shadow-lg);
+	animation-duration: var(--zg-duration-base);
+}
+.desk-alert.green  { border-left-color: var(--zg-success-fg); }
+.desk-alert.red    { border-left-color: var(--zg-danger-fg); }
+.desk-alert.yellow,
+.desk-alert.orange { border-left-color: var(--zg-warning-fg); }
+.desk-alert .alert-message-container { padding: var(--zg-space-3) var(--zg-space-8) var(--zg-space-3) var(--zg-space-4); }
+.desk-alert .alert-message { font-size: var(--zg-text-base); }
+.desk-alert .alert-subtitle { font-size: var(--zg-text-sm); }
+
+/* Inline Bootstrap alerts share the same status palette */
+.alert {
+	border-radius: var(--zg-radius-md);
+	border-width: 1px;
+	font-size: var(--zg-text-base);
+}
+.alert.alert-info    { border-color: color-mix(in srgb, var(--zg-info-fg) 25%, transparent); }
+.alert.alert-success { border-color: color-mix(in srgb, var(--zg-success-fg) 25%, transparent); }
+.alert.alert-warning { border-color: color-mix(in srgb, var(--zg-warning-fg) 25%, transparent); }
+.alert.alert-danger  { border-color: color-mix(in srgb, var(--zg-danger-fg) 25%, transparent); }
+
+/* Empty / no-result blocks (list, report, kanban share Frappe's .msg-box) */
+.msg-box {
+	padding: var(--zg-space-8) var(--zg-space-4);
+	color: var(--text-muted);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+}
+.msg-box .null-state { opacity: 0.85; }
+.msg-box .msg-box-action,
+.msg-box p { margin-top: var(--zg-space-2); }
+
+/* Skeleton loader — opt-in utility; animation is disabled under reduced motion (see 90-a11y) */
+.zg-skeleton {
+	display: block;
+	min-height: 1em;
+	border-radius: var(--zg-radius-sm);
+	background: linear-gradient(90deg, var(--subtle-fg) 25%, var(--subtle-accent) 50%, var(--subtle-fg) 75%);
+	background-size: 200% 100%;
+	animation: zg-skeleton 1.4s linear infinite;
+}
+@keyframes zg-skeleton {
+	from { background-position: 200% 0; }
+	to   { background-position: -200% 0; }
+}
+/* ============================================
+   31. ACCESSIBILITY & MOTION
+   ============================================ */
+
+/* One visible keyboard-focus ring for anything interactive that has no own focus style.
+   :where() keeps specificity at zero so component rules above still win. */
+:where(a, button, [role="button"], [role="menuitem"], [role="tab"], summary, [tabindex]:not([tabindex="-1"])):focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+:where(input, select, textarea):focus-visible {
+	outline: none; /* inputs get the box-shadow ring from the controls layer */
+}
+
+/* Motion: honour the OS setting */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;   /* beats Frappe's per-component durations */
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* Higher contrast: stronger borders and ring */
+@media (prefers-contrast: more) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--border-color: var(--gray-500);
+		--dark-border-color: var(--gray-700);
+		--zg-focus-offset: 3px;
+	}
 }
