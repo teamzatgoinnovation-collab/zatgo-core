@@ -8,9 +8,9 @@
 
 .btn-primary,
 .btn-primary-dark {
-	background-color: var(--primary) !important;
-	border-color: var(--primary) !important;
-	color: #FFFFFF !important;
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--zg-on-primary) !important;
 	font-weight: 500;
 	box-shadow: var(--shadow-primary-sm);
 	transition: background 0.15s ease, box-shadow 0.15s ease;
@@ -41,7 +41,7 @@
 
 /* --- All inputs: squarish corners + blue focus --- */
 .form-control {
-	border-radius: var(--border-radius-sm) !important;
+	border-radius: var(--border-radius-sm);
 	transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -66,51 +66,51 @@
 }
 
 .input-group > .form-control {
-	border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm) !important;
+	border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
 }
 
 .input-group > .input-group-append .btn {
-	border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0 !important;
+	border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
 }
 
 /* --- Slightly larger inputs only inside forms --- */
 .form-page .form-control,
 .form-layout .form-control,
 .modal-dialog .form-control {
-	height: 38px !important;
-	font-size: 13px !important;
+	height: 38px;
+	font-size: 13px;
 	padding: 8px 10px !important;
-	border: 1px solid var(--gray-300) !important;
-	background-color: var(--fg-color) !important;
+	border: 1px solid var(--gray-300);
+	background-color: var(--fg-color);
 }
 
 .form-page textarea.form-control,
 .form-layout textarea.form-control,
 .modal-dialog textarea.form-control {
 	height: auto !important;
-	min-height: 76px !important;
-	padding: 8px 10px !important;
+	min-height: 76px;
+	padding: 8px 10px;
 }
 
 .form-page select.form-control,
 .form-layout select.form-control,
 .modal-dialog select.form-control {
-	height: 38px !important;
-	padding: 8px 10px !important;
+	height: 38px;
+	padding: 8px 10px;
 }
 
 .form-page .input-group > .input-group-append .btn,
 .form-layout .input-group > .input-group-append .btn,
 .modal-dialog .input-group > .input-group-append .btn {
-	height: 38px !important;
+	height: 38px;
 }
 
 .form-page .like-disabled-input,
 .form-layout .like-disabled-input,
 .modal-dialog .like-disabled-input {
-	min-height: 38px !important;
-	padding: 8px 10px !important;
-	border-radius: var(--border-radius-sm) !important;
+	min-height: 38px;
+	padding: 8px 10px;
+	border-radius: var(--border-radius-sm);
 }
 
 /* ============================================
@@ -123,14 +123,14 @@
 }
 
 .form-tabs .nav-item {
-	margin-right: 4px !important;
-	margin-left: 0 !important;
+	margin-right: 4px;
+	margin-left: 0;
 }
 
 .form-tabs .nav-link {
-	border: none !important;
+	border: none;
 	border-bottom: 2px solid transparent !important;
-	border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0 !important;
+	border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
 	padding: 8px 10px !important;
 	margin: 0 !important;
 	transition: all 0.15s ease;

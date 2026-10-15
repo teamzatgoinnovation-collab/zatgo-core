@@ -74,3 +74,67 @@
 	--code-block-text: #C9D1D9;
 	--placeholder-color: #6E7681;
 }
+
+/* ============================================
+   2c. COLOUR ROLES (values moved out of component rules; light/dark swap here)
+   ============================================ */
+:root,
+[data-theme="light"] {
+	--zg-brand: #2952E3;              /* fixed brand colour (rail accents, focus) — same in both themes */
+	--zg-brand-rgb: 41, 82, 227;
+	--zg-on-primary: #FFFFFF;
+	--zg-danger-solid: #DF1B41;
+	--zg-scrim: rgba(0, 0, 0, 0.3);
+
+	/* Rail is always a dark surface; these are its backgrounds */
+	--zg-rail-bg: #0B1120;
+	--zg-rail-border: #1A2332;
+
+	/* White at N% — for text/washes ON the dark rail and brand-coloured surfaces */
+	--zg-white-06: rgba(255, 255, 255, 0.06);
+	--zg-white-08: rgba(255, 255, 255, 0.08);
+	--zg-white-09: rgba(255, 255, 255, 0.09);
+	--zg-white-10: rgba(255, 255, 255, 0.1);
+	--zg-white-12: rgba(255, 255, 255, 0.12);
+	--zg-white-15: rgba(255, 255, 255, 0.15);
+	--zg-white-20: rgba(255, 255, 255, 0.2);
+	--zg-white-25: rgba(255, 255, 255, 0.25);
+	--zg-white-35: rgba(255, 255, 255, 0.35);
+	--zg-white-40: rgba(255, 255, 255, 0.4);
+	--zg-white-45: rgba(255, 255, 255, 0.45);
+	--zg-white-65: rgba(255, 255, 255, 0.65);
+	--zg-white-80: rgba(255, 255, 255, 0.8);
+	--zg-white-85: rgba(255, 255, 255, 0.85);
+	--zg-white-90: rgba(255, 255, 255, 0.9);
+	--zg-white-100: #FFFFFF;
+
+	/* Subtle row/head washes */
+	--zg-wash-1: rgba(0, 0, 0, 0.015);
+	--zg-wash-2: rgba(0, 0, 0, 0.04);
+
+	/* Accent pairs (tinted bg + readable fg): sidebar section icons, file-type icons, tags, counters */
+	--zg-accent-blue-bg: #E8F0FE;   --zg-accent-blue-fg: #1A73E8;
+	--zg-accent-amber-bg: #FEF3E0;  --zg-accent-amber-fg: #E8A317;
+	--zg-accent-green-bg: #E6F4EA;  --zg-accent-green-fg: #1E8E3E;
+	--zg-accent-purple-bg: #F3E8FD; --zg-accent-purple-fg: #8430CE;
+	--zg-accent-red-bg: #FDECEA;    --zg-accent-red-fg: #D93025;
+	--zg-accent-indigo-bg: #E8EAF6; --zg-accent-indigo-fg: #3F51B5;
+	--zg-accent-orange-bg: #fff3e0; --zg-accent-orange-fg: #e65100;
+}
+
+[data-theme="dark"] {
+	--zg-rail-bg: #070B14;
+	--zg-rail-border: #141C28;
+	--zg-wash-1: rgba(255, 255, 255, 0.02);
+	--zg-wash-2: rgba(255, 255, 255, 0.04);
+	--zg-dark-surface-1: #21262D;
+	--zg-dark-surface-2: #30363D;
+
+	--zg-accent-blue-bg: rgba(26, 115, 232, 0.15);   --zg-accent-blue-fg: #6EAAFF;
+	--zg-accent-amber-bg: rgba(232, 163, 23, 0.15);  --zg-accent-amber-fg: #FFC94D;
+	--zg-accent-green-bg: rgba(30, 142, 62, 0.15);   --zg-accent-green-fg: #5CD87D;
+	--zg-accent-purple-bg: rgba(132, 48, 206, 0.15); --zg-accent-purple-fg: #BB86FC;
+	--zg-accent-red-bg: rgba(217, 48, 37, 0.15);     --zg-accent-red-fg: #F28B82;
+	--zg-accent-indigo-bg: rgba(63, 81, 181, 0.15);  --zg-accent-indigo-fg: #9FA8DA;
+	--zg-accent-orange-bg: rgba(230, 81, 0, 0.15);   --zg-accent-orange-fg: #ff9800;
+}
