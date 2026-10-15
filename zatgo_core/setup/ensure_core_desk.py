@@ -26,9 +26,22 @@ def _items() -> list[dict]:
     ]
 
 
+def _ensure_workspace() -> None:
+    """Fresh install: Frappe imports workspace/zatgo/zatgo.json before
+    after_install creates the ZG roles it lists, so that import fails
+    silently -- import it again here, where the roles exist."""
+    if frappe.db.exists("Workspace", NAME):
+        return
+    from frappe.modules.import_file import import_file_by_path
+
+    path = os.path.join(frappe.get_app_path("zatgo_core"), "zatgo_core", "workspace", "zatgo", "zatgo.json")
+    import_file_by_path(path, force=True)
+
+
 def ensure_core_desk() -> None:
+    _ensure_workspace()
     if not frappe.db.exists("Workspace", NAME):
-        return  # the synced Workspace is not there (yet): nothing to point at
+        return  # nothing to point at
     if not frappe.db.exists("Workspace Sidebar", NAME):
         sb = frappe.get_doc(
             {

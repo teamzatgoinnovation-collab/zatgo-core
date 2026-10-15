@@ -378,3 +378,15 @@ class TestZatGoDeskEntry(IndustryTestBase):
         self.assertEqual((icon.link_type, icon.link_to, icon.hidden), ("Workspace Sidebar", "ZatGo", 0))
         items = frappe.get_doc("Workspace Sidebar", "ZatGo").items
         self.assertIn("ZG System Settings", [i.link_to for i in items])
+
+    def test_zatgo_entry_is_rebuilt_from_nothing(self) -> None:
+        # Fresh install: the synced Workspace may be missing (its roles do not
+        # exist yet when Frappe imports it) -- ensure_core_desk brings it back.
+        from zatgo_core.setup.ensure_core_desk import ensure_core_desk
+
+        for dt in ("Desktop Icon", "Workspace Sidebar", "Workspace"):
+            if frappe.db.exists(dt, "ZatGo"):
+                frappe.delete_doc(dt, "ZatGo", force=1, ignore_permissions=True)
+        ensure_core_desk()
+        for dt in ("Workspace", "Workspace Sidebar", "Desktop Icon"):
+            self.assertTrue(frappe.db.exists(dt, "ZatGo"), dt)
