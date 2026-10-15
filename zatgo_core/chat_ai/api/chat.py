@@ -8,6 +8,8 @@ import frappe
 from frappe import _
 
 from zatgo_core.chat_ai.api.response import fail, ok
+from zatgo_core.chat_ai.core.providers.errors import ProviderError
+from zatgo_core.chat_ai.core.quota import QuotaExceeded, enforce as enforce_quota
 from zatgo_core.chat_ai.erpnext.orchestrator import run_turn
 from zatgo_core.chat_ai.plugin.api import get_commands
 from zatgo_core.chat_ai.plugin.loader import load_all
@@ -37,7 +39,13 @@ def send(
 	if isinstance(pending_args, str):
 		pending_args = json.loads(pending_args or "{}")
 	message = message or ""
-	if not session:
+	try:
+		enforce_quota()
+	except QuotaExceeded as exc:
+		return fail(str(exc))
+	if session:
+		_assert_session_access(session)
+	else:
 		session = _create_session()
 	try:
 		data = run_turn(
@@ -53,9 +61,16 @@ def send(
 			execution_mode=execution_mode,
 		)
 		return ok(data)
-	except Exception as exc:
+	except ProviderError as exc:
+		frappe.log_error(title=f"chat_ai.send provider {exc.code}", message=exc.detail or str(exc))
+		return fail(exc.message, code=exc.code, retryable=exc.retryable)
+	except frappe.PermissionError:
+		return fail(_("Not permitted"), code="forbidden")
+	except frappe.ValidationError as exc:
+		return fail(str(exc), code="invalid")
+	except Exception:
 		frappe.log_error(title="chat_ai.send")
-		return fail(str(exc))
+		return fail(_("The assistant ran into a problem. Please try again."), code="internal", retryable=True)
 
 
 @frappe.whitelist()

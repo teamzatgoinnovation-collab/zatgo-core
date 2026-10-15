@@ -80,18 +80,6 @@
    "print": 0,
    "report": 1,
    "share": 0
-  },
-  {
-   "role": "Chat AI User",
-   "read": 1,
-   "write": 1,
-   "create": 1,
-   "delete": 1,
-   "email": 0,
-   "export": 0,
-   "print": 0,
-   "report": 0,
-   "share": 0
   }
  ],
  "sort_field": "modified",

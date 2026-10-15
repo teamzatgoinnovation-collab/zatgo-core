@@ -9,6 +9,7 @@ from typing import Any, Iterator
 
 from zatgo_core.chat_ai.core.providers.base import LLMMessage, LLMProvider, LLMResult
 from zatgo_core.chat_ai.core.providers.capabilities import PROVIDER_DEFAULTS
+from zatgo_core.chat_ai.core.providers.errors import from_exception, from_http_status
 
 
 class OpenAICompatProvider(LLMProvider):
@@ -85,7 +86,9 @@ class OpenAICompatProvider(LLMProvider):
 				return json.loads(resp.read().decode("utf-8"))
 		except urllib.error.HTTPError as exc:
 			body = exc.read().decode("utf-8", errors="replace")
-			raise RuntimeError(f"LLM HTTP {exc.code}: {body[:500]}") from exc
+			raise from_http_status(exc.code, body[:500]) from exc
+		except (urllib.error.URLError, OSError) as exc:
+			raise from_exception(exc) from exc
 
 	def _build_payload(
 		self,
@@ -186,7 +189,7 @@ class OpenAICompatProvider(LLMProvider):
 				if text:
 					yield text
 				return
-			raise RuntimeError(f"LLM HTTP {exc.code}: {body[:500]}") from exc
+			raise from_http_status(exc.code, body[:500]) from exc
 		except Exception:
 			result = self.chat(messages, stream=False, **opts)
 			text = result.content or ""

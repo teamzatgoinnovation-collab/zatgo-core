@@ -12,7 +12,6 @@ def hourly():
 
 
 def daily():
-	_rollup_usage()
 	_purge_old_conversations()
 
 
@@ -48,11 +47,6 @@ def _ping_provider():
 		frappe.db.commit()
 	except Exception:
 		frappe.log_error(title="chat_ai provider health")
-
-
-def _rollup_usage():
-	# Usage is also written per-turn; daily job can compact if needed
-	pass
 
 
 def _purge_old_conversations():

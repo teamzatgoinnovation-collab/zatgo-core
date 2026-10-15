@@ -148,6 +148,14 @@ permission_query_conditions = {
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_query",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_query",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_query",
+    # Chat AI: each user sees only their own conversations (managers see all).
+    "AI Chat Session": "zatgo_core.chat_ai.permissions.query_ai_chat_session",
+    "AI Chat Memory": "zatgo_core.chat_ai.permissions.query_ai_chat_memory",
+    "AI Artifact": "zatgo_core.chat_ai.permissions.query_ai_artifact",
+    "AI Tool Log": "zatgo_core.chat_ai.permissions.query_ai_tool_log",
+    "AI Usage Daily": "zatgo_core.chat_ai.permissions.query_ai_usage_daily",
+    "AI Chat Message": "zatgo_core.chat_ai.permissions.query_ai_chat_message",
+    "AI Conversation Summary": "zatgo_core.chat_ai.permissions.query_ai_conversation_summary",
     # Bundled modules' own DocTypes: no rows where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_query_conditions",
@@ -164,6 +172,14 @@ has_permission = {
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
+    # Chat AI: owner scoping (managers bypass); True otherwise, never None.
+    "AI Chat Session": "zatgo_core.chat_ai.permissions.perm_ai_chat_session",
+    "AI Chat Memory": "zatgo_core.chat_ai.permissions.perm_ai_chat_memory",
+    "AI Artifact": "zatgo_core.chat_ai.permissions.perm_ai_artifact",
+    "AI Tool Log": "zatgo_core.chat_ai.permissions.perm_ai_tool_log",
+    "AI Usage Daily": "zatgo_core.chat_ai.permissions.perm_ai_usage_daily",
+    "AI Chat Message": "zatgo_core.chat_ai.permissions.perm_ai_chat_message",
+    "AI Conversation Summary": "zatgo_core.chat_ai.permissions.perm_ai_conversation_summary",
     # Bundled modules' own DocTypes: nobody's where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_doc_has_permission",

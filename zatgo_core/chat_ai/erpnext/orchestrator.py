@@ -805,42 +805,49 @@ def _cost(settings, tin, tout) -> float:
 
 
 def _record_usage(settings, tokens, cost, error=False, latency=0):
+	"""Per-user/day/model counters. Increments happen in SQL so concurrent
+	turns cannot overwrite each other's counts; the insert races are resolved
+	by the unique lookup below plus a retry."""
 	try:
 		from frappe.utils import today
 
 		user = frappe.session.user
 		provider = settings.get("provider")
 		model = settings.get("default_model")
-		existing = frappe.db.get_value(
-			"AI Usage Daily",
-			{"usage_date": today(), "user": user, "provider": provider, "model": model},
-			"name",
-		)
-		if existing:
-			doc = frappe.get_doc("AI Usage Daily", existing)
-			doc.tokens_in = (doc.tokens_in or 0) + tokens[0]
-			doc.tokens_out = (doc.tokens_out or 0) + tokens[1]
-			doc.cost_estimate = (doc.cost_estimate or 0) + cost
-			doc.request_count = (doc.request_count or 0) + 1
-			doc.error_count = (doc.error_count or 0) + (1 if error else 0)
-			n = doc.request_count
-			doc.avg_latency_ms = ((doc.avg_latency_ms or 0) * (n - 1) + latency) / n
-			doc.save(ignore_permissions=True)
-		else:
-			frappe.get_doc(
-				{
-					"doctype": "AI Usage Daily",
-					"usage_date": today(),
-					"user": user,
-					"provider": provider,
-					"model": model,
-					"tokens_in": tokens[0],
-					"tokens_out": tokens[1],
-					"cost_estimate": cost,
-					"request_count": 1,
-					"error_count": 1 if error else 0,
-					"avg_latency_ms": latency,
-				}
-			).insert(ignore_permissions=True)
+		key = {"usage_date": today(), "user": user, "provider": provider, "model": model}
+		for _attempt in range(2):
+			existing = frappe.db.get_value("AI Usage Daily", key, "name")
+			if not existing:
+				frappe.db.savepoint("chat_ai_usage")
+				try:
+					frappe.get_doc(
+						{
+							"doctype": "AI Usage Daily",
+							**key,
+							"tokens_in": 0,
+							"tokens_out": 0,
+							"cost_estimate": 0,
+							"request_count": 0,
+							"error_count": 0,
+							"avg_latency_ms": 0,
+						}
+					).insert(ignore_permissions=True)
+				except Exception:
+					frappe.db.rollback(save_point="chat_ai_usage")
+				existing = frappe.db.get_value("AI Usage Daily", key, "name")
+			if existing:
+				frappe.db.sql(
+					"""update `tabAI Usage Daily` set
+						tokens_in = coalesce(tokens_in, 0) + %s,
+						tokens_out = coalesce(tokens_out, 0) + %s,
+						cost_estimate = coalesce(cost_estimate, 0) + %s,
+						avg_latency_ms = (coalesce(avg_latency_ms, 0) * coalesce(request_count, 0) + %s)
+							/ (coalesce(request_count, 0) + 1),
+						request_count = coalesce(request_count, 0) + 1,
+						error_count = coalesce(error_count, 0) + %s
+						where name = %s""",
+					(tokens[0], tokens[1], cost, latency or 0, 1 if error else 0, existing),
+				)
+				return
 	except Exception:
-		pass
+		frappe.log_error(title="chat_ai._record_usage")

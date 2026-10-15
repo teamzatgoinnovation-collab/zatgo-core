@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
+import secrets
 import time
 
 import frappe
@@ -17,13 +16,17 @@ def _cache_key(session: str, token: str) -> str:
 	return f"chat_ai_confirm:{session}:{token}"
 
 
+def _owner() -> str:
+	return frappe.session.user
+
+
 def issue_token(session: str, payload: dict) -> str:
-	"""Store payload server-side; return opaque token."""
-	raw = json.dumps(payload, sort_keys=True, default=str)
-	token = hashlib.sha256(f"{session}:{raw}:{time.time()}".encode()).hexdigest()[:32]
+	"""Store payload server-side; return an unguessable opaque token bound to
+	the issuing user and session."""
+	token = secrets.token_urlsafe(24)
 	frappe.cache.set_value(
 		_cache_key(session, token),
-		{"payload": payload, "ts": time.time()},
+		{"payload": payload, "ts": time.time(), "user": _owner()},
 		expires_in_sec=_TOKEN_TTL_SEC,
 	)
 	return token
@@ -39,6 +42,8 @@ def consume_token(session: str, token: str | None, expected_kind: str | None = N
 		return None
 	if time.time() - float(entry.get("ts") or 0) > _TOKEN_TTL_SEC:
 		frappe.cache.delete_value(key)
+		return None
+	if entry.get("user") != _owner():
 		return None
 	payload = entry.get("payload") or {}
 	if expected_kind and payload.get("kind") != expected_kind:
