@@ -1,0 +1,143 @@
+/* ============================================
+   2. DARK MODE
+   ============================================ */
+
+[data-theme="dark"] {
+	--primary: #7195EC;
+	--primary-color: #7195EC;
+	--brand-color: #7195EC;
+
+	--gray-900: #0D1117;
+	--gray-800: #161B22;
+	--gray-700: #21262D;
+	--gray-600: #30363D;
+	--gray-500: #484F58;
+	--gray-400: #6E7681;
+	--gray-300: #8B949E;
+	--gray-200: #C9D1D9;
+	--gray-100: #E6EDF3;
+	--gray-50:  #F0F6FC;
+
+	--heading-color: #E6EDF3;
+	--text-color: #C9D1D9;
+	--text-neutral: #C9D1D9;
+	--text-muted: #8B949E;
+	--text-light: #6E7681;
+
+	--bg-color: #0D1117;
+	--fg-color: #161B22;
+	--card-bg: #161B22;
+	--subtle-accent: #161B22;
+	--subtle-fg: #21262D;
+	--navbar-bg: #161B22;
+	--fg-hover-color: #21262D;
+	--modal-bg: #161B22;
+	--toast-bg: #161B22;
+	--popover-bg: #161B22;
+	--control-bg: #21262D;
+	--control-bg-on-gray: #21262D;
+
+	--border-color: #21262D;
+	--dark-border-color: #30363D;
+	--table-border-color: #21262D;
+
+	--btn-primary: #7195EC;
+	--btn-default-bg: #21262D;
+	--btn-default-hover-bg: #30363D;
+	--btn-ghost-hover-bg: #21262D;
+
+	--focus-default: 0 0 0 2px rgba(113, 149, 236, 0.3);
+	--focus-blue: 0 0 0 2px rgba(113, 149, 236, 0.35);
+	--shadow-panel-left: -4px 0 24px rgba(0, 0, 0, 0.3);
+
+	--sidebar-hover-color: #21262D;
+	--sidebar-active-color: #1A2E4A;
+	--sidebar-border-color: #21262D;
+	--divider-color: #21262D;
+	--surface-menu-bar: #0D1117;
+
+	--surface-gray-1: #161B22;
+	--surface-gray-2: #21262D;
+	--surface-gray-3: #30363D;
+	--surface-gray-4: #484F58;
+	--surface-white: #0D1117;
+	--surface-modal: #161B22;
+	--surface-cards: #161B22;
+	--surface-selected: #30363D;
+
+	--ink-gray-1: #21262D;
+	--ink-gray-2: #30363D;
+	--ink-gray-3: #484F58;
+	--ink-gray-4: #6E7681;
+	--ink-gray-5: #8B949E;
+	--ink-gray-6: #C9D1D9;
+	--ink-gray-7: #C9D1D9;
+	--ink-gray-8: #E6EDF3;
+	--ink-gray-9: #F0F6FC;
+	--ink-blue-link: #7195EC;
+	--ink-white: #0D1117;
+
+	--outline-gray-1: #21262D;
+	--outline-gray-2: #30363D;
+	--outline-gray-3: #484F58;
+	--outline-gray-4: #6E7681;
+	--outline-gray-modals: #30363D;
+
+	--surface-blue-1: #0D1B33;
+	--surface-blue-2: #142A4D;
+	--surface-blue-3: #7195EC;
+
+	--checkbox-color: #7195EC;
+	--date-active-bg: #7195EC;
+	--progress-bar-bg: #7195EC;
+
+	--scrollbar-thumb-color: #484F58;
+	--scrollbar-track-color: #21262D;
+	--skeleton-bg: #21262D;
+}
+
+/* ============================================
+   3. SIDEBAR VARIABLES (Light)
+   ============================================ */
+
+:root {
+	--st-sidebar-bg: #FFFFFF;
+	--st-sidebar-width: 240px;
+	--st-sidebar-border: #E3E8EE;
+	--st-item-hover: #F4F6F8;
+	--st-item-active-bg: #2952E3;
+	--st-item-active-text: #FFFFFF;
+	--st-text-primary: #0A2540;
+	--st-text-secondary: #425466;
+	--st-text-muted: #697386;
+	--st-section-color: #8792A2;
+	--st-kbd-bg: #EFF3F8;
+	--st-kbd-color: #8792A2;
+	--st-search-bg: #F6F9FC;
+	--st-search-border: #E3E8EE;
+	--st-divider: #EFF3F8;
+	--st-update-bg: #ECFDF5;
+	--st-update-color: #0B8C3E;
+	--st-radius: 6px;
+	--st-radius-sm: 4px;
+}
+
+[data-theme="dark"] {
+	--st-sidebar-bg: #0D1117;
+	--st-sidebar-border: #21262D;
+	--st-item-hover: rgba(255, 255, 255, 0.05);
+	--st-item-active-bg: #7195EC;
+	--st-item-active-text: #FFFFFF;
+	--st-text-primary: #E6EDF3;
+	--st-text-secondary: #8B949E;
+	--st-text-muted: #6E7681;
+	--st-section-color: #6E7681;
+	--st-kbd-bg: rgba(255, 255, 255, 0.06);
+	--st-kbd-color: #6E7681;
+	--st-search-bg: rgba(255, 255, 255, 0.03);
+	--st-search-border: rgba(255, 255, 255, 0.08);
+	--st-divider: rgba(255, 255, 255, 0.06);
+	--st-update-bg: rgba(12, 191, 76, 0.1);
+	--st-update-color: #34D399;
+}
+

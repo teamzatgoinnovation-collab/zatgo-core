@@ -1,0 +1,385 @@
+/* ============================================
+   5c. FORM RIGHT SIDEBAR — Modern Redesign
+   ============================================ */
+
+/* --- Sidebar wrapper --- */
+.layout-side-section {
+	background: var(--fg-color);
+	border-left: 1px solid var(--border-color);
+}
+
+.layout-side-section .form-sidebar {
+	padding: 0 !important;
+}
+
+/* --- Image / avatar section --- */
+.form-sidebar .sidebar-image-section {
+	text-align: center;
+	padding: 16px 16px 4px !important;
+	background: var(--fg-color);
+	border-bottom: none;
+}
+
+.form-sidebar .sidebar-image-wrapper {
+	display: inline-block;
+}
+
+.form-sidebar .sidebar-image-section .sidebar-image,
+.form-sidebar .sidebar-image-section .sidebar-standard-image {
+	width: 72px !important;
+	height: 72px !important;
+	border-radius: 0 !important;
+}
+
+.form-sidebar .sidebar-standard-image .standard-image {
+	width: 72px !important;
+	height: 72px !important;
+	font-size: 24px !important;
+	border-radius: 0 !important;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+	font-weight: 600;
+}
+
+.form-sidebar .sidebar-image {
+	border-radius: 0 !important;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Meta details (name + ID below image) --- */
+.form-sidebar .sidebar-meta-details {
+	padding: 4px 16px 8px !important;
+	background: var(--fg-color);
+	border-bottom: none;
+	text-align: center;
+}
+
+.form-sidebar .form-title-text {
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	color: var(--heading-color) !important;
+	line-height: 1.4;
+}
+
+.form-sidebar .form-name-copy {
+	font-size: 11px !important;
+	color: var(--gray-500) !important;
+}
+
+/* --- Action icons row (like, print, edit, fav) --- */
+.form-sidebar .form-stats-likes {
+	display: flex !important;
+	align-items: center !important;
+	gap: 4px;
+}
+
+.form-sidebar .form-stats-likes .btn,
+.form-sidebar .form-stats-likes .icon-btn,
+.form-sidebar .form-stats-likes .liked-by {
+	width: 30px !important;
+	height: 30px !important;
+	min-width: 30px !important;
+	min-height: 30px !important;
+	border-radius: 6px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: all 0.15s ease;
+	background: var(--subtle-fg) !important;
+	border: 1px solid var(--border-color) !important;
+	padding: 0 !important;
+}
+
+.form-sidebar .form-stats-likes .btn:hover,
+.form-sidebar .form-stats-likes .icon-btn:hover,
+.form-sidebar .form-stats-likes .liked-by:hover {
+	background: var(--fg-color) !important;
+	border-color: var(--primary) !important;
+	color: var(--primary) !important;
+}
+
+.form-sidebar .like-action .like-icon {
+	transition: transform 0.15s ease;
+}
+
+.form-sidebar .like-action:hover .like-icon {
+	color: var(--primary);
+}
+
+/* --- Divider between header and sections --- */
+.form-sidebar .sidebar-meta-details + .sidebar-section {
+	border-top: 1px solid var(--border-color) !important;
+}
+
+/* --- Sidebar sections --- */
+.form-sidebar .sidebar-section {
+	padding: 12px 16px !important;
+	border-bottom: none !important;
+	margin: 0 !important;
+}
+
+/* --- Section labels with colored icons --- */
+.form-sidebar .form-sidebar-items .form-sidebar-label {
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	letter-spacing: 0.01em !important;
+	color: var(--heading-color) !important;
+	gap: 8px !important;
+}
+
+/* Colored icon backgrounds for each section */
+.form-sidebar .form-sidebar-items .form-sidebar-label .icon {
+	width: 22px;
+	height: 22px;
+	border-radius: 5px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	padding: 4px;
+}
+
+.form-sidebar .form-sidebar-items .form-sidebar-label .icon svg {
+	width: 13px !important;
+	height: 13px !important;
+}
+
+/* Assign — blue icon */
+.form-sidebar .form-assignments .form-sidebar-label .icon {
+	background: #E8F0FE;
+	color: #1A73E8;
+}
+
+/* Attachments — amber icon */
+.form-sidebar .form-attachments .form-sidebar-label .icon {
+	background: #FEF3E0;
+	color: #E8A317;
+}
+
+/* Tags — green icon */
+.form-sidebar .form-tags .form-sidebar-label .icon {
+	background: #E6F4EA;
+	color: #1E8E3E;
+}
+
+/* Share — purple icon */
+.form-sidebar .form-shared .form-sidebar-label .icon {
+	background: #F3E8FD;
+	color: #8430CE;
+}
+
+/* Dark mode icon colors */
+[data-theme="dark"] .form-sidebar .form-assignments .form-sidebar-label .icon {
+	background: rgba(26, 115, 232, 0.15);
+	color: #6EAAFF;
+}
+[data-theme="dark"] .form-sidebar .form-attachments .form-sidebar-label .icon {
+	background: rgba(232, 163, 23, 0.15);
+	color: #FFC94D;
+}
+[data-theme="dark"] .form-sidebar .form-tags .form-sidebar-label .icon {
+	background: rgba(30, 142, 62, 0.15);
+	color: #5CD87D;
+}
+[data-theme="dark"] .form-sidebar .form-shared .form-sidebar-label .icon {
+	background: rgba(132, 48, 206, 0.15);
+	color: #BB86FC;
+}
+
+/* --- Add buttons (+) --- */
+.form-sidebar .add-assignment-btn,
+.form-sidebar .add-attachment-btn,
+.form-sidebar .share-doc-btn {
+	width: 24px !important;
+	height: 24px !important;
+	border-radius: 6px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: all 0.15s ease;
+	color: var(--gray-500) !important;
+	background: var(--subtle-fg) !important;
+}
+
+.form-sidebar .add-assignment-btn:hover,
+.form-sidebar .add-attachment-btn:hover,
+.form-sidebar .share-doc-btn:hover {
+	background-color: var(--primary) !important;
+	color: #fff !important;
+}
+
+/* --- Assignment rows --- */
+.form-sidebar .assignments .dialog-assignment-row {
+	padding: 5px 6px !important;
+	margin-left: 0 !important;
+}
+
+.form-sidebar .assignments .avatar {
+	border: 2px solid var(--fg-color) !important;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* --- Attachment rows — card style --- */
+.form-sidebar .attachment-row {
+	margin: 4px 0 !important;
+	margin-left: 0 !important;
+}
+
+/* Enhanced card layout */
+.form-sidebar .st-attach-card {
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	background: var(--fg-color) !important;
+	border: 1px solid var(--border-color) !important;
+	border-radius: 8px !important;
+	padding: 8px 10px !important;
+	height: auto !important;
+	width: 100% !important;
+	transition: all 0.15s ease;
+}
+
+.form-sidebar .st-attach-card:hover {
+	border-color: var(--primary) !important;
+	box-shadow: 0 1px 4px rgba(41, 82, 227, 0.1);
+}
+
+/* File type badge */
+.st-file-icon {
+	width: 30px;
+	height: 30px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 9px;
+	font-weight: 700;
+	text-transform: uppercase;
+	flex-shrink: 0;
+	letter-spacing: 0.02em;
+}
+
+.st-file-icon.st-pdf  { background: #FDECEA; color: #D93025; }
+.st-file-icon.st-doc  { background: #E8F0FE; color: #1A73E8; }
+.st-file-icon.st-xls  { background: #E6F4EA; color: #1E8E3E; }
+.st-file-icon.st-img  { background: #F3E8FD; color: #8430CE; }
+.st-file-icon.st-zip  { background: #FEF3E0; color: #E8A317; }
+.st-file-icon.st-code { background: #E8EAF6; color: #3F51B5; }
+.st-file-icon.st-file { background: var(--subtle-fg); color: var(--gray-500); }
+
+[data-theme="dark"] .st-file-icon.st-pdf  { background: rgba(217, 48, 37, 0.15); color: #F28B82; }
+[data-theme="dark"] .st-file-icon.st-doc  { background: rgba(26, 115, 232, 0.15); color: #6EAAFF; }
+[data-theme="dark"] .st-file-icon.st-xls  { background: rgba(30, 142, 62, 0.15); color: #5CD87D; }
+[data-theme="dark"] .st-file-icon.st-img  { background: rgba(132, 48, 206, 0.15); color: #BB86FC; }
+[data-theme="dark"] .st-file-icon.st-zip  { background: rgba(232, 163, 23, 0.15); color: #FFC94D; }
+[data-theme="dark"] .st-file-icon.st-code { background: rgba(63, 81, 181, 0.15); color: #9FA8DA; }
+[data-theme="dark"] .st-file-icon.st-file { background: rgba(255, 255, 255, 0.06); }
+
+/* File details */
+.st-attach-details {
+	flex: 1;
+	min-width: 0;
+	text-align: left;
+}
+
+.st-attach-name {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--heading-color);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: block;
+	line-height: 1.3;
+	text-decoration: none;
+	text-align: left;
+}
+
+.st-attach-name:hover {
+	color: var(--primary);
+	text-decoration: underline;
+}
+
+.st-attach-lock {
+	font-size: 10px;
+	color: var(--gray-400);
+	line-height: 1;
+	display: block;
+	margin-top: 1px;
+}
+
+/* Remove btn */
+.form-sidebar .st-attach-card .remove-btn {
+	opacity: 0;
+	transition: opacity 0.15s ease;
+	flex-shrink: 0;
+}
+
+.form-sidebar .st-attach-card:hover .remove-btn {
+	opacity: 1;
+}
+
+/* --- Tag pills --- */
+.form-sidebar .form-tag-row .data-pill {
+	border-radius: 20px !important;
+	font-size: 11px !important;
+	font-weight: 500;
+	padding: 4px 12px !important;
+	background: #E6F4EA !important;
+	color: #1E8E3E !important;
+	border: none !important;
+}
+
+[data-theme="dark"] .form-sidebar .form-tag-row .data-pill {
+	background: rgba(30, 142, 62, 0.15) !important;
+	color: #5CD87D !important;
+}
+
+.form-sidebar .form-tag-row .data-pill .remove-btn {
+	color: #1E8E3E !important;
+}
+
+/* --- Shared users --- */
+.form-sidebar .shares .shared-user {
+	margin-right: 2px !important;
+}
+
+.form-sidebar .shares .avatar {
+	border: 2px solid var(--fg-color) !important;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* --- Followed by section --- */
+.form-sidebar .followed-by-section {
+	padding: 12px 16px !important;
+}
+
+/* --- Meta info footer (Last Edited, Created) --- */
+.form-sidebar .sidebar-menu {
+	padding: 14px 16px !important;
+	margin: 0 !important;
+	list-style: none !important;
+	background-color: rgba(0, 0, 0, 0.015);
+	border-top: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .form-sidebar .sidebar-menu {
+	background-color: rgba(255, 255, 255, 0.02);
+}
+
+.form-sidebar .sidebar-menu li {
+	padding: 4px 0 !important;
+	font-size: 11px !important;
+	color: var(--gray-500) !important;
+	border: none !important;
+	line-height: 1.5;
+}
+
+.form-sidebar .sidebar-menu li:last-child {
+	padding-bottom: 0 !important;
+}
+
+.form-sidebar .sidebar-menu .modified-by,
+.form-sidebar .sidebar-menu .created-by {
+	font-weight: 500;
+}
+

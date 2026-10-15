@@ -1,0 +1,743 @@
+/* ============================================
+   24. DUAL SIDEBAR — WORKSPACE RAIL
+   ============================================ */
+
+/* Layout */
+body.st-dual-sidebar {
+	display: flex;
+	flex-direction: row;
+}
+
+body.st-dual-sidebar .main-section {
+	flex: 1;
+	min-width: 0;
+}
+
+/* ===== Rail width — collapsed (icons) vs expanded (icons + labels) ===== */
+:root {
+	--st-rail-width: 60px;
+	--st-rail-width-expanded: 184px;
+}
+
+body.st-rail-expanded {
+	--st-rail-width: var(--st-rail-width-expanded);
+}
+
+/* ===== The Rail — dark by default ===== */
+.st-workspace-rail {
+	width: var(--st-rail-width);
+	min-width: var(--st-rail-width);
+	height: 100vh;
+	background: #0B1120;
+	border-right: 1px solid #1A2332;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 14px 0;
+	position: sticky;
+	top: 0;
+	z-index: 1021;
+	overflow: hidden;
+	transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .st-workspace-rail {
+	background: #070B14;
+	border-right-color: #141C28;
+}
+
+.st-rail-top {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	width: 100%;
+	padding: 0 8px;
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* ===== Rail Item ===== */
+.st-rail-item {
+	width: 44px;
+	height: 44px;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+	position: relative;
+}
+
+.st-rail-item:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== Active Rail Item ===== */
+.st-rail-item.active {
+	background: rgba(255, 255, 255, 0.12);
+}
+
+.st-rail-item.active:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+/* Active indicator — left bar */
+.st-rail-item.active::before {
+	content: "";
+	position: absolute;
+	left: -8px;
+	top: 8px;
+	bottom: 8px;
+	width: 3px;
+	background: #2952E3;
+	border-radius: 0 3px 3px 0;
+}
+
+/* ===== Rail Icon ===== */
+.st-rail-icon {
+	width: 24px;
+	height: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: visible;
+}
+
+/* All SVGs/icons in rail — default muted white */
+.st-rail-icon svg,
+.st-rail-icon .icon {
+	width: 20px !important;
+	height: 20px !important;
+	color: rgba(255, 255, 255, 0.45) !important;
+	stroke: rgba(255, 255, 255, 0.45) !important;
+	transition: color 0.15s ease, stroke 0.15s ease;
+}
+
+/* Hover — brighter */
+.st-rail-item:hover .st-rail-icon svg,
+.st-rail-item:hover .st-rail-icon .icon {
+	color: rgba(255, 255, 255, 0.8) !important;
+	stroke: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Active — full white */
+.st-rail-item.active .st-rail-icon svg,
+.st-rail-item.active .st-rail-icon .icon {
+	color: #FFFFFF !important;
+	stroke: #FFFFFF !important;
+}
+
+/* Initials fallback */
+.st-rail-initials {
+	font-size: 12px;
+	font-weight: 700;
+	color: rgba(255, 255, 255, 0.4);
+	letter-spacing: 0.02em;
+	line-height: 1;
+	transition: color 0.15s ease;
+}
+
+.st-rail-item:hover .st-rail-initials {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.st-rail-item.active .st-rail-initials {
+	color: #FFFFFF;
+}
+
+/* ===== Expanded mode — items become full-width rows with labels ===== */
+/* Metrics mirror the sidebar panel: 36px rows, 8px gap, 13.5px/480 labels, 16px icons */
+body.st-rail-expanded .st-rail-item,
+body.st-rail-resizing .st-rail-item {
+	width: 100%;
+	height: 36px;
+	justify-content: flex-start;
+	gap: 8px;
+	padding: 0 10px;
+}
+
+body.st-rail-expanded .st-rail-icon svg,
+body.st-rail-expanded .st-rail-icon .icon,
+body.st-rail-resizing .st-rail-icon svg,
+body.st-rail-resizing .st-rail-icon .icon {
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.st-rail-label {
+	display: none;
+	flex: 1;
+	min-width: 0;
+	font-size: 13.5px;
+	font-weight: 500;
+	line-height: 1;
+	color: rgba(255, 255, 255, 0.65);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	transition: color 0.15s ease;
+}
+
+body.st-rail-expanded .st-rail-label,
+body.st-rail-resizing .st-rail-label {
+	display: block;
+}
+
+.st-rail-item:hover .st-rail-label {
+	color: rgba(255, 255, 255, 0.9);
+}
+
+.st-rail-item.active .st-rail-label {
+	color: #FFFFFF;
+}
+
+/* ===== Rail search ===== */
+.st-rail-search {
+	width: 100%;
+	padding: 0 8px;
+	margin-bottom: 6px;
+	flex-shrink: 0;
+}
+
+.st-rail-search-btn {
+	width: 44px;
+	height: 40px;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.st-rail-search-btn:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.st-rail-search-btn svg {
+	width: 18px;
+	height: 18px;
+	color: rgba(255, 255, 255, 0.45);
+	transition: color 0.15s ease;
+}
+
+.st-rail-search-btn:hover svg {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.st-rail-search-box {
+	display: none;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 10px;
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.st-rail-search-box:focus-within {
+	border-color: rgba(255, 255, 255, 0.25);
+	background: rgba(255, 255, 255, 0.09);
+}
+
+.st-rail-search-box svg {
+	width: 15px;
+	height: 15px;
+	color: rgba(255, 255, 255, 0.4);
+	flex-shrink: 0;
+}
+
+.st-rail-search-box input {
+	flex: 1;
+	min-width: 0;
+	background: transparent;
+	border: none;
+	outline: none;
+	box-shadow: none;
+	color: rgba(255, 255, 255, 0.9);
+	font-size: 13.5px;
+	font-weight: 400;
+	padding: 0;
+}
+
+.st-rail-search-box input::placeholder {
+	color: rgba(255, 255, 255, 0.35);
+}
+
+.st-rail-search-clear {
+	display: none;
+	color: rgba(255, 255, 255, 0.4);
+	cursor: pointer;
+	font-size: 15px;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.st-rail-search-clear:hover {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+.st-workspace-rail.st-filtering .st-rail-search-clear {
+	display: block;
+}
+
+body.st-rail-expanded .st-rail-search-box,
+body.st-rail-resizing .st-rail-search-box {
+	display: flex;
+}
+
+body.st-rail-expanded .st-rail-search-btn,
+body.st-rail-resizing .st-rail-search-btn {
+	display: none;
+}
+
+.st-rail-item.st-rail-hidden {
+	display: none !important;
+}
+
+.st-rail-empty {
+	display: none;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.35);
+	text-align: center;
+	padding: 10px 8px;
+	flex-shrink: 0;
+}
+
+.st-rail-empty.visible {
+	display: block;
+}
+
+/* ===== Rail bottom — expand/collapse toggle ===== */
+.st-rail-bottom {
+	flex-shrink: 0;
+	width: 100%;
+	padding: 6px 8px 0;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+	margin-top: 6px;
+}
+
+.st-rail-toggle {
+	width: 44px;
+	height: 36px;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+body.st-rail-expanded .st-rail-toggle {
+	width: 100%;
+}
+
+.st-rail-toggle:hover {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.st-rail-toggle svg {
+	width: 16px;
+	height: 16px;
+	color: rgba(255, 255, 255, 0.45);
+	transition: transform 0.2s ease, color 0.15s ease;
+}
+
+body.st-rail-expanded .st-rail-toggle svg {
+	transform: rotate(180deg);
+}
+
+.st-rail-toggle:hover svg {
+	color: rgba(255, 255, 255, 0.8);
+}
+
+/* ===== Rail resizer — drag edge, snaps to nearest state ===== */
+.st-rail-resizer {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 5px;
+	height: 100%;
+	cursor: col-resize;
+	z-index: 5;
+}
+
+.st-rail-resizer:hover,
+body.st-rail-resizing .st-rail-resizer {
+	background: rgba(41, 82, 227, 0.4);
+}
+
+body.st-rail-resizing {
+	cursor: col-resize;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+body.st-rail-resizing .st-workspace-rail {
+	transition: none;
+}
+
+/* ===== Rail Tooltip (fixed position, set by JS) ===== */
+.st-rail-tooltip {
+	position: fixed;
+	background: var(--gray-900);
+	color: #FFFFFF;
+	font-size: 12px;
+	font-weight: 500;
+	padding: 5px 10px;
+	border-radius: var(--border-radius-sm);
+	white-space: nowrap;
+	pointer-events: none;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 0.12s ease, visibility 0.12s ease;
+	z-index: 9999;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Arrow */
+.st-rail-tooltip::before {
+	content: "";
+	position: absolute;
+	right: 100%;
+	top: 50%;
+	transform: translateY(-50%);
+	border: 5px solid transparent;
+	border-right-color: var(--gray-900);
+}
+
+.st-rail-tooltip.visible {
+	opacity: 1;
+	visibility: visible;
+}
+
+/* ===== Dual sidebar — sidebar panel stays collapsible ===== */
+body.st-dual-sidebar .body-sidebar-container {
+	height: 100vh;
+}
+
+/* The sidebar panel uses frappe's normal expand/collapse behavior */
+/* We just remove the placeholder since the rail handles spacing */
+body.st-dual-sidebar .body-sidebar-placeholder {
+	display: none !important;
+}
+
+body.st-dual-sidebar .body-sidebar-container {
+	width: auto;
+}
+
+/* When expanded, standard width */
+body.st-dual-sidebar .body-sidebar-container.expanded .body-sidebar {
+	width: 240px !important;
+	position: relative !important;
+}
+
+/* The header dropdown chevron is hidden — switching is via rail */
+body.st-dual-sidebar .sidebar-header .drop-icon {
+	display: none !important;
+}
+
+/* Rail scrollbar (items list scrolls; search and toggle stay fixed) */
+.st-rail-top::-webkit-scrollbar {
+	width: 2px;
+}
+
+.st-rail-top::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.st-rail-top::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.1);
+	border-radius: 2px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 576px) {
+	.st-workspace-rail {
+		display: none;
+	}
+}
+
+/* ===== Overlay ===== */
+body.st-dual-sidebar .overlay {
+	display: none !important;
+}
+
+/* ===== Onboarding panel — shift right for workspace rail ===== */
+body.st-dual-sidebar .onb-panel {
+	left: calc(var(--st-rail-width) + 236px) !important;
+}
+
+/* ============================================
+   25. DESK PAGE (/desk) — Module Picker
+   ============================================ */
+
+/* Navbar */
+.desktop-wrapper .navbar-container {
+	height: 56px;
+	padding: 10px 24px;
+	background: #FFFFFF;
+	border-bottom: 1px solid #E3E8EE;
+	box-shadow: none;
+}
+
+[data-theme="dark"] .desktop-wrapper .navbar-container {
+	background: #161B22;
+	border-bottom-color: #21262D;
+}
+
+/* Brand logo */
+.desktop-wrapper #brand-logo {
+	height: 28px;
+	width: auto;
+}
+
+/* Search bar */
+.desktop-wrapper .desktop-navbar-modal-search {
+	background: var(--control-bg);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-md);
+	height: 36px;
+	padding: 0 14px;
+	max-width: 480px;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.desktop-wrapper .desktop-navbar-modal-search:hover {
+	border-color: #D3D9E0;
+	background: #FFFFFF;
+	outline: none;
+}
+
+.desktop-wrapper .desktop-search-icon {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+.desktop-wrapper .desktop-keyboard-shortcut {
+	color: var(--text-light);
+	font-size: 12px;
+	background: var(--subtle-fg);
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 500;
+}
+
+/* Notification bell */
+.desktop-wrapper .desktop-notifications .btn-reset {
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	transition: background 0.15s ease;
+}
+
+.desktop-wrapper .desktop-notifications .btn-reset:hover {
+	background: var(--subtle-fg);
+}
+
+/* Avatar */
+.desktop-wrapper .desktop-avatar .avatar {
+	width: 32px !important;
+	height: 32px !important;
+	border-radius: 8px !important;
+}
+
+/* ===== Main container ===== */
+.desktop-wrapper .desktop-container {
+	min-height: calc(100vh - 56px);
+	background: var(--bg-color);
+	padding: 40px 24px 24px;
+	justify-content: center;
+}
+
+/* Icons container */
+.desktop-wrapper .icons-container {
+	margin-top: 0;
+	padding: 0;
+	width: 100%;
+	max-width: 1000px;
+}
+
+/* Grid — 6 columns on desktop */
+.desktop-wrapper .icons {
+	gap: 12px 8px;
+	grid-template-columns: repeat(6, 1fr) !important;
+	grid-template-rows: auto !important;
+	justify-items: center;
+}
+
+/* Individual icon */
+.desktop-wrapper .desktop-icon {
+	width: 100%;
+	max-width: 140px;
+	height: auto;
+	padding: 18px 10px 14px;
+	border-radius: 10px;
+	border: 1px solid transparent;
+	gap: 10px;
+	transition: all 0.2s ease;
+	text-decoration: none;
+}
+
+.desktop-wrapper .desktop-icon:hover {
+	background: var(--fg-color);
+	border-color: var(--gray-200);
+	box-shadow: var(--shadow-base);
+	transform: translateY(-2px);
+}
+
+[data-theme="dark"] .desktop-wrapper .desktop-icon:hover {
+	background: #21262D;
+	border-color: #30363D;
+}
+
+/* Icon container (the rounded square with icon) */
+.desktop-wrapper .icon-container {
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.2s ease;
+}
+
+.desktop-wrapper .icon-container:has(.icon) {
+	background: var(--gray-100);
+}
+
+[data-theme="dark"] .desktop-wrapper .icon-container:has(.icon) {
+	background: #21262D;
+}
+
+.desktop-wrapper .icon-container:hover {
+	background: var(--gray-200);
+}
+
+[data-theme="dark"] .desktop-wrapper .icon-container:hover {
+	background: #30363D;
+}
+
+.desktop-wrapper .icon-container img {
+	width: 48px;
+	height: 48px;
+}
+
+.desktop-wrapper .icon-container .icon {
+	width: 26px;
+	height: 26px;
+	color: var(--text-color);
+}
+
+/* Icon caption */
+.desktop-wrapper .icon-caption {
+	height: auto;
+	gap: 2px;
+}
+
+.desktop-wrapper .icon-title {
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--text-color);
+	line-height: 1.3;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.desktop-wrapper .icon-subtitle {
+	font-size: 11px;
+	color: var(--text-muted);
+	line-height: 1.3;
+}
+
+/* ===== Folder icons ===== */
+.desktop-wrapper .folder-icon {
+	border-radius: 14px;
+	padding: 6px;
+	background: var(--gray-100) !important;
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .desktop-wrapper .folder-icon {
+	background: #21262D !important;
+}
+
+/* ===== Modal (folder open view) ===== */
+.desktop-modal .modal-content {
+	border-radius: var(--border-radius-3xl) !important;
+	box-shadow: var(--shadow-xl);
+}
+
+.desktop-modal-body {
+	border-radius: var(--border-radius-3xl);
+}
+
+/* ===== Edit mode ===== */
+.desktop-wrapper .desktop-edit-mode {
+	border-color: var(--gray-300);
+}
+
+.desktop-wrapper .edit-mode-buttons .btn {
+	border-radius: var(--border-radius-md);
+}
+
+/* ===== Page indicator ===== */
+.desktop-wrapper .page-indicator {
+	background: var(--gray-300);
+	width: 6px;
+	height: 6px;
+}
+
+.desktop-wrapper .active-page {
+	background: var(--primary) !important;
+}
+
+/* ===== Welcome text ===== */
+.desktop-wrapper .no-apps-message {
+	color: var(--text-muted);
+	font-size: var(--text-lg);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+	.desktop-wrapper .icons {
+		grid-template-columns: repeat(4, 1fr) !important;
+		gap: 10px 6px;
+	}
+
+	.desktop-wrapper .desktop-icon {
+		max-width: none;
+	}
+}
+
+@media (max-width: 480px) {
+	.desktop-wrapper .icons {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 8px 4px;
+	}
+
+	.desktop-wrapper .desktop-icon {
+		padding: 14px 6px 10px;
+	}
+
+	.desktop-wrapper .icons-container {
+		margin-top: 0;
+	}
+}
+

@@ -1,0 +1,199 @@
+/*
+ * SaaS Theme — Fintech Theme (Blue)
+ *
+ * Brand blue:  #2952E3
+ * Navy:        #0A2540
+ * Body:        #3C4257
+ * Muted:       #697386
+ * Surface:     #F6F9FC
+ * Borders:     #E3E8EE
+ */
+
+/* ============================================
+   1. GLOBAL FRAPPE VARIABLE OVERRIDES
+   ============================================ */
+
+:root,
+[data-theme="light"] {
+	/* Canonical brand tokens — also mirrored (hand-synced, no shared build step) in
+	   login.css's own :root (--st-login-*) and in this file's header comment above.
+	   Changing any brand hex here must update both. See README's "Maintaining Brand
+	   Tokens" section for the full cross-reference. */
+	--primary: #2952E3;
+	--primary-color: #2952E3;
+	--brand-color: #2952E3;
+	--primary-hover: var(--blue-600);
+	--primary-active: var(--blue-700);
+	--primary-tint-03: rgba(41, 82, 227, 0.03);
+	--primary-tint-06: rgba(41, 82, 227, 0.06);
+	--primary-tint-08: rgba(41, 82, 227, 0.08);
+	--primary-tint-15: rgba(41, 82, 227, 0.15);
+
+	--gray-50:  #F6F9FC;
+	--gray-100: #EFF3F8;
+	--gray-200: #E3E8EE;
+	--gray-300: #D3D9E0;
+	--gray-400: #A3ACB9;
+	--gray-500: #8792A2;
+	--gray-600: #697386;
+	--gray-700: #425466;
+	--gray-800: #30313D;
+	--gray-900: #0A2540;
+
+	--heading-color: #0A2540;
+	--text-color: #3C4257;
+	--text-neutral: #3C4257;
+	--text-dark: #0A2540;
+	--text-muted: #697386;
+	--text-light: #8792A2;
+
+	--bg-color: #F6F9FC;
+	--fg-color: #FFFFFF;
+	--card-bg: #FFFFFF;
+	--subtle-accent: #F6F9FC;
+	--subtle-fg: #EFF3F8;
+	--navbar-bg: #FFFFFF;
+	--fg-hover-color: #EFF3F8;
+	--modal-bg: #FFFFFF;
+	--toast-bg: #FFFFFF;
+	--popover-bg: #FFFFFF;
+	--control-bg: #F6F9FC;
+	--control-bg-on-gray: #EFF3F8;
+	--awesomebar-focus-bg: #FFFFFF;
+	--awesomplete-hover-bg: #EFF3F8;
+	--disabled-control-bg: #F6F9FC;
+	--disabled-text-color: #8792A2;
+
+	--border-color: #E3E8EE;
+	--dark-border-color: #D3D9E0;
+	--table-border-color: #E3E8EE;
+	--border-primary: #0A2540;
+	--btn-group-border-color: #D3D9E0;
+
+	--border-radius-tiny: 2px;
+	--border-radius-sm: 4px;
+	--border-radius: 4px;
+	--border-radius-md: 6px;
+	--border-radius-lg: 8px;
+	--border-radius-xl: 10px;
+	--border-radius-2xl: 12px;
+	--border-radius-3xl: 16px;
+
+	--btn-primary: #2952E3;
+	--btn-default-bg: #FFFFFF;
+	--btn-default-hover-bg: #EFF3F8;
+	--btn-ghost-hover-bg: #EFF3F8;
+
+	--shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.04);
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+	--shadow-base: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 2px rgba(0, 0, 0, 0.06);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 4px rgba(0, 0, 0, 0.06);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+	--shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
+	--shadow-primary-sm: 0 1px 2px rgba(41, 82, 227, 0.15);
+	--shadow-primary-md: 0 2px 6px rgba(41, 82, 227, 0.2);
+	--shadow-panel-left: -4px 0 24px rgba(0, 0, 0, 0.08);
+
+	--focus-default: 0 0 0 2px rgba(41, 82, 227, 0.25);
+	--focus-blue: 0 0 0 2px rgba(41, 82, 227, 0.3);
+	--focus-green: 0 0 0 2px rgba(12, 191, 76, 0.3);
+	--focus-red: 0 0 0 2px rgba(223, 27, 65, 0.25);
+
+	--scrollbar-thumb-color: #C1C8D1;
+	--scrollbar-track-color: #EFF3F8;
+
+	--sidebar-select-color: #EFF3F8;
+	--sidebar-hover-color: #F0F2F5;
+	--sidebar-active-color: #E8F0FE;
+	--sidebar-border-color: #E3E8EE;
+	--divider-color: #E3E8EE;
+	--sidebar-width: 240px;
+	--surface-menu-bar: #FFFFFF;
+
+	--surface-gray-1: #F6F9FC;
+	--surface-gray-2: #EFF3F8;
+	--surface-gray-3: #E3E8EE;
+	--surface-gray-4: #D3D9E0;
+	--surface-gray-5: #425466;
+	--surface-gray-6: #30313D;
+	--surface-gray-7: #0A2540;
+	--surface-white: #FFFFFF;
+	--surface-modal: #FFFFFF;
+
+	--ink-gray-1: #E3E8EE;
+	--ink-gray-2: #D3D9E0;
+	--ink-gray-3: #A3ACB9;
+	--ink-gray-4: #8792A2;
+	--ink-gray-5: #697386;
+	--ink-gray-6: #425466;
+	--ink-gray-7: #425466;
+	--ink-gray-8: #30313D;
+	--ink-gray-9: #0A2540;
+	--ink-blue-link: #2952E3;
+
+	--outline-gray-1: #E3E8EE;
+	--outline-gray-2: #D3D9E0;
+	--outline-gray-3: #A3ACB9;
+	--outline-gray-4: #8792A2;
+	--outline-gray-5: #E3E8EE;
+	--outline-gray-modals: #E3E8EE;
+
+	--highlight-color: #F6F9FC;
+	--yellow-highlight-color: #FFFBEB;
+	--highlight-shadow: 1px 1px 10px rgba(41, 82, 227, 0.08), 0 0 4px rgba(41, 82, 227, 0.15);
+	--placeholder-color: #F6F9FC;
+
+	--checkbox-color: #2952E3;
+	--checkbox-focus-shadow: 0 0 0 2px rgba(41, 82, 227, 0.25);
+	--switch-bg: #D3D9E0;
+
+	--date-active-bg: #2952E3;
+	--date-active-text: #FFFFFF;
+	--progress-bar-bg: #2952E3;
+	--skeleton-bg: #EFF3F8;
+
+	--code-block-bg: #0A2540;
+	--code-block-text: #A3ACB9;
+
+	--blue-500: #2952E3;
+	--blue-600: #1B41CC;
+	--blue-700: #133095;
+
+	--surface-blue-1: #F0F5FF;
+	--surface-blue-2: #E0EBFF;
+	--surface-blue-3: #2952E3;
+	--ink-blue-2: #2952E3;
+	--ink-blue-3: #1B41CC;
+	--outline-blue-1: #99BFFF;
+
+	--alert-bg-info: #F0F5FF;
+	--alert-text-info: #133095;
+	--alert-bg-success: #ECFDF5;
+	--alert-text-success: #0B8C3E;
+	--alert-bg-danger: #FFF1F3;
+	--alert-text-danger: #DF1B41;
+	--alert-bg-warning: #FFFBEB;
+	--alert-text-warning: #B76E00;
+
+	--bg-blue: #E0EBFF;
+	--text-on-blue: #133095;
+	--bg-light-blue: #F0F5FF;
+	--text-on-light-blue: #1B41CC;
+
+	--input-padding: 14px 12px;
+}
+
+/* ============================================
+   1b. TYPOGRAPHY
+   ============================================ */
+
+:root {
+	--font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
+		Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+	font-family: var(--font-sans);
+	line-height: 1.5;
+}
+
