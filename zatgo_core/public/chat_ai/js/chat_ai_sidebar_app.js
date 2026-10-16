@@ -1,118 +1,123 @@
 /**
- * Chat AI — Vue 3 Desk slide-out (languages + voice)
+ * Chat AI — Vue 3 Desk slide-out.
+ *
+ * Pure logic lives in chat_ai.logic (chat_ai_logic.js), strings in chat_ai.i18n,
+ * markdown + sanitising in chat_ai.createMarkdown (chat_ai_markdown.js). This file wires
+ * them to the DOM and to the whitelisted API (zatgo_core.chat_ai.api.chat.*).
  */
 frappe.provide("chat_ai.sidebar");
+frappe.provide("chat_ai.libs");
 
-const CAI_UI = {
-	en: {
-		sub: "ERP assistant",
-		emptyTitle: "Ask anything about your ERP",
-		emptyHint: "Click 🎤, speak in the selected language, click mic again to stop, then Send.",
-		placeholder: "Message or /command…",
-		send: "Send",
-		newChat: "New",
-		working: "Working…",
-		speak: "Speak",
-		speakOn: "Auto-speak on",
-		speakOff: "Auto-speak off",
-		stop: "Stop",
-		mic: "Voice input — click to talk, click again to stop",
-		micOff: "Enable Voice Input in Chat AI Settings",
-		listening: "Listening… speak clearly, then click mic to stop",
-		livePrefix: "Hearing",
-		confirm: "Confirm",
-		cancel: "Cancel",
-		planOk: "OK — proceed",
-		voiceUnsupported: "Voice input is not supported in this browser. Use Chrome or Edge.",
-		voiceError: "Could not hear clearly — try again closer to the mic.",
-		voiceDenied: "Microphone permission denied. Allow mic access for this site.",
-		sessions: "Chats",
-		rename: "Rename",
-		pin: "Pin",
-		unpin: "Unpin",
-		archive: "Archive",
-		delete: "Delete",
-		clear: "Clear",
-		stopGen: "Stop",
-		searchSessions: "Search chats…",
-		copy: "Copy",
-		copied: "Copied",
-		artifact: "Result",
-		modeAuto: "Auto",
-	},
-	ar: {
-		sub: "مساعد تخطيط الموارد",
-		emptyTitle: "اسأل عن أي شيء في النظام",
-		emptyHint: "اكتب سؤالاً أو / للأوامر أو استخدم الميكروفون.",
-		placeholder: "رسالة أو /أمر…",
-		send: "إرسال",
-		newChat: "جديد",
-		listening: "جاري الاستماع… تحدث بوضوح ثم اضغط الميكروفون للإيقاف",
-		working: "جاري العمل…",
-		speak: "تشغيل",
-		speakOn: "التحدث التلقائي مفعّل",
-		speakOff: "التحدث التلقائي متوقف",
-		stop: "إيقاف",
-		mic: "إدخال صوتي — اضغط للتحدث ثم مجدداً للإيقاف",
-		micOff: "فعّل الإدخال الصوتي من إعدادات Chat AI",
-		livePrefix: "يُسمع",
-		confirm: "تأكيد",
-		cancel: "إلغاء",
-		planOk: "موافق — متابعة",
-		voiceUnsupported: "الإدخال الصوتي غير مدعوم. استخدم Chrome أو Edge.",
-		voiceError: "لم يُسمع بوضوح — حاول مجدداً أقرب للميكروفون.",
-		voiceDenied: "تم رفض إذن الميكروفون. اسمح بالوصول لهذا الموقع.",
-		sessions: "المحادثات",
-		rename: "إعادة تسمية",
-		pin: "تثبيت",
-		unpin: "إلغاء التثبيت",
-		archive: "أرشفة",
-		delete: "حذف",
-		clear: "مسح",
-		stopGen: "إيقاف",
-		searchSessions: "بحث…",
-		copy: "نسخ",
-		copied: "تم النسخ",
-		artifact: "نتيجة",
-		modeAuto: "تلقائي",
-	},
-	ml: {
-		sub: "ERP സഹായി",
-		emptyTitle: "ERP-യെക്കുറിച്ച് എന്തും ചോദിക്കൂ",
-		emptyHint: "ചോദ്യം ടൈപ്പ് ചെയ്യുക, / കമാൻഡ്, അല്ലെങ്കിൽ മൈക്ക് ഉപയോഗിക്കുക.",
-		placeholder: "സന്ദേശം അല്ലെങ്കിൽ /കമാൻഡ്…",
-		send: "അയയ്ക്കുക",
-		newChat: "പുതിയത്",
-		listening: "കേൾക്കുന്നു… വ്യക്തമായി സംസാരിച്ച് മൈക്ക് അമർത്തി നിർത്തുക",
-		working: "പ്രവർത്തിക്കുന്നു…",
-		speak: "കേൾക്കുക",
-		speakOn: "യാന്ത്രിക സംസാരം ഓൺ",
-		speakOff: "യാന്ത്രിക സംസാരം ഓഫ്",
-		stop: "നിർത്തുക",
-		mic: "വോയ്സ് — ക്ലിക്ക് ചെയ്ത് സംസാരിക്കുക, വീണ്ടും അമർത്തി നിർത്തുക",
-		micOff: "Chat AI Settings-ൽ Voice Input ഓണാക്കുക",
-		livePrefix: "കേൾക്കുന്നു",
-		confirm: "സ്ഥിരീകരിക്കുക",
-		cancel: "റദ്ദാക്കുക",
-		planOk: "ശരി — തുടരുക",
-		voiceUnsupported: "വോയ്സ് ലഭ്യമല്ല. Chrome അല്ലെങ്കിൽ Edge ഉപയോഗിക്കുക.",
-		voiceError: "വ്യക്തമായി കേട്ടില്ല — മൈക്കിനോട് അടുത്ത് വീണ്ടും ശ്രമിക്കുക.",
-		voiceDenied: "മൈക്ക് അനുമതി നിഷേധിച്ചു. ഈ സൈറ്റിന് അനുവദിക്കുക.",
-		sessions: "ചാറ്റുകൾ",
-		rename: "പേര് മാറ്റുക",
-		pin: "പിൻ",
-		unpin: "അൺപിൻ",
-		archive: "ആർക്കൈവ്",
-		delete: "ഇല്ലാതാക്കുക",
-		clear: "മായ്ക്കുക",
-		stopGen: "നിർത്തുക",
-		searchSessions: "തിരയുക…",
-		copy: "പകർത്തുക",
-		copied: "പകർത്തി",
-		artifact: "ഫലം",
-		modeAuto: "ഓട്ടോ",
-	},
+const CAI_API = "zatgo_core.chat_ai.api.chat.";
+const CAI_VENDOR = "/assets/zatgo_core/chat_ai/js/vendor/";
+
+/* ---------------------------------------------------------------- transport */
+
+/**
+ * POST a whitelisted method. Resolves with the method's return value (the
+ * {ok, data, ...} envelope); throws {status, message, code, network} for
+ * transport / HTTP failures so callers can tell "the connection broke" from "the
+ * server said no".
+ */
+chat_ai.api = async function (method, args, opts) {
+	const o = opts || {};
+	const body = new URLSearchParams();
+	Object.keys(args || {}).forEach((k) => {
+		const v = args[k];
+		if (v === undefined || v === null) return;
+		body.append(k, typeof v === "object" ? JSON.stringify(v) : String(v));
+	});
+	let res;
+	try {
+		res = await fetch("/api/method/" + (method.indexOf(".") < 0 ? CAI_API + method : method), {
+			method: "POST",
+			credentials: "same-origin",
+			headers: { "X-Frappe-CSRF-Token": frappe.csrf_token, Accept: "application/json" },
+			body,
+			signal: o.signal,
+		});
+	} catch (e) {
+		const err = new Error(e && e.message ? e.message : "network");
+		err.name = "TypeError";
+		err.status = 0;
+		err.network = true;
+		throw err;
+	}
+	let json = null;
+	try {
+		json = await res.json();
+	} catch (e) {
+		json = null;
+	}
+	if (!res.ok) {
+		const err = new Error(chat_ai.api.serverMessage(json) || res.statusText || "HTTP " + res.status);
+		err.status = res.status;
+		err.code = res.status === 403 ? "forbidden" : res.status === 429 ? "rate_limited" : "";
+		err.network = chat_ai.logic.isNetworkError({ status: res.status });
+		throw err;
+	}
+	return json ? json.message : null;
 };
+
+/** Frappe wraps msgprint/throw text in _server_messages (JSON of JSON). */
+chat_ai.api.serverMessage = function (json) {
+	try {
+		if (!json || !json._server_messages) return "";
+		const list = JSON.parse(json._server_messages);
+		return list
+			.map((m) => {
+				try {
+					return JSON.parse(m).message;
+				} catch (e) {
+					return String(m);
+				}
+			})
+			.join(" ")
+			.replace(/<[^>]*>/g, "")
+			.slice(0, 300);
+	} catch (e) {
+		return "";
+	}
+};
+
+/* ------------------------------------------------------------ vendor loading */
+
+/* The sidebar script is served with ?v=<content hash> (services/ui_apps.py asset_url); the lazily
+ * loaded libraries reuse it, so one deploy invalidates everything together. */
+const CAI_VER = (() => {
+	const m = document.currentScript && /[?&]v=([\w-]+)/.exec(document.currentScript.src || "");
+	return m ? m[1] : "";
+})();
+
+chat_ai.libs.load = function (file) {
+	return new Promise((resolve, reject) => {
+		const s = document.createElement("script");
+		s.src = CAI_VENDOR + file + (CAI_VER ? "?v=" + CAI_VER : "");
+		s.async = false;
+		s.onload = () => resolve(true);
+		s.onerror = () => reject(new Error("failed to load " + file));
+		document.head.appendChild(s);
+	});
+};
+
+/** marked + DOMPurify + highlight.js load once, on first mount; KaTeX only when math appears. */
+chat_ai.libs.ensure = function () {
+	if (chat_ai.libs._p) return chat_ai.libs._p;
+	chat_ai.libs._p = Promise.all(["marked.umd.js", "purify.min.js", "highlight.min.js"].map(chat_ai.libs.load))
+		.then(() => !!(window.marked && window.DOMPurify))
+		.catch(() => false); // rendering falls back to escaped plain text
+	return chat_ai.libs._p;
+};
+
+chat_ai.libs.ensureKatex = function () {
+	if (window.katex) return Promise.resolve(true);
+	if (!chat_ai.libs._k) {
+		chat_ai.libs._k = chat_ai.libs.load("katex.min.js").then(() => !!window.katex).catch(() => false);
+	}
+	return chat_ai.libs._k;
+};
+
+/* ------------------------------------------------------------------- shell */
 
 chat_ai.sidebar = {
 	app: null,
@@ -129,16 +134,6 @@ chat_ai.sidebar = {
 		}
 		this.root = document.getElementById("cai-root");
 		this.app = await chat_ai.vue.mount(this.root, chat_ai.sidebar.AppOptions);
-
-		document.addEventListener("keydown", (e) => {
-			if (e.key === "Escape" && this._vm && this._vm.open) {
-				this._vm.toggle(false);
-			}
-			if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "j") {
-				e.preventDefault();
-				if (this._vm) this._vm.toggle();
-			}
-		});
 	},
 };
 
@@ -157,13 +152,32 @@ chat_ai.sidebar.AppOptions = {
 				{ code: "ml", label: "Malayalam", native: "മലയാളം", bcp47: "ml-IN", dir: "ltr" },
 			],
 			messages: [],
+			hasMore: false,
+			loadingOlder: false,
+			loadingSession: false,
+			historyError: false,
+			atBottom: true,
 			input: "",
 			progress: "",
 			busy: false,
+			stopping: false,
+			announce: "",
+			// composer
+			files: [],
+			dragging: false,
+			models: [],
+			routing: false,
+			features: { file_upload: true, vision: true, web_search: false, streaming: true },
+			maxUploadMb: 15,
+			selectedModel: localStorage.getItem("chat_ai_model") || "",
+			webOn: localStorage.getItem("chat_ai_web") !== "0",
+			modelMenuOpen: false,
+			// voice
 			listening: false,
 			speakingId: null,
 			commands: [],
 			paletteOpen: false,
+			paletteIndex: 0,
 			pending: null,
 			enableVoiceIn: true,
 			enableVoiceOut: true,
@@ -176,23 +190,26 @@ chat_ai.sidebar.AppOptions = {
 			recognition: null,
 			liveTranscript: "",
 			voicesReady: false,
+			// sessions / artifacts / overlays
 			sessions: [],
 			sessionQuery: "",
+			searching: false,
 			showSessions: false,
-			streamMsgId: null,
-			streamStopped: false,
-			sessionPinned: false,
-			artifacts: [],
 			showArtifacts: false,
-			_typeQueue: "",
-			_typeTimer: null,
-			_typeMsgId: null,
-			_typePendingMeta: null,
+			artifacts: [],
+			sessionPinned: false,
+			menuOpen: false,
+			helpOpen: false,
+			dlg: null,
+			editing: null,
+			mdVersion: 0,
+			mdReady: false,
+			expanded: localStorage.getItem("chat_ai_wide") === "1",
 		};
 	},
 	computed: {
 		ui() {
-			return CAI_UI[this.language] || CAI_UI.en;
+			return chat_ai.i18n.strings(this.language);
 		},
 		dir() {
 			const meta = this.languages.find((l) => l.code === this.language);
@@ -214,13 +231,10 @@ chat_ai.sidebar.AppOptions = {
 			return this.bcp47;
 		},
 		paletteItems() {
-			if (!this.input.startsWith("/")) return [];
+			if (!this.input.startsWith("/") || /\s/.test(this.input.trim().slice(1))) return [];
 			const q = this.input.slice(1).toLowerCase();
 			return (this.commands || []).filter(
-				(c) =>
-					!q ||
-					(c.name || "").toLowerCase().startsWith(q) ||
-					(c.label || "").toLowerCase().includes(q)
+				(c) => !q || (c.name || "").toLowerCase().startsWith(q) || (c.label || "").toLowerCase().includes(q)
 			);
 		},
 		voiceAvailable() {
@@ -230,26 +244,91 @@ chat_ai.sidebar.AppOptions = {
 			if (this.ttsEngine === "Voicebox") return true;
 			return !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
 		},
+		groupedSessions() {
+			return chat_ai.logic.groupSessions(this.sessions);
+		},
+		sessionTitle() {
+			const s = this.sessions.find((x) => x.name === this.session);
+			return (s && s.title) || this.ui.untitled;
+		},
+		uploading() {
+			return this.files.some((f) => f.status === "uploading");
+		},
+		readyFiles() {
+			return this.files.filter((f) => f.status === "ready" || f.status === "processing");
+		},
+		canSend() {
+			return !this.busy && !this.uploading && !!((this.input || "").trim() || this.readyFiles.length);
+		},
+		acceptTypes() {
+			return chat_ai.logic.acceptAttr({ vision: this.features.vision });
+		},
+		currentModelLabel() {
+			if (!this.selectedModel) return this.routing ? this.ui.modelAuto : this.ui.modelDefault;
+			return this.selectedModel;
+		},
+		showModelPicker() {
+			return this.models.length > 1 || this.routing;
+		},
+		shortcuts() {
+			return [
+				[this.ui.kbSend, "Enter"],
+				[this.ui.kbNewline, "Shift+Enter"],
+				[this.ui.kbToggle, "Ctrl/Cmd+Shift+J"],
+				[this.ui.kbSearch, "Ctrl/Cmd+K"],
+				[this.ui.kbNew, "Ctrl/Cmd+Shift+O"],
+				[this.ui.kbStop, "Esc"],
+				[this.ui.kbFocus, "/"],
+				[this.ui.kbHelp, "?"],
+			];
+		},
 	},
 	watch: {
 		input() {
-			this.paletteOpen = this.input.startsWith("/") && this.paletteItems.length > 0;
+			this.paletteOpen = this.paletteItems.length > 0;
+			this.paletteIndex = 0;
 		},
 		language() {
+			this.mdVersion += 1;
 			if (this.listening) {
 				this.stopListening();
 				this.$nextTick(() => this.startListening());
 			}
 		},
+		selectedModel(v) {
+			try {
+				localStorage.setItem("chat_ai_model", v || "");
+			} catch (e) {
+				/* storage unavailable */
+			}
+		},
+		webOn(v) {
+			try {
+				localStorage.setItem("chat_ai_web", v ? "1" : "0");
+			} catch (e) {
+				/* storage unavailable */
+			}
+		},
+		sessionQuery() {
+			clearTimeout(this._searchTimer);
+			this._searchTimer = setTimeout(() => this.refreshSessions(), 250);
+		},
 	},
 	async mounted() {
 		chat_ai.sidebar._vm = this;
+		this._htmlCache = new Map();
+		this._turn = null;
+		this._onKey = (e) => this.onGlobalKey(e);
+		document.addEventListener("keydown", this._onKey);
 		this.bindRealtime();
 		this.bindLayout();
+		this.bindViewport();
 		this.warmVoices();
 		this.updateLayoutOffset();
+		this.setupMarkdown();
 		await this.loadLocale();
 		this.loadCommands();
+		this.loadModels();
 		await this.refreshSessions();
 		if (this.open && !this.session) {
 			if (this.sessions.length) await this.openSession(this.sessions[0].name);
@@ -257,30 +336,24 @@ chat_ai.sidebar.AppOptions = {
 		}
 	},
 	beforeUnmount() {
+		document.removeEventListener("keydown", this._onKey);
 		this.unbindLayout();
+		this.unbindViewport();
 		this.stopListening();
 		this.stopSpeaking();
+		this.files.forEach((f) => f.thumb && URL.revokeObjectURL(f.thumb));
+		clearTimeout(this._searchTimer);
+		this._flushPending = false;
+		if (this._raf) cancelAnimationFrame(this._raf);
+		clearTimeout(this._flushTimer);
 	},
 	methods: {
-		esc(s) {
-			return frappe.utils.escape_html(String(s ?? ""));
+		/* ------------------------------------------------------------ helpers */
+		t(key, vars) {
+			return chat_ai.i18n.fmt(this.ui[key] != null ? this.ui[key] : key, vars);
 		},
-		formatText(s) {
-			let t = this.esc(s);
-			const codes = [];
-			t = t.replace(/```([\s\S]*?)```/g, (_, code) => {
-				const i = codes.length;
-				codes.push(`<pre class="cai-code"><code>${code.trim()}</code></pre>`);
-				return `@@CODE${i}@@`;
-			});
-			t = t.replace(/`([^`]+)`/g, "<code class=\"cai-inline-code\">$1</code>");
-			t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-			t = t.replace(/(^|\n)[\-*] (.+)/g, "$1• $2");
-			t = t.replace(/\n/g, "<br>");
-			codes.forEach((html, i) => {
-				t = t.replace(`@@CODE${i}@@`, html);
-			});
-			return t;
+		L() {
+			return chat_ai.logic;
 		},
 		copyText(text) {
 			const t = String(text || "");
@@ -296,6 +369,1173 @@ chat_ai.sidebar.AppOptions = {
 				done();
 			}
 		},
+		download(filename, text, mime) {
+			const url = URL.createObjectURL(new Blob([text], { type: mime || "text/plain;charset=utf-8" }));
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 2000);
+		},
+		focusInput() {
+			this.$nextTick(() => {
+				const el = this.$refs.input;
+				if (el) el.focus();
+			});
+		},
+		msgById(id) {
+			return this.messages.find((m) => m.id === id);
+		},
+		panelEl() {
+			return this.$refs.panel || null;
+		},
+
+		/* ----------------------------------------------------------- markdown */
+		setupMarkdown() {
+			this._md = chat_ai.createMarkdown({ libs: {}, window });
+			chat_ai.libs.ensure().then((ok) => {
+				if (!ok) return;
+				this._md = chat_ai.createMarkdown({
+					libs: { marked: window.marked, DOMPurify: window.DOMPurify, hljs: window.hljs, katex: window.katex },
+					window,
+				});
+				this._htmlCache.clear();
+				this.mdReady = this._md.ready;
+				this.mdVersion += 1;
+			});
+		},
+		ensureKatex() {
+			if (this._katexStarted) return;
+			this._katexStarted = true;
+			chat_ai.libs.ensureKatex().then((ok) => {
+				if (!ok) return;
+				this.setupMarkdown();
+			});
+		},
+		/** Sanitised HTML for an assistant message (cached per message and text). */
+		msgHtml(msg) {
+			void this.mdVersion;
+			const key = [msg.text.length, (msg.sources || []).length, this.mdVersion, this.language].join(":");
+			const hit = this._htmlCache.get(msg.id);
+			if (hit && hit.key === key && hit.text === msg.text) return hit.html;
+			const r = this._md.render(msg.text, {
+				sources: msg.sources || [],
+				labels: {
+					copy: this.ui.copyCode,
+					download: this.ui.downloadCode,
+					code: this.ui.code,
+					source: this.ui.source,
+				},
+			});
+			if (r.needsMath) this.ensureKatex();
+			this._htmlCache.set(msg.id, { key, text: msg.text, html: r.html });
+			if (this._htmlCache.size > 400) this._htmlCache.delete(this._htmlCache.keys().next().value);
+			return r.html;
+		},
+		/** Clicks inside rendered answers: code-block buttons and citation markers. */
+		onMessageClick(e, msg) {
+			const target = e.target;
+			if (!target || !target.closest) return;
+			const cite = target.closest("a[data-cite]");
+			if (cite) {
+				e.preventDefault(); // never let #cai-src-n reach Frappe's hash router...
+				e.stopPropagation(); // ...nor its document-level link handler (it would still rewrite the URL)
+				const n = parseInt(cite.getAttribute("data-cite"), 10);
+				msg.srcOpen = n;
+				this.$nextTick(() => {
+					const el = document.getElementById(`cai-src-${msg.id}-${n}`);
+					if (el) {
+						el.scrollIntoView({ block: "nearest" });
+						el.classList.add("cai-source--flash");
+						setTimeout(() => el.classList.remove("cai-source--flash"), 1400);
+					}
+				});
+				return;
+			}
+			const btn = target.closest("button[data-act]");
+			if (!btn) return;
+			const block = btn.closest(".cai-md-codeblock");
+			const code = block && block.querySelector("pre code");
+			if (!code) return;
+			const text = code.textContent || "";
+			if (btn.getAttribute("data-act") === "copy") this.copyText(text);
+			else this.download(this.L().codeFilename(block.getAttribute("data-lang")), text);
+		},
+
+		/* -------------------------------------------------------------- panel */
+		toggle(force) {
+			this.open = typeof force === "boolean" ? force : !this.open;
+			try {
+				localStorage.setItem("chat_ai_open", this.open ? "1" : "0");
+			} catch (e) {
+				/* storage unavailable */
+			}
+			this.$nextTick(() => this.updateLayoutOffset());
+			if (this.open && !this.session) {
+				if (this.sessions.length) this.openSession(this.sessions[0].name);
+				else this.newSession();
+			}
+			if (this.open) {
+				this._returnFocus = document.activeElement;
+				this.focusInput();
+			} else {
+				this.stopListening();
+				this.closeOverlays();
+				if (this._returnFocus && this._returnFocus.focus) this._returnFocus.focus();
+			}
+		},
+		toggleWide() {
+			this.expanded = !this.expanded;
+			localStorage.setItem("chat_ai_wide", this.expanded ? "1" : "0");
+		},
+		closeOverlays() {
+			this.menuOpen = false;
+			this.helpOpen = false;
+			this.modelMenuOpen = false;
+			this.showArtifacts = false;
+			this.showSessions = false;
+			if (this.dlg) this.closeDialog();
+		},
+		hasOverlay() {
+			return !!(this.dlg || this.menuOpen || this.helpOpen || this.modelMenuOpen || this.showSessions || this.showArtifacts);
+		},
+		bindViewport() {
+			/* Mobile keyboards shrink the visual viewport, not the layout viewport. */
+			if (!window.visualViewport) return;
+			this._onVV = () => {
+				const vv = window.visualViewport;
+				const shell = this.$el;
+				if (shell && shell.style) shell.style.setProperty("--cai-vvh", `${Math.round(vv.height)}px`);
+			};
+			window.visualViewport.addEventListener("resize", this._onVV);
+			window.visualViewport.addEventListener("scroll", this._onVV);
+			this._onVV();
+		},
+		unbindViewport() {
+			if (window.visualViewport && this._onVV) {
+				window.visualViewport.removeEventListener("resize", this._onVV);
+				window.visualViewport.removeEventListener("scroll", this._onVV);
+			}
+		},
+		onGlobalKey(e) {
+			const panel = this.panelEl();
+			const active = document.activeElement;
+			const inPanel = !!(panel && active && panel.contains(active));
+			const typing = !!(
+				active && (/^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName) || active.isContentEditable)
+			);
+			const action = this.L().matchShortcut(e, {
+				open: this.open,
+				inPanel,
+				typing,
+				overlay: this.hasOverlay(),
+				busy: this.busy,
+				frappeModal: !!document.querySelector(".modal.show"),
+			});
+			if (!action) return;
+			e.preventDefault();
+			switch (action) {
+				case "toggle":
+					this.toggle();
+					break;
+				case "close-overlay":
+					this.closeOverlays();
+					break;
+				case "stop":
+					this.stopGeneration();
+					break;
+				case "close":
+					this.toggle(false);
+					break;
+				case "focus-search":
+					this.showSessions = true;
+					this.$nextTick(() => this.$refs.search && this.$refs.search.focus());
+					break;
+				case "new-chat":
+					this.newSession();
+					break;
+				case "help":
+					this.helpOpen = true;
+					break;
+				case "focus-input":
+					this.focusInput();
+					break;
+			}
+		},
+
+		/* ------------------------------------------------------------ dialogs */
+		openDialog(dlg) {
+			this._dlgReturn = document.activeElement;
+			this.dlg = Object.assign({ value: "", danger: false, input: false, textarea: false, note: "" }, dlg);
+			this.$nextTick(() => {
+				const root = this.$refs.dialog;
+				const field = root && root.querySelector("input, textarea");
+				const first = field || (root && root.querySelector("button"));
+				if (first) first.focus();
+			});
+		},
+		closeDialog() {
+			this.dlg = null;
+			const back = this._dlgReturn;
+			this._dlgReturn = null;
+			if (back && back.focus && document.contains(back)) back.focus();
+		},
+		async dialogOk() {
+			const d = this.dlg;
+			if (!d) return;
+			const value = d.value;
+			this.closeDialog();
+			if (d.onOk) await d.onOk(value);
+		},
+		dialogKeydown(e) {
+			if (e.key === "Escape") {
+				e.stopPropagation();
+				this.closeDialog();
+				return;
+			}
+			if (e.key === "Enter" && e.target.tagName === "INPUT") {
+				e.preventDefault();
+				this.dialogOk();
+				return;
+			}
+			if (e.key !== "Tab") return;
+			const nodes = this.$refs.dialog.querySelectorAll("button, input, textarea");
+			if (!nodes.length) return;
+			const first = nodes[0];
+			const last = nodes[nodes.length - 1];
+			if (e.shiftKey && document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			} else if (!e.shiftKey && document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		},
+
+		/* ------------------------------------------------------------- models */
+		async loadModels() {
+			try {
+				const r = await chat_ai.api("list_models", {});
+				if (!(r && r.ok)) return;
+				const d = r.data || {};
+				this.models = d.models || [];
+				this.routing = !!d.routing;
+				this.features = Object.assign(this.features, d.features || {});
+				this.maxUploadMb = d.max_upload_mb || this.maxUploadMb;
+				if (this.selectedModel && !this.models.some((m) => m.name === this.selectedModel)) {
+					this.selectedModel = "";
+				}
+			} catch (e) {
+				/* feature probing is best effort; the composer works without it */
+			}
+		},
+		slotLabel(slot) {
+			const map = {
+				balanced: "slotBalanced", fast: "slotFast", reasoning: "slotReasoning",
+				vision: "slotVision", coding: "slotCoding", fallback: "slotFallback",
+			};
+			return this.ui[map[slot]] || slot;
+		},
+		pickModel(name) {
+			this.selectedModel = name;
+			this.modelMenuOpen = false;
+			this.focusInput();
+		},
+
+		/* ----------------------------------------------------------- sessions */
+		async newSession() {
+			try {
+				const r = await chat_ai.api("new_session", { language: this.language });
+				if (r && r.ok) {
+					this.resetConversation(r.data.name);
+					this.showSessions = false;
+					await this.refreshSessions();
+					this.focusInput();
+				}
+			} catch (e) {
+				this.toastError(e);
+			}
+		},
+		resetConversation(session) {
+			this._turn = null;
+			this.session = session;
+			this.messages = [];
+			this.hasMore = false;
+			this.progress = "";
+			this.pending = null;
+			this.sessionPinned = false;
+			this.busy = false;
+			this.stopping = false;
+			this.historyError = false;
+			this.editing = null;
+			this._htmlCache.clear();
+			this.clearFiles();
+			this.stopSpeaking();
+		},
+		async refreshSessions() {
+			const q = (this.sessionQuery || "").trim();
+			this.searching = !!q;
+			try {
+				const r = q
+					? await chat_ai.api("search_sessions", { query: q })
+					: await chat_ai.api("list_sessions", { status: "Active" });
+				if (r && r.ok && (this.sessionQuery || "").trim() === q) this.sessions = r.data || [];
+			} catch (e) {
+				if (!q) this.sessions = [];
+			} finally {
+				if ((this.sessionQuery || "").trim() === q) this.searching = false;
+			}
+		},
+		async openSession(name) {
+			if (!name) return;
+			if (name === this.session && this.messages.length) {
+				this.showSessions = false;
+				return;
+			}
+			const meta = (this.sessions || []).find((s) => s.name === name);
+			this.resetConversation(name);
+			this.showSessions = false;
+			if (meta) {
+				this.mode = meta.assistant_mode || this.mode;
+				this.sessionPinned = !!meta.is_pinned;
+			}
+			await this.loadHistory();
+			this.loadArtifacts();
+		},
+		async loadHistory() {
+			this.loadingSession = true;
+			this.historyError = false;
+			const session = this.session;
+			try {
+				const r = await chat_ai.api("history", { session, limit: 50 });
+				if (session !== this.session) return;
+				if (!(r && r.ok)) throw new Error("history");
+				const rows = (r.data || []).map((row) => this.L().rowToMessage(row));
+				this.messages = this.L().mergeHistory(this.messages, rows, "replace");
+				this.hasMore = !!r.has_more;
+				this.$nextTick(() => this.scrollToBottom(true));
+			} catch (e) {
+				this.historyError = true;
+			} finally {
+				this.loadingSession = false;
+			}
+		},
+		async loadOlder() {
+			if (this.loadingOlder || !this.hasMore || !this.session) return;
+			const cursor = this.L().oldestCursor(this.messages);
+			if (!cursor) return;
+			this.loadingOlder = true;
+			const box = this.$refs.messages;
+			const before = box ? box.scrollHeight - box.scrollTop : 0;
+			try {
+				const r = await chat_ai.api("history", { session: this.session, limit: 50, before: cursor });
+				if (!(r && r.ok)) return;
+				const rows = (r.data || []).map((row) => this.L().rowToMessage(row));
+				this.messages = this.L().mergeHistory(this.messages, rows, "prepend");
+				this.hasMore = !!r.has_more;
+				this.$nextTick(() => {
+					if (box) box.scrollTop = box.scrollHeight - before; // keep the reader where they were
+				});
+			} catch (e) {
+				this.toastError(e);
+			} finally {
+				this.loadingOlder = false;
+			}
+		},
+		/** After a turn, learn the server ids of the exchange (needed for edit / delete). */
+		async adoptIds() {
+			if (!this.session) return;
+			const session = this.session;
+			try {
+				const r = await chat_ai.api("history", { session, limit: 4 });
+				if (!(r && r.ok) || session !== this.session) return;
+				const rows = (r.data || []).slice().reverse();
+				const mine = this.messages.filter((m) => !m.serverId);
+				rows.forEach((row) => {
+					const role = row.role === "user" ? "user" : "assistant";
+					const idx = mine.map((m) => m.role).lastIndexOf(role);
+					if (idx >= 0 && !this.messages.some((m) => m.serverId === row.name)) {
+						const m = mine.splice(idx, 1)[0];
+						const live = this.msgById(m.id);
+						if (live) {
+							live.serverId = row.name;
+							live.creation = row.creation || "";
+							live.persisted = true;
+						}
+					}
+				});
+			} catch (e) {
+				/* ids are only needed for edit/delete; the next history load restores them */
+			}
+		},
+		renameSession() {
+			if (!this.session) return;
+			this.menuOpen = false;
+			this.openDialog({
+				title: this.ui.renameTitle,
+				label: this.ui.renameLabel,
+				input: true,
+				value: this.sessionTitle,
+				okText: this.ui.save,
+				onOk: async (title) => {
+					if (!(title || "").trim()) return;
+					await chat_ai.api("rename", { session: this.session, title: title.trim() });
+					this.refreshSessions();
+				},
+			});
+		},
+		async togglePin() {
+			if (!this.session) return;
+			this.menuOpen = false;
+			const next = this.sessionPinned ? 0 : 1;
+			await chat_ai.api("pin", { session: this.session, pinned: next });
+			this.sessionPinned = !!next;
+			this.refreshSessions();
+		},
+		archiveSession() {
+			this.menuOpen = false;
+			this.openDialog({
+				title: this.ui.archiveTitle,
+				body: this.ui.archiveBody,
+				okText: this.ui.archive,
+				onOk: async () => {
+					await chat_ai.api("archive", { session: this.session });
+					await this.afterSessionGone();
+				},
+			});
+		},
+		deleteSession() {
+			this.menuOpen = false;
+			this.openDialog({
+				title: this.ui.deleteChatTitle,
+				body: this.ui.deleteChatBody,
+				okText: this.ui.delete,
+				danger: true,
+				onOk: async () => {
+					await chat_ai.api("delete_session", { session: this.session });
+					await this.afterSessionGone();
+				},
+			});
+		},
+		clearSession() {
+			this.menuOpen = false;
+			this.openDialog({
+				title: this.ui.clearTitle,
+				body: this.ui.clearBody,
+				okText: this.ui.clear,
+				danger: true,
+				onOk: async () => {
+					await chat_ai.api("clear", { session: this.session });
+					this.messages = [];
+					this.hasMore = false;
+					this.pending = null;
+				},
+			});
+		},
+		async afterSessionGone() {
+			const gone = this.session;
+			this.resetConversation(null);
+			await this.refreshSessions();
+			const next = this.sessions.find((s) => s.name !== gone);
+			if (next) await this.openSession(next.name);
+			else await this.newSession();
+		},
+		async exportMarkdown(mode) {
+			this.menuOpen = false;
+			try {
+				const r = await chat_ai.api("export_session", { session: this.session });
+				if (!(r && r.ok)) throw new Error("export");
+				const d = r.data || {};
+				if (mode === "copy") this.copyText(d.markdown);
+				else this.download(this.L().exportFilename(d.title), d.markdown, "text/markdown;charset=utf-8");
+			} catch (e) {
+				this.toastError(e);
+			}
+		},
+		async setLanguage(code) {
+			this.language = code;
+			try {
+				localStorage.setItem("chat_ai_lang", code);
+			} catch (e) {
+				/* storage unavailable */
+			}
+			if (!this.session) return;
+			try {
+				await chat_ai.api("set_language", { session: this.session, language: code });
+			} catch (e) {
+				/* the choice still applies to the UI */
+			}
+		},
+
+		/* ---------------------------------------------------------- artifacts */
+		async loadArtifacts() {
+			if (!this.session) {
+				this.artifacts = [];
+				return;
+			}
+			try {
+				const r = await chat_ai.api("zatgo_core.chat_ai.api.platform.chat_artifacts", { session: this.session, limit: 40 });
+				const list = (r && r.ok && r.data) || (r && r.data) || [];
+				this.artifacts = Array.isArray(list) ? list : [];
+			} catch (e) {
+				this.artifacts = [];
+			}
+		},
+		async openArtifact(name) {
+			try {
+				const r = await chat_ai.api("zatgo_core.chat_ai.api.platform.get_artifact", { name });
+				const doc = (r && r.ok && r.data) || (r && r.data) || {};
+				const body = typeof doc.content === "string" ? doc.content : JSON.stringify(doc.content || "", null, 2);
+				this.showArtifacts = false;
+				this.openDialog({
+					title: doc.title || name,
+					pre: String(body).slice(0, 20000),
+					okText: this.ui.close,
+					cancelText: this.ui.copy,
+					onCancel: () => this.copyText(body),
+					onOk: () => {},
+				});
+			} catch (e) {
+				this.toastError(e);
+			}
+		},
+
+		/* ----------------------------------------------------------- composer */
+		clearFiles() {
+			this.files.forEach((f) => f.thumb && URL.revokeObjectURL(f.thumb));
+			this.files = [];
+		},
+		onPickFiles(e) {
+			this.addFiles(Array.from(e.target.files || []));
+			e.target.value = "";
+		},
+		onPaste(e) {
+			const items = Array.from((e.clipboardData && e.clipboardData.files) || []);
+			if (items.length) {
+				e.preventDefault();
+				this.addFiles(items);
+			}
+		},
+		onDrop(e) {
+			this.dragging = false;
+			const items = Array.from((e.dataTransfer && e.dataTransfer.files) || []);
+			if (items.length) this.addFiles(items);
+		},
+		onDragOver(e) {
+			if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) {
+				e.preventDefault();
+				this.dragging = true;
+			}
+		},
+		fileProblem(file) {
+			const chk = this.L().clientFileCheck(file, {
+				fileUpload: this.features.file_upload,
+				vision: this.features.vision,
+				maxMb: this.maxUploadMb,
+			});
+			if (chk.ok) return "";
+			const map = {
+				disabled: ["errFileDisabled", {}],
+				type: ["errFileType", { name: file.name }],
+				size: ["errFileSize", { name: file.name, mb: this.maxUploadMb }],
+				empty: ["errFileEmpty", { name: file.name }],
+				vision: ["errFileVision", { name: file.name }],
+			};
+			const m = map[chk.reason] || ["errGeneric", {}];
+			return this.t(m[0], m[1]);
+		},
+		async addFiles(list) {
+			for (const file of list) {
+				if (this.files.length >= 5) {
+					frappe.show_alert({ message: this.t("errFileLimit", { n: 5 }), indicator: "orange" });
+					break;
+				}
+				const problem = this.fileProblem(file);
+				if (problem) {
+					frappe.show_alert({ message: problem, indicator: "orange" });
+					continue;
+				}
+				const entry = {
+					id: this.L().localId("f"),
+					name: file.name,
+					size: file.size,
+					kind: this.L().FILE_TYPES[this.L().extOf(file.name)] || "",
+					status: "uploading",
+					progress: 0,
+					server: "",
+					error: "",
+					thumb: file.type && file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+				};
+				this.files.push(entry);
+				this.uploadFile(entry.id, file);
+			}
+		},
+		async uploadFile(id, file) {
+			const entry = () => this.files.find((f) => f.id === id);
+			try {
+				if (!this.session) await this.newSession();
+				const fd = new FormData();
+				fd.append("session", this.session);
+				fd.append("file", file, file.name);
+				const result = await new Promise((resolve, reject) => {
+					const xhr = new XMLHttpRequest();
+					xhr.open("POST", "/api/method/" + CAI_API + "upload");
+					xhr.setRequestHeader("X-Frappe-CSRF-Token", frappe.csrf_token);
+					xhr.setRequestHeader("Accept", "application/json");
+					xhr.upload.onprogress = (ev) => {
+						const e = entry();
+						if (e && ev.lengthComputable) e.progress = Math.round((ev.loaded / ev.total) * 100);
+					};
+					xhr.onerror = () => reject(new Error(this.ui.errNetwork));
+					xhr.onload = () => {
+						let json = null;
+						try {
+							json = JSON.parse(xhr.responseText);
+						} catch (e) {
+							json = null;
+						}
+						if (xhr.status >= 200 && xhr.status < 300 && json && json.message) resolve(json.message);
+						else reject(new Error(chat_ai.api.serverMessage(json) || this.ui.errGeneric));
+					};
+					xhr.send(fd);
+				});
+				const e = entry();
+				if (!e) return; // removed while uploading
+				if (!result.ok) {
+					e.status = "failed";
+					e.error = result.error || this.ui.errGeneric;
+					return;
+				}
+				e.server = result.data.name;
+				e.status = result.data.status === "Failed" ? "failed" : result.data.status === "Ready" ? "ready" : "processing";
+				e.error = result.data.error || "";
+				e.progress = 100;
+			} catch (err) {
+				const e = entry();
+				if (e) {
+					e.status = "failed";
+					e.error = err.message || this.ui.errGeneric;
+				}
+			}
+		},
+		async removeFile(f) {
+			this.files = this.files.filter((x) => x.id !== f.id);
+			if (f.thumb) URL.revokeObjectURL(f.thumb);
+			if (f.server) {
+				try {
+					await chat_ai.api("delete_attachment", { attachment: f.server });
+				} catch (e) {
+					/* an orphaned file is removed with its conversation */
+				}
+			}
+		},
+		onKeydown(e) {
+			if (this.paletteOpen && this.paletteItems.length) {
+				if (e.key === "ArrowDown") {
+					e.preventDefault();
+					this.paletteIndex = (this.paletteIndex + 1) % this.paletteItems.length;
+					return;
+				}
+				if (e.key === "ArrowUp") {
+					e.preventDefault();
+					this.paletteIndex = (this.paletteIndex - 1 + this.paletteItems.length) % this.paletteItems.length;
+					return;
+				}
+				if (e.key === "Tab" || (e.key === "Enter" && !e.shiftKey)) {
+					e.preventDefault();
+					this.pickCommand(this.paletteItems[this.paletteIndex]);
+					return;
+				}
+			}
+			if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+				e.preventDefault();
+				this.send();
+			}
+		},
+		autoGrow() {
+			const el = this.$refs.input;
+			if (!el) return;
+			el.style.height = "auto";
+			el.style.height = Math.min(el.scrollHeight, 180) + "px";
+		},
+		pickCommand(cmd) {
+			this.input = `/${cmd.name} `;
+			this.paletteOpen = false;
+			if (cmd.name === "help") this.showHelp();
+			this.focusInput();
+		},
+		showHelp() {
+			const lines = this.commands.map((c) => `/${c.name} — ${c.description || c.label || ""}`);
+			const msg = this.L().emptyMessage("assistant", lines.join("\n") || "No commands available.");
+			this.messages.push(msg);
+			this.scrollToBottom(true);
+		},
+		isPlanApprovalText(text) {
+			const t = (text || "").trim().toLowerCase();
+			return ["ok", "yes", "confirm", "proceed", "continue", "go ahead", "y"].includes(t);
+		},
+
+		/* --------------------------------------------------------------- turns */
+		async send() {
+			if (!this.canSend) {
+				if (this.uploading) frappe.show_alert({ message: this.ui.uploadWait, indicator: "orange" });
+				return;
+			}
+			let text = (this.input || "").trim();
+			this.stopListening();
+			if (this.pending && this.pending.kind === "plan" && this.isPlanApprovalText(text)) {
+				this.input = "";
+				const m = this.L().emptyMessage("user", text);
+				this.messages.push(m);
+				await this.confirmPlan(true);
+				return;
+			}
+			let command = null;
+			if (text.startsWith("/")) {
+				const parts = text.slice(1).split(/\s+/);
+				command = parts.shift();
+				text = parts.join(" ");
+				if (command === "help") {
+					this.showHelp();
+					this.input = "";
+					this.paletteOpen = false;
+					return;
+				}
+			}
+			const attachments = this.readyFiles.map((f) => ({ name: f.server, file_name: f.name, kind: f.kind }));
+			const user = this.L().emptyMessage("user", command ? `/${command} ${text}`.trim() : text);
+			user.attachments = attachments;
+			this.messages.push(user);
+			this.input = "";
+			this.paletteOpen = false;
+			this.$nextTick(() => this.autoGrow());
+			const args = {
+				message: text,
+				command,
+				attachments: attachments.map((a) => a.name),
+				model: this.selectedModel || null,
+				web: this.features.web_search ? (this.webOn ? 1 : 0) : null,
+			};
+			this.files.forEach((f) => f.thumb && URL.revokeObjectURL(f.thumb));
+			this.files = [];
+			await this.runTurn("send", args);
+		},
+		/**
+		 * One request/response turn. kind: send | regenerate | edit | confirm.
+		 * Streaming text arrives over realtime meanwhile; the response is authoritative.
+		 */
+		async runTurn(kind, args) {
+			if (!this.session) await this.newSession();
+			const L = this.L();
+			const assistant = L.emptyMessage("assistant", "");
+			assistant.status = "pending";
+			assistant._retry = { kind, args };
+			this.messages.push(assistant);
+			const turn = {
+				session: this.session,
+				msgId: assistant.id,
+				buffer: new L.StreamBuffer(),
+				finalized: false,
+				dirty: false,
+			};
+			this._turn = turn;
+			this.busy = true;
+			this.stopping = false;
+			this.progress = this.ui.working;
+			this.announce = this.ui.working;
+			this.scrollToBottom(true);
+			const common = { session: this.session, client_context: this.clientContext() };
+			let payload = null;
+			let failure = null;
+			try {
+				if (kind === "regenerate") {
+					payload = await chat_ai.api("regenerate", { session: this.session, model: args.model, web: args.web });
+				} else if (kind === "edit") {
+					payload = await chat_ai.api("edit_message", {
+						session: this.session, message: args.message_id, content: args.message, model: args.model, web: args.web,
+					});
+				} else {
+					payload = await chat_ai.api("send", Object.assign({}, common, args));
+				}
+			} catch (e) {
+				failure = e;
+			}
+			turn.finalized = true;
+			this._flushPending = false;
+			if (this._raf) {
+				cancelAnimationFrame(this._raf);
+				this._raf = 0;
+			}
+			clearTimeout(this._flushTimer);
+			if (this._turn === turn) this._turn = null;
+			const live = this.msgById(turn.msgId);
+			if (turn.session !== this.session || !live) {
+				this.busy = false; // the user moved to another conversation; nothing to render here
+				return;
+			}
+			if (failure) await this.finishWithFailure(live, turn, failure);
+			else if (!payload || !payload.ok) this.finishWithError(live, turn, this.L().errorFromPayload(payload));
+			else this.finishWithAnswer(live, payload.data || {});
+			this.busy = false;
+			this.stopping = false;
+			this.progress = "";
+			this.scrollToBottom();
+			this.refreshSessions();
+			this.loadArtifacts();
+			this.adoptIds();
+		},
+		finishWithAnswer(msg, data) {
+			const L = this.L();
+			msg.steps.forEach((st) => {
+				if (st.status === "running") st.status = "done"; // the turn is over: nothing is still running
+			});
+			const cj = data.content_json || {};
+			if (data.assistant_mode) this.mode = data.assistant_mode;
+			msg.text = data.content || msg.text || "";
+			msg.blocks = Array.isArray(cj.blocks) ? cj.blocks : [];
+			msg.sources = L.normalizeSources(data.sources || cj.sources);
+			msg.meta = data.meta || cj.meta || null;
+			const interrupted = !!(msg.meta && msg.meta.interrupted);
+			msg.status = interrupted ? "error" : "done";
+			msg.error = interrupted ? { message: "", code: "interrupted", retryable: true } : null;
+			msg.serverId = data.message || msg.serverId;
+			msg.persisted = !!data.message;
+			msg.needs_confirmation = !!(cj.needs_confirmation || data.needs_confirmation);
+			msg.needs_plan_approval = !!(cj.needs_plan_approval || data.needs_plan_approval);
+			msg.pending_plan = cj.pending_plan || data.pending_plan || [];
+			msg.pending_assumptions = cj.pending_assumptions || data.pending_assumptions || [];
+			msg.confirmation_token = cj.confirmation_token || data.confirmation_token || "";
+			if (data.queued) {
+				msg.status = "queued";
+				msg.text = msg.text || this.ui.bgNotice;
+			}
+			if (msg.needs_confirmation) {
+				this.pending = { kind: "tool", tool: cj.pending_tool, args: cj.pending_args, token: msg.confirmation_token };
+			} else if (msg.needs_plan_approval) {
+				this.pending = { kind: "plan", plan: msg.pending_plan, assumptions: msg.pending_assumptions, token: msg.confirmation_token };
+			}
+			this.announce = this.ui.replyReady;
+			if (this.autoSpeak && this.enableVoiceOut && msg.text && msg.status === "done") this.speak(msg);
+		},
+		finishWithError(msg, turn, error) {
+			msg.steps.forEach((st) => {
+				if (st.status === "running") st.status = "failed";
+			});
+			msg.status = "error";
+			msg.text = turn.buffer.flushAll() || msg.text; // what the user already saw stays visible
+			msg.error = error;
+			msg.error.partial = !!msg.text;
+			this.announce = error.message || this.ui.errGeneric;
+			if (error.code === "forbidden") this.loadHistory();
+		},
+		async finishWithFailure(msg, turn, err) {
+			const network = this.L().isNetworkError(err) || err.network;
+			if (!network) {
+				this.finishWithError(msg, turn, {
+					message: err.message || "",
+					code: err.code || "internal",
+					retryable: false,
+				});
+				return;
+			}
+			// The connection broke while the server may have finished: look before assuming failure.
+			msg.status = "pending";
+			msg.text = turn.buffer.flushAll() || msg.text;
+			this.progress = this.ui.errNetwork;
+			await new Promise((r) => setTimeout(r, 1500));
+			const before = this.messages.filter((m) => m.serverId).length;
+			await this.loadHistory();
+			const after = this.messages.filter((m) => m.serverId).length;
+			if (after > before) return; // the answer had arrived: history now shows it
+			const live = this.msgById(msg.id) || this.messages[this.messages.length - 1];
+			if (live && !live.serverId) {
+				live.status = "error";
+				live.error = { message: this.ui.errNetworkFinal, code: "network", retryable: true, reload: true };
+			}
+		},
+		stopGeneration() {
+			if (!this.busy || this.stopping) return;
+			this.stopping = true;
+			this.progress = this.ui.stopping;
+			if (this.session) chat_ai.api("cancel", { session: this.session }).catch(() => {});
+			// The server finishes the turn with what was generated and the response replaces this state.
+		},
+		retryMessage(msg) {
+			const retry = msg._retry;
+			const idx = this.messages.findIndex((m) => m.id === msg.id);
+			if (idx < 0) return;
+			const prev = this.messages[idx - 1];
+			const persisted = !!(prev && prev.serverId);
+			if (msg.error && msg.error.reload) {
+				this.loadHistory();
+				return;
+			}
+			this.messages.splice(idx, 1);
+			if (persisted) {
+				this.runTurn("regenerate", { model: this.selectedModel || null, web: this.features.web_search ? (this.webOn ? 1 : 0) : null });
+			} else if (retry) {
+				this.runTurn(retry.kind === "send" ? "send" : "regenerate", retry.args);
+			}
+		},
+		regenerate(msg) {
+			if (this.busy || !this.L().canRegenerate(this.messages, msg)) return;
+			this.messages = this.messages.filter((m) => m.id !== msg.id);
+			this.runTurn("regenerate", { model: this.selectedModel || null, web: this.features.web_search ? (this.webOn ? 1 : 0) : null });
+		},
+		startEdit(msg) {
+			if (this.busy || !msg.serverId) return;
+			this.editing = { id: msg.id, text: msg.text };
+			this.$nextTick(() => {
+				const el = this.$refs.editBox && (Array.isArray(this.$refs.editBox) ? this.$refs.editBox[0] : this.$refs.editBox);
+				if (el) {
+					el.focus();
+					el.setSelectionRange(el.value.length, el.value.length);
+				}
+			});
+		},
+		cancelEdit() {
+			this.editing = null;
+		},
+		async saveEdit(msg) {
+			const text = (this.editing && this.editing.text || "").trim();
+			if (!text || this.busy) return;
+			const idx = this.messages.findIndex((m) => m.id === msg.id);
+			const serverId = msg.serverId;
+			const attachments = msg.attachments;
+			this.editing = null;
+			this.messages = this.L().truncateAfter(this.messages, idx - 1);
+			const user = this.L().emptyMessage("user", text);
+			user.attachments = attachments;
+			this.messages.push(user);
+			await this.runTurn("edit", {
+				message_id: serverId, message: text, model: this.selectedModel || null,
+				web: this.features.web_search ? (this.webOn ? 1 : 0) : null,
+			});
+		},
+		deleteMessage(msg) {
+			if (this.busy) return;
+			if (!msg.serverId) {
+				this.messages = this.messages.filter((m) => m.id !== msg.id);
+				return;
+			}
+			this.openDialog({
+				title: this.ui.deleteMsgTitle,
+				body: this.ui.deleteMsgBody,
+				okText: this.ui.delete,
+				danger: true,
+				onOk: async () => {
+					try {
+						await chat_ai.api("delete_message", { session: this.session, message: msg.serverId });
+						this.messages = this.messages.filter((m) => m.id !== msg.id);
+					} catch (e) {
+						this.toastError(e);
+					}
+				},
+			});
+		},
+		async confirmPending(yes, msg) {
+			if (msg) msg.confirmState = yes ? "approved" : "declined";
+			if (!yes) {
+				this.pending = null;
+				this.messages.push(this.L().emptyMessage("assistant", this.ui.cancelled));
+				return;
+			}
+			if (!this.pending || this.pending.kind !== "tool") return;
+			const p = this.pending;
+			this.pending = null;
+			await this.runTurn("send", {
+				message: "", confirmed: 1, pending_tool: p.tool, pending_args: p.args, confirmation_token: p.token,
+			});
+		},
+		async confirmPlan(yes, msg) {
+			if (msg) msg.confirmState = yes ? "approved" : "declined";
+			if (!yes) {
+				this.pending = null;
+				this.messages.push(this.L().emptyMessage("assistant", this.ui.cancelled));
+				return;
+			}
+			if (!this.pending || this.pending.kind !== "plan") return;
+			const p = this.pending;
+			this.pending = null;
+			await this.runTurn("send", { message: "OK", plan_confirmed: 1, confirmation_token: p.token });
+		},
+		openLink(dt, nm) {
+			frappe.set_route("Form", dt, nm);
+		},
+		toastError(e) {
+			frappe.show_alert({ message: (e && e.message) || this.ui.errGeneric, indicator: "red" });
+		},
+
+		/* ------------------------------------------------------------ scrolling */
+		onScroll() {
+			const box = this.$refs.messages;
+			if (!box) return;
+			this.atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+			if (box.scrollTop < 60 && this.hasMore && !this.loadingOlder) this.loadOlder();
+		},
+		scrollToBottom(force) {
+			this.$nextTick(() => {
+				const box = this.$refs.messages;
+				if (!box) return;
+				if (force || this.atBottom) {
+					box.scrollTop = box.scrollHeight;
+					this.atBottom = true;
+				}
+			});
+		},
+
+		/* ------------------------------------------------------------- realtime */
+		scheduleFlush() {
+			if (this._flushPending) return;
+			this._flushPending = true;
+			// One render per frame for smoothness, but a hidden tab pauses requestAnimationFrame, so a
+			// short timer races it: whichever fires first flushes, the other is cancelled.
+			const run = () => {
+				if (!this._flushPending) return;
+				this._flushPending = false;
+				if (this._raf) cancelAnimationFrame(this._raf);
+				clearTimeout(this._flushTimer);
+				this._raf = 0;
+				this.flushStream();
+			};
+			this._raf = requestAnimationFrame(run);
+			this._flushTimer = setTimeout(run, 80);
+		},
+		flushStream() {
+			const t = this._turn;
+			if (!t || t.finalized) return;
+			const changed = t.buffer.take();
+			if (changed || t.dirty) {
+				const m = this.msgById(t.msgId);
+				if (m) {
+					m.text = t.buffer.text;
+					m.status = "streaming";
+				}
+				t.dirty = false;
+				this.scrollToBottom();
+			}
+		},
+		addStep(msg, label, tool) {
+			if (!msg || !label) return;
+			const last = msg.steps[msg.steps.length - 1];
+			if (last && last.label === label) return;
+			if (last) last.status = last.status === "failed" ? "failed" : "done";
+			msg.steps.push({ label, tool: tool || "", status: "running" });
+			if (msg.steps.length > 40) msg.steps.shift();
+		},
+		bindRealtime() {
+			if (!frappe.realtime || !frappe.realtime.on) return;
+			frappe.realtime.on("chat_ai:progress", (data) => {
+				const t = this._turn;
+				if (!data || !this.L().eventBelongsToTurn(data, t)) return;
+				const label = this.ui["stage_" + data.stage] || data.label || data.stage || "";
+				this.progress = label;
+				this.addStep(this.msgById(t.msgId), data.tool ? this.t("toolRunning", { tool: data.tool }) : label, data.tool);
+			});
+			frappe.realtime.on("chat_ai:stream", (data) => {
+				const t = this._turn;
+				if (!data || !this.L().eventBelongsToTurn(data, t)) return;
+				t.buffer.push(data);
+				if (data.reset) t.dirty = true;
+				this.scheduleFlush();
+			});
+			frappe.realtime.on("chat_ai:event", (evt) => {
+				const t = this._turn;
+				if (!evt || !this.L().eventBelongsToTurn(evt, t)) return;
+				const type = evt.type || "";
+				const d = evt.data || {};
+				// Text deltas come from chat_ai:stream only (this event mirrors them).
+				if (type === "planning" || type === "thinking") this.progress = d.detail || this.ui.thinking;
+				else if (type === "tool_started" || type === "tool_progress") {
+					this.progress = d.detail || d.tool || type;
+					this.addStep(this.msgById(t.msgId), this.t("toolRunning", { tool: d.tool || "" }), d.tool);
+				} else if (type === "artifact_created") this.loadArtifacts();
+				else if (type === "error") this.progress = d.message || this.ui.errGeneric;
+			});
+			frappe.realtime.on("chat_ai:notify", (data) => {
+				if (data && data.message) frappe.show_alert({ message: data.message, indicator: "green" });
+				if (this.session) this.loadHistory();
+			});
+		},
+
+
+		/* --------------------------------------------------------- template helpers */
+		grouped(msg) {
+			return this.L().groupSources(msg.sources);
+		},
+		sourceTotal(msg) {
+			return this.L().sourceCount(msg.sources);
+		},
+		stepsSummary(msg) {
+			if (msg.status === "pending" || msg.status === "streaming") return this.ui.stepsRunning;
+			return this.t("stepsCount", { n: msg.steps.length });
+		},
+		badge(msg) {
+			return this.L().metaBadge(msg.meta);
+		},
+		badgeText(msg) {
+			const b = this.badge(msg);
+			if (!b) return "";
+			return b.fallbackFrom
+				? this.t("answeredFallback", { model: b.model, from: b.fallbackFrom })
+				: this.t("answeredBy", { model: b.model });
+		},
+		routeLabel(route) {
+			const map = {
+				fast: "routeFast", reasoning: "routeReasoning", vision: "routeVision",
+				coding: "routeCoding", balanced: "routeBalanced", manual: "routeManual",
+			};
+			return map[route] ? this.ui[map[route]] : "";
+		},
+		errorText(msg) {
+			const e = msg.error || {};
+			if (e.message) return e.message;
+			return e.code === "interrupted" ? this.ui.interrupted : this.ui.errGeneric;
+		},
+		canRetryMsg(msg) {
+			return !!(msg.error && (this.L().canRetry(msg.error) || msg.error.reload));
+		},
+		canConfigure(msg) {
+			const code = msg.error && msg.error.code;
+			const admin = frappe.user && (frappe.user.has_role("System Manager") || frappe.user.has_role("Chat AI Manager"));
+			return !!admin && ["auth", "model_unavailable", "not_configured"].includes(code);
+		},
+		openSettings() {
+			frappe.set_route("Form", "Chat AI Settings");
+		},
+		fileState(f) {
+			if (f.status === "uploading") return `${this.ui.uploading} ${f.progress}%`;
+			if (f.status === "processing") return this.ui.processing;
+			if (f.status === "failed") return f.error || this.ui.failed;
+			return this.L().humanSize(f.size);
+		},
+		attachmentLabel(a) {
+			return a.file_name || a.name;
+		},
+		dialogCancel() {
+			const d = this.dlg;
+			if (d && d.onCancel) d.onCancel();
+			else this.closeDialog();
+		},
+		tableCsv(data) {
+			this.download("table.csv", "﻿" + this.L().tableToCsv(data), "text/csv;charset=utf-8");
+		},
+		parts(text) {
+			return this.L().highlightParts(text, this.sessionQuery);
+		},
+		groupLabel(key) {
+			const map = { pinned: "groupPinned", today: "groupToday", yesterday: "groupYesterday", week: "groupWeek", older: "groupOlder" };
+			return this.ui[map[key]] || key;
+		},
+		lastAssistantId() {
+			const list = this.messages;
+			for (let i = list.length - 1; i >= 0; i--) if (list[i].role === "assistant") return list[i].id;
+			return "";
+		},
+
+		/* ---- voice, layout and locale: carried over unchanged from the previous version ---- */
 		warmVoices() {
 			if (!window.speechSynthesis) return;
 			const mark = () => {
@@ -402,20 +1642,6 @@ chat_ai.sidebar.AppOptions = {
 				/* keep defaults */
 			}
 		},
-		toggle(force) {
-			this.open = typeof force === "boolean" ? force : !this.open;
-			localStorage.setItem("chat_ai_open", this.open ? "1" : "0");
-			this.$nextTick(() => this.updateLayoutOffset());
-			if (this.open && !this.session) this.newSession();
-			if (this.open) {
-				this.$nextTick(() => {
-					const el = this.$refs.input;
-					if (el) el.focus();
-				});
-			} else {
-				this.stopListening();
-			}
-		},
 		clientContext() {
 			const route = frappe.get_route ? frappe.get_route() : [];
 			const ctx = {
@@ -453,388 +1679,7 @@ chat_ai.sidebar.AppOptions = {
 				this.commands = [];
 			}
 		},
-		async newSession() {
-			const r = await frappe.call("zatgo_core.chat_ai.api.chat.new_session", {
-				language: this.language,
-			});
-			if (r.message && r.message.ok) {
-				this.session = r.message.data.name;
-				this.messages = [];
-				this.progress = "";
-				this.pending = null;
-				this.sessionPinned = false;
-				this.streamMsgId = null;
-				this.streamStopped = false;
-				this.stopSpeaking();
-				await this.refreshSessions();
-			}
-		},
-		async refreshSessions() {
-			try {
-				const method = this.sessionQuery
-					? "zatgo_core.chat_ai.api.chat.search_sessions"
-					: "zatgo_core.chat_ai.api.chat.list_sessions";
-				const args = this.sessionQuery ? { query: this.sessionQuery } : { status: "Active" };
-				const r = await frappe.call(method, args);
-				if (r.message && r.message.ok) this.sessions = r.message.data || [];
-			} catch (e) {
-				this.sessions = [];
-			}
-		},
-		async openSession(name) {
-			if (!name || name === this.session) {
-				this.showSessions = false;
-				return;
-			}
-			this.session = name;
-			this.messages = [];
-			this.pending = null;
-			this.streamMsgId = null;
-			this.progress = "";
-			this.showSessions = false;
-			const meta = (this.sessions || []).find((s) => s.name === name);
-			if (meta) {
-				this.mode = meta.assistant_mode || this.mode;
-				this.sessionPinned = !!meta.is_pinned;
-			}
-			try {
-				const r = await frappe.call("zatgo_core.chat_ai.api.chat.history", { session: name, limit: 80 });
-				if (!(r.message && r.message.ok)) return;
-				const rows = r.message.data || [];
-				for (const row of rows) {
-					let cj = {};
-					try {
-						cj = typeof row.content_json === "string"
-							? JSON.parse(row.content_json || "{}")
-							: row.content_json || {};
-					} catch (e) {
-						cj = {};
-					}
-					this.pushMessage(row.role || "assistant", {
-						text: row.content || "",
-						content_json: cj,
-					}, { history: true });
-				}
-			} catch (e) {
-				/* ignore */
-			}
-			await this.loadArtifacts();
-		},
-		async renameSession() {
-			if (!this.session) return;
-			const title = prompt(this.ui.rename, (this.sessions.find((s) => s.name === this.session) || {}).title || "");
-			if (title == null) return;
-			await frappe.call("zatgo_core.chat_ai.api.chat.rename", { session: this.session, title });
-			await this.refreshSessions();
-		},
-		async togglePin() {
-			if (!this.session) return;
-			const next = this.sessionPinned ? 0 : 1;
-			await frappe.call("zatgo_core.chat_ai.api.chat.pin", { session: this.session, pinned: next });
-			this.sessionPinned = !!next;
-			await this.refreshSessions();
-		},
-		async archiveSession() {
-			if (!this.session) return;
-			await frappe.call("zatgo_core.chat_ai.api.chat.archive", { session: this.session });
-			this.session = null;
-			this.messages = [];
-			await this.refreshSessions();
-			if (this.sessions.length) await this.openSession(this.sessions[0].name);
-			else await this.newSession();
-		},
-		async deleteSession() {
-			if (!this.session) return;
-			if (!confirm(this.ui.delete + "?")) return;
-			await frappe.call("zatgo_core.chat_ai.api.chat.delete_session", { session: this.session });
-			this.session = null;
-			this.messages = [];
-			await this.refreshSessions();
-			if (this.sessions.length) await this.openSession(this.sessions[0].name);
-			else await this.newSession();
-		},
-		async clearSession() {
-			if (!this.session) return;
-			await frappe.call("zatgo_core.chat_ai.api.chat.clear", { session: this.session });
-			this.messages = [];
-			this.pending = null;
-		},
-		stopGeneration() {
-			this.streamStopped = true;
-			this.busy = false;
-			this.progress = "";
-			this.clearTypewriter(true);
-			this.streamMsgId = null;
-			if (this.session) {
-				frappe.call({
-					method: "zatgo_core.chat_ai.api.chat.cancel",
-					args: { session: this.session },
-				}).catch(() => {});
-			}
-		},
-		clearTypewriter(flush) {
-			if (this._typeTimer) {
-				clearTimeout(this._typeTimer);
-				this._typeTimer = null;
-			}
-			const msg = this.messages.find((m) => m.id === this._typeMsgId);
-			if (msg) {
-				if (flush && this._typeQueue) {
-					msg.text = (msg.text || "") + this._typeQueue;
-				}
-				msg.typing = false;
-			}
-			this._typeQueue = "";
-			this._typeMsgId = null;
-			const meta = this._typePendingMeta;
-			this._typePendingMeta = null;
-			if (meta && msg) this.applyMessageMeta(msg, meta);
-		},
-		applyMessageMeta(msg, meta) {
-			if (!msg || !meta) return;
-			if (meta.blocks) msg.blocks = meta.blocks;
-			if (meta.needs_confirmation != null) msg.needs_confirmation = !!meta.needs_confirmation;
-			if (meta.needs_plan_approval != null) msg.needs_plan_approval = !!meta.needs_plan_approval;
-			if (meta.pending_plan) msg.pending_plan = meta.pending_plan;
-			if (meta.pending_assumptions) msg.pending_assumptions = meta.pending_assumptions;
-			if (meta.confirmation_token) msg.confirmation_token = meta.confirmation_token;
-			if (msg.needs_confirmation && meta.pending) this.pending = meta.pending;
-			else if (msg.needs_plan_approval && meta.pending) this.pending = meta.pending;
-			if (meta.speak && this.autoSpeak && this.enableVoiceOut && msg.text) this.speak(msg);
-		},
-		enqueueType(msgId, chunk) {
-			if (!chunk || this.streamStopped) return;
-			this._typeMsgId = msgId;
-			this._typeQueue += chunk;
-			const msg = this.messages.find((m) => m.id === msgId);
-			if (msg) msg.typing = true;
-			if (!this._typeTimer) this.drainTypewriter();
-		},
-		drainTypewriter() {
-			if (this.streamStopped) {
-				this.clearTypewriter(false);
-				return;
-			}
-			if (!this._typeQueue) {
-				this._typeTimer = null;
-				const msg = this.messages.find((m) => m.id === this._typeMsgId);
-				if (msg) msg.typing = false;
-				const meta = this._typePendingMeta;
-				if (meta && msg) {
-					this._typePendingMeta = null;
-					this.applyMessageMeta(msg, meta);
-				}
-				return;
-			}
-			/* ChatGPT-style: reveal one word at a time */
-			const wordMatch = this._typeQueue.match(/^(\s+|[^\s]+(?:\s+)?)/);
-			const take = wordMatch ? wordMatch[0] : this._typeQueue.slice(0, 1);
-			this._typeQueue = this._typeQueue.slice(take.length);
-			const msg = this.messages.find((m) => m.id === this._typeMsgId);
-			if (msg) {
-				msg.text = (msg.text || "") + take;
-				msg.typing = true;
-			}
-			this.$nextTick(() => {
-				const box = this.$refs.messages;
-				if (box) box.scrollTop = box.scrollHeight;
-			});
-			let delay = 52;
-			if (/[.!?…]/.test(take)) delay = 110;
-			else if (/\n/.test(take)) delay = 80;
-			else if (/[,;:]/.test(take)) delay = 70;
-			else if (take.length > 12) delay = 64;
-			this._typeTimer = setTimeout(() => this.drainTypewriter(), delay);
-		},
-		typeToFull(msgId, fullText, meta) {
-			const msg = this.messages.find((m) => m.id === msgId);
-			if (!msg) return Promise.resolve();
-			const target = fullText || "";
-			this._typePendingMeta = meta || null;
-			if (!target) {
-				this.applyMessageMeta(msg, meta);
-				msg.typing = false;
-				return Promise.resolve();
-			}
-			/* Sync queue to remaining text only — avoid duplicating streamed chunks */
-			const current = msg.text || "";
-			if (this._typeTimer) {
-				clearTimeout(this._typeTimer);
-				this._typeTimer = null;
-			}
-			this._typeQueue = "";
-			if (target === current) {
-				this.applyMessageMeta(msg, meta);
-				msg.typing = false;
-				return Promise.resolve();
-			}
-			if (target.startsWith(current)) {
-				const rest = target.slice(current.length);
-				if (!rest) {
-					this.applyMessageMeta(msg, meta);
-					msg.typing = false;
-					return Promise.resolve();
-				}
-				this.enqueueType(msgId, rest);
-			} else {
-				msg.text = "";
-				this.enqueueType(msgId, target);
-			}
-			return new Promise((resolve) => {
-				const wait = () => {
-					if (!this._typeQueue && !this._typeTimer) {
-						resolve();
-						return;
-					}
-					setTimeout(wait, 40);
-				};
-				wait();
-			});
-		},
-		toggleAutoSpeak() {
-			if (!this.enableVoiceOut || !this.ttsAvailable) return;
-			this.autoSpeak = !this.autoSpeak;
-			localStorage.setItem("chat_ai_auto_speak", this.autoSpeak ? "1" : "0");
-			if (!this.autoSpeak) this.stopSpeaking();
-		},
-		async loadArtifacts() {
-			if (!this.session) {
-				this.artifacts = [];
-				return;
-			}
-			try {
-				const r = await frappe.call({
-					method: "zatgo_core.chat_ai.api.platform.chat_artifacts",
-					args: { session: this.session, limit: 40 },
-				});
-				const payload = r.message || {};
-				this.artifacts = (payload.ok && payload.data) || payload.data || [];
-				if (!Array.isArray(this.artifacts)) this.artifacts = [];
-			} catch (e) {
-				this.artifacts = [];
-			}
-		},
-		async openArtifact(name) {
-			try {
-				const r = await frappe.call({
-					method: "zatgo_core.chat_ai.api.platform.get_artifact",
-					args: { name },
-				});
-				const payload = r.message || {};
-				const doc = (payload.ok && payload.data) || payload.data || {};
-				const body = doc.content || "";
-				frappe.msgprint({
-					title: doc.title || name,
-					message: `<pre class="cai-code">${frappe.utils.escape_html(String(body).slice(0, 8000))}</pre>`,
-				});
-			} catch (e) {
-				frappe.show_alert({ message: e.message || "Failed", indicator: "red" });
-			}
-		},
-		async setLanguage(code) {
-			this.language = code;
-			localStorage.setItem("chat_ai_lang", code);
-			if (!this.session) return;
-			await frappe.call("zatgo_core.chat_ai.api.chat.set_language", {
-				session: this.session,
-				language: code,
-			});
-		},
-		pickCommand(cmd) {
-			this.input = `/${cmd.name} `;
-			this.paletteOpen = false;
-			if (cmd.name === "help") this.showHelp();
-			this.$nextTick(() => {
-				if (this.$refs.input) this.$refs.input.focus();
-			});
-		},
-		showHelp() {
-			const lines = this.commands.map(
-				(c) => `/${c.name} — ${c.description || c.label || ""}`
-			);
-			this.pushMessage("assistant", {
-				text: lines.join("\n") || "No commands available.",
-			});
-		},
-		pushMessage(role, payload, opts = {}) {
-			const cj = payload.content_json || {};
-			const msg = {
-				id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-				role,
-				text: payload.text || "",
-				blocks: cj.blocks || [],
-				needs_confirmation: !!cj.needs_confirmation && !opts.history,
-				needs_plan_approval: !!cj.needs_plan_approval && !opts.history,
-				pending_plan: cj.pending_plan || [],
-				pending_assumptions: cj.pending_assumptions || [],
-				confirmation_token: cj.confirmation_token || payload.confirmation_token || "",
-			};
-			this.messages.push(msg);
-			if (role === "assistant" && !opts.history) {
-				if (msg.needs_confirmation) {
-					this.pending = {
-						kind: "tool",
-						tool: cj.pending_tool,
-						args: cj.pending_args,
-						token: msg.confirmation_token,
-					};
-				} else if (msg.needs_plan_approval) {
-					this.pending = {
-						kind: "plan",
-						plan: msg.pending_plan,
-						assumptions: msg.pending_assumptions,
-						token: msg.confirmation_token,
-					};
-				}
-			}
-			this.$nextTick(() => {
-				const box = this.$refs.messages;
-				if (box) box.scrollTop = box.scrollHeight;
-			});
-			/* Auto-speak is handled after typewriter finishes (applyMessageMeta / typeToFull) */
-			return msg;
-		},
-		openLink(dt, nm) {
-			frappe.set_route("Form", dt, nm);
-		},
-		async confirmPending(yes) {
-			if (!yes) {
-				this.pending = null;
-				this.pushMessage("assistant", { text: "Cancelled." });
-				return;
-			}
-			if (!this.pending || this.pending.kind !== "tool") return;
-			await this.sendRaw("", {
-				confirmed: 1,
-				pending_tool: this.pending.tool,
-				pending_args: this.pending.args,
-				confirmation_token: this.pending.token,
-			});
-			this.pending = null;
-		},
-		async confirmPlan(yes) {
-			if (!yes) {
-				this.pending = null;
-				this.pushMessage("assistant", { text: "Cancelled." });
-				return;
-			}
-			if (!this.pending || this.pending.kind !== "plan") return;
-			await this.sendRaw("OK", {
-				plan_confirmed: 1,
-				confirmation_token: this.pending.token,
-			});
-			this.pending = null;
-		},
-		isPlanApprovalText(text) {
-			const t = (text || "").trim().toLowerCase();
-			return ["ok", "yes", "confirm", "proceed", "continue", "go ahead", "y"].includes(t);
-		},
-		onKeydown(e) {
-			if (e.key === "Enter" && !e.shiftKey) {
-				e.preventDefault();
-				this.send();
-			}
-		},
+
 		toggleMic() {
 			if (!this.enableVoiceIn) {
 				frappe.show_alert({ message: this.ui.micOff, indicator: "orange" });
@@ -1170,418 +2015,361 @@ chat_ai.sidebar.AppOptions = {
 			}
 			this.speakingId = null;
 		},
-		async send() {
-			let text = (this.input || "").trim();
-			if (!text || this.busy) return;
-			this.stopListening();
-			// Typed OK for pending plan
-			if (this.pending && this.pending.kind === "plan" && this.isPlanApprovalText(text)) {
-				this.input = "";
-				this.pushMessage("user", { text });
-				await this.confirmPlan(true);
-				return;
-			}
-			let command = null;
-			if (text.startsWith("/")) {
-				const parts = text.slice(1).split(/\s+/);
-				command = parts.shift();
-				text = parts.join(" ");
-				if (command === "help") {
-					this.showHelp();
-					this.input = "";
-					this.paletteOpen = false;
-					return;
-				}
-			}
-			const display = command ? `/${command} ${text}`.trim() : text;
-			this.input = "";
-			this.paletteOpen = false;
-			this.pushMessage("user", { text: display });
-			await this.sendRaw(text, { command });
-		},
-		async sendRaw(message, extra = {}) {
-			if (!this.session) await this.newSession();
-			this.busy = true;
-			this.streamStopped = false;
-			this.progress = this.ui.working;
-			const streamMsg = this.pushMessage("assistant", { text: "", content_json: { blocks: [], streaming: true } });
-			this.streamMsgId = streamMsg.id;
-			try {
-				const r = await frappe.call({
-					method: "zatgo_core.chat_ai.api.chat.send",
-					args: {
-						session: this.session,
-						message,
-						client_context: JSON.stringify(this.clientContext()),
-						command: extra.command || null,
-						confirmed: extra.confirmed || 0,
-						plan_confirmed: extra.plan_confirmed || 0,
-						confirmation_token: extra.confirmation_token || null,
-						pending_tool: extra.pending_tool || null,
-						pending_args: extra.pending_args
-							? JSON.stringify(extra.pending_args)
-							: null,
-					},
-				});
-				if (this.streamStopped) return;
-				const payload = r.message || {};
-				const idx = this.messages.findIndex((m) => m.id === this.streamMsgId);
-				if (!payload.ok) {
-					if (idx >= 0) this.messages[idx].text = payload.error || "Error";
-					else this.pushMessage("assistant", { text: payload.error || "Error" });
-					return;
-				}
-				const data = payload.data || {};
-				if (data.assistant_mode) this.mode = data.assistant_mode;
-				const cj = data.content_json || {
-					blocks: [],
-					needs_confirmation: data.needs_confirmation,
-					needs_plan_approval: data.needs_plan_approval,
-					pending_plan: data.pending_plan,
-					pending_assumptions: data.pending_assumptions,
-					pending_tool: data.pending_tool,
-					pending_args: data.pending_args,
-					confirmation_token: data.confirmation_token,
-				};
-				if (idx >= 0) {
-					const msg = this.messages[idx];
-					const pending =
-						cj.needs_confirmation
-							? {
-									kind: "tool",
-									tool: cj.pending_tool,
-									args: cj.pending_args,
-									token: cj.confirmation_token || data.confirmation_token || "",
-							  }
-							: cj.needs_plan_approval
-								? {
-										kind: "plan",
-										plan: cj.pending_plan || [],
-										assumptions: cj.pending_assumptions || [],
-										token: cj.confirmation_token || data.confirmation_token || "",
-								  }
-								: null;
-					await this.typeToFull(msg.id, data.content || msg.text || "", {
-						blocks: cj.blocks || [],
-						needs_confirmation: !!cj.needs_confirmation,
-						needs_plan_approval: !!cj.needs_plan_approval,
-						pending_plan: cj.pending_plan || [],
-						pending_assumptions: cj.pending_assumptions || [],
-						confirmation_token: cj.confirmation_token || data.confirmation_token || "",
-						pending,
-						speak: true,
-					});
-				} else {
-					const m = this.pushMessage("assistant", {
-						text: "",
-						content_json: cj,
-						confirmation_token: data.confirmation_token,
-					});
-					await this.typeToFull(m.id, data.content || "", {
-						blocks: cj.blocks || [],
-						speak: true,
-					});
-				}
-				await this.refreshSessions();
-				await this.loadArtifacts();
-			} catch (e) {
-				const idx = this.messages.findIndex((m) => m.id === this.streamMsgId);
-				if (idx >= 0) this.messages[idx].text = e.message || "Request failed";
-				else this.pushMessage("assistant", { text: e.message || "Request failed" });
-			} finally {
-				this.busy = false;
-				this.progress = "";
-				/* keep streamMsgId until typing finishes if still queued */
-				if (!this._typeQueue && !this._typeTimer) this.streamMsgId = null;
-			}
-		},
-		bindRealtime() {
-			if (!frappe.realtime || !frappe.realtime.on) return;
-			frappe.realtime.on("chat_ai:progress", (data) => {
-				if (!data) return;
-				if (data.session && this.session && data.session !== this.session) return;
-				this.progress = data.label || data.stage || "";
-				if (data.stage === "done") {
-					setTimeout(() => {
-						if (this.progress === (data.label || data.stage)) this.progress = "";
-					}, 800);
-				}
-			});
-			frappe.realtime.on("chat_ai:stream", (data) => {
-				if (!data) return;
-				if (data.session && this.session && data.session !== this.session) return;
-				if (this.streamStopped) return;
-				if (data.done) {
-					this.progress = "";
-					return;
-				}
-				const chunk = data.chunk || "";
-				if (!chunk) return;
-				let msg = this.messages.find((m) => m.id === this.streamMsgId);
-				if (!msg) {
-					msg = this.pushMessage("assistant", { text: "", content_json: { blocks: [] } });
-					this.streamMsgId = msg.id;
-				}
-				msg._fromLegacyStream = true;
-				this.enqueueType(msg.id, chunk);
-			});
-			frappe.realtime.on("chat_ai:event", (evt) => {
-				if (!evt) return;
-				if (evt.session && this.session && evt.session !== this.session) return;
-				const t = evt.type || "";
-				const d = evt.data || {};
-				if (t === "planning" || t === "thinking") {
-					this.progress = d.detail || t;
-				} else if (t === "tool_started" || t === "tool_progress") {
-					this.progress = d.detail || d.tool || t;
-				} else if (t === "assistant_message") {
-					if (this.streamStopped) return;
-					if (d.done) {
-						this.progress = "";
-						return;
-					}
-					const chunk = d.chunk || "";
-					if (!chunk) return;
-					let msg = this.messages.find((m) => m.id === this.streamMsgId);
-					if (!msg) {
-						msg = this.pushMessage("assistant", { text: "", content_json: { blocks: [] } });
-						this.streamMsgId = msg.id;
-					}
-					/* Prefer legacy stream when both fire */
-					if (msg._fromLegacyStream) return;
-					this.enqueueType(msg.id, chunk);
-				} else if (t === "artifact_created") {
-					this.loadArtifacts();
-				} else if (t === "done") {
-					this.progress = "";
-					this.loadArtifacts();
-				} else if (t === "error") {
-					this.progress = d.message || "Error";
-				}
-			});
-		},
+
 	},
 	template: `
-<div class="cai-shell">
+<div class="cai-shell" :class="{ 'cai-shell--wide': expanded }">
   <button
     type="button"
     class="cai-launcher"
     :class="{ 'cai-launcher--hidden': open }"
-    title="Chat AI (Ctrl+Shift+J)"
-    aria-label="Open Chat AI"
+    :title="ui.open + ' (Ctrl+Shift+J)'"
+    :aria-label="ui.open"
     @click="toggle()"
   >
-    <span class="cai-launcher-mark">AI</span>
+    <span class="cai-launcher-mark" aria-hidden="true">AI</span>
   </button>
 
+  <div v-if="open" class="cai-scrim" @click="toggle(false)" aria-hidden="true"></div>
+
   <aside
+    ref="panel"
     class="cai-panel"
-    :class="{ 'cai-panel--open': open, 'cai-panel--rtl': dir === 'rtl' }"
+    :class="{ 'cai-panel--open': open, 'cai-panel--rtl': dir === 'rtl', 'cai-panel--drop': dragging }"
     :dir="dir"
     :aria-hidden="open ? 'false' : 'true'"
+    :inert="open ? null : ''"
+    role="complementary"
+    :aria-label="ui.brand"
+    @dragover="onDragOver"
+    @dragleave.self="dragging = false"
+    @drop.prevent="onDrop"
   >
     <header class="cai-header">
+      <button type="button" class="cai-icon-btn cai-btn-chats" :aria-label="showSessions ? ui.hideChats : ui.showChats" :aria-expanded="showSessions ? 'true' : 'false'" @click="showSessions = !showSessions; showSessions && refreshSessions()">
+        <span aria-hidden="true">☰</span>
+      </button>
       <div class="cai-brand">
-        <span class="cai-brand-mark">AI</span>
-        <div class="cai-brand-text">
-          <strong>Chat AI</strong>
-          <span class="cai-brand-sub">{{ ui.sub }} · {{ mode || ui.modeAuto }}</span>
+        <strong class="cai-brand-title" :title="sessionTitle">{{ sessionTitle }}</strong>
+        <span class="cai-brand-sub">{{ ui.brand }} · {{ mode || ui.modeAuto }}</span>
+      </div>
+      <button type="button" class="cai-icon-btn" :aria-label="ui.newChatFull" :title="ui.newChatFull + ' (Ctrl+Shift+O)'" @click="newSession"><span aria-hidden="true">＋</span></button>
+      <div class="cai-menu-wrap">
+        <button type="button" class="cai-icon-btn" :aria-label="ui.menu" aria-haspopup="menu" :aria-expanded="menuOpen ? 'true' : 'false'" @click="menuOpen = !menuOpen"><span aria-hidden="true">⋯</span></button>
+        <div v-if="menuOpen" class="cai-menu" role="menu" @click.stop>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="renameSession">{{ ui.rename }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="togglePin">{{ sessionPinned ? ui.unpin : ui.pin }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="exportMarkdown('copy')">{{ ui.copyMarkdown }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="exportMarkdown('download')">{{ ui.downloadMarkdown }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="showArtifacts = true; menuOpen = false; loadArtifacts()">{{ ui.artifacts }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="helpOpen = true; menuOpen = false">{{ ui.help }}</button>
+          <div class="cai-menu-sep" role="separator"></div>
+          <label class="cai-menu-field">
+            <span>{{ ui.language }}</span>
+            <select :value="language" @change="setLanguage($event.target.value)">
+              <option v-for="l in languages" :key="l.code" :value="l.code">{{ l.native }}</option>
+            </select>
+          </label>
+          <div class="cai-menu-sep" role="separator"></div>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="clearSession">{{ ui.clear }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="archiveSession">{{ ui.archive }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item cai-menu-item--danger" @click="deleteSession">{{ ui.delete }}</button>
         </div>
       </div>
-      <select class="cai-mode" :value="language" @change="setLanguage($event.target.value)" title="Language">
-        <option v-for="l in languages" :key="l.code" :value="l.code">{{ l.native }}</option>
-      </select>
-      <button type="button" class="cai-icon-btn" :title="ui.sessions" @click="showSessions = !showSessions; refreshSessions()">☰</button>
-      <button type="button" class="cai-icon-btn" title="Artifacts" @click="showArtifacts = !showArtifacts; loadArtifacts()">▣</button>
-      <button type="button" class="cai-icon-btn" :title="ui.newChat" @click="newSession">{{ ui.newChat }}</button>
-      <button type="button" class="cai-icon-btn" title="Close" @click="toggle(false)">×</button>
+      <button type="button" class="cai-icon-btn cai-btn-wide" :aria-label="expanded ? ui.collapse : ui.expand" :aria-pressed="expanded ? 'true' : 'false'" @click="toggleWide"><span aria-hidden="true">{{ expanded ? '⇥' : '⇤' }}</span></button>
+      <button type="button" class="cai-icon-btn" :aria-label="ui.close" @click="toggle(false)"><span aria-hidden="true">×</span></button>
     </header>
 
-    <div v-if="showArtifacts" class="cai-session-rail cai-artifact-rail">
-      <div class="cai-session-actions">
-        <strong>Artifacts</strong>
-        <button type="button" class="cai-icon-btn" @click="loadArtifacts">↻</button>
+    <div class="cai-sr-only" role="status" aria-live="polite">{{ announce }}</div>
+    <div v-if="menuOpen || modelMenuOpen" class="cai-overlay-catch" @click="menuOpen = false; modelMenuOpen = false"></div>
+
+    <nav v-if="showSessions" class="cai-rail" :aria-label="ui.sessions">
+      <div class="cai-search">
+        <input ref="search" type="search" v-model="sessionQuery" :placeholder="ui.searchSessions" :aria-label="ui.searchSessions" />
       </div>
-      <button
-        v-for="a in artifacts"
-        :key="a.name"
-        type="button"
-        class="cai-session-item"
-        @click="openArtifact(a.name)"
-      >
-        <span>{{ a.title || a.artifact_type }}</span>
-        <small>{{ a.artifact_type }}</small>
-      </button>
-      <p v-if="!artifacts.length" class="cai-brand-sub">No artifacts yet</p>
+      <div class="cai-rail-list">
+        <p v-if="searching && !sessions.length" class="cai-muted">{{ ui.searching }}</p>
+        <p v-else-if="!sessions.length" class="cai-muted">{{ sessionQuery ? ui.noResults : ui.noChats }}</p>
+        <template v-for="g in groupedSessions" :key="g.key">
+          <h3 class="cai-rail-group">{{ groupLabel(g.key) }}</h3>
+          <button
+            v-for="s in g.items"
+            :key="s.name"
+            type="button"
+            class="cai-session"
+            :class="{ 'cai-session--active': s.name === session }"
+            :aria-current="s.name === session ? 'true' : null"
+            @click="openSession(s.name)"
+          >
+            <span class="cai-session-title">{{ s.title || ui.untitled }}</span>
+            <small v-if="s.match === 'message' && s.snippet" class="cai-session-snippet"><span class="cai-muted">{{ ui.inMessages }}:</span>
+              <template v-for="(p, pi) in parts(s.snippet)" :key="pi"><mark v-if="p.hit">{{ p.text }}</mark><template v-else>{{ p.text }}</template></template>
+            </small>
+          </button>
+        </template>
+      </div>
+    </nav>
+
+    <div v-if="showArtifacts" class="cai-rail cai-rail--artifacts" role="region" :aria-label="ui.artifacts">
+      <div class="cai-rail-head">
+        <strong>{{ ui.artifacts }}</strong>
+        <span>
+          <button type="button" class="cai-icon-btn" :aria-label="ui.refresh" @click="loadArtifacts"><span aria-hidden="true">↻</span></button>
+          <button type="button" class="cai-icon-btn" :aria-label="ui.close" @click="showArtifacts = false"><span aria-hidden="true">×</span></button>
+        </span>
+      </div>
+      <div class="cai-rail-list">
+        <button v-for="a in artifacts" :key="a.name" type="button" class="cai-session" @click="openArtifact(a.name)">
+          <span class="cai-session-title">{{ a.title || a.artifact_type }}</span>
+          <small class="cai-muted">{{ a.artifact_type }}</small>
+        </button>
+        <p v-if="!artifacts.length" class="cai-muted">{{ ui.noArtifacts }}</p>
+      </div>
     </div>
 
-    <div v-if="showSessions" class="cai-session-rail">
-      <input class="cai-session-search" v-model="sessionQuery" :placeholder="ui.searchSessions" @input="refreshSessions" />
-      <div class="cai-session-actions">
-        <button type="button" class="cai-icon-btn" @click="renameSession">{{ ui.rename }}</button>
-        <button type="button" class="cai-icon-btn" @click="togglePin">{{ sessionPinned ? ui.unpin : ui.pin }}</button>
-        <button type="button" class="cai-icon-btn" @click="clearSession">{{ ui.clear }}</button>
-        <button type="button" class="cai-icon-btn" @click="archiveSession">{{ ui.archive }}</button>
-        <button type="button" class="cai-icon-btn" @click="deleteSession">{{ ui.delete }}</button>
+    <div class="cai-messages" ref="messages" role="log" :aria-label="ui.conversation" aria-live="off" aria-relevant="additions" tabindex="0" @scroll.passive="onScroll">
+      <div v-if="hasMore" class="cai-older">
+        <button type="button" class="cai-btn cai-btn--ghost" :disabled="loadingOlder" @click="loadOlder">{{ loadingOlder ? ui.loadingOlder : ui.loadOlder }}</button>
       </div>
-      <button
-        v-for="s in sessions"
-        :key="s.name"
-        type="button"
-        class="cai-session-item"
-        :class="{ 'cai-session-item--active': s.name === session }"
-        @click="openSession(s.name)"
-      >
-        <span class="cai-session-title">{{ s.is_pinned ? '📌 ' : '' }}{{ s.title || s.name }}</span>
-      </button>
-    </div>
 
-    <div class="cai-messages" ref="messages">
-      <div v-if="!messages.length" class="cai-empty">
+      <div v-if="loadingSession" class="cai-skeleton" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div v-else-if="historyError" class="cai-alert" role="alert">
+        <span>{{ ui.historyError }}</span>
+        <button type="button" class="cai-btn" @click="loadHistory">{{ ui.retry }}</button>
+      </div>
+
+      <div v-if="!messages.length && !loadingSession && !historyError" class="cai-empty">
         <p class="cai-empty-title">{{ ui.emptyTitle }}</p>
         <p class="cai-empty-hint">{{ ui.emptyHint }}</p>
+        <div class="cai-suggest">
+          <button v-for="k in ['suggest1','suggest2','suggest3','suggest4']" :key="k" type="button" class="cai-chip" @click="input = ui[k]; focusInput()">{{ ui[k] }}</button>
+        </div>
       </div>
 
-      <div
+      <article
         v-for="msg in messages"
         :key="msg.id"
         class="cai-msg"
-        :class="'cai-msg--' + msg.role"
+        :class="['cai-msg--' + msg.role, 'cai-msg--' + msg.status]"
+        :aria-label="msg.role === 'user' ? ui.you : ui.assistant"
       >
         <div class="cai-bubble">
-          <div
-            class="cai-bubble-text"
-            :class="{ 'cai-bubble-text--typing': msg.typing }"
-            v-html="formatText(msg.text)"
-          ></div>
-
-          <template v-for="(b, bi) in msg.blocks" :key="bi">
-            <table v-if="b.type === 'table' && b.data" class="cai-table">
-              <thead>
-                <tr>
-                  <th v-for="(h, hi) in (b.data.headers || [])" :key="hi">{{ h }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, ri) in (b.data.rows || [])" :key="ri">
-                  <td v-for="(cell, ci) in row" :key="ci">{{ cell }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="b.type === 'table'" class="cai-artifact-actions">
-              <button type="button" class="cai-icon-btn" @click="copyText(JSON.stringify(b.data || {}))">{{ ui.copy }}</button>
+          <!-- user message -->
+          <template v-if="msg.role === 'user'">
+            <div v-if="editing && editing.id === msg.id" class="cai-edit">
+              <label class="cai-sr-only" :for="'cai-edit-' + msg.id">{{ ui.editMessage }}</label>
+              <textarea :id="'cai-edit-' + msg.id" ref="editBox" v-model="editing.text" rows="3" @keydown.esc.stop="cancelEdit"></textarea>
+              <p class="cai-muted">{{ ui.editWarn }}</p>
+              <div class="cai-row">
+                <button type="button" class="cai-btn cai-btn--primary" :disabled="!(editing.text || '').trim()" @click="saveEdit(msg)">{{ ui.editSend }}</button>
+                <button type="button" class="cai-btn" @click="cancelEdit">{{ ui.cancel }}</button>
+              </div>
             </div>
-            <div v-if="b.type === 'links' && Array.isArray(b.data)" class="cai-links">
-              <button
-                v-for="(l, li) in b.data"
-                :key="li"
-                type="button"
-                class="cai-link"
-                @click="openLink(l.doctype, l.name)"
-              >{{ l.doctype }}: {{ l.name }}</button>
-            </div>
-            <div v-if="b.type === 'plan' && b.data" class="cai-plan">
-              <p v-if="(b.data.assumptions || []).length" class="cai-plan-assumptions">
-                <strong>Assumptions</strong>
-              </p>
-              <ul v-if="(b.data.assumptions || []).length" class="cai-plan-list">
-                <li v-for="(a, ai) in b.data.assumptions" :key="'a'+ai">{{ a }}</li>
-              </ul>
-              <ol v-if="(b.data.steps || []).length" class="cai-plan-steps">
-                <li v-for="(s, si) in b.data.steps" :key="'s'+si">{{ s }}</li>
-              </ol>
-            </div>
-            <span v-if="b.type === 'badge' || b.type === 'status'" class="cai-badge">{{ b.data && (b.data.label || b.data.text || b.data) }}</span>
-            <details v-if="b.type === 'chart' || b.type === 'json' || b.type === 'artifact'" class="cai-artifact">
-              <summary>{{ ui.artifact }}</summary>
-              <pre class="cai-code"><code>{{ typeof b.data === 'string' ? b.data : JSON.stringify(b.data, null, 2) }}</code></pre>
-              <button type="button" class="cai-icon-btn" @click="copyText(typeof b.data === 'string' ? b.data : JSON.stringify(b.data, null, 2))">{{ ui.copy }}</button>
-            </details>
+            <div v-else class="cai-user-text">{{ msg.text }}</div>
+            <ul v-if="msg.attachments && msg.attachments.length" class="cai-attached">
+              <li v-for="(a, ai) in msg.attachments" :key="ai"><span aria-hidden="true">📎</span> {{ attachmentLabel(a) }}</li>
+            </ul>
           </template>
 
-          <div v-if="msg.needs_plan_approval" class="cai-confirm cai-confirm--plan">
-            <button type="button" class="cai-btn cai-btn--primary" @click="confirmPlan(true)">{{ ui.planOk }}</button>
-            <button type="button" class="cai-btn" @click="confirmPlan(false)">{{ ui.cancel }}</button>
-          </div>
+          <!-- assistant message -->
+          <template v-else>
+            <details v-if="msg.steps.length" class="cai-steps">
+              <summary>{{ stepsSummary(msg) }}</summary>
+              <ul>
+                <li v-for="(s, si) in msg.steps" :key="si" :class="'cai-step--' + s.status">{{ s.label }}</li>
+              </ul>
+            </details>
 
-          <div v-if="msg.needs_confirmation" class="cai-confirm">
-            <button type="button" class="cai-btn cai-btn--primary" @click="confirmPending(true)">{{ ui.confirm }}</button>
-            <button type="button" class="cai-btn" @click="confirmPending(false)">{{ ui.cancel }}</button>
-          </div>
+            <div v-if="(msg.status === 'pending' || msg.status === 'queued') && !msg.text" class="cai-typing" role="img" :aria-label="ui.working"><i></i><i></i><i></i></div>
 
-          <div v-if="msg.role === 'assistant' && enableVoiceOut && ttsAvailable && msg.text" class="cai-voice-actions">
-            <button
-              type="button"
-              class="cai-icon-btn"
-              @click="speakingId === msg.id ? stopSpeaking() : speak(msg)"
-            >{{ speakingId === msg.id ? ui.stop : ui.speak }}</button>
-          </div>
+            <div
+              v-if="msg.text"
+              class="cai-md"
+              :class="{ 'cai-md--streaming': msg.status === 'streaming' }"
+              v-html="msgHtml(msg)"
+              @click="onMessageClick($event, msg)"
+            ></div>
+
+            <template v-for="(b, bi) in msg.blocks" :key="bi">
+              <div v-if="b.type === 'table' && b.data" class="cai-tablewrap" role="region" tabindex="0" :aria-label="ui.artifact">
+                <table class="cai-table">
+                  <thead><tr><th v-for="(h, hi) in (b.data.headers || [])" :key="hi" scope="col">{{ h }}</th></tr></thead>
+                  <tbody><tr v-for="(row, ri) in (b.data.rows || [])" :key="ri"><td v-for="(cell, ci) in row" :key="ci">{{ L().fmtCell(cell) }}</td></tr></tbody>
+                </table>
+              </div>
+              <div v-if="b.type === 'table'" class="cai-row">
+                <button type="button" class="cai-btn cai-btn--ghost" @click="tableCsv(b.data)">{{ ui.downloadCsv }}</button>
+                <button type="button" class="cai-btn cai-btn--ghost" @click="copyText(JSON.stringify(b.data || {}))">{{ ui.copyJson }}</button>
+              </div>
+              <div v-if="b.type === 'links' && Array.isArray(b.data)" class="cai-links">
+                <button v-for="(l, li) in b.data" :key="li" type="button" class="cai-chip" @click="openLink(l.doctype, l.name)">{{ l.doctype }}: {{ l.name }}</button>
+              </div>
+              <div v-if="b.type === 'plan' && b.data" class="cai-plan">
+                <template v-if="(b.data.assumptions || []).length">
+                  <strong>{{ ui.assumptions }}</strong>
+                  <ul><li v-for="(a, ai) in b.data.assumptions" :key="'a' + ai">{{ a }}</li></ul>
+                </template>
+                <ol v-if="(b.data.steps || []).length"><li v-for="(s, si) in b.data.steps" :key="'s' + si">{{ s }}</li></ol>
+              </div>
+              <span v-if="b.type === 'badge' || b.type === 'status'" class="cai-badge">{{ b.data && (b.data.label || b.data.text || b.data) }}</span>
+              <details v-if="b.type === 'chart' || b.type === 'json' || b.type === 'artifact'" class="cai-artifact">
+                <summary>{{ ui.artifact }}</summary>
+                <pre><code>{{ typeof b.data === 'string' ? b.data : JSON.stringify(b.data, null, 2) }}</code></pre>
+                <button type="button" class="cai-btn cai-btn--ghost" @click="copyText(typeof b.data === 'string' ? b.data : JSON.stringify(b.data, null, 2))">{{ ui.copy }}</button>
+              </details>
+            </template>
+
+            <div v-if="msg.status === 'error'" class="cai-alert" role="alert">
+              <span>{{ errorText(msg) }}<template v-if="msg.error && msg.error.partial"> {{ ui.partialNotSaved }}</template></span>
+              <span class="cai-row">
+                <button v-if="canRetryMsg(msg)" type="button" class="cai-btn" @click="retryMessage(msg)">{{ msg.error && msg.error.reload ? ui.reloadChat : ui.retry }}</button>
+                <button v-if="canConfigure(msg)" type="button" class="cai-btn cai-btn--ghost" @click="openSettings">{{ ui.openSettings }}</button>
+              </span>
+            </div>
+
+            <div v-if="msg.needs_plan_approval" class="cai-confirm">
+              <template v-if="!msg.confirmState">
+                <button type="button" class="cai-btn cai-btn--primary" @click="confirmPlan(true, msg)">{{ ui.planOk }}</button>
+                <button type="button" class="cai-btn" @click="confirmPlan(false, msg)">{{ ui.cancel }}</button>
+              </template>
+              <span v-else class="cai-badge">{{ msg.confirmState === 'approved' ? ui.approved : ui.declined }}</span>
+            </div>
+            <div v-if="msg.needs_confirmation" class="cai-confirm">
+              <template v-if="!msg.confirmState">
+                <button type="button" class="cai-btn cai-btn--primary" @click="confirmPending(true, msg)">{{ ui.confirm }}</button>
+                <button type="button" class="cai-btn" @click="confirmPending(false, msg)">{{ ui.cancel }}</button>
+              </template>
+              <span v-else class="cai-badge">{{ msg.confirmState === 'approved' ? ui.approved : ui.declined }}</span>
+            </div>
+
+            <details v-if="sourceTotal(msg)" class="cai-sources" :open="msg.srcOpen != null">
+              <summary>{{ ui.sources }} ({{ sourceTotal(msg) }})</summary>
+              <template v-for="kind in ['web', 'file']" :key="kind">
+                <template v-if="grouped(msg)[kind].length">
+                  <h4>{{ kind === 'web' ? ui.sourcesWeb : ui.sourcesFiles }}</h4>
+                  <ol class="cai-source-list">
+                    <li v-for="s in grouped(msg)[kind]" :key="s.n" :id="'cai-src-' + msg.id + '-' + s.n" class="cai-source" :value="s.n">
+                      <span class="cai-source-n">{{ s.n }}</span>
+                      <span class="cai-source-body">
+                        <a v-if="s.type === 'web' && s.url" :href="s.url" target="_blank" rel="noopener noreferrer nofollow" :aria-label="ui.openSource + ': ' + s.title">{{ s.title }}</a>
+                        <span v-else class="cai-source-title">{{ s.title }}<template v-if="s.chunk != null && s.chunk >= 0"> · {{ t('part', { n: s.chunk + 1 }) }}</template><template v-else-if="s.chunk === -1"> · {{ ui.computedFromFile }}</template></span>
+                        <small v-if="s.type === 'web' && s.domain" class="cai-muted">{{ s.domain }}</small>
+                        <small v-if="s.snippet" class="cai-source-snippet">{{ s.snippet }}</small>
+                      </span>
+                    </li>
+                  </ol>
+                </template>
+              </template>
+            </details>
+
+            <div v-if="badge(msg) && msg.status !== 'pending'" class="cai-meta" :class="{ 'cai-meta--fallback': badge(msg).fallbackFrom }">
+              <span>{{ badgeText(msg) }}</span>
+              <span v-if="routeLabel(badge(msg).route) && !badge(msg).fallbackFrom" class="cai-badge">{{ routeLabel(badge(msg).route) }}</span>
+            </div>
+          </template>
         </div>
-      </div>
+
+        <div v-if="!busy && msg.status !== 'pending' && msg.status !== 'streaming' && !(editing && editing.id === msg.id)" class="cai-actions" role="group" :aria-label="msg.role === 'user' ? ui.you : ui.assistant">
+          <button type="button" class="cai-act" :aria-label="ui.copyMessage" :title="ui.copyMessage" @click="copyText(msg.text)"><span aria-hidden="true">⧉</span></button>
+          <button v-if="msg.role === 'assistant' && L().canRegenerate(messages, msg)" type="button" class="cai-act" :aria-label="ui.regenerate" :title="ui.regenerate" @click="regenerate(msg)"><span aria-hidden="true">↻</span></button>
+          <button v-if="msg.role === 'user' && msg.serverId" type="button" class="cai-act" :aria-label="ui.editMessage" :title="ui.editMessage" @click="startEdit(msg)"><span aria-hidden="true">✎</span></button>
+          <button v-if="msg.role === 'assistant' && enableVoiceOut && ttsAvailable && msg.text" type="button" class="cai-act" :aria-label="speakingId === msg.id ? ui.stop : ui.speak" :title="speakingId === msg.id ? ui.stop : ui.speak" @click="speakingId === msg.id ? stopSpeaking() : speak(msg)"><span aria-hidden="true">{{ speakingId === msg.id ? '■' : '🔊' }}</span></button>
+          <button v-if="msg.serverId" type="button" class="cai-act cai-act--danger" :aria-label="ui.deleteMessage" :title="ui.deleteMessage" @click="deleteMessage(msg)"><span aria-hidden="true">🗑</span></button>
+        </div>
+      </article>
     </div>
 
-    <div
-      class="cai-progress"
-      :class="{ 'cai-progress--active': progress || busy || listening, 'cai-progress--listening': listening }"
-    >
+    <button v-if="!atBottom && messages.length" type="button" class="cai-jump" @click="scrollToBottom(true)">{{ ui.jumpLatest }} <span aria-hidden="true">↓</span></button>
+
+    <div class="cai-progress" :class="{ 'cai-progress--active': progress || busy || listening }" aria-hidden="true">
       <span v-if="progress || busy || listening" class="cai-progress-dot"></span>
       <span class="cai-progress-text">{{ progress || (busy ? ui.working : '') }}</span>
     </div>
 
     <footer class="cai-composer" :class="{ 'cai-composer--listening': listening }">
-      <div v-show="paletteOpen" class="cai-palette">
-        <button
-          v-for="c in paletteItems"
-          :key="c.name"
-          type="button"
-          class="cai-palette-item"
-          @click="pickCommand(c)"
-        >
-          <strong>/{{ c.name }}</strong>
-          <span>{{ c.description || c.label || '' }}</span>
+      <div v-if="dragging" class="cai-drop" aria-hidden="true">{{ ui.dropFiles }}</div>
+
+      <ul v-if="files.length" class="cai-files" :aria-label="ui.attach">
+        <li v-for="f in files" :key="f.id" class="cai-file" :class="'cai-file--' + f.status">
+          <img v-if="f.thumb" :src="f.thumb" alt="" class="cai-file-thumb" />
+          <span v-else class="cai-file-icon" aria-hidden="true">📄</span>
+          <span class="cai-file-body">
+            <span class="cai-file-name">{{ f.name }}</span>
+            <small class="cai-file-state" :role="f.status === 'failed' ? 'alert' : null">{{ fileState(f) }}</small>
+          </span>
+          <button type="button" class="cai-act" :aria-label="ui.removeFile + ': ' + f.name" @click="removeFile(f)"><span aria-hidden="true">×</span></button>
+        </li>
+      </ul>
+
+      <div v-show="paletteOpen" class="cai-palette" role="listbox" :aria-label="ui.commands">
+        <button v-for="(c, ci) in paletteItems" :key="c.name" type="button" role="option" :aria-selected="ci === paletteIndex ? 'true' : 'false'" class="cai-palette-item" :class="{ 'cai-palette-item--on': ci === paletteIndex }" @click="pickCommand(c)">
+          <strong>/{{ c.name }}</strong><span>{{ c.description || c.label || '' }}</span>
         </button>
       </div>
+
+      <label class="cai-sr-only" for="cai-input">{{ ui.composerLabel }}</label>
       <textarea
+        id="cai-input"
         ref="input"
         class="cai-input"
         v-model="input"
-        rows="2"
+        rows="1"
         :placeholder="ui.placeholder"
+        enterkeyhint="send"
         @keydown="onKeydown"
+        @input="autoGrow"
+        @paste="onPaste"
       ></textarea>
-      <div class="cai-composer-actions">
-        <button
-          v-if="enableVoiceOut && ttsAvailable"
-          type="button"
-          class="cai-icon-btn cai-speak-toggle"
-          :class="{ 'cai-speak-toggle--on': autoSpeak }"
-          :title="autoSpeak ? ui.speakOn : ui.speakOff"
-          @click="toggleAutoSpeak"
-        >{{ autoSpeak ? '🔊' : '🔇' }}</button>
-        <button
-          v-if="voiceAvailable"
-          type="button"
-          class="cai-icon-btn cai-mic"
-          :class="{ 'cai-mic--on': listening, 'cai-mic--off': !enableVoiceIn }"
-          :disabled="!enableVoiceIn || busy"
-          :title="enableVoiceIn ? ui.mic : ui.micOff"
-          @click="toggleMic"
-        >{{ listening ? '■' : '🎤' }}</button>
-        <button
-          v-if="busy"
-          type="button"
-          class="cai-btn"
-          @click="stopGeneration"
-        >{{ ui.stopGen }}</button>
-        <button
-          v-else
-          type="button"
-          class="cai-btn cai-btn--primary cai-send"
-          :disabled="!(input || '').trim()"
-          @click="send"
-        >{{ ui.send }}</button>
+
+      <div class="cai-toolbar">
+        <input v-if="features.file_upload" ref="filePicker" type="file" multiple class="cai-sr-only" tabindex="-1" :accept="acceptTypes" @change="onPickFiles" />
+        <button v-if="features.file_upload" type="button" class="cai-tool" :aria-label="ui.attach" :title="ui.attach" @click="$refs.filePicker.click()"><span aria-hidden="true">📎</span></button>
+        <button v-if="features.web_search" type="button" class="cai-tool" :class="{ 'cai-tool--on': webOn }" :aria-pressed="webOn ? 'true' : 'false'" :aria-label="ui.webSearch" :title="webOn ? ui.webSearchOn : ui.webSearchOff" @click="webOn = !webOn"><span aria-hidden="true">🌐</span><span class="cai-tool-label">{{ ui.webSearch }}</span></button>
+
+        <div v-if="showModelPicker" class="cai-menu-wrap">
+          <button type="button" class="cai-tool cai-tool--model" aria-haspopup="menu" :aria-expanded="modelMenuOpen ? 'true' : 'false'" :aria-label="ui.model + ': ' + currentModelLabel" @click="modelMenuOpen = !modelMenuOpen"><span class="cai-tool-label cai-tool-label--always">{{ currentModelLabel }}</span><span aria-hidden="true">▾</span></button>
+          <div v-if="modelMenuOpen" class="cai-menu cai-menu--up" role="menu" @click.stop>
+            <button type="button" role="menuitemradio" :aria-checked="!selectedModel ? 'true' : 'false'" class="cai-menu-item" @click="pickModel('')">
+              {{ routing ? ui.modelAuto : ui.modelDefault }}<small v-if="routing" class="cai-muted"> — {{ ui.modelAutoHint }}</small>
+            </button>
+            <button v-for="m in models" :key="m.name" type="button" role="menuitemradio" :aria-checked="selectedModel === m.name ? 'true' : 'false'" class="cai-menu-item" @click="pickModel(m.name)">
+              {{ m.name }} <small class="cai-muted">{{ slotLabel(m.slot) }}</small>
+            </button>
+          </div>
+        </div>
+
+        <span class="cai-spacer"></span>
+
+        <button v-if="enableVoiceOut && ttsAvailable" type="button" class="cai-tool" :class="{ 'cai-tool--on': autoSpeak }" :aria-pressed="autoSpeak ? 'true' : 'false'" :aria-label="autoSpeak ? ui.speakOn : ui.speakOff" :title="autoSpeak ? ui.speakOn : ui.speakOff" @click="toggleAutoSpeak"><span aria-hidden="true">{{ autoSpeak ? '🔊' : '🔇' }}</span></button>
+        <button v-if="voiceAvailable" type="button" class="cai-tool" :class="{ 'cai-tool--on': listening }" :disabled="!enableVoiceIn || busy" :aria-pressed="listening ? 'true' : 'false'" :aria-label="enableVoiceIn ? ui.mic : ui.micOff" :title="enableVoiceIn ? ui.mic : ui.micOff" @click="toggleMic"><span aria-hidden="true">{{ listening ? '■' : '🎤' }}</span></button>
+        <button v-if="busy" type="button" class="cai-btn cai-btn--stop" :disabled="stopping" @click="stopGeneration">{{ stopping ? ui.stopping : ui.stopGen }}</button>
+        <button v-else type="button" class="cai-btn cai-btn--primary cai-send" :disabled="!canSend" @click="send">{{ ui.send }}</button>
       </div>
+      <p class="cai-hint">{{ ui.composerHint }}</p>
     </footer>
+
+    <div v-if="helpOpen" class="cai-dialog-wrap" @click.self="helpOpen = false">
+      <div class="cai-dialog" role="dialog" aria-modal="true" :aria-label="ui.help" @keydown.esc.stop="helpOpen = false">
+        <h2>{{ ui.help }}</h2>
+        <dl class="cai-keys"><template v-for="(k, ki) in shortcuts" :key="ki"><dt>{{ k[0] }}</dt><dd><kbd>{{ k[1] }}</kbd></dd></template></dl>
+        <div class="cai-row cai-row--end"><button type="button" class="cai-btn cai-btn--primary" autofocus @click="helpOpen = false">{{ ui.ok }}</button></div>
+      </div>
+    </div>
+
+    <div v-if="dlg" class="cai-dialog-wrap" @click.self="closeDialog">
+      <div ref="dialog" class="cai-dialog" role="dialog" aria-modal="true" :aria-label="dlg.title" @keydown="dialogKeydown">
+        <h2>{{ dlg.title }}</h2>
+        <p v-if="dlg.body">{{ dlg.body }}</p>
+        <pre v-if="dlg.pre" class="cai-dialog-pre">{{ dlg.pre }}</pre>
+        <label v-if="dlg.input" class="cai-field"><span>{{ dlg.label }}</span><input type="text" v-model="dlg.value" maxlength="140" /></label>
+        <div class="cai-row cai-row--end">
+          <button type="button" class="cai-btn" @click="dialogCancel">{{ dlg.cancelText || ui.cancel }}</button>
+          <button type="button" class="cai-btn" :class="dlg.danger ? 'cai-btn--danger' : 'cai-btn--primary'" @click="dialogOk">{{ dlg.okText || ui.ok }}</button>
+        </div>
+      </div>
+    </div>
   </aside>
 </div>
 `,

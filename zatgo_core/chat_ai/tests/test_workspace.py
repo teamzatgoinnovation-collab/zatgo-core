@@ -1375,3 +1375,73 @@ class TestFetchUrl(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main()
+
+
+
+class TestContextBudget(unittest.TestCase):
+	"""core/context.py: fitting history to a token budget and compacting context JSON."""
+
+	def _msgs(self, n, size=200):
+		return [{"role": "user" if i % 2 == 0 else "assistant", "content": f"m{i:03d} " + "x" * size} for i in range(n)]
+
+	def test_estimates_are_conservative_for_arabic(self):
+		from zatgo_core.chat_ai.core.context import estimate_tokens
+
+		self.assertEqual(estimate_tokens(""), 0)
+		self.assertGreater(estimate_tokens("مرحبا بكم في النظام" * 10), estimate_tokens("hello there in the system" * 10) * 1.5)
+
+	def test_fit_keeps_the_newest_and_reports_what_it_dropped(self):
+		from zatgo_core.chat_ai.core.context import estimate_tokens, fit_history
+
+		msgs = self._msgs(40)
+		one = estimate_tokens(msgs[0]["content"])
+		kept, dropped = fit_history(msgs, one * 10 + 5)
+		self.assertEqual([m["content"][:4] for m in kept], [f"m{i:03d}" for i in range(30, 40)])
+		self.assertEqual([m["content"][:4] for m in dropped], [f"m{i:03d}" for i in range(30)])
+		self.assertEqual(len(kept) + len(dropped), 40)  # nothing lost, nothing duplicated
+
+	def test_message_count_cap_applies_too(self):
+		from zatgo_core.chat_ai.core.context import fit_history
+
+		kept, dropped = fit_history(self._msgs(20, size=5), 10**6, max_messages=6)
+		self.assertEqual((len(kept), len(dropped)), (6, 14))
+		kept, dropped = fit_history(self._msgs(5, size=5), 10**6, max_messages=0)  # 0 = no count cap
+		self.assertEqual((len(kept), len(dropped)), (5, 0))
+
+	def test_the_newest_messages_are_kept_even_over_budget_but_clipped(self):
+		from zatgo_core.chat_ai.core.context import estimate_tokens, fit_history
+
+		huge = [{"role": "user", "content": "first"}, {"role": "assistant", "content": "HEAD " + "y" * 200000 + " TAIL"}]
+		kept, dropped = fit_history(huge, 500)
+		self.assertEqual(len(kept), 2)
+		clipped = kept[-1]["content"]
+		self.assertLess(estimate_tokens(clipped), 600)
+		self.assertTrue(clipped.startswith("HEAD") and clipped.endswith("TAIL"))
+		self.assertIn("shortened", clipped)
+		self.assertEqual(huge[1]["content"][:4], "HEAD")  # the input is not mutated
+
+	def test_empty_and_degenerate_input(self):
+		from zatgo_core.chat_ai.core.context import fit_history
+
+		self.assertEqual(fit_history([], 100), ([], []))
+		self.assertEqual(fit_history(None, 100), ([], []))
+		kept, dropped = fit_history([{"role": "user", "content": "a"}], 0)
+		self.assertEqual((len(kept), dropped), (1, []))
+
+	def test_compact_json_is_always_valid_and_drops_low_priority_keys_first(self):
+		import json
+
+		from zatgo_core.chat_ai.core.context import compact_json
+
+		ctx = {
+			"current_user": {"user": "a@b.c"}, "entity_memory": {"customer": "ACME"},
+			"recent_documents": ["doc" * 50] * 50, "workspace_context": {"name": "w" * 3000},
+		}
+		out = json.loads(compact_json(ctx, 600))  # parses: the old [:6000] cut mid-string
+		self.assertNotIn("recent_documents", out)
+		self.assertEqual(out["current_user"], {"user": "a@b.c"})
+		self.assertEqual(out["entity_memory"], {"customer": "ACME"})
+		small = {"a": 1}
+		self.assertEqual(json.loads(compact_json(small, 600)), small)
+		impossible = json.loads(compact_json({"current_user": {"x": "z" * 5000}}, 100))
+		self.assertTrue(impossible.get("truncated") or len(json.dumps(impossible)) <= 100)

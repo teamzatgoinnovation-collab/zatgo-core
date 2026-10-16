@@ -18,7 +18,10 @@ def is_cancelled(session: str | None) -> bool:
 	try:
 		import frappe
 
-		return bool(frappe.cache.get_value(cancel_key(session)))
+		# expires=True: don't memoise in frappe.local.cache. get_value() otherwise caches the first
+		# answer -- a miss included -- for the whole request, so a Stop pressed during a long turn
+		# (set by another request) would never be seen by the request that is streaming.
+		return bool(frappe.cache.get_value(cancel_key(session), expires=True))
 	except Exception:
 		return False
 

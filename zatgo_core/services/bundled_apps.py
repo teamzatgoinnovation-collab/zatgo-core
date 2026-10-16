@@ -235,7 +235,15 @@ def gate_module_api() -> None:
 DESK_ASSETS = {
     "chat_ai": (
         ["chat_ai/css/chat_ai_sidebar.css"],
-        ["chat_ai/js/chat_ai_vue.js", "chat_ai/js/chat_ai_sidebar_app.js"],
+        # order matters: logic/i18n/markdown are plain helpers the sidebar calls. The vendor
+        # libraries (marked, DOMPurify, highlight.js, KaTeX) load lazily from js/vendor/.
+        [
+            "chat_ai/js/chat_ai_vue.js",
+            "chat_ai/js/chat_ai_i18n.js",
+            "chat_ai/js/chat_ai_logic.js",
+            "chat_ai/js/chat_ai_markdown.js",
+            "chat_ai/js/chat_ai_sidebar_app.js",
+        ],
     ),
     "tracker": (["tracker/css/tracker.css"], ["tracker/js/tracker.js", "tracker/js/tracker_vue.js"]),
 }

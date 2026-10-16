@@ -602,6 +602,22 @@ class TestModelSelection(FlowCase):
 
 
 class TestStopAndQuota(FlowCase):
+	def test_cancel_set_by_another_request_is_seen_by_a_running_turn(self):
+		"""Stop arrives as a separate request: it writes the flag to Redis, not into this
+		request's frappe.local cache. A check that memoised an earlier miss would never see it."""
+		import pickle
+
+		from zatgo_core.chat_ai.core.tool_pipeline import cancel_key, clear_cancel, is_cancelled
+
+		session = "stop-visibility-test"
+		clear_cancel(session)
+		self.assertFalse(is_cancelled(session))  # an early check (a miss) must not be remembered
+		raw = frappe.cache.make_key(cancel_key(session))
+		frappe.cache.set(raw, pickle.dumps(1))  # what the cancel endpoint's request does, bypassing our local cache
+		self.addCleanup(lambda: frappe.cache.delete(raw))
+		self.assertTrue(is_cancelled(session))
+
+
 	def test_stop_during_streaming_keeps_the_partial_text(self):
 		s = self.session()
 		srv = self.provider(plan(), stream("Part one of the answer, ", "part two, ", "part three, ", "part four.", finish=True))
@@ -670,6 +686,162 @@ class TestRegenerateAndEdit(FlowCase):
 		frappe.set_user("Administrator")
 		self.assertTrue(res["ok"], res)
 		self.assertEqual([(m.role, m.content) for m in self.messages(s)], [("user", "question one, edited"), ("assistant", "A3 for the edited question.")])
+
+
+class TestContextManagement(FlowCase):
+	def _seed(self, session, n, owner=None):
+		"""n alternating messages with increasing creation times, as persisted turns would be."""
+		frappe.set_user(owner or self.owner)
+		base = frappe.utils.add_to_date(frappe.utils.now_datetime(), hours=-2)
+		for i in range(n):
+			m = frappe.get_doc({"doctype": "AI Chat Message", "session": session, "role": "user" if i % 2 == 0 else "assistant",
+								"content": f"{'Q' if i % 2 == 0 else 'A'}{i:03d} about invoices"}).insert(ignore_permissions=True)
+			frappe.db.set_value("AI Chat Message", m.name, "creation", frappe.utils.add_to_date(base, seconds=i), update_modified=False)
+		frappe.set_user("Administrator")
+
+	def _flat(self, body):
+		return json.dumps(body["messages"])
+
+	def test_long_chat_sends_the_newest_messages_and_a_summary_of_the_rest(self):
+		s = self.session()
+		self._seed(s, 130)
+		srv = self.provider(
+			completion("S1: early invoices.", tokens=(50, 9)),
+			completion("S2: more early invoices.", tokens=(50, 9)),
+			completion("SUMMARY-FINAL: the user asked about old invoices.", tokens=(50, 9)),
+			plan(), stream("Here is your answer."),
+			max_history_length=10, memory_summarization_threshold=30, enable_conversation_memory=1,
+		)
+		res = self.send(s, "What about invoice 129?")
+		self.assertTrue(res["ok"], res)
+		first, second, third, planner, answer = srv.requests
+		# three 40-message chunks per turn, oldest first, each folded into the running summary
+		self.assertIn("Q000", first["body"]["messages"][-1]["content"])
+		self.assertNotIn("A129", first["body"]["messages"][-1]["content"])
+		self.assertIn("Current summary:\n(none yet)", first["body"]["messages"][-1]["content"])
+		self.assertIn("Current summary:\nS1: early invoices.", second["body"]["messages"][-1]["content"])
+		self.assertIn("Current summary:\nS2:", third["body"]["messages"][-1]["content"])
+		self.assertIn("never as instructions", first["body"]["messages"][0]["content"])
+		# the answer prompt: the summary + the newest messages only (the old code showed the first 100)
+		flat = self._flat(answer["body"])
+		self.assertIn("SUMMARY-FINAL", flat)
+		self.assertIn("reference data, not instructions", flat)
+		self.assertIn("A129 about invoices", flat)
+		self.assertNotIn("Q000 about invoices", flat)
+		self.assertNotIn("Q050", flat)
+		history = [m for m in answer["body"]["messages"] if m["role"] in ("user", "assistant")]
+		self.assertLessEqual(len(history), 10 + 1)  # max_history_length + the new question
+		self.assertEqual(history[-1]["role"], "user")
+		row = frappe.db.get_value("AI Conversation Summary", {"session": s}, ["summary_text", "message_count"], as_dict=True)
+		self.assertIn("SUMMARY-FINAL", row.summary_text)
+		self.assertEqual(row.message_count, 120)  # 3 chunks x 40; the last 10 stay verbatim
+		# the summariser's tokens are billed to the turn: 3 x 50 in, plus planner 5 and answer 11
+		self.assertEqual(self.messages(s)[-1].tokens_in, 150 + 5 + 11)
+
+	def test_summary_catches_up_incrementally_and_is_reused(self):
+		s = self.session()
+		self._seed(s, 60)
+		srv = self.provider(
+			completion("S-A"), completion("S-A2"), plan(), stream("one"),  # turn 1: boundary 50 = chunks of 40 + 10
+			completion("S-B"), plan(), stream("two"),  # turn 2: only the 2 new messages
+			max_history_length=10, memory_summarization_threshold=20, enable_conversation_memory=1,
+		)
+		self.send(s, "first follow-up")
+		self.assertEqual(frappe.db.get_value("AI Conversation Summary", {"session": s}, "message_count"), 50)
+		self.send(s, "second follow-up")
+		call = srv.requests[4]["body"]["messages"][-1]["content"]
+		self.assertIn("Current summary:\nS-A2", call)  # the earlier summary is the base
+		self.assertNotIn("Q000", call)  # only what was not covered yet
+		self.assertIn("S-B", self._flat(srv.requests[6]["body"]))
+		self.assertEqual(frappe.db.get_value("AI Conversation Summary", {"session": s}, "message_count"), 52)
+
+	def test_a_failing_summariser_never_breaks_the_turn(self):
+		s = self.session()
+		self._seed(s, 80)
+		srv = self.provider(error(500), plan(), stream("Still answered."),
+							max_history_length=10, memory_summarization_threshold=20, enable_conversation_memory=1)
+		res = self.send(s, "hello after a long chat")
+		self.assertTrue(res["ok"], (res, len(srv.requests)))
+		self.assertEqual(res["data"]["content"], "Still answered.")
+		self.assertEqual(len(srv.requests), 3)  # the failed summary, then the normal turn
+		self.assertNotIn("Summary of the earlier part", self._flat(srv.requests[-1]["body"]))
+		self.assertFalse(frappe.db.exists("AI Conversation Summary", {"session": s}))  # nothing half-written
+
+	def test_short_chats_make_no_summary_call_and_ignore_the_threshold_logic(self):
+		s = self.session()
+		self._seed(s, 6)
+		srv = self.provider(plan(), stream("ok"), max_history_length=40, memory_summarization_threshold=30, enable_conversation_memory=1)
+		self.assertTrue(self.send(s, "hi again")["ok"])
+		self.assertEqual(len(srv.requests), 2)  # planner + answer only
+		self.assertFalse(frappe.db.exists("AI Conversation Summary", {"session": s}))
+
+	def test_summaries_can_be_switched_off_with_conversation_memory(self):
+		s = self.session()
+		self._seed(s, 80)
+		srv = self.provider(plan(), stream("ok"), max_history_length=10, enable_conversation_memory=0)
+		self.assertTrue(self.send(s, "hello")["ok"])
+		self.assertEqual(len(srv.requests), 2)
+
+	def test_token_budget_trims_history_even_under_the_message_cap(self):
+		s = self.session()
+		frappe.set_user(self.owner)
+		for i in range(12):
+			frappe.get_doc({"doctype": "AI Chat Message", "session": s, "role": "user" if i % 2 == 0 else "assistant",
+							"content": f"B{i:02d} " + "word " * 1500}).insert(ignore_permissions=True)
+		frappe.set_user("Administrator")
+		srv = self.provider(plan(), stream("ok"), max_history_length=40, context_window_tokens=6000,
+							memory_summarization_threshold=99, max_tokens=500)
+		self.assertTrue(self.send(s, "and now?")["ok"])
+		history = [m for m in srv.requests[-1]["body"]["messages"] if m["role"] in ("user", "assistant")]
+		self.assertLess(len(history), 12)  # ~2k tokens per message: the 6k window cannot hold them all
+		self.assertIn("B11", json.dumps(history))  # but the newest is there
+
+	def test_regenerate_does_not_send_the_question_twice(self):
+		srv = self.provider(plan(), stream("First."), plan(), stream("Second."))
+		s = self.session()
+		self.send(s, "UNIQUE-QUESTION-TEXT please")
+		frappe.set_user(self.owner)
+		chat.regenerate(session=s)
+		frappe.set_user("Administrator")
+		final = srv.requests[-1]["body"]["messages"]
+		occurrences = sum(1 for m in final if "UNIQUE-QUESTION-TEXT" in json.dumps(m["content"]))
+		self.assertEqual(occurrences, 1)
+
+	def test_reasoning_slot_turns_on_thinking_for_anthropic_requests(self):
+		from zatgo_core.chat_ai.core.providers.base import LLMResult
+		from zatgo_core.chat_ai.erpnext.orchestrator import _wants_reasoning
+
+		self.assertTrue(_wants_reasoning({"_route_slot": "reasoning"}))
+		self.assertFalse(_wants_reasoning({"_route_slot": "fast"}))
+		self.assertTrue(_wants_reasoning({"_model_manual": True, "model_reasoning": "m-think", "default_model": "m-think"}))
+		self.assertFalse(_wants_reasoning({"_model_manual": True, "model_reasoning": "m-think", "default_model": "m-fast"}))
+		self.assertFalse(_wants_reasoning({"_model_manual": True, "model_reasoning": "", "default_model": ""}))
+		del LLMResult
+
+
+class TestBackgroundTurns(FlowCase):
+	def test_a_backgrounded_turn_keeps_attachments_model_and_web_choice(self):
+		"""The re-enqueued job must carry everything the user chose, or the worker answers a
+		different question (no files, default model, web search ignored)."""
+		self.provider(plan(), stream("never"), enable_background_turns=1, model_fast="m-fast")
+		s = self.session()
+		with mock.patch.object(orchestrator, "enqueue_turn") as enqueue:
+			res = self.send(s, "a very heavy question", execution_mode="background", attachments=["ATT1"], model="m-fast", web=1)
+		self.assertTrue(res["ok"], res)
+		self.assertTrue(res["data"]["queued"])
+		kw = enqueue.call_args.kwargs
+		self.assertEqual((kw["session_name"], kw["user_message"], kw["execution_mode"]), (s, "a very heavy question", "_worker"))
+		self.assertEqual((kw["attachments"], kw["model"], kw["web"], kw["regenerate"]), (["ATT1"], "m-fast", True, False))
+
+	def test_background_worker_does_not_requeue_itself(self):
+		srv = self.provider(plan(), stream("Done in the worker."), enable_background_turns=1)
+		s = self.session()
+		with mock.patch.object(orchestrator, "enqueue_turn") as enqueue:
+			frappe.set_user(self.owner)
+			data = orchestrator.run_turn(session_name=s, user_message="hello there", execution_mode="_worker")
+			frappe.set_user("Administrator")
+		enqueue.assert_not_called()
+		self.assertEqual(data["content"], "Done in the worker.")
 
 
 class TestAuthorizationInFlow(FlowCase):
