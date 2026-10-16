@@ -339,9 +339,23 @@ body {
 
   .invoice-date       { left: 24.57%; top: 19.44%; width: 22.06%; height: 2.81%; font-size: 10pt; line-height: 8.34mm; }
   .invoice-number     { left: 69.51%; top: 19.44%; width: 16.75%; height: 2.81%; font-size: 9pt;  line-height: 8.34mm; }
-  .customer-name      { left: 46.90%; top: 22.24%; width: 49.41%; height: 2.69%; font-size: 10pt; line-height: 7.98mm; }
-  .customer-vat       { left: 60.86%; top: 24.93%; width: 35.46%; height: 3.00%; font-size: 10pt; line-height: 8.92mm; }
-  .customer-address   { left: 44.5%; top: 27.93%; width: 13.5%; height: 3.20%; font-size: 8pt;  padding-top: 2.2mm; line-height: 1.2; }
+  /* V5 form: positions measured off the artwork (% of its 1241px width) */
+  .customer-name      { left: 33.68%; top: 22.24%; width: 54%; height: 2.69%; font-size: 9pt; font-weight: bold; line-height: 7.98mm; }
+  .customer-name-arabic { right: 12.17%; top: 22.24%; width: 54%; height: 2.69%; font-size: 9pt; font-weight: bold; line-height: 7.98mm; }
+  .customer-vat       { left: 33.68%; top: 24.93%; width: 18.29%; height: 3.00%; font-size: 10pt; line-height: 8.92mm; }
+  .customer-cr        { left: 72.68%; top: 24.93%; width: 12.57%; height: 3.00%; font-size: 10pt; line-height: 8.92mm; }
+  .customer-address   { left: 31.3%; top: 27.93%; width: 26.3%; height: 3.20%; font-size: 8pt;  padding-top: 2.2mm; line-height: 1.2; }
+
+  /* Long English + Arabic name pair: shrink so they don't collide */
+  .customer-name.fit-1, .customer-name-arabic.fit-1 { font-size: 8pt; }
+  .customer-name.fit-2, .customer-name-arabic.fit-2 { font-size: 7pt; }
+  /* Very long pair: each name gets its own half of the row and wraps to two lines */
+  .customer-name.fit-3, .customer-name-arabic.fit-3 {
+    width: 26.5%; height: 2.35%; padding-top: 1.6mm;
+    font-size: 6.5pt; line-height: 1.15;
+    white-space: normal; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-overflow: ellipsis;
+  }
   .customer-mobile    { left: 69.79%; top: 27.93%; width: 16.47%; height: 3.20%; font-size: 9pt;  line-height: 9.5mm; }
 
 

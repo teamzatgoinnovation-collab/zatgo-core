@@ -164,7 +164,8 @@ stored there.
 - **Rollback**: re-save the previous HTML/CSS (git history of these two files,
   the commit before this one) into the doc; the V4 images are still on disk.
 - **Not changed / known**: the separate `Kasib Asia Tax Return Invoice` format
-  still points at `KasibAsiaReturnV4.jpg`. Amounts of 5+ integer digits
+  was moved to the V5 return artwork afterwards (see
+  `../kasib_asia_tax_return_invoice/`). Amounts of 5+ integer digits
   (e.g. 61,934.40) lose their last digit at the right edge of the item
   "Total" cell and the "Total Excluding VAT" box -- the field widths are
   unchanged from V4 and it reproduces on the pre-V5 format too.

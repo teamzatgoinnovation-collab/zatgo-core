@@ -36,8 +36,12 @@
 {% set ROW_HEIGHTS = [4.188, 4.228, 4.188, 4.307, 4.149, 4.188, 4.307, 4.149, 4.307, 4.109] %}
 
 {% set customer_tax_id = "" %}
+{% set customer_cr = "" %}
+{% set customer_name_ar = "" %}
 {% if doc.customer %}
   {% set customer_tax_id = frappe.db.get_value("Customer", doc.customer, "tax_id") or "" %}
+  {% set customer_cr = frappe.db.get_value("Customer", doc.customer, "zatgo_cr_number") or "" %}
+  {% set customer_name_ar = frappe.db.get_value("Customer", doc.customer, "zatgo_customer_name_ar") or "" %}
 {% endif %}
 
 {# ---- Customer Address: fall back to the customer's own default address
@@ -133,7 +137,7 @@
 {% set is_last_page = page == page_count - 1 %}
 
 <div class="invoice-page{% if is_last_page %} last-page{% endif %}">
-  <img class="invoice-background" src="/files/KasibAsiaReturnV4.jpg" alt="">
+  <img class="invoice-background" src="/files/KasibAsiaReturnV5.jpg" alt="">
 
   <div class="copy-label">{{ copy_label }}</div>
   {% if doc.custom_payment_type == "Cash" %}
@@ -153,8 +157,16 @@
   </div>
   {% endif %}
 
-  <div class="dynamic-field customer-name" dir="auto">{{ doc.customer_name or doc.customer or "" }}</div>
+  {# English and Arabic names share one row between the two printed labels
+     (~11px per character at 9pt). Step the font down when the pair is long
+     so the two names never run into each other. #}
+  {% set name_chars = ((doc.customer_name or doc.customer or "")|length) + (customer_name_ar|length) %}
+  {% set name_fit = "fit-3" if name_chars > 76 else "fit-2" if name_chars > 66 else "fit-1" if name_chars > 56 else "" %}
+  <div class="dynamic-field customer-name {{ name_fit }}" dir="auto">{{ doc.customer_name or doc.customer or "" }}</div>
+  <div class="dynamic-field customer-name-arabic {{ name_fit }}" dir="rtl">{{ customer_name_ar }}</div>
   <div class="dynamic-field customer-vat center" dir="ltr">{{ customer_tax_id }}</div>
+  {# "CR Number : / رقم السجل التجاري" is pre-printed on the V5 form; only the value is drawn. #}
+  {% if customer_cr %}<div class="dynamic-field customer-cr center" dir="ltr">{{ customer_cr }}</div>{% endif %}
   <div class="dynamic-field customer-address wrap" dir="auto">
     {% if address_line1 %}<div>{{ address_line1 }}</div>{% endif %}
     {% if address_city %}<div>{{ address_city }}</div>{% endif %}
@@ -214,33 +226,33 @@
       {% elif col_name == 'desc' %}
         <div dir="auto">{{ item.item_name or item.description or item.item_code or "" }}</div>
         {% if item_name_ar %}<div class="ar-line">{{ item_name_ar }}</div>{% endif %}
-      {% elif col_name == 'qty' %}{{ "%g"|format(item.qty or 0) }}
+      {% elif col_name == 'qty' %}{{ "%g"|format((item.qty or 0)|abs) }}
       {% elif col_name == 'unit' %}{{ item.uom or item.stock_uom or "" }}
-      {% elif col_name == 'unitprice' %}{{ frappe.utils.fmt_money(item.rate or 0) }}
-      {% elif col_name == 'net' %}{{ frappe.utils.fmt_money(item_net) }}
-      {% elif col_name == 'vat' %}{{ frappe.utils.fmt_money(item_vat) }}
-      {% elif col_name == 'total' %}{{ frappe.utils.fmt_money(item_total) }}
+      {% elif col_name == 'unitprice' %}{{ frappe.utils.fmt_money((item.rate or 0)|abs) }}
+      {% elif col_name == 'net' %}{{ frappe.utils.fmt_money(item_net|abs) }}
+      {% elif col_name == 'vat' %}{{ frappe.utils.fmt_money(item_vat|abs) }}
+      {% elif col_name == 'total' %}{{ frappe.utils.fmt_money(item_total|abs) }}
       {% endif %}
     </div>
     {% endfor %}
   {% endfor %}
 
   {% if is_last_page %}
-    <div class="dynamic-field total-ex-vat">{{ frappe.utils.fmt_money(net_total) }}</div>
-    <div class="dynamic-field total-vat">{{ frappe.utils.fmt_money(total_vat) }}</div>
-    <div class="dynamic-field discount">{{ frappe.utils.fmt_money(discount_amount) }}</div>
-    <div class="dynamic-field grand-total">{{ frappe.utils.fmt_money(grand_total) }}</div>
+    <div class="dynamic-field total-ex-vat">{{ frappe.utils.fmt_money(net_total|abs) }}</div>
+    <div class="dynamic-field total-vat">{{ frappe.utils.fmt_money(total_vat|abs) }}</div>
+    <div class="dynamic-field discount">{{ frappe.utils.fmt_money(discount_amount|abs) }}</div>
+    <div class="dynamic-field grand-total">{{ frappe.utils.fmt_money(grand_total|abs) }}</div>
 
-    {%- set amount_words = frappe.utils.money_in_words(doc.grand_total or 0, doc.currency or "SAR") -%}
+    {%- set amount_words = frappe.utils.money_in_words((doc.grand_total or 0)|abs, doc.currency or "SAR") -%}
   <div class="dynamic-field remarks" dir="auto">{{ amount_words }}{% if doc.remarks or doc.terms %} &mdash; {{ doc.remarks or doc.terms }}{% endif %}</div>
-  <div class="prev-balance">{{ frappe.utils.fmt_money(doc.get("vansale_previous_balance") or 0) }}</div>
+  <div class="prev-balance">{{ frappe.utils.fmt_money((doc.get("vansale_previous_balance") or 0)|abs) }}</div>
 
     {# Previous Balance and Received-By are manual/signature fields with no
        reliable ERPNext source for this invoice alone - left blank rather
        than guessed, per "don't invent data when it isn't available". #}
     {% if "Cash" in paid_types %}<div class="paid-mark cash">&#10003;</div>{% endif %}
     {% if "Bank" in paid_types %}
-      <div class="payment-box bank-transfer">{{ frappe.utils.fmt_money(paid_amount) }}</div>
+      <div class="payment-box bank-transfer">{{ frappe.utils.fmt_money(paid_amount|abs) }}</div>
     {% endif %}
     {% if paid_types|length > 0 and "Cash" not in paid_types and "Bank" not in paid_types %}
       <div class="paid-mark other">&#10003;</div>
