@@ -35,8 +35,11 @@ class UploadError(ValueError):
 
 
 def safe_filename(name: str | None) -> str:
-	name = (name or "").replace("\\", "/").split("/")[-1]  # drop any path
-	name = unicodedata.normalize("NFKC", name)
+	# Fold compatibility forms first: NFKC turns fullwidth slashes (U+FF0F, U+FF3C) into real
+	# path separators, which must be dropped along with the rest of the path.
+	name = unicodedata.normalize("NFKC", name or "")
+	name = name.replace("\\", "/").split("/")[-1]  # drop any path
+	name = "".join(" " if ch.isspace() else ch for ch in name)  # tabs / newlines separate words; they must not glue them together
 	name = "".join(ch for ch in name if ch.isprintable() and ch not in '<>:"|?*')
 	name = re.sub(r"\s+", " ", name).strip(" .")
 	if len(name) > 120:

@@ -54,9 +54,9 @@ def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> L
 		label = settings.get("embedding_provider") or settings.get("provider") or "OpenAI"
 		api_key = settings.get("embedding_api_key") or settings.get("api_key") or ""
 		label = _normalize_provider_label(label, api_key)
+		# Never fall back to the chat model: a chat model name is not an embedding model.
 		model = (
 			settings.get("embedding_model")
-			or settings.get("default_model")
 			or _DEFAULT_EMBEDDING_MODELS.get(label)
 			or "text-embedding-3-small"
 		)

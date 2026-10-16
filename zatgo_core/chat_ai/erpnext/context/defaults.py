@@ -96,7 +96,10 @@ def _resolve_company(context: dict) -> str | None:
 	user_default = frappe.defaults.get_user_default("Company")
 	if user_default:
 		return user_default
-	companies = frappe.get_all("Company", filters={"disabled": 0}, pluck="name", limit=2)
+	# ERPNext v16 Company has no `disabled` column; filtering on it raised on every turn for
+	# users without a default Company.
+	company_filters = {"disabled": 0} if frappe.db.has_column("Company", "disabled") else {}
+	companies = frappe.get_all("Company", filters=company_filters, pluck="name", limit=2)
 	if len(companies) == 1:
 		return companies[0]
 	return None

@@ -23,11 +23,16 @@ MAX_CANDIDATE_CHUNKS = 5000
 
 
 def _embedder(settings: dict):
-	"""Embedding provider, or None when not configured/supported."""
+	"""Embedding provider, or None when not configured/supported.
+
+	Opt-in: only when an Embedding Provider is chosen in Chat AI Settings. Having a chat
+	API key must not silently start sending every upload to an embeddings endpoint."""
 	try:
 		from zatgo_core.chat_ai.core.providers.registry import from_settings
 
-		if not (settings.get("embedding_api_key") or settings.get("api_key") or settings.get("embedding_provider")):
+		if not settings.get("embedding_provider"):
+			return None
+		if not (settings.get("embedding_api_key") or settings.get("api_key")):
 			return None
 		provider = from_settings(settings, for_embedding=True)
 		return provider if provider.capabilities.embedding else None

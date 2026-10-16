@@ -33,6 +33,17 @@ class ScriptedServer:
 					self.wfile.write(chunk)
 					self.wfile.flush()
 
+			def do_GET(self):  # e.g. web search APIs; the query string stays in `path`
+				self.rfile.read(int(self.headers.get("Content-Length") or 0))
+				outer.requests.append({"path": self.path, "headers": dict(self.headers), "body": {}})
+				status, ctype, payload = outer.responses.pop(0) if outer.responses else (500, "text/plain", b"x")
+				self.send_response(status)
+				self.send_header("Content-Type", ctype)
+				self.end_headers()
+				for chunk in payload if isinstance(payload, list) else [payload]:
+					self.wfile.write(chunk)
+					self.wfile.flush()
+
 			def log_message(self, *a):
 				pass
 

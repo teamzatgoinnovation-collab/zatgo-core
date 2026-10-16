@@ -426,11 +426,15 @@ def run_turn(
 		settings.get("_has_files") and "too large to include" in attachment_ctx
 	):
 		settings["_stream_session"] = session_name
-		resp = _direct_answer(
+		resp, answer = _direct_answer(
 			provider, settings, msg + (("\n\n" + attachment_ctx) if attachment_ctx else ""), context, history, plan,
 			images=attachments_svc.image_data_urls(atts),
 		)
-		return _persist(session, memory, user_message, resp, settings, tokens=(plan.tokens_in, plan.tokens_out), model=plan.model)
+		return _persist(
+			session, memory, user_message, resp, settings,
+			tokens=(plan.tokens_in + answer.tokens_in, plan.tokens_out + answer.tokens_out),
+			model=answer.model or plan.model, error=bool(resp.meta.get("interrupted")),
+		)
 
 	# Plan approval gate (unless already approved via token)
 	if plan.needs_plan_approval and not plan_confirmed and not approved_plan:
@@ -716,14 +720,18 @@ def _direct_answer(provider, settings, msg, context, history, plan, images=None)
 			raise
 		rnd = stream_round(fallback, messages, settings=settings, session=session_name)
 	md = strip_using_preamble(rnd.result.content or plan.raw_content or "Done.")
+	meta = {}
 	if rnd.stopped:
 		md += "\n\n_(stopped)_"
+	elif rnd.interrupted:
+		md += "\n\n_(the connection to the AI provider was interrupted)_"
+		meta["interrupted"] = True
 	if session_name:
 		if settings.get("enable_streaming", 1) and not rnd.streamed:
 			publish_typed_stream(session_name, md, chunk_size=5)  # provider could not stream
 		else:
 			publish_stream(session_name, "", done=True)
-	return AssistantResponse(markdown=md)
+	return AssistantResponse(markdown=md, meta=meta), rnd.result
 
 
 def _load_memory(session_name: str) -> ConversationMemory:

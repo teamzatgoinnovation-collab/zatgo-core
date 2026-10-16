@@ -11,6 +11,7 @@ import ipaddress
 import json
 import re
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -106,7 +107,10 @@ def get_provider(settings: dict) -> WebSearchProvider:
 
 def _is_public_ip(ip: str) -> bool:
 	a = ipaddress.ip_address(ip)
-	return not (a.is_private or a.is_loopback or a.is_link_local or a.is_multicast or a.is_reserved or a.is_unspecified)
+	# is_global is False for every range that is not publicly routable, including ones that
+	# is_private misses: carrier-grade NAT 100.64.0.0/10 (cloud metadata services, Tailscale),
+	# 192.0.0.0/24 and the documentation / benchmarking blocks.
+	return a.is_global and not (a.is_private or a.is_loopback or a.is_link_local or a.is_multicast or a.is_reserved or a.is_unspecified)
 
 
 def assert_public_url(url: str) -> list[str]:
@@ -117,7 +121,10 @@ def assert_public_url(url: str) -> list[str]:
 		raise WebToolError("Only http(s) URLs can be fetched.")
 	if parts.username or parts.password:
 		raise WebToolError("URLs with credentials are not allowed.")
-	port = parts.port or (443 if parts.scheme == "https" else 80)
+	try:
+		port = parts.port if parts.port is not None else (443 if parts.scheme == "https" else 80)
+	except ValueError as exc:  # non-numeric or out of range
+		raise WebToolError("That port is not allowed.") from exc
 	if port not in (80, 443, 8080, 8443):
 		raise WebToolError("That port is not allowed.")
 	try:
@@ -194,10 +201,34 @@ def _strip_tags(s: str) -> str:
 	return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", s or "")).strip()
 
 
+def _read_capped(resp, limit: int, deadline: float) -> bytes:
+	"""Up to `limit`+1 bytes of the body. A server that trickles bytes forever resets the
+	per-read socket timeout each time, so the whole read also gets a deadline."""
+	chunks, size = [], 0
+	while size <= limit:
+		chunk = resp.read1(min(65536, limit + 1 - size))
+		if not chunk:
+			break
+		chunks.append(chunk)
+		size += len(chunk)
+		if time.monotonic() > deadline:
+			raise WebToolError("The page took too long to load.")
+	return b"".join(chunks)
+
+
+def _decode(raw: bytes, content_type: str) -> str:
+	charset = re.search(r"charset=([\w-]+)", content_type or "")
+	try:
+		return raw.decode(charset.group(1) if charset else "utf-8", errors="replace")
+	except LookupError:  # a server may declare any name; unknown ones fall back to UTF-8
+		return raw.decode("utf-8", errors="replace")
+
+
 def fetch_url(url: str, *, timeout: int = 15) -> dict:
 	"""Fetch a public page as plain text. Redirects are followed manually so every hop is
-	re-validated; response size is capped. Content is data, never instructions."""
+	re-validated; response size and time are capped. Content is data, never instructions."""
 	current = url
+	deadline = time.monotonic() + timeout * 2
 	for _hop in range(MAX_REDIRECTS + 1):
 		ips = assert_public_url(current)
 		opener = urllib.request.build_opener(_NoRedirect, *_pinned_handlers(ips[0]))
@@ -211,13 +242,15 @@ def fetch_url(url: str, *, timeout: int = 15) -> dict:
 			raise WebToolError(f"The page returned HTTP {exc.code}.") from exc
 		except (urllib.error.URLError, OSError) as exc:
 			raise WebToolError("The page could not be reached.") from exc
-		with resp:
-			ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-			if ctype not in ("text/html", "text/plain", "application/xhtml+xml", ""):
-				raise WebToolError(f"Unsupported content type ({ctype}).")
-			raw = resp.read(MAX_FETCH_BYTES + 1)
-		charset = re.search(r"charset=([\w-]+)", resp.headers.get("Content-Type") or "")
-		html = raw[:MAX_FETCH_BYTES].decode(charset.group(1) if charset else "utf-8", errors="replace")
+		try:
+			with resp:
+				ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+				if ctype not in ("text/html", "text/plain", "application/xhtml+xml", ""):
+					raise WebToolError(f"Unsupported content type ({ctype}).")
+				raw = _read_capped(resp, MAX_FETCH_BYTES, deadline)
+		except (OSError, http.client.HTTPException) as exc:  # stalled or broken connection mid-body
+			raise WebToolError("The page could not be read.") from exc
+		html = _decode(raw[:MAX_FETCH_BYTES], resp.headers.get("Content-Type") or "")
 		if ctype == "text/plain":
 			text, title = html, ""
 		else:

@@ -50,7 +50,7 @@ def send(
 	try:
 		enforce_quota()
 	except QuotaExceeded as exc:
-		return fail(str(exc))
+		return fail(str(exc), code="rate_limited", retryable=True)
 	if session:
 		_assert_session_access(session)
 	else:
@@ -460,6 +460,11 @@ def export_session(session=None):
 	return ok({"title": title, "markdown": "\n\n---\n\n".join(parts)})
 
 
+def _uploaded_file():
+	request = getattr(frappe.local, "request", None)
+	return (getattr(request, "files", None) or {}).get("file")
+
+
 @frappe.whitelist()
 def upload(session=None):
 	"""Multipart upload (field `file`) into a conversation; creates the conversation if none is given."""
@@ -467,7 +472,7 @@ def upload(session=None):
 	from zatgo_core.chat_ai.core.files.validate import UploadError
 	from zatgo_core.chat_ai.erpnext import attachments as attachments_svc
 
-	f = (frappe.request.files or {}).get("file") if getattr(frappe, "request", None) else None
+	f = _uploaded_file()
 	if not f:
 		return fail(_("No file received"), code="no_file")
 	try:

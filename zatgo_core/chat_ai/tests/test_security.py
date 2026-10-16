@@ -176,15 +176,20 @@ class TestQuota(IntegrationTestCase):
 	def tearDown(self):
 		frappe.cache.delete_value("chat_ai_rate:Administrator")
 
+	@staticmethod
+	def _only(field, value):
+		"""get_single_value stand-in: `value` for one Chat AI Settings field, 0 (off) for the rest."""
+		return mock.patch.object(frappe.db, "get_single_value", side_effect=lambda dt, f=None, *a, **k: value if f == field else 0)
+
 	def test_burst_limit(self):
-		with mock.patch.object(frappe.db, "get_single_value", return_value=3):
+		with self._only("max_messages_per_minute", 3):
 			for _ in range(3):
 				quota.enforce("Administrator")
 			with self.assertRaises(quota.QuotaExceeded):
 				quota.enforce("Administrator")
 
 	def test_burst_limit_zero_disables(self):
-		with mock.patch.object(frappe.db, "get_single_value", return_value=0):
+		with self._only("max_messages_per_minute", 0):
 			for _ in range(50):
 				quota.enforce("Administrator")
 
@@ -230,10 +235,10 @@ class TestQuota(IntegrationTestCase):
 				"request_count": 2,
 			}
 		).insert(ignore_permissions=True)
-		with mock.patch.object(frappe.db, "get_single_value", return_value=2):
+		with self._only("max_messages_per_user_per_day", 2):
 			with self.assertRaises(quota.QuotaExceeded):
 				quota.enforce(user)
-		with mock.patch.object(frappe.db, "get_single_value", return_value=0):
+		with self._only("max_messages_per_user_per_day", 0):
 			quota.enforce(user)  # 0 = unlimited
 
 

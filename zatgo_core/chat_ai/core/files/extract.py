@@ -52,13 +52,22 @@ def _cap(text: str) -> Extracted:
 	return Extracted(text)
 
 
+def _opens_without_password(reader) -> bool:
+	"""Many PDFs are "encrypted" only to restrict printing or copying (owner password) and
+	open for any reader with an empty user password; only real user passwords block us."""
+	try:
+		return bool(reader.decrypt(""))
+	except Exception:  # wrong password, or an unsupported / unavailable cipher
+		return False
+
+
 def extract_pdf(content: bytes) -> Extracted:
 	from pypdf import PdfReader
 	from pypdf.errors import PyPdfError
 
 	try:
 		reader = PdfReader(io.BytesIO(content))
-		if reader.is_encrypted:
+		if reader.is_encrypted and not _opens_without_password(reader):
 			raise ExtractError("The PDF is password protected.")
 		parts, total = [], len(reader.pages)
 		for i, page in enumerate(reader.pages[:MAX_PDF_PAGES], 1):

@@ -10,8 +10,14 @@ import statistics
 from collections import defaultdict
 
 MAX_RESULT_ROWS = 50
-_ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩٫٬", "0123456789.,")
-_NUM = re.compile(r"^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$")
+_ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩٫٬\u2212", "0123456789.,-")  # U+2212 is the typographic minus
+# A number with optional thousands grouping, optionally wrapped in a short currency / unit label:
+# "1,234.50", "SAR 99", "$-5", "12%", "5 kg". Labels hold no digits, so dates ("15/01/2024"), phone
+# numbers and codes ("INV-2024-001") are not numbers.
+_NUMBER = r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:[eE][-+]?\d+)?|\.\d+"
+# A dot belongs to a label ("ر.س", "S.R.") only when no digit follows it; otherwise ".5" would read as the label "." plus 5.
+_LABEL = r"(?:[^\d\s+\-,().]|\.(?!\d)){1,10}"
+_VALUE = re.compile(rf"^(?P<s1>[-+])?\s*(?:(?P<pre>{_LABEL})\s*)?(?P<s2>[-+])?\s*(?P<num>{_NUMBER})\s*(?P<suf>{_LABEL})?$")
 FUNCS = ("sum", "mean", "min", "max", "median", "count", "count_distinct")
 OPS = ("eq", "ne", "gt", "gte", "lt", "lte", "contains")
 
@@ -27,13 +33,19 @@ def to_number(value) -> float | None:
 	if isinstance(value, (int, float)):
 		return float(value)
 	s = str(value).strip().translate(_ARABIC_DIGITS)
-	if not s:
-		return None
 	neg = s.startswith("(") and s.endswith(")")
-	s = re.sub(r"[^\d.,eE+\-]", "", s.strip("()")).replace(",", "")
-	if not _NUM.match(s):
+	if neg:
+		s = s[1:-1].strip()
+	m = _VALUE.match(s)
+	if not m or (m["s1"] and m["s2"]):
 		return None
-	n = float(s)
+	# A letter label glued to the number is an identifier ("SKU1001", "SKU-1001", "A1"), not a
+	# currency: "SAR 99" needs the space. Symbols may touch ("$99") and units may follow ("5kg").
+	if m["pre"] and any(ch.isalpha() for ch in m["pre"]):
+		sign = m.start("s2") if m["s2"] else m.start("num")
+		if m.end("pre") == sign:
+			return None
+	n = float((m["s1"] or m["s2"] or "") + m["num"].replace(",", ""))
 	return -n if neg else n
 
 
@@ -64,7 +76,13 @@ def _passes(row, columns, flt) -> bool:
 
 
 def apply_filters(columns, rows, filters):
-	for f in filters or []:
+	if isinstance(filters, dict):  # one filter given without the list around it
+		filters = [filters]
+	filters = filters or []
+	for f in filters:
+		if not isinstance(f, dict):
+			raise TableError("Each filter must be an object like {\"column\": ..., \"op\": ..., \"value\": ...}")
+	for f in filters:
 		rows = [r for r in rows if _passes(r, columns, f)]
 	return rows
 

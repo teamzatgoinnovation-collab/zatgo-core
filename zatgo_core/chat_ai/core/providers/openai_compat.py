@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -9,7 +10,7 @@ from typing import Any, Iterator
 
 from zatgo_core.chat_ai.core.providers.base import LLMMessage, LLMProvider, LLMResult, StreamEvent
 from zatgo_core.chat_ai.core.providers.capabilities import PROVIDER_DEFAULTS
-from zatgo_core.chat_ai.core.providers.errors import from_exception, from_http_status
+from zatgo_core.chat_ai.core.providers.errors import ProviderError, from_exception, from_http_status
 
 
 class OpenAICompatProvider(LLMProvider):
@@ -225,6 +226,7 @@ class OpenAICompatProvider(LLMProvider):
 		calls: dict[int, dict] = {}
 		usage: dict = {}
 		model = self.model
+		finished = False  # saw [DONE] or a finish_reason: the provider really ended the answer
 		try:
 			resp = urllib.request.urlopen(req, timeout=self.timeout)
 		except urllib.error.HTTPError as exc:
@@ -253,6 +255,7 @@ class OpenAICompatProvider(LLMProvider):
 						continue
 					data_str = line[5:].strip()
 					if data_str == "[DONE]":
+						finished = True
 						break
 					try:
 						obj = json.loads(data_str)
@@ -262,6 +265,8 @@ class OpenAICompatProvider(LLMProvider):
 					if obj.get("usage"):
 						usage = obj["usage"]
 					for choice in obj.get("choices") or []:
+						if choice.get("finish_reason"):
+							finished = True
 						delta = choice.get("delta") or {}
 						text = delta.get("content")
 						if text:
@@ -279,8 +284,13 @@ class OpenAICompatProvider(LLMProvider):
 								slot["function"]["name"] += fn["name"]
 							if fn.get("arguments"):
 								slot["function"]["arguments"] += fn["arguments"]
-		except (urllib.error.URLError, OSError) as exc:
+		except (urllib.error.URLError, OSError, http.client.HTTPException) as exc:
 			raise from_exception(exc) from exc
+		if not finished:
+			# The connection ended without the provider finishing: never present this as a complete answer.
+			raise ProviderError(
+				"The connection to the AI provider was interrupted.", code="interrupted", retryable=True
+			)
 		yield StreamEvent(
 			"result",
 			result=LLMResult(

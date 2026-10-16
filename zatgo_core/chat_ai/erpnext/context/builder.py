@@ -20,7 +20,12 @@ def build_context_stack(client_context: dict | None = None, entities: dict | Non
 		"workspace_context": client_context.get("workspace") or {},
 	}
 	# Intelligent defaults (company, warehouse, etc.)
-	resolved = resolve_intelligent_defaults(stack)
+	try:
+		resolved = resolve_intelligent_defaults(stack)
+	except Exception:
+		# Defaults are a convenience; a site without a Company/Fiscal Year must still be able to chat.
+		frappe.log_error(title="chat_ai intelligent defaults")
+		resolved = {}
 	if resolved.get("values"):
 		stack["intelligent_defaults"] = resolved["values"]
 	if resolved.get("assumptions"):

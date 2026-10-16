@@ -55,19 +55,27 @@ def upload(session: str, filename: str | None, content: bytes) -> dict:
 			"status": "Uploaded",
 		}
 	).insert(ignore_permissions=True)
-	file_doc = frappe.get_doc(
-		{
-			"doctype": "File",
-			"file_name": safe,
-			"attached_to_doctype": "AI Attachment",
-			"attached_to_name": att.name,
-			"is_private": 1,
-			"content": content,
-		}
-	).insert(ignore_permissions=True)
+	try:
+		file_doc = frappe.get_doc(
+			{
+				"doctype": "File",
+				"file_name": safe,
+				"attached_to_doctype": "AI Attachment",
+				"attached_to_name": att.name,
+				"is_private": 1,
+				"content": content,
+			}
+		).insert(ignore_permissions=True)
+	except Exception as exc:
+		# Frappe itself rejects some corrupt files (e.g. unparseable PDFs) while storing them.
+		frappe.delete_doc("AI Attachment", att.name, ignore_permissions=True, force=True)
+		frappe.logger("chat_ai").info("upload rejected at storage: %s", type(exc).__name__)
+		raise UploadError(_("The file is corrupt or could not be stored."), "invalid_file") from exc
 	att.db_set("file", file_doc.file_url)
 
-	if len(content) <= INLINE_PROCESS_BYTES:
+	if att.kind == "image":
+		att.db_set("status", "Ready")  # nothing to extract; the model reads the pixels
+	elif len(content) <= INLINE_PROCESS_BYTES:
 		process(att.name)
 	else:
 		att.db_set("status", "Processing")
@@ -82,8 +90,13 @@ def upload(session: str, filename: str | None, content: bytes) -> dict:
 
 
 def _read_bytes(att) -> bytes:
-	file_doc = frappe.get_doc("File", {"file_url": att.file, "attached_to_name": att.name})
-	return file_doc.get_content()
+	"""The stored file exactly as uploaded. File.get_content() is avoided: it returns *text*
+	for text-like files (decoded as UTF-8), which would break CSVs saved as Windows-1256."""
+	file_doc = frappe.get_doc(
+		"File", {"attached_to_doctype": "AI Attachment", "attached_to_name": att.name}
+	)
+	with open(file_doc.get_full_path(), "rb") as fh:
+		return fh.read()
 
 
 def process(name: str) -> None:
