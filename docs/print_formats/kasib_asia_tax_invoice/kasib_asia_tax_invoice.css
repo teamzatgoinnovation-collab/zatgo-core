@@ -939,7 +939,7 @@ body {
 
     font-family: Arial, sans-serif;
     color: #686868;
-    font-size: 6.5pt;
+    font-size: 7.5pt;
     line-height: 3.7mm;
 
     direction: ltr;
@@ -949,5 +949,5 @@ body {
 .bank-riyadh,
 .bank-riyadh div,
 .bank-riyadh span {
-    color: #686868 !important;
+    color: #1F91CF !important;
 }
