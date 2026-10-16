@@ -257,67 +257,6 @@ body {
 
 
 /* =========================================================
-   9. ARABIC CONTACT NUMBERS
-   ========================================================= */
-
-.arabic-contact-numbers {
-    position: absolute;
-
-    top: 8.35%;
-    right: 5.7%;
-
-    width: 48%;
-    height: 3.5%;
-
-    z-index: 10;
-
-    margin: 0;
-    padding: 0;
-
-    color: #292826;
-
-    font-family:
-        "KasibArabic",
-        "Noto Sans Arabic",
-        "DejaVu Sans",
-        Arial,
-        sans-serif;
-
-    font-size: 10pt;
-    font-weight: bold;
-
-    line-height: 1.8;
-
-    text-align: right;
-    direction: rtl;
-
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.arabic-contact-numbers .contact-number {
-    display: inline-block;
-
-    font-family: Arial, sans-serif;
-    font-size: 10pt;
-    font-weight: bold;
-
-    direction: ltr;
-    unicode-bidi: embed;
-
-    color: #21201D;
-}
-
-.arabic-contact-numbers .contact-separator {
-    display: inline-block;
-
-    margin: 0 2mm;
-
-    color: #686868;
-}
-
-
-/* =========================================================
    10. ZATCA QR CODE
    ========================================================= */
 
@@ -486,10 +425,10 @@ body {
    ========================================================= */
 
 .customer-name {
-    left: 42.30%;
+    left: 33.68%;
     top: 22.24%;
 
-    width: 49.41%;
+    width: 54%;
     height: 2.69%;
 
     font-size: 9pt;
@@ -499,10 +438,10 @@ body {
 }
 
 .customer-name-arabic {
-    right: 3.90%;
+    right: 12.17%;
     top: 22.24%;
 
-    width: 49.41%;
+    width: 54%;
     height: 2.69%;
 
     font-size: 9pt;
@@ -511,16 +450,48 @@ body {
     line-height: 7.98mm;
 }
 
+/* Long English + Arabic name pair: shrink so they don't collide */
+.customer-name.fit-1,
+.customer-name-arabic.fit-1 {
+    font-size: 8pt;
+}
+
+.customer-name.fit-2,
+.customer-name-arabic.fit-2 {
+    font-size: 7pt;
+}
+
+/* Very long pair: each name gets its own half of the row and wraps to two lines */
+.customer-name.fit-3,
+.customer-name-arabic.fit-3 {
+    width: 26.5%;
+    height: 2.35%;
+
+    padding-top: 1.6mm;
+
+    font-size: 6.5pt;
+    line-height: 1.15;
+
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    /* keep to two lines; anything longer is cut cleanly with an ellipsis */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    text-overflow: ellipsis;
+}
+
 
 /* =========================================================
    16. CUSTOMER VAT & CR NUMBER
    ========================================================= */
 
 .customer-vat {
-    left: 38.86%;
+    left: 33.68%;
     top: 24.93%;
 
-    width: 35.46%;
+    width: 18.29%;
     height: 3.00%;
 
     font-size: 10pt;
@@ -529,29 +500,15 @@ body {
 }
 
 .customer-cr {
-    right: 3.9%;
+    left: 72.68%;
     top: 24.93%;
 
-    width: 30%;
+    width: 12.57%;
     height: 3.00%;
 
-    font-size: 9pt;
+    font-size: 10pt;
 
     line-height: 8.92mm;
-}
-
-.customer-cr .cr-label {
-    font-weight: bold;
-    margin-left: 2mm;
-}
-
-.customer-cr .cr-value {
-    font-size: 10pt;
-}
-
-.customer-cr .cr-en {
-    font-weight: bold;
-    margin-right: 2mm;
 }
 
 
@@ -560,16 +517,20 @@ body {
    ========================================================= */
 
 .customer-address {
-    left: 44.5%;
+    left: 31.3%;
     top: 27.53%;
 
-    width: 13.5%;
+    width: 16.9%;
     height: 3.20%;
 
     padding-top: 2.2mm;
 
     font-size: 8.5pt;
     line-height: 1.2;
+}
+
+.credit-note .customer-address {
+    width: 26.3%;
 }
 
 
@@ -826,7 +787,6 @@ body {
    ========================================================= */
 
 .ar-line,
-.arabic-contact-numbers,
 [dir="rtl"] {
     font-family:
         "KasibArabic",
@@ -890,64 +850,5 @@ body {
         height: 297mm;
     }
 
-    .arabic-contact-numbers {
-        direction: rtl;
-        text-align: right;
-
-        font-family:
-            "KasibArabic",
-            "Noto Sans Arabic",
-            "DejaVu Sans",
-            Arial,
-            sans-serif;
-
-        font-size: 10pt;
-        font-weight: bold;
-
-        color: #686868;
-
-        white-space: nowrap;
-    }
-
-    .arabic-contact-numbers .contact-number {
-        direction: ltr;
-        unicode-bidi: embed;
-
-        display: inline-block;
-
-        font-family: Arial, sans-serif;
-        font-weight: bold;
-    }
-
-    .arabic-contact-numbers .contact-separator {
-        margin: 0 2mm;
-    }
 }
 
-
-/* =========================================================
-   23. SECOND BANK ACCOUNT (RIYADH BANK)
-   Right half of the pre-printed "Bank Account Details" box.
-   ========================================================= */
-
-.bank-riyadh {
-    left: 41.5%;
-    top: 89.6%;
-
-    width: 29%;
-    height: 2.6%;
-
-    font-family: Arial, sans-serif;
-    color: #686868;
-    font-size: 7.5pt;
-    line-height: 3.7mm;
-
-    direction: ltr;
-    text-align: left;
-}
-
-.bank-riyadh,
-.bank-riyadh div,
-.bank-riyadh span {
-    color: #1F91CF !important;
-}

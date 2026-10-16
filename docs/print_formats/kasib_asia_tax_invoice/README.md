@@ -132,3 +132,40 @@ New in the live format: a `.bank-riyadh` block (last page only) in the empty
 right half of the pre-printed "Bank Account Details" box, which only carries
 Al Rajhi on the background artwork -- "Bank Details : Riyadh Bank A/C" /
 "IBAN : SA6120000001576153409940".
+
+## Update 2026-10-16: V5 artwork (new pre-printed forms)
+
+Applied to the live doc on kasibasia; this snapshot is the exact HTML/CSS now
+stored there.
+
+- **Background**: `/files/KasibAsiaInvoiceV5.jpg` and `/files/KasibAsiaReturnV5.jpg`
+  (returns/credit notes use the second). Uploaded straight into the site's
+  `public/files/` beside V3/V4, which stay in place -- loose files, not File
+  docs, and not tracked in git (same as V3/V4). Both are 1241x1755 px.
+- **The new forms print more themselves**, so the template stopped drawing the
+  Arabic phone line (`.arabic-contact-numbers`) and the Riyadh Bank block
+  (`.bank-riyadh`) -- both would have printed twice -- and the customer CR
+  labels ("CR Number :" / "رقم السجل التجاري") are pre-printed, so only the CR
+  value is drawn now.
+- **Customer block re-seated** between the new label positions (measured off
+  the artwork, % of 1241 px width): name, VAT, CR, address. The return
+  artwork has no Arabic address label, so its address box is wider
+  (`.credit-note` class on the page). The name row steps its font down
+  (`fit-1/2/3`) when English + Arabic names together are long, and at the
+  last step gives each name its own half of the row, two lines max -- found
+  with a real customer (Fadco Trading Limited + a 41-character Arabic name)
+  whose names touched.
+- **Verified** locally (`vansale1` bench: invoice, 12-item two-page invoice,
+  return, long-name cases, plus a V4 control) and on kasibasia with real
+  documents (`S1-01`, return `SINV-00008`) through a throwaway draft format
+  before touching the live one; the live render after the update was
+  pixel-identical to the draft render. `custom_print_count` unchanged by the
+  renders.
+- **Rollback**: re-save the previous HTML/CSS (git history of these two files,
+  the commit before this one) into the doc; the V4 images are still on disk.
+- **Not changed / known**: the separate `Kasib Asia Tax Return Invoice` format
+  still points at `KasibAsiaReturnV4.jpg`. Amounts of 5+ integer digits
+  (e.g. 61,934.40) lose their last digit at the right edge of the item
+  "Total" cell and the "Total Excluding VAT" box -- the field widths are
+  unchanged from V4 and it reproduces on the pre-V5 format too.
+

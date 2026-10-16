@@ -275,7 +275,7 @@
 
   {% set is_last_page = page == page_count - 1 %}
 
-  <div class="invoice-page{% if is_last_page %} last-page{% endif %}">
+  <div class="invoice-page{% if is_last_page %} last-page{% endif %}{% if is_credit_note %} credit-note{% endif %}">
 
     {# =====================================================
        BACKGROUND IMAGE
@@ -284,13 +284,13 @@
     {% if is_credit_note %}
       <img
         class="invoice-background"
-        src="/files/KasibAsiaReturnV4.jpg"
+        src="/files/KasibAsiaReturnV5.jpg"
         alt="Credit Note Background"
       >
     {% else %}
       <img
         class="invoice-background"
-        src="/files/KasibAsiaInvoiceV4.jpg"
+        src="/files/KasibAsiaInvoiceV5.jpg"
         alt="Tax Invoice Background"
       >
     {% endif %}
@@ -330,23 +330,8 @@
     {% endif %}
 
 
-    {# =====================================================
-       ARABIC CONTACT NUMBERS
-       ===================================================== #}
-
-    <div class="arabic-contact-numbers" dir="rtl">
-      <span>الجوال:</span>
-
-      <span class="contact-number" dir="ltr">
-        ٠٥٧٩٧٧٦٧٨٠
-      </span>
-
-      <span class="contact-separator">|</span>
-
-      <span class="contact-number" dir="ltr">
-        ٠١٢٥٩١١٨١٠
-      </span>
-    </div>
+    {# The company phone numbers (Arabic header) and both bank accounts are
+       printed on the V5 artwork itself, so they are no longer drawn here. #}
 
 
     {# =====================================================
@@ -392,11 +377,23 @@
        CUSTOMER NAME
        ===================================================== #}
 
-    <div class="dynamic-field customer-name" dir="auto">
+    {# English and Arabic names share one row between the two printed labels
+       (~11px per character at 9pt). Step the font down when the pair is long
+       so the two names never run into each other. #}
+    {% set name_chars =
+      ((doc.customer_name or doc.customer or "")|length) + (customer_name_ar|length)
+    %}
+    {% set name_fit =
+      "fit-3" if name_chars > 76 else
+      "fit-2" if name_chars > 66 else
+      "fit-1" if name_chars > 56 else ""
+    %}
+
+    <div class="dynamic-field customer-name {{ name_fit }}" dir="auto">
       {{ doc.customer_name or doc.customer or "" }}
     </div>
 
-    <div class="dynamic-field customer-name-arabic" dir="rtl">
+    <div class="dynamic-field customer-name-arabic {{ name_fit }}" dir="rtl">
       {{ customer_name_ar }}
     </div>
 
@@ -412,14 +409,14 @@
       {{ customer_tax_id }}
     </div>
 
+    {# "CR Number : / رقم السجل التجاري" is pre-printed on the form (V5);
+       only the value is drawn, in the gap between the two labels. #}
     {% if customer_cr %}
     <div
-      class="dynamic-field customer-cr"
-      dir="rtl"
+      class="dynamic-field customer-cr center"
+      dir="ltr"
     >
-      <span class="cr-label">رقم السجل التجاري :</span>
-      <span class="cr-value" dir="ltr">{{ customer_cr }}</span>
-      <span class="cr-en" dir="ltr">CR :</span>
+      {{ customer_cr }}
     </div>
     {% endif %}
 
@@ -651,15 +648,6 @@
 
       <div class="prev-balance">
         {{ frappe.utils.fmt_money(display_previous_balance) }}
-      </div>
-
-
-      {# Second bank account (Riyadh Bank) - sits in the empty right half of
-         the pre-printed "Bank Account Details" box, which only carries Al Rajhi #}
-
-      <div class="dynamic-field bank-riyadh" dir="ltr">
-        <div>Bank Details : Riyadh Bank A/C</div>
-        <div>IBAN : SA6120000001576153409940</div>
       </div>
 
 
