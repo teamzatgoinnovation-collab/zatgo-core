@@ -52,6 +52,7 @@ saas_theme.sidebar = {
 			this._listeners_bound = true;
 		}
 		this.toggle_rail_visibility();
+		this.initMobileRail();
 	},
 
 	/* ============================================
@@ -681,3 +682,294 @@ saas_theme.attachments = {
 		observer.observe(document.body, { childList: true, subtree: true });
 	},
 };
+
+// ===== Mobile navigation drawer =====
+/*
+ * Below the phone breakpoint (--zg-bp-sm, 576px) the workspace rail is an off-canvas drawer; layout and
+ * animation live in css/src/87-responsive.css. This block is the behaviour:
+ *   - a menu trigger (div[role=button], same convention as the rail controls) in every page head
+ *   - scrim, close button, Esc, route change and leaving the phone width all close the drawer
+ *   - aria-expanded / aria-controls on the trigger; focus moves into the drawer and is restored on close
+ *   - the rest of the desk is made inert while open (body scroll lock is CSS: body.st-mobile-nav-open)
+ *   - choosing a workspace closes the drawer and opens Frappe's own sidebar panel, so the choice is visible
+ * initMobileRail() is idempotent (called from sidebar.init(), which can run more than once) and does nothing
+ * when the rail has not been built or the page head is absent. Desktop is untouched: every handler is
+ * gated on the phone media query, and the trigger/scrim/head are display:none above it.
+ */
+(function () {
+	const BODY_OPEN = "st-mobile-nav-open";
+	const RAIL_ID = "st-workspace-rail";
+	const INERT_SELECTOR = ".main-section, .body-sidebar-container";
+
+	const state = {
+		open: false,
+		bound: false,
+		mq: null,
+		return_focus: null,
+		inerted: [],
+		timer: null,
+	};
+
+	const menu_svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16"/></svg>`;
+	const close_svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+
+	// Breakpoints come from the stylesheet tokens so JS and CSS switch at the same width.
+	function token_px(name, fallback) {
+		let px = fallback;
+		try {
+			const v = parseInt(getComputedStyle(document.documentElement).getPropertyValue(name), 10);
+			if (v > 0) px = v;
+		} catch (e) {
+			// computed style unavailable — keep the fallback
+		}
+		return px;
+	}
+
+	function is_phone() {
+		if (state.mq) return state.mq.matches;
+		return window.innerWidth <= token_px("--zg-bp-sm", 576);
+	}
+
+	// Frappe's own sidebar panel is an off-canvas overlay below its mobile cut-off (768px)
+	function is_panel_overlay() {
+		const px = token_px("--zg-bp-md", 768) - 0.02;
+		return window.matchMedia ? window.matchMedia(`(max-width: ${px}px)`).matches : window.innerWidth < px;
+	}
+
+	function rail_available() {
+		const $rail = saas_theme.sidebar.$rail;
+		return !!($rail && $rail.length && document.body.contains($rail[0]));
+	}
+
+	function set_expanded(expanded) {
+		$(".st-mobile-nav-trigger").attr("aria-expanded", expanded ? "true" : "false");
+	}
+
+	function set_inert(on) {
+		if (on) {
+			state.inerted = [];
+			document.querySelectorAll(INERT_SELECTOR).forEach((el) => {
+				if (!el.hasAttribute("inert")) {
+					el.setAttribute("inert", "");
+					state.inerted.push(el);
+				}
+			});
+		} else {
+			state.inerted.forEach((el) => el.removeAttribute("inert"));
+			state.inerted = [];
+		}
+	}
+
+	function focus_el(el) {
+		if (el && typeof el.focus === "function") el.focus({ preventScroll: true });
+	}
+
+	function restore_focus(el) {
+		let node = el;
+		if (!node || node === document.body || !document.body.contains(node)) {
+			node = $(".st-mobile-nav-trigger:visible").first()[0];
+		}
+		focus_el(node);
+	}
+
+	function focus_into_drawer() {
+		const $rail = saas_theme.sidebar.$rail;
+		const go = () => {
+			const $active = $rail.find(".st-rail-item.active:visible").first();
+			const $first = $rail.find(".st-rail-item:visible, .st-mobile-nav-close").first();
+			focus_el(($active.length ? $active : $first)[0]);
+		};
+		go();
+		// The drawer turns visible with the open class; if the first attempt ran before that style applied, retry once
+		requestAnimationFrame(() => {
+			if (state.open && !$rail[0].contains(document.activeElement)) go();
+		});
+	}
+
+	function open(trigger) {
+		if (state.open || !is_phone() || !rail_available()) return;
+		state.open = true;
+		state.return_focus = trigger || document.activeElement;
+		$("body").addClass(BODY_OPEN);
+		set_expanded(true);
+		set_inert(true);
+		focus_into_drawer();
+	}
+
+	function close(opts) {
+		if (!state.open) return;
+		state.open = false;
+		const target = state.return_focus;
+		state.return_focus = null;
+		$("body").removeClass(BODY_OPEN);
+		set_expanded(false);
+		set_inert(false); // before focusing: inert elements cannot take focus
+		if (!opts || opts.restore_focus !== false) restore_focus(target);
+	}
+
+	function toggle(trigger) {
+		if (state.open) close();
+		else open(trigger);
+	}
+
+	// A workspace was picked in the drawer. Picking only swaps the sidebar panel's content, which on a phone is
+	// off-canvas, so show that panel (Frappe's own overlay mode) and put focus in it.
+	function after_workspace_pick() {
+		if (!state.open) return;
+		close({ restore_focus: false });
+
+		const sidebar = frappe.app && frappe.app.sidebar;
+		if (sidebar && typeof sidebar.open === "function" && is_panel_overlay()) {
+			sidebar.open();
+			if (typeof sidebar.prevent_scroll === "function") sidebar.prevent_scroll();
+			setTimeout(() => {
+				const link = $(".body-sidebar-container.expanded .body-sidebar-top a.item-anchor[href]:visible")
+					.first()[0];
+				if (link) focus_el(link);
+				else restore_focus(null);
+			}, 120);
+		} else {
+			restore_focus(null);
+		}
+	}
+
+	// Frappe leaves its overlay-mode panel open after a navigation; on the phone/overlay widths close it so the
+	// page the user just chose is not hidden behind a scrim.
+	function close_panel_after_navigation() {
+		const sidebar = frappe.app && frappe.app.sidebar;
+		if (sidebar && sidebar.sidebar_expanded && typeof sidebar.close === "function" && is_panel_overlay()) {
+			sidebar.close();
+		}
+	}
+
+	// Tab cycles inside the open drawer
+	function trap_tab(e) {
+		if (e.key !== "Tab" || !state.open) return;
+		const nodes = saas_theme.sidebar.$rail
+			.find(".st-mobile-nav-close, .st-rail-search-box input, .st-rail-search-clear, .st-rail-item")
+			.filter(":visible")
+			.toArray();
+		if (!nodes.length) return;
+		const first = nodes[0];
+		const last = nodes[nodes.length - 1];
+		if (e.shiftKey && document.activeElement === first) {
+			e.preventDefault();
+			focus_el(last);
+		} else if (!e.shiftKey && document.activeElement === last) {
+			e.preventDefault();
+			focus_el(first);
+		}
+	}
+
+	// Capture phase, so it sees Esc before the rail search box does
+	function on_escape(e) {
+		if (e.key !== "Escape" || !state.open) return;
+		const t = e.target;
+		// With text in the workspace filter, the first Esc only clears it (the rail's own handler)
+		if (t && t.matches && t.matches(".st-rail-search-box input") && t.value) return;
+		e.preventDefault();
+		close();
+	}
+
+	function on_page_change() {
+		close({ restore_focus: false });
+		close_panel_after_navigation();
+		schedule_triggers();
+	}
+
+	function on_viewport_change() {
+		if (!is_phone()) close({ restore_focus: false });
+	}
+
+	function build_chrome($rail) {
+		if (!$rail.attr("id")) $rail.attr("id", RAIL_ID);
+
+		if (!$rail.children(".st-mobile-nav-head").length) {
+			const $head = $(`
+				<div class="st-mobile-nav-head">
+					<span class="st-mobile-nav-title">${frappe.utils.escape_html(__("Workspaces"))}</span>
+					<div class="st-mobile-nav-close" role="button" tabindex="0"
+						title="${frappe.utils.escape_html(__("Close"))}"
+						aria-label="${frappe.utils.escape_html(__("Close workspace menu"))}">${close_svg}</div>
+				</div>
+			`);
+			$rail.prepend($head);
+			bind_activation($head.find(".st-mobile-nav-close"), () => close());
+		}
+
+		if (!$(".st-mobile-nav-scrim").length) {
+			$('<div class="st-mobile-nav-scrim" aria-hidden="true"></div>')
+				.appendTo("body")
+				.on("click", () => close());
+		}
+
+		if (!$rail.data("stMobileNavBound")) {
+			$rail.data("stMobileNavBound", true);
+			// Same activation helper as the rail's own items; runs after the switch_workspace handler bound at build time
+			bind_activation($rail.find(".st-rail-item"), after_workspace_pick);
+			$rail.on("keydown.st_mobile_nav", trap_tab);
+		}
+	}
+
+	// Page heads are created per page, so every call checks all of them and adds the trigger where it is missing
+	function ensure_triggers($rail) {
+		const id = $rail.attr("id") || RAIL_ID;
+		const label = frappe.utils.escape_html(__("Workspace menu"));
+
+		$(".page-head .page-title").each(function () {
+			const $title = $(this);
+			if ($title.children(".st-mobile-nav-trigger").length) return;
+
+			const $trigger = $(`
+				<div class="st-mobile-nav-trigger" role="button" tabindex="0"
+					title="${label}" aria-label="${label}"
+					aria-controls="${id}" aria-expanded="${state.open ? "true" : "false"}">${menu_svg}</div>
+			`);
+			$title.prepend($trigger);
+			bind_activation($trigger, function () {
+				toggle(this);
+			});
+		});
+	}
+
+	function schedule_triggers() {
+		clearTimeout(state.timer);
+		state.timer = setTimeout(() => {
+			if (rail_available()) ensure_triggers(saas_theme.sidebar.$rail);
+		}, 120);
+	}
+
+	function bind_globals() {
+		if (state.bound) return;
+		state.bound = true;
+
+		document.addEventListener("keydown", on_escape, true);
+		$(document).on("page-change.st_mobile_nav", on_page_change);
+		$(document).on("form-refresh.st_mobile_nav sidebar_setup.st_mobile_nav", schedule_triggers);
+
+		if (state.mq) {
+			if (state.mq.addEventListener) state.mq.addEventListener("change", on_viewport_change);
+			else if (state.mq.addListener) state.mq.addListener(on_viewport_change);
+		}
+	}
+
+	saas_theme.sidebar.initMobileRail = function () {
+		try {
+			const $rail = saas_theme.sidebar.$rail;
+			if (!$rail || !$rail.length) return; // rail not built (no workspaces) or DOM absent
+
+			if (!state.mq && window.matchMedia) {
+				state.mq = window.matchMedia(`(max-width: ${token_px("--zg-bp-sm", 576)}px)`);
+			}
+			build_chrome($rail);
+			ensure_triggers($rail);
+			bind_globals();
+		} catch (e) {
+			console.error("saas_theme: mobile navigation drawer failed to initialise", e);
+		}
+	};
+
+	saas_theme.sidebar.openMobileRail = open;
+	saas_theme.sidebar.closeMobileRail = close;
+})();
+// ===== /Mobile navigation drawer =====

@@ -463,6 +463,18 @@ body {
 	--zg-accent-red-bg: #FDECEA;    --zg-accent-red-fg: #D93025;
 	--zg-accent-indigo-bg: #E8EAF6; --zg-accent-indigo-fg: #3F51B5;
 	--zg-accent-orange-bg: #fff3e0; --zg-accent-orange-fg: #e65100;
+	--zg-accent-pink-bg: #FCE7F1;   --zg-accent-pink-fg: #C2255C;
+	--zg-accent-teal-bg: #DDF4F0;   --zg-accent-teal-fg: #0B7A6E;
+
+	/* Light tints for icons on the always-dark workspace rail (same in both themes) */
+	--zg-rail-hue-1: #7FA0FF;
+	--zg-rail-hue-2: #5CD87D;
+	--zg-rail-hue-3: #FFC94D;
+	--zg-rail-hue-4: #BB86FC;
+	--zg-rail-hue-5: #F783AC;
+	--zg-rail-hue-6: #4FD1C5;
+	--zg-rail-hue-7: #F28B82;
+	--zg-rail-hue-8: #9FA8DA;
 }
 
 [data-theme="dark"] {
@@ -480,54 +492,18 @@ body {
 	--zg-accent-red-bg: rgba(217, 48, 37, 0.15);     --zg-accent-red-fg: #F28B82;
 	--zg-accent-indigo-bg: rgba(63, 81, 181, 0.15);  --zg-accent-indigo-fg: #9FA8DA;
 	--zg-accent-orange-bg: rgba(230, 81, 0, 0.15);   --zg-accent-orange-fg: #ff9800;
+	--zg-accent-pink-bg: rgba(214, 51, 108, 0.15);   --zg-accent-pink-fg: #F783AC;
+	--zg-accent-teal-bg: rgba(13, 148, 136, 0.15);   --zg-accent-teal-fg: #4FD1C5;
 }
 /* ============================================
-   4. BUTTONS
+   4. BUTTONS — moved to 82-buttons.css
    ============================================ */
-
-.btn {
-	border-radius: var(--border-radius-sm) !important;
-}
-
-.btn-primary,
-.btn-primary-dark {
-	background-color: var(--primary);
-	border-color: var(--primary);
-	color: var(--zg-on-primary) !important;
-	font-weight: 500;
-	box-shadow: var(--shadow-primary-sm);
-	transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.btn-primary:hover,
-.btn-primary-dark:hover {
-	background-color: var(--primary-hover) !important;
-	border-color: var(--primary-hover) !important;
-	box-shadow: var(--shadow-primary-md);
-}
-
-.btn-primary:focus,
-.btn-primary:focus-visible,
-.btn-primary-dark:focus,
-.btn-primary-dark:focus-visible {
-	box-shadow: var(--focus-blue) !important;
-}
-
-.btn-default {
-	border: 1px solid var(--border-color);
-	font-weight: 500;
-}
 
 /* ============================================
    5. INPUTS — Squarish + Blue Focus
    ============================================ */
 
-/* --- All inputs: squarish corners + blue focus --- */
-.form-control {
-	border-radius: var(--border-radius-sm);
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
+/* --- All inputs: blue focus (radius/transition: see 83-inputs.css) --- */
 .form-control:focus,
 .form-control:focus-visible {
 	box-shadow: var(--focus-default) !important;
@@ -596,41 +572,7 @@ body {
 	border-radius: var(--border-radius-sm);
 }
 
-/* ============================================
-   5b. FORM TABS — Primary active state
-   ============================================ */
-
-.form-tabs .nav-tabs {
-	padding: 0 16px;
-	gap: 0;
-}
-
-.form-tabs .nav-item {
-	margin-right: 4px;
-	margin-left: 0;
-}
-
-.form-tabs .nav-link {
-	border: none;
-	border-bottom: 2px solid transparent !important;
-	border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
-	padding: 8px 10px !important;
-	margin: 0 !important;
-	transition: all 0.15s ease;
-}
-
-.form-tabs .nav-link.active {
-	color: var(--primary) !important;
-	border-bottom: 2px solid var(--primary) !important;
-	background-color: var(--primary-tint-06) !important;
-	font-weight: 600;
-}
-
-.form-tabs .nav-link:hover:not(.active) {
-	color: var(--primary) !important;
-	background-color: var(--primary-tint-03) !important;
-}
-
+/* 5b. FORM TABS — moved to 86-tabs-menus-dialogs.css */
 /* ============================================
    5c. FORM RIGHT SIDEBAR — Modern Redesign
    ============================================ */
@@ -695,7 +637,7 @@ body {
 
 .form-sidebar .form-name-copy {
 	font-size: 11px !important;
-	color: var(--gray-500);
+	color: var(--text-muted);
 }
 
 /* --- Action icons row (like, print, edit, fav) --- */
@@ -974,7 +916,7 @@ body {
 .form-sidebar .sidebar-menu li {
 	padding: 4px 0;
 	font-size: 11px !important;
-	color: var(--gray-500);
+	color: var(--text-muted);
 	border: none;
 	line-height: 1.5;
 }
@@ -1735,7 +1677,6 @@ body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notificati
    ============================================ */
 
 .tooltip .tooltip-inner {
-	background: var(--gray-900);
 	border-radius: var(--border-radius-sm);
 	font-size: 12px;
 	font-weight: 500;
@@ -1764,11 +1705,6 @@ body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notificati
 .body-sidebar .bottom-edit-controls {
 	gap: 8px;
 	padding: 8px 0;
-}
-
-.body-sidebar .bottom-edit-controls .btn {
-	border-radius: 4px;
-	font-size: 13px;
 }
 
 /* ============================================
@@ -2610,10 +2546,6 @@ body.st-dual-sidebar .onb-panel {
 	border-color: var(--gray-300);
 }
 
-.desktop-wrapper .edit-mode-buttons .btn {
-	border-radius: var(--border-radius-md);
-}
-
 /* ===== Page indicator ===== */
 .desktop-wrapper .page-indicator {
 	background: var(--gray-300);
@@ -2691,13 +2623,13 @@ body.st-dual-sidebar .onb-panel {
 .widget .widget-head .widget-title {
 	font-weight: 600 !important;
 	font-size: 12px !important;
-	color: var(--gray-600) !important;
+	color: var(--text-muted) !important;
 	letter-spacing: 0.01em;
 }
 
 .widget .widget-head .widget-subtitle {
 	font-size: 11px;
-	color: var(--gray-400);
+	color: var(--text-muted);
 }
 
 /* --- Widget control (menu) --- */
@@ -2738,13 +2670,7 @@ body.st-dual-sidebar .onb-panel {
 
 .widget.number-widget-box .stat-period {
 	font-size: 11px;
-	color: var(--gray-400);
-}
-
-.widget.number-widget-box .percentage-stat-area .indicator-pill-round {
-	font-size: 11px;
-	padding: 2px 6px;
-	border-radius: var(--border-radius-sm);
+	color: var(--text-muted);
 }
 
 /* --- Chart widget --- */
@@ -2759,7 +2685,7 @@ body.st-dual-sidebar .onb-panel {
 .widget.dashboard-widget-box .widget-title {
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--gray-600);
+	color: var(--text-muted);
 }
 
 .widget.dashboard-widget-box .widget-body {
@@ -2811,12 +2737,6 @@ body.st-dual-sidebar .onb-panel {
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--heading-color);
-}
-
-.widget.shortcut-widget-box .indicator-pill {
-	font-size: 11px;
-	border-radius: var(--border-radius-sm);
-	padding: 2px 8px;
 }
 
 /* --- Quick list widget --- */
@@ -2914,7 +2834,7 @@ body.st-dual-sidebar .onb-panel {
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	color: var(--gray-600);
+	color: var(--text-muted);
 	margin: 0;
 	padding: 10px 14px;
 	background: var(--zg-wash-1);
@@ -3186,34 +3106,6 @@ body.st-dual-sidebar .onb-panel {
    26. LIST VIEW
    ============================================ */
 
-/* Status/indicator pills — shared base so list view row status pills
-   (.indicator-pill.green/red/...) match the already-styled dashboard
-   widget pills instead of a third near-duplicate rule. */
-.indicator-pill {
-	border-radius: var(--border-radius-sm);
-	font-size: 11px;
-	padding: 2px 8px;
-	font-weight: 500;
-}
-
-.list-row-container {
-	border-bottom: 1px solid var(--border-color);
-	transition: background 0.12s ease;
-}
-
-.list-row-container:hover {
-	background: var(--fg-hover-color);
-}
-
-.list-row-container .list-row-head {
-	border-bottom: 1px solid var(--border-color);
-	color: var(--text-muted);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.01em;
-	text-transform: uppercase;
-}
-
 .list-row-checkbox {
 	accent-color: var(--primary);
 }
@@ -3235,117 +3127,21 @@ body.st-dual-sidebar .onb-panel {
 	box-shadow: var(--shadow-xs);
 }
 
-.list-paging-area .btn,
-.sort-selector .btn {
-	border-radius: var(--border-radius-sm);
-}
-
 /* ============================================
    27. REPORT VIEW
    ============================================ */
 
 .datatable-wrapper {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	overflow: hidden;
+	overflow: hidden;  /* border/radius: 84-tables.css */
 }
 
 .dt-scrollable {
 	background: var(--card-bg);
 }
 
-.dt-row-header .dt-cell {
-	background: var(--card-bg);
-	border-bottom: 1px solid var(--border-color);
-	color: var(--text-muted);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.01em;
-	text-transform: uppercase;
-}
-
-.dt-row-filter .dt-cell {
-	background: var(--subtle-fg);
-}
-
-.dt-cell {
-	border-color: var(--border-color);
-}
-
-.dt-cell--sticky {
-	background: var(--gray-50);
-}
-
-.dt-row:not(.dt-row-header):not(.dt-row-filter):hover .dt-cell {
-	background: var(--fg-hover-color) !important;
-}
-
-.dt-input {
-	border-radius: var(--border-radius-sm);
-	font-size: 12px;
-}
-
-.dt-dropdown-container .dt-dropdown__list {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	box-shadow: var(--shadow-lg);
-	background: var(--card-bg);
-}
-
-.dt-dropdown__list-item:hover {
-	background: var(--fg-hover-color);
-}
-
-[data-theme="dark"] .dt-cell--sticky {
-	background: var(--gray-800);
-}
-
 /* ============================================
-   28. DIALOGS & MODALS (frappe.ui.Dialog / frappe.get_modal)
+   28. DIALOGS & MODALS — moved to 86-tabs-menus-dialogs.css
    ============================================ */
-
-.modal-content {
-	border-radius: var(--border-radius-2xl);
-	border: 1px solid var(--border-color);
-	box-shadow: var(--shadow-xl);
-	background: var(--modal-bg);
-	overflow: hidden;
-}
-
-.modal-header {
-	padding: 14px 20px;
-	border-bottom: 1px solid var(--border-color);
-	background: var(--modal-bg);
-}
-
-.modal-header .modal-title {
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--heading-color);
-}
-
-.modal-header .modal-actions .btn-modal-minimize,
-.modal-header .modal-actions .btn-modal-close {
-	border-radius: var(--border-radius-md);
-	transition: background 0.12s ease;
-}
-
-.modal-header .modal-actions .btn-modal-minimize:hover,
-.modal-header .modal-actions .btn-modal-close:hover {
-	background: var(--fg-hover-color);
-}
-
-.modal-footer {
-	background: var(--subtle-accent);
-	border-top: 1px solid var(--border-color);
-	border-radius: 0 0 var(--border-radius-2xl) var(--border-radius-2xl);
-}
-
-/* Branded overlay tint instead of the generic bootstrap black */
-.modal-backdrop.show {
-	background-color: var(--gray-900);
-	opacity: 0.45;
-}
 
 /* ============================================
    29. KANBAN BOARD
@@ -3382,7 +3178,7 @@ body.st-dual-sidebar .onb-panel {
 	text-transform: uppercase;
 	letter-spacing: 0.02em;
 	font-size: 11.5px;
-	color: var(--gray-600);
+	color: var(--text-muted);
 }
 
 .kanban-column .column-options a {
@@ -3391,17 +3187,6 @@ body.st-dual-sidebar .onb-panel {
 }
 
 .kanban-column .column-options a:hover {
-	background: var(--fg-hover-color);
-}
-
-.kanban-column .dropdown-menu {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	box-shadow: var(--shadow-lg);
-	background: var(--card-bg);
-}
-
-.kanban-column .dropdown-menu .dropdown-item:hover {
 	background: var(--fg-hover-color);
 }
 
@@ -3504,7 +3289,6 @@ body.st-dual-sidebar .onb-panel {
 	line-height: var(--zg-leading-normal);
 }
 .msg-box .null-state { opacity: 0.85; }
-.msg-box .msg-box-action,
 .msg-box p { margin-top: var(--zg-space-2); }
 
 /* Skeleton loader — opt-in utility; animation is disabled under reduced motion (see 90-a11y) */
@@ -3519,6 +3303,3591 @@ body.st-dual-sidebar .onb-panel {
 @keyframes zg-skeleton {
 	from { background-position: 200% 0; }
 	to   { background-position: -200% 0; }
+}
+/* ============================================
+   82. BUTTON SYSTEM — variants, sizes, states, groups
+   The one authoritative definition of .btn (supersedes 10-controls §4 and the generic
+   .btn rules in 40/50/60/70). Variant and size classes only set --zg-btn-* custom
+   properties; one set of state rules (rest, hover, open, press, focus, disabled,
+   working) reads them, so every variant behaves alike and light/dark swap by token.
+
+   Frappe v16.29 DOM this targets: sizes btn-xs / btn-sm (btn-md appears only in web forms,
+   btn-lg nowhere in Frappe JS, both styled for completeness), variants btn-primary /
+   btn-default / btn-secondary / btn-ghost / btn-danger / btn-success / btn-info /
+   btn-warning / btn-link / btn-primary-light, icon-btn, btn-group, data-toggle="dropdown".
+   "Working" is not a class: Frappe only does prop("disabled") while a request runs
+   (request.js, save.js, page.js) and sets body[data-ajax-state="triggered"].
+   ============================================ */
+
+/* --------------------------------------------
+   1. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Size scale: height / inline padding / type */
+	--zg-btn-h-xs: 24px;
+	--zg-btn-h-sm: 28px;
+	--zg-btn-h-md: 32px;
+	--zg-btn-h-lg: 40px;
+	--zg-btn-px-xs: var(--zg-space-2);
+	--zg-btn-px-sm: 10px;
+	--zg-btn-px-md: var(--zg-space-3);
+	--zg-btn-px-lg: var(--zg-space-4);
+	--zg-btn-fs-xs: var(--zg-text-sm);
+	--zg-btn-fs-sm: var(--zg-text-sm);
+	--zg-btn-fs-md: var(--zg-text-base);
+	--zg-btn-fs-lg: var(--zg-text-md);
+	--zg-btn-touch: 40px;                                   /* minimum hit area for coarse pointers */
+
+	/* Solid fills darken toward this on hover / press (navy in light, near-black in dark) */
+	--zg-btn-shade: var(--gray-900);
+
+	/* Primary */
+	--zg-btn-primary-bg: var(--primary);
+	--zg-btn-primary-bg-hover: var(--primary-hover);
+	--zg-btn-primary-bg-active: var(--primary-active);
+	--zg-btn-primary-fg: var(--zg-on-primary);
+	--zg-btn-primary-shadow: var(--shadow-primary-sm);
+	--zg-btn-primary-shadow-hover: var(--shadow-primary-md);
+
+	/* Status fills (white text) and the same hue as text on a plain surface */
+	--zg-btn-danger-bg: var(--zg-danger-solid);
+	--zg-btn-danger-fg: var(--zg-on-primary);
+	--zg-btn-danger-text: var(--zg-danger-solid);
+	--zg-btn-success-bg: color-mix(in srgb, var(--alert-text-success) 88%, var(--zg-btn-shade));
+	--zg-btn-success-fg: var(--zg-on-primary);
+	--zg-btn-success-text: var(--zg-btn-success-bg);
+	--zg-btn-warning-bg: var(--zg-accent-amber-fg);         /* amber needs dark text */
+	--zg-btn-warning-fg: var(--gray-900);
+
+	/* Neutral (default / secondary / light / outline) */
+	--zg-btn-neutral-bg: var(--btn-default-bg);
+	--zg-btn-neutral-bg-hover: var(--btn-default-hover-bg);
+	--zg-btn-neutral-bg-active: color-mix(in srgb, var(--btn-default-hover-bg) 85%, var(--text-color));
+	--zg-btn-neutral-fg: var(--text-color);
+	--zg-btn-neutral-border: var(--dark-border-color);
+	--zg-btn-neutral-border-hover: color-mix(in srgb, var(--dark-border-color) 55%, var(--text-muted));
+
+	/* Tonal (btn-info, btn-primary-light): same pair the alerts use */
+	--zg-btn-tonal-bg: var(--zg-info-bg);
+	--zg-btn-tonal-bg-hover: color-mix(in srgb, var(--zg-info-fg) 10%, var(--zg-info-bg));
+	--zg-btn-tonal-bg-active: color-mix(in srgb, var(--zg-info-fg) 18%, var(--zg-info-bg));
+	--zg-btn-tonal-fg: var(--zg-info-fg);
+	--zg-btn-tonal-border: color-mix(in srgb, var(--zg-info-fg) 30%, transparent);
+
+	/* Link */
+	--zg-btn-link-fg: var(--ink-blue-link);
+	--zg-btn-link-fg-hover: color-mix(in srgb, var(--ink-blue-link) 75%, var(--heading-color));
+
+	/* 00-tokens hard-codes this in :root, which also wins in dark; derive it so group dividers theme */
+	--btn-group-border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] {
+	/* Dark primary is the light brand blue, so its label is dark (white on it is only ~2.9:1) */
+	--zg-btn-primary-bg-hover: color-mix(in srgb, var(--primary) 84%, var(--zg-white-100));
+	--zg-btn-primary-bg-active: color-mix(in srgb, var(--primary) 86%, var(--zg-btn-shade));
+	--zg-btn-primary-fg: var(--gray-900);
+	--zg-btn-primary-shadow: none;
+	--zg-btn-primary-shadow-hover: none;
+
+	--zg-btn-danger-text: var(--alert-text-danger);
+	--zg-btn-success-bg: color-mix(in srgb, var(--alert-text-success) 50%, var(--zg-btn-shade));
+	--zg-btn-success-text: var(--alert-text-success);
+}
+
+/* --------------------------------------------
+   2. BASE — layout, type, motion (every .btn)
+   Defaults describe a bare, chrome-less button (transparent, muted label), which is what
+   Frappe renders for an unvariated .btn. Variants in §4 override the palette.
+   -------------------------------------------- */
+.btn {
+	/* palette (swapped by variants) */
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);
+	--zg-btn-bg-active: color-mix(in srgb, var(--btn-ghost-hover-bg) 85%, var(--text-color));
+	--zg-btn-fg: var(--text-muted);
+	--zg-btn-fg-hover: var(--text-color);
+	--zg-btn-border: transparent;
+	--zg-btn-border-hover: var(--zg-btn-border);
+	--zg-btn-border-active: var(--zg-btn-border-hover);
+	--zg-btn-shadow: none;
+	--zg-btn-shadow-hover: var(--zg-btn-shadow);
+
+	/* geometry (swapped by size classes) */
+	--zg-btn-h: var(--zg-btn-h-md);
+	--zg-btn-px: var(--zg-btn-px-md);
+	--zg-btn-py: 3px;
+	--zg-btn-fs: var(--zg-btn-fs-md);
+	--zg-btn-radius: var(--zg-radius-md);
+	--zg-btn-gap: calc(var(--zg-space-1) * 1.5);
+	--zg-btn-bw: 1px;
+	--zg-btn-hit: 0px;                                      /* raised to --zg-btn-touch for coarse pointers */
+
+	/* Frappe's own size variable drives .icon-btn width/height and .page-actions .btn height */
+	--btn-height: max(var(--zg-btn-h), var(--zg-btn-hit));
+
+	/* icons follow the label colour in every variant */
+	--icon-stroke: currentColor;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--zg-btn-gap);
+	font-size: var(--zg-btn-fs);
+	font-weight: 500;
+	/* Height without min-/fixed height: a one-line button is exactly --btn-height tall, while components
+	   that set their own smaller height (form-sidebar "+", connections "+") keep winning */
+	line-height: calc(var(--btn-height) - 2 * var(--zg-btn-bw) - 2 * var(--zg-btn-py));
+	letter-spacing: 0.01em;
+	text-align: center;
+	cursor: pointer;
+	background-color: var(--zg-btn-bg);
+	color: var(--zg-btn-fg);
+	/* every variant keeps a 1px border (transparent when borderless): equal box in all variants, and
+	   transparent borders are what make ghost / link buttons visible in forced-colors (high-contrast) mode */
+	border: var(--zg-btn-bw) solid var(--zg-btn-border);
+	border-radius: var(--zg-btn-radius);
+	box-shadow: var(--zg-btn-shadow);
+	transition:
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease),
+		color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease);
+}
+
+.btn,
+.btn:hover,
+.btn:focus {
+	text-decoration: none;                                  /* beats a:hover underline on a.btn */
+}
+
+.btn-block {
+	display: flex;
+	width: 100%;
+}
+
+/* Icons: fixed box, no auto margins (Frappe's .icon has margin: 0 auto), never squeezed */
+.btn .icon,
+.btn .es-icon {
+	flex: none;
+	margin: 0;
+}
+
+/* --------------------------------------------
+   3. SIZES — xs 24 / sm 28 / md 32 / lg 40
+   Vars here; the one padding rule below must match Frappe's
+   .btn:not(.btn-md):not(.btn-lg):not(.btn-xs) (0,4,0) to win.
+   -------------------------------------------- */
+.btn-xs {
+	--zg-btn-h: var(--zg-btn-h-xs);
+	--zg-btn-px: var(--zg-btn-px-xs);
+	--zg-btn-py: 2px;
+	--zg-btn-fs: var(--zg-btn-fs-xs);
+	--zg-btn-radius: var(--zg-radius-sm);
+	--zg-btn-gap: var(--zg-space-1);
+}
+
+.btn-sm,
+.btn-group-sm > .btn {
+	--zg-btn-h: var(--zg-btn-h-sm);
+	--zg-btn-px: var(--zg-btn-px-sm);
+	--zg-btn-fs: var(--zg-btn-fs-sm);
+}
+
+.btn-lg,
+.btn-group-lg > .btn {
+	--zg-btn-h: var(--zg-btn-h-lg);
+	--zg-btn-px: var(--zg-btn-px-lg);
+	--zg-btn-py: var(--zg-space-1);
+	--zg-btn-fs: var(--zg-btn-fs-lg);
+}
+
+/* The page head runs on the compact scale: plain and icon buttons line up with its btn-sm ones */
+.page-actions .btn:not(.btn-xs):not(.btn-lg) {
+	--zg-btn-h: var(--zg-btn-h-sm);
+	--zg-btn-px: var(--zg-btn-px-sm);
+	--zg-btn-fs: var(--zg-btn-fs-sm);
+}
+.page-actions .btn {
+	border-radius: var(--zg-btn-radius);                    /* Frappe: .page-actions .btn { border-radius: var(--border-radius) } (0,2,0) */
+}
+
+.btn:not(.btn-md):not(.btn-lg):not(.btn-xs),
+.btn.btn-xs:not(.btn-sm):not(.btn-lg),
+.btn.btn-lg:not(.btn-xs):not(.btn-sm) {
+	padding: var(--zg-btn-py) var(--zg-btn-px);
+}
+
+/* Icon-only: square, size from --btn-height (Frappe's .btn.icon-btn already sets width/height from it).
+   (0,5,0) to out-rank Frappe's 6px padding on these */
+.btn.icon-btn {
+	--zg-btn-px: 0px;
+	--zg-btn-py: 0px;
+}
+.btn.icon-btn:not(.btn-md):not(.btn-lg):not(.btn-xs),
+.btn.icon-btn.btn-xs:not(.btn-sm):not(.btn-lg) {
+	padding: 0;
+}
+
+/* Split-button caret segment is narrower than a labelled button */
+.btn.dropdown-toggle-split {
+	--zg-btn-px: var(--zg-space-2);
+}
+
+/* --------------------------------------------
+   4. VARIANTS — palette only
+   -------------------------------------------- */
+
+/* Primary */
+.btn-primary {
+	--zg-btn-bg: var(--zg-btn-primary-bg);
+	--zg-btn-bg-hover: var(--zg-btn-primary-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-primary-bg-active);
+	--zg-btn-fg: var(--zg-btn-primary-fg);
+	--zg-btn-fg-hover: var(--zg-btn-primary-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--zg-btn-shadow: var(--zg-btn-primary-shadow);
+	--zg-btn-shadow-hover: var(--zg-btn-primary-shadow-hover);
+	--icon-fill-bg: var(--zg-btn-bg);
+	white-space: nowrap;
+}
+
+/* Neutral: default / secondary / light */
+.btn-default,
+.btn-secondary,
+.btn-light {
+	--zg-btn-bg: var(--zg-btn-neutral-bg);
+	--zg-btn-bg-hover: var(--zg-btn-neutral-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-neutral-bg-active);
+	--zg-btn-fg: var(--zg-btn-neutral-fg);
+	--zg-btn-fg-hover: var(--zg-btn-neutral-fg);
+	--zg-btn-border: var(--zg-btn-neutral-border);
+	--zg-btn-border-hover: var(--zg-btn-neutral-border-hover);
+}
+
+/* Outline: neutral border, no fill until hovered */
+.btn-outline,
+.btn-outline-secondary {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);
+	--zg-btn-bg-active: var(--zg-btn-neutral-bg-active);
+	--zg-btn-fg: var(--zg-btn-neutral-fg);
+	--zg-btn-fg-hover: var(--zg-btn-neutral-fg);
+	--zg-btn-border: var(--zg-btn-neutral-border);
+	--zg-btn-border-hover: var(--zg-btn-neutral-border-hover);
+}
+
+/* Outline in a status hue: the label shifts toward the heading colour on the tinted hover / press fill
+   (keeps 4.5:1 there in both themes) */
+.btn-outline-primary {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--primary) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--primary) 18%, transparent);
+	--zg-btn-fg: var(--primary);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--primary) 75%, var(--heading-color));
+	--zg-btn-border: var(--primary);
+}
+.btn-outline-danger {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-danger-text) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-danger-text) 18%, transparent);
+	--zg-btn-fg: var(--zg-btn-danger-text);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--zg-btn-danger-text) 75%, var(--heading-color));
+	--zg-btn-border: var(--zg-btn-danger-text);
+}
+.btn-outline-success {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-success-text) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-success-text) 18%, transparent);
+	--zg-btn-fg: var(--zg-btn-success-text);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--zg-btn-success-text) 75%, var(--heading-color));
+	--zg-btn-border: var(--zg-btn-success-text);
+}
+
+/* Ghost: text only, fill on hover */
+.btn-ghost {
+	--zg-btn-fg: var(--text-color);
+	--zg-btn-fg-hover: var(--text-color);
+}
+
+/* Danger / success / warning: solid fills, hover and press darken toward --zg-btn-shade */
+.btn-danger {
+	--zg-btn-bg: var(--zg-btn-danger-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-danger-bg) 88%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-danger-bg) 76%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-danger-fg);
+	--zg-btn-fg-hover: var(--zg-btn-danger-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+.btn-success {
+	--zg-btn-bg: var(--zg-btn-success-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-success-bg) 88%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-success-bg) 76%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-success-fg);
+	--zg-btn-fg-hover: var(--zg-btn-success-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+.btn-warning {
+	--zg-btn-bg: var(--zg-btn-warning-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-warning-bg) 92%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-warning-bg) 84%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-warning-fg);
+	--zg-btn-fg-hover: var(--zg-btn-warning-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+
+/* Tonal: btn-info (also Frappe's "selected" marker in gantt / paging) and btn-primary-light
+   (filter / group-by buttons while active, skip link) */
+.btn-info,
+.btn-primary-light {
+	--zg-btn-bg: var(--zg-btn-tonal-bg);
+	--zg-btn-bg-hover: var(--zg-btn-tonal-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-tonal-bg-active);
+	--zg-btn-fg: var(--zg-btn-tonal-fg);
+	--zg-btn-fg-hover: var(--zg-btn-tonal-fg);
+	--zg-btn-border: var(--zg-btn-tonal-border);
+}
+
+/* Link: label only; hover underlines (a non-colour cue) */
+.btn-link {
+	--zg-btn-fg: var(--zg-btn-link-fg);
+	--zg-btn-fg-hover: var(--zg-btn-link-fg-hover);
+	--zg-btn-bg-hover: transparent;
+	--zg-btn-bg-active: transparent;
+}
+.btn.btn-link {
+	--zg-btn-px: var(--zg-space-2);
+}
+.btn-link.icon-btn {
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);           /* no text to underline, so give icon links a hover fill */
+	--zg-btn-bg-active: color-mix(in srgb, var(--btn-ghost-hover-bg) 85%, var(--text-color));
+}
+
+/* Frappe sets bg / colour / border-colour on these (0,2,0) and Bootstrap on their :focus and
+   :disabled; repaint from the palette at the same specificity (this file loads later). */
+.btn:is(
+	.btn-default, .btn-secondary, .btn-light, .btn-ghost, .btn-primary, .btn-danger, .btn-success,
+	.btn-warning, .btn-info, .btn-primary-light, .btn-outline, .btn-outline-primary,
+	.btn-outline-secondary, .btn-outline-danger, .btn-outline-success
+),
+.btn:is(
+	.btn-default, .btn-secondary, .btn-light, .btn-primary, .btn-danger, .btn-success,
+	.btn-warning, .btn-info, .btn-outline-primary, .btn-outline-secondary,
+	.btn-outline-danger, .btn-outline-success
+):focus {
+	background-color: var(--zg-btn-bg);
+	color: var(--zg-btn-fg);
+	border-color: var(--zg-btn-border);
+}
+.btn-link:disabled,
+.btn-link.disabled {
+	color: var(--zg-btn-fg);                                /* Bootstrap greys disabled links to #7c7c7c */
+}
+
+/* --------------------------------------------
+   5. STATES — read the palette, same for every variant
+   -------------------------------------------- */
+
+/* Hover. (0,4,0) beats Frappe's .btn.btn-default:hover (0,3,0) */
+.btn:not(:disabled):not(.disabled):hover {
+	background-color: var(--zg-btn-bg-hover);
+	border-color: var(--zg-btn-border-hover);
+	color: var(--zg-btn-fg-hover);
+	box-shadow: var(--zg-btn-shadow-hover);
+}
+.btn-link:not(:disabled):not(.disabled):hover {
+	text-decoration: underline;
+}
+
+/* Open dropdown (Bootstrap sets aria-expanded on data-toggle="dropdown" triggers) and toggled-on */
+.btn:not(:disabled):not(.disabled)[aria-expanded="true"],
+.btn:not(:disabled):not(.disabled).active {
+	background-color: var(--zg-btn-bg-active);
+	border-color: var(--zg-btn-border-active);
+	color: var(--zg-btn-fg-hover);
+}
+
+/* Press. Frappe paints :active with !important (.btn:active, .btn.btn-primary:active and its
+   dark twin), so this is the one state that cannot win without it. Frappe's own halo
+   (box-shadow: var(--focus-default)) is kept as the pressed cue. */
+.btn:not(:disabled):not(.disabled):active {
+	background-color: var(--zg-btn-bg-active) !important; /* important: Frappe .btn:active / .btn-primary:active use !important */
+	color: var(--zg-btn-fg-hover) !important; /* important: same Frappe rules */
+	border-color: var(--zg-btn-border-active);
+}
+
+/* Focus. Mouse focus keeps the resting look (drops Bootstrap's grey ring left after a click);
+   keyboard focus gets a solid outline that survives every variant, incl. .btn-link whose
+   box-shadow Frappe forces off. */
+.btn:focus,
+.btn.focus {
+	box-shadow: var(--zg-btn-shadow);
+}
+.btn:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+.btn-link:focus:not(:focus-visible) {
+	text-decoration: none;                                  /* Bootstrap underlines :focus; keep that for the keyboard only */
+}
+
+/* Disabled (native :disabled, or the .disabled class Frappe's Dialog adds). Not by opacity alone:
+   not-allowed cursor, no shadow, no hover/press (those rules exclude disabled). */
+.btn:disabled,
+.btn.disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+.btn-paging.btn-info:disabled {
+	opacity: 1;                                             /* the current page is disabled by Frappe but is "selected", not unavailable */
+	border-color: var(--zg-btn-neutral-border);             /* Frappe paints its fill / label; keep the group's neutral outline */
+}
+
+/* Working. Frappe disables the clicked button for the life of the request and flags
+   body[data-ajax-state="triggered"]; scoped to primary actions in the page head and dialogs
+   so an unrelated disabled button never spins. The ring shape (not colour) signals "busy". */
+body[data-ajax-state="triggered"] :is(.page-actions, .modal-footer) .btn-primary:disabled {
+	opacity: 0.8;
+	cursor: progress;
+}
+body[data-ajax-state="triggered"] :is(.page-actions, .modal-footer) .btn-primary:disabled::before {
+	content: "";
+	flex: none;
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: zg-btn-spin 700ms linear infinite;
+}
+@keyframes zg-btn-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------
+   6. GROUPS & DROPDOWN TRIGGERS
+   Corner collapsing and the -1px overlap come from Bootstrap's .btn-group rules; radius is
+   declared at (0,1,0) above precisely so those win. Needs 10-controls' `.btn { ... !important }`
+   radius rule gone.
+   -------------------------------------------- */
+
+/* Solid segments need a divider, their border equals their fill */
+.btn-group > .btn:is(.btn-primary, .btn-danger, .btn-success, .btn-warning):not(:first-child) {
+	border-inline-start-color: color-mix(in srgb, var(--zg-btn-fg) 35%, transparent);
+}
+
+/* Bootstrap's caret (.dropdown-toggle::after) carries its own margin; the flex gap already spaces it */
+.btn.dropdown-toggle::after {
+	margin-inline-start: 0;
+}
+
+/* An open group trigger keeps its resting shadow (Bootstrap adds an inset underline) */
+.btn-group.show .dropdown-toggle {
+	box-shadow: var(--zg-btn-shadow);
+}
+
+/* --------------------------------------------
+   7. POINTER ADAPTATION
+   -------------------------------------------- */
+
+/* Touch: 40px minimum hit area for every size (raises --btn-height: line-height, page-head height, icon-btn squares) */
+@media (pointer: coarse) {
+	.btn {
+		--zg-btn-hit: var(--zg-btn-touch);
+	}
+}
+/* ============================================
+   83. FORM CONTROLS — inputs, selects, Link / autocomplete, pickers, check / radio / switch,
+   attach, validation, labels and help text
+   Loads after 10-controls (section 5) and supersedes it; all colours come from tokens, so
+   light / dark swap in the two token blocks below.
+   Scope: field controls (.frappe-control). Grid cells (.grid-body) and report-view cell editors
+   (.datatable) are table territory and are deliberately left alone, as are the navbar search and
+   the workspace rail search.
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS (--zg-field-*)
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-field-height: 36px;
+	--zg-field-height-sm: 32px;           /* compact filter bars (.input-xs) */
+	--zg-field-target: 32px;              /* min row height of options / check labels */
+	--zg-field-option-pad-y: 6px;
+	--zg-field-pad-x: 10px;
+	--zg-field-pad-y: 8px;
+	--zg-field-radius: var(--zg-radius-sm);
+
+	--zg-field-bg: var(--fg-color);
+	--zg-field-bg-sunken: var(--subtle-fg);                    /* read-only / disabled / file drop area */
+	--zg-field-border: var(--gray-500);                        /* >= 3:1 against the card surface */
+	--zg-field-border-hover: var(--gray-600);
+	--zg-field-border-quiet: var(--border-color);              /* inactive boxes, separators */
+	--zg-field-faint: var(--gray-500);                         /* inactive picker days */
+	--zg-field-text-2: var(--gray-700);                        /* secondary text that sits on hover / selected tints (>= 4.5:1) */
+	--zg-field-error: var(--zg-danger-fg);
+	--zg-field-error-soft: var(--zg-danger-bg);
+	--zg-field-on-accent: var(--zg-on-primary);                /* text / thumb sitting on --primary */
+	--zg-field-selected: color-mix(in srgb, var(--primary) 10%, transparent);
+
+	--zg-field-ring: 0 0 0 1px var(--zg-focus-ring), 0 0 0 4px color-mix(in srgb, var(--zg-focus-ring) 24%, transparent);
+	--zg-field-ring-error: 0 0 0 1px var(--zg-field-error), 0 0 0 4px color-mix(in srgb, var(--zg-field-error) 24%, transparent);
+}
+
+[data-theme="dark"] {
+	/* Frappe's gray scale is inverted in dark; Frappe's own disabled / hover tokens are not restated
+	   by 01-tokens-dark (they stay light), so every role used below is restated here. */
+	--zg-field-bg: var(--control-bg);
+	--zg-field-bg-sunken: var(--bg-color);
+	--zg-field-border: var(--gray-400);
+	--zg-field-border-hover: var(--gray-300);
+	--zg-field-faint: var(--gray-400);
+	--zg-field-text-2: var(--text-muted);
+	--zg-field-on-accent: var(--bg-color);
+}
+
+/* Touch: 40px targets, and 16px text so iOS does not zoom the page on focus */
+@media (pointer: coarse) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-field-height: 40px;
+		--zg-field-height-sm: 40px;
+		--zg-field-target: 40px;
+		--zg-field-option-pad-y: 10px;
+	}
+}
+
+/* --------------------------------------------
+   1. LABELS, REQUIRED MARKER, DESCRIPTIONS
+   -------------------------------------------- */
+.frappe-control .control-label {
+	margin-bottom: var(--zg-space-1);
+	color: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	font-weight: 500;
+	line-height: var(--zg-leading-tight);
+}
+
+/* Frappe paints the asterisk with its pale --red-400; the asterisk (not colour) carries "required" */
+.frappe-control .control-label.reqd::after,
+.frappe-control .label-area.reqd::after {
+	content: " *";
+	color: var(--zg-field-error);
+	white-space: nowrap;
+}
+
+/* Field description. .text-extra-muted paints with var(--gray-500) !important (3:1 on light, 2:1 on
+   dark), so re-point that variable on the element instead of fighting the !important. */
+.frappe-control .help-box {
+	--gray-500: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	line-height: var(--zg-leading-normal);
+}
+
+/* Section / column descriptions use --text-light, which fails 4.5:1 */
+.form-section .form-section-description,
+.form-column .form-column-description {
+	color: var(--text-muted);
+}
+
+/* --------------------------------------------
+   2. TEXT INPUTS, SELECT, TEXTAREA
+   FIELD := .frappe-control .form-control:where(:not(.grid-body *, .datatable *))  (specificity 0,2,0)
+   -------------------------------------------- */
+
+/* Frappe's own --focus-default / --focus-red feed 10-controls' !important focus rule; re-pointing
+   them on the control itself gives the new ring without another !important. */
+.frappe-control .form-control,
+.frappe-control .ql-editor {
+	--focus-default: var(--zg-field-ring);
+	--focus-red: var(--zg-field-ring-error);
+}
+
+/* A field's validation tokens (Frappe's pink --red-400 fails 3:1) */
+.frappe-control {
+	--error-border: var(--zg-field-error);
+	--error-bg: var(--zg-field-error-soft);
+}
+
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height);
+	padding-block: 0;                      /* theme --input-padding is 14px 12px: 28px of padding leaves no text room in a 26-32px filter input */
+	padding-inline: var(--zg-field-pad-x);
+	border: 1px solid var(--zg-field-border);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg);
+	box-shadow: var(--shadow-xs);
+	color: var(--text-color);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-tight);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+
+/* Hover (never over focus, disabled, read-only or an error border) */
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):hover:where(:not(:focus, :disabled, [readonly])) {
+	border-color: var(--zg-field-border-hover);
+}
+
+/* Compact filter bars: still >= 32px */
+.frappe-control .form-control.input-xs:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height-sm);
+}
+
+.frappe-control .form-control::placeholder {
+	color: var(--text-muted);              /* 4.5:1; Frappe's gray-500 is 3:1 */
+	opacity: 1;
+}
+
+/* Multi-line */
+.frappe-control textarea.form-control:where(:not(.grid-body *, .datatable *)) {
+	height: auto;
+	min-height: calc(var(--zg-field-height) * 2 + var(--zg-space-1));
+	padding-block: var(--zg-field-pad-y);
+	line-height: var(--zg-leading-normal);
+	resize: vertical;
+}
+
+/* Select: native popup follows the theme; the chevron is vertically centred (Frappe pins it at top: 3px) */
+.frappe-control select.form-control:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height);        /* 10-controls' .form-page select.form-control (0,2,1) outranks the generic rule */
+	cursor: pointer;
+	text-overflow: ellipsis;
+}
+.frappe-control select.form-control.input-xs:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height-sm);
+}
+.frappe-control[data-fieldtype="Select"] select.form-control {
+	padding-inline-end: 28px !important; /* important: 10-controls forces padding:8px 10px !important on form fields, which sends the text under the chevron */
+}
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .select-icon,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .select-icon.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .placeholder,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .placeholder.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .select-icon,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .select-icon.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .placeholder,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .placeholder.xs {
+	top: 50%;
+	transform: translateY(-50%);          /* grid cells keep Frappe's own top offsets */
+}
+.frappe-control[data-fieldtype="Select"] .placeholder {
+	--gray-500: var(--text-muted);         /* .text-extra-muted !important, see help-box */
+}
+[data-theme="dark"] .frappe-control .form-control {
+	color-scheme: dark;                    /* native select popup, number spinners */
+}
+
+/* Numbers line up in columns of figures */
+.frappe-control input[data-fieldtype="Int"],
+.frappe-control input[data-fieldtype="Float"],
+.frappe-control input[data-fieldtype="Currency"],
+.frappe-control input[data-fieldtype="Percent"] {
+	font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------
+   3. READ-ONLY, DISABLED AND STATIC VALUES
+   Disabled = dimmed + not-allowed; read-only = sunken but fully legible (it is data).
+   -------------------------------------------- */
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):disabled {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+	color: var(--text-muted);
+	cursor: not-allowed;
+}
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *))[readonly] {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+	color: var(--text-color);
+	cursor: default;
+}
+
+/* Read-only value shown instead of an input (.control-value). Same height as the input so the
+   form does not jump; Frappe's disabled tokens stay light in dark mode, so tokens are used here. */
+.frappe-control .like-disabled-input {
+	min-height: var(--zg-field-height);
+	padding: var(--zg-field-pad-y) var(--zg-field-pad-x);
+	border: 1px solid var(--zg-field-border-quiet);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg-sunken);
+	color: var(--text-color);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+	overflow-wrap: anywhere;
+	cursor: default;
+}
+
+/* --------------------------------------------
+   4. VALIDATION
+   Frappe marks a bad field with .has-error on the .frappe-control wrapper (mandatory + empty, or
+   df.invalid) and reports the text through msgprint; the only text attached to a field is its
+   .help-box. So the state is: error border (token above), a 2px-weight ring, the label turned red
+   with an alert icon (so colour is not the only cue), and the description turned red.
+   -------------------------------------------- */
+.frappe-control.has-error .form-control:where(:not(.grid-body *, .datatable *)) {
+	box-shadow: 0 0 0 1px var(--zg-field-error);
+}
+
+.frappe-control.has-error .control-label,
+.frappe-control.has-error .checkbox .label-area,
+.frappe-control.has-error .switch-control .label-area {
+	color: var(--zg-field-error);
+}
+.frappe-control.has-error .control-label::before,
+.frappe-control.has-error .checkbox .label-area::before,
+.frappe-control.has-error .switch-control .label-area::before {
+	content: "";
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-end: 0.3em;
+	vertical-align: -0.15em;
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.2'/%3E%3Cpath d='M8 4.8v3.8M8 11.2v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.2'/%3E%3Cpath d='M8 4.8v3.8M8 11.2v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.frappe-control.has-error .help-box {
+	--gray-500: var(--zg-field-error);     /* see section 1 */
+}
+
+/* MultiSelectPills: Frappe draws the error border on the outer .control-input, which would double up
+   with the bordered inner box */
+.frappe-control[data-fieldtype="MultiSelectPills"].has-error .control-input {
+	border: 0;
+}
+.frappe-control[data-fieldtype="MultiSelectPills"].has-error .table-multiselect.form-control {
+	border-color: var(--zg-field-error);
+}
+
+/* --------------------------------------------
+   5. LINK / AUTOCOMPLETE
+   -------------------------------------------- */
+
+/* Open / clear buttons sit inside the input: inset them so the input border stays whole */
+.frappe-control .control-input .link-btn {    /* scoped to field inputs: the form timeline reuses .link-btn for plain action buttons */
+	inset-block-start: 1px;
+	inset-inline-end: 1px;
+	height: calc(100% - 2px);
+	padding-inline: var(--zg-space-1);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-field-bg);
+	color: var(--text-muted);
+}
+.frappe-control .control-input .link-btn a:hover {
+	color: var(--primary);
+}
+.frappe-control .control-input .link-btn .btn-clear:hover {
+	color: var(--zg-field-error);          /* Frappe's var(--error-color) is undefined */
+}
+
+/* Dropdown (Link, Autocomplete, MultiSelectPills, filter values) */
+.frappe-control .awesomplete > [role="listbox"] {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--dark-border-color);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--popover-bg);
+	box-shadow: var(--shadow-lg);
+}
+.frappe-control .awesomplete > [role="listbox"] > li,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] {
+	padding: var(--zg-field-option-pad-y) var(--zg-space-2);
+	border-inline-start: 3px solid transparent;   /* keyboard selection bar, reserved so rows do not shift */
+	border-radius: var(--zg-radius-sm);
+	font-size: var(--zg-text-base);
+}
+.frappe-control .awesomplete > [role="listbox"] > li:hover,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"]:hover {
+	background-color: var(--fg-hover-color);       /* Frappe's --awesomplete-hover-bg stays light in dark */
+}
+.frappe-control .awesomplete > [role="listbox"] > li[aria-selected="true"],
+.frappe-control .awesomplete > [role="listbox"] > [role="option"][aria-selected="true"] {
+	border-inline-start-color: var(--primary);     /* bar + tint: selection is not colour alone */
+	background-color: var(--zg-field-selected);
+}
+.frappe-control .awesomplete > [role="listbox"] > li strong,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] strong {
+	font-size: var(--zg-text-base);
+	font-weight: 600;
+}
+.frappe-control .awesomplete > [role="listbox"] > li .small,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] .small {
+	color: var(--zg-field-text-2);
+	font-size: var(--zg-text-sm);
+}
+.frappe-control .awesomplete > [role="listbox"] > li .link-option,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] .link-option {
+	color: var(--primary);                         /* "Create a new ..." / "Advanced Search" rows */
+	font-weight: 500;
+}
+
+/* --------------------------------------------
+   6. PASSWORD, MULTISELECT, TAG PILLS
+   -------------------------------------------- */
+.frappe-control[data-fieldtype="Password"] .control-input-wrapper .toggle-password {
+	display: flex;                         /* .hidden / .hide are display:none !important, so toggling still works */
+	align-items: center;
+	height: var(--zg-field-height);
+	padding-block: 0;
+	color: var(--text-muted);
+}
+.frappe-control[data-fieldtype="Password"] .control-input-wrapper .toggle-password:hover {
+	color: var(--text-color);
+}
+
+/* The wrapper is a .form-control with a fixed height in forms (10-controls); it must grow with its pills */
+.frappe-control .table-multiselect.form-control {
+	height: auto;
+	min-height: var(--zg-field-height);
+	padding-block: var(--zg-space-1);
+}
+/* Its inner <input> has no own border, so the wrapper carries the focus ring */
+.frappe-control .table-multiselect.form-control:focus-within {
+	border-color: var(--zg-focus-ring);
+	box-shadow: var(--zg-field-ring);
+}
+/* The typing input inside the box is borderless: Frappe tints it with --control-bg, which shows as a grey bar on a white box */
+.frappe-control .table-multiselect .input-with-feedback {
+	background-color: transparent;
+	box-shadow: none;
+}
+.frappe-control .table-multiselect .tb-selected-value {
+	padding: 2px var(--zg-space-2);
+	border: 1px solid var(--dark-border-color);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-field-bg-sunken);   /* --subtle-fg equals the field fill in dark and the chip vanishes */
+	color: var(--text-color);
+	font-size: var(--zg-text-sm);
+}
+.frappe-control .table-multiselect .tb-selected-value .btn-remove {
+	margin-inline-start: var(--zg-space-1);
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.frappe-control .table-multiselect .tb-selected-value .btn-remove:hover {
+	color: var(--zg-field-error);
+}
+
+/* MultiSelect list: trigger text centred, selected row uses a themed tint (Frappe's is a light yellow) */
+.frappe-control .multiselect-list .status-text {
+	top: 50%;
+	transform: translateY(-50%);
+}
+.multiselect-list .selectable-item.selected {
+	background-color: var(--zg-field-selected);
+}
+
+/* --------------------------------------------
+   7. CHECKBOX AND RADIO
+   Frappe sizes these (--checkbox-size) and draws the tick; the theme sets colour, focus, disabled.
+   Global on purpose: list / report / grid checkboxes should look the same as field checkboxes.
+   -------------------------------------------- */
+input[type="checkbox"] {
+	border-color: var(--zg-field-border);
+	background-color: var(--zg-field-bg);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+input[type="checkbox"]:hover:where(:not(:checked, :disabled)),
+input[type="radio"]:hover:where(:not(:disabled))::before {
+	border-color: var(--zg-field-border-hover);
+}
+input[type="checkbox"]:disabled,
+input[type="checkbox"].disabled-deselected {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+}
+
+input[type="radio"]::before {
+	border-color: var(--zg-field-border);
+	background-color: var(--zg-field-bg);
+}
+input[type="radio"]:checked::before {
+	border-color: var(--primary);
+	box-shadow: inset 0 0 0 3px var(--zg-field-bg);   /* Frappe's gap is hardcoded white */
+}
+input[type="radio"]:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+/* Focus: same ring as 90-a11y, on the box itself (Frappe's is a 25% halo) */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+input[type="checkbox"]:focus:not(:focus-visible) {
+	box-shadow: none;
+}
+
+/* Clickable label, dimmed when disabled */
+.checkbox label {
+	cursor: pointer;
+}
+.checkbox label:has(input:disabled) {
+	cursor: not-allowed;
+}
+.checkbox label:has(input:disabled) .label-area {
+	color: var(--text-muted);
+}
+
+/* --------------------------------------------
+   8. SWITCH
+   New field type (.switch-control) and the legacy .switch / .slider (timeline toggle).
+   Off = grey track, on = brand track with the thumb sliding: position is the non-colour cue.
+   -------------------------------------------- */
+.switch-control .switch-visual {
+	width: 32px;
+	height: 18px;
+	background-color: var(--zg-field-border);
+	transition: background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch-control .switch-thumb {
+	width: 14px;
+	height: 14px;
+	background-color: var(--zg-field-bg);
+	transition: transform var(--zg-duration-base) var(--zg-ease),
+		background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch-control .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--primary);
+}
+.switch-control .input-area:has(input:checked) ~ .switch-visual .switch-thumb {
+	background-color: var(--zg-field-on-accent);
+	transform: translateX(14px);
+}
+.frappe-rtl .switch-control .input-area:has(input:checked) ~ .switch-visual .switch-thumb {
+	transform: translateX(-14px);
+}
+.switch-control:hover .input-area:not(:has(input:checked)) ~ .switch-visual {
+	background-color: var(--zg-field-border-hover);
+}
+.switch-control:hover .input-area:has(input:checked) ~ .switch-visual {
+	background-color: color-mix(in srgb, var(--primary) 85%, var(--text-color));
+}
+.switch-control .input-area:has(input:focus-visible) ~ .switch-visual {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+.switch-control:has(input:disabled) .input-area:has(input:checked) ~ .switch-visual {
+	opacity: 0.55;
+}
+
+.switch .slider {
+	background-color: var(--zg-field-border);
+	transition: background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch .slider::before {
+	background-color: var(--zg-field-bg);
+	transition: transform var(--zg-duration-base) var(--zg-ease),
+		background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch input:checked + .slider {
+	background-color: var(--primary);
+}
+.switch input:checked + .slider::before {
+	background-color: var(--zg-field-on-accent);
+}
+.switch input:focus-visible + .slider {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+
+/* --------------------------------------------
+   9. DATE / DATETIME / TIME PICKERS (air-datepicker; Frappe sets its tokens, but leaves cyan
+   defaults, light-only greys and white-on-primary text in place)
+   -------------------------------------------- */
+.datepicker {
+	border-color: var(--dark-border-color);
+	border-radius: var(--zg-radius-lg);
+	background: var(--popover-bg);
+	box-shadow: var(--shadow-xl);
+	font-size: var(--zg-text-base);
+}
+.datepicker--pointer {
+	background: var(--popover-bg);
+	border-color: var(--dark-border-color);
+}
+.datepicker--nav-title {
+	border-radius: var(--zg-radius-sm);
+	color: var(--text-color);
+	font-weight: 600;
+}
+.datepicker--nav-title i {
+	color: var(--text-muted);
+}
+.datepicker--nav-action path {
+	stroke: var(--text-muted);
+}
+.datepicker--nav-action:hover path {
+	stroke: var(--text-color);
+}
+.datepicker--day-name {
+	color: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	font-weight: 500;
+}
+
+.datepicker--cell {
+	height: var(--zg-field-target);
+	border-radius: var(--zg-radius-sm);
+}
+.datepicker--cell.-current- {
+	box-shadow: inset 0 0 0 1px var(--primary);    /* today: ring + bold (Frappe), not colour alone */
+}
+.datepicker--cell.-selected-,
+.datepicker--cell.-selected-.-current-,
+.datepicker--cell.-current-.-selected- {
+	border-radius: var(--zg-radius-sm);
+	box-shadow: none;
+	color: var(--zg-field-on-accent);
+}
+.datepicker--cell.-selected-.-focus-,
+.datepicker--cell.-in-range-.-focus- {
+	color: var(--zg-field-on-accent);
+}
+.datepicker--cell.-disabled-,
+.datepicker--cell.-disabled-.-focus-,
+.datepicker--cell-day.-other-month-,
+.datepicker--cell-year.-other-decade- {
+	color: var(--zg-field-faint);
+}
+.datepicker--cell-day.-other-month-:hover,
+.datepicker--cell-year.-other-decade-:hover {
+	color: var(--text-muted);
+}
+.-selected-.datepicker--cell-day.-other-month-,
+.-selected-.datepicker--cell-year.-other-decade- {
+	background: color-mix(in srgb, var(--date-active-bg) 55%, transparent);
+	color: var(--text-color);              /* on-accent text would be too faint on the 55% tint */
+}
+
+.datepicker--button {
+	height: var(--zg-field-target);
+	border-radius: var(--zg-radius-sm);
+	color: var(--primary);
+	font-weight: 500;
+}
+.datepicker--button:hover {
+	color: var(--primary);
+}
+
+/* Time sliders: thumbs were white with a light-grey edge */
+.datepicker--time-row input[type="range"]::-webkit-slider-thumb {
+	border-color: var(--zg-field-border);
+	background: var(--zg-field-bg);
+}
+.datepicker--time-row input[type="range"]::-moz-range-thumb {
+	border-color: var(--zg-field-border);
+	background: var(--zg-field-bg);
+}
+.datepicker--time-row input[type="range"]:hover::-webkit-slider-thumb {
+	border-color: var(--zg-field-border-hover);
+}
+.datepicker--time-row input[type="range"]:hover::-moz-range-thumb {
+	border-color: var(--zg-field-border-hover);
+}
+.datepicker--time-row input[type="range"]:focus::-webkit-slider-thumb {
+	border-color: var(--primary);
+	background: var(--primary);
+}
+.datepicker--time-row input[type="range"]:focus::-moz-range-thumb {
+	border-color: var(--primary);
+	background: var(--primary);
+}
+.datepicker--time-current-hours.-focus-::after,
+.datepicker--time-current-minutes.-focus-::after,
+.datepicker--time-current-seconds.-focus-::after {
+	box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* --------------------------------------------
+   10. ATTACH AND FILE UPLOAD
+   -------------------------------------------- */
+.frappe-control[data-fieldtype="Attach"] .attached-file,
+.frappe-control[data-fieldtype="Attach Image"] .attached-file {
+	min-height: var(--zg-field-height);
+	border: 1px solid var(--zg-field-border-quiet);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg-sunken);
+}
+
+/* Upload dialog drop area (Vue scoped styles load later, hence the extra ancestor classes) */
+.modal-body .file-uploader .file-upload-area {
+	border: 1px dashed var(--zg-field-border);
+	border-radius: var(--zg-radius-lg);
+	background-color: var(--zg-field-bg-sunken);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+.modal-body .file-uploader .file-upload-area:hover,
+.modal-body .file-uploader .file-upload-area:focus-within {
+	border-color: var(--primary);
+	background-color: var(--zg-field-selected);
+}
+.modal-body .file-uploader .file-upload-area .btn-file-upload:hover {
+	background-color: var(--fg-hover-color);
+}
+
+/* --------------------------------------------
+   11. TEXT EDITOR (Quill) AND CODE
+   -------------------------------------------- */
+.frappe-control .ql-toolbar.ql-snow,
+.frappe-control .ql-container.ql-snow {
+	border-color: var(--zg-field-border);
+}
+.frappe-control .ql-container.ql-snow {
+	background-color: var(--zg-field-bg);
+}
+.frappe-control .ql-editor:not(.read-mode) {
+	background-color: var(--zg-field-bg);
+}
+.frappe-control .ql-editor.ql-blank::before {
+	color: var(--text-muted);              /* Frappe uses rgba(0,0,0,.6): invisible in dark */
+	font-style: normal;
+}
+.frappe-control .ace_editor {
+	border: 1px solid var(--zg-field-border);
+	border-radius: var(--zg-field-radius);
+}
+
+/* --------------------------------------------
+   12. TOUCH
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.frappe-control .form-control:where(:not(.grid-body *, .datatable *)) {
+		font-size: var(--zg-text-lg);
+	}
+	.checkbox label,
+	.switch-control {
+		align-items: center;
+		min-height: var(--zg-field-target);
+		padding-top: 0;
+	}
+	.datepicker--nav {
+		min-height: var(--zg-field-target);
+	}
+}
+/* ============================================
+   84. TABLE SYSTEM — report view / datatable, child-table grids, list view, plain tables
+   One table language: small semibold muted header labels, 1px row dividers, tinted hover and
+   selected rows, tabular numerals, themed focus rings. Every colour is a --zg-table-* token
+   derived from existing theme tokens, so light and dark swap in the two blocks below.
+
+   Frappe v16.29 DOM this targets:
+	 report view / query report  .datatable > .dt-header (.dt-row-header, .dt-row-filter) + .dt-scrollable + .dt-footer
+	 child tables                .form-grid > .grid-heading-row + .grid-body > .rows > .grid-row > .data-row.row > .col
+	 list view                   .list-row-container > .list-row | header.list-row-head (first container is sticky via Frappe list.scss)
+	 plain tables                Bootstrap .table, .markdown-preview / .html-preview table
+   Row height is NOT one CSS value everywhere: frappe-datatable sizes rows from its JS option
+   cellHeight (35 report view, 33 query report) and feeds the same number to its virtual scroller,
+   so CSS never resizes .dt-row / .dt-cell. List and grid rows use --zg-table-row-h.
+   Frappe has no density toggle; to add one, override --zg-table-row-h / --zg-table-head-h on an
+   ancestor of the table.
+
+   Row state is painted through variables where the existing paint cannot be out-ranked without
+   !important: a datatable row re-points --dt-cell-bg and --fg-hover-color (70's hover rule is
+   !important and reads the latter), a grid row re-points --fg-color (cell paint is a literal
+   var(--fg-color)), a list row owns --zg-row-bg. Dark mode: 00-tokens declares --highlight-color
+   only in its light block, which also matches <html> in dark, so Frappe's dark value never
+   applies; the datatable re-points the --dt-* variables that read it and each list row
+   re-points --highlight-color itself.
+   10-controls still has !important rules on .form-control (padding, focus box-shadow) and 83
+   leaves grid / datatable cells to this file, so cell-editor focus rings go through
+   --focus-default / --focus-red rather than a competing box-shadow.
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS (--zg-table-*)
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-table-row-h: 40px;                /* list + grid body rows */
+	--zg-table-head-h: 36px;               /* list header (grid header stays Frappe's 32px: its cell padding is !important) */
+	--zg-table-pad-x: 10px;                /* cell inline padding, same as the field padding in 83 */
+	--zg-table-radius: var(--zg-radius-md);
+	--zg-table-head-tracking: 0.04em;      /* reset to 0 in RTL: letter-spacing breaks Arabic joining */
+
+	--zg-table-bg: var(--fg-color);
+	--zg-table-head-bg: var(--subtle-fg);
+	--zg-table-filter-bg: color-mix(in srgb, var(--subtle-fg) 45%, var(--fg-color));
+	--zg-table-row-hover: color-mix(in srgb, var(--primary) 4%, var(--fg-color));
+	--zg-table-row-selected: color-mix(in srgb, var(--primary) 8%, var(--fg-color));
+	--zg-table-row-selected-hover: color-mix(in srgb, var(--primary) 12%, var(--fg-color));
+
+	--zg-table-fg: var(--text-color);
+	--zg-table-fg-muted: color-mix(in srgb, var(--text-muted) 75%, var(--text-color));   /* 5.1:1 on the header fill, 4.5:1+ on every row tint */
+	--zg-table-head-fg: color-mix(in srgb, var(--text-muted) 60%, var(--text-color));    /* 5.7:1 on the header fill (plain --text-muted is 4.3:1) */
+
+	--zg-table-line: var(--border-color);                 /* row dividers */
+	--zg-table-line-soft: color-mix(in srgb, var(--border-color) 50%, var(--fg-color));   /* column dividers */
+	--zg-table-line-strong: var(--dark-border-color);     /* frame, header rule, totals rule */
+	--zg-table-input-border: color-mix(in srgb, var(--text-muted) 80%, var(--fg-color));   /* inline filter boxes: >= 3.1:1 in both themes */
+}
+
+[data-theme="dark"] {
+	--zg-table-row-hover: color-mix(in srgb, var(--primary) 8%, var(--fg-color));
+	--zg-table-row-selected: color-mix(in srgb, var(--primary) 14%, var(--fg-color));
+	--zg-table-row-selected-hover: color-mix(in srgb, var(--primary) 18%, var(--fg-color));
+	--zg-table-line: var(--dark-border-color);            /* --border-color is 1.1:1 on the dark surface */
+	--zg-table-line-soft: var(--border-color);
+	--zg-table-line-strong: color-mix(in srgb, var(--dark-border-color) 60%, var(--text-muted));
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--zg-table-line: var(--text-muted);
+		--zg-table-line-soft: var(--text-muted);
+		--zg-table-line-strong: var(--text-color);
+	}
+}
+
+/* --------------------------------------------
+   1. REPORT VIEW, QUERY REPORT, DIALOG PICKERS (frappe-datatable)
+   -------------------------------------------- */
+/* Frappe feeds these from --highlight-color (light in dark mode, see header) and a few literals */
+.datatable {
+	--dt-border-color: var(--zg-table-line);
+	--dt-cell-bg: var(--zg-table-bg);
+	--dt-header-cell-bg: var(--zg-table-head-bg);
+	--dt-light-bg: var(--zg-table-row-selected);                 /* selected cell range, dragged header */
+	--dt-selection-highlight-color: var(--zg-table-row-selected);  /* checked rows */
+	border-radius: var(--zg-table-radius);
+	font-size: var(--zg-text-base);
+}
+
+/* Frame (report view; query-report tables are framed by their own cell borders) */
+.datatable-wrapper {
+	border-color: var(--zg-table-line-strong);
+	border-radius: var(--zg-table-radius);
+}
+/* The frame draws the right and bottom edge, so the last column / last row skip theirs (was doubled) */
+.datatable-wrapper .dt-cell:last-child {
+	border-right-color: transparent;
+}
+.report-view .datatable-wrapper .dt-row:last-child:not(.dt-row-filter) .dt-cell {
+	border-bottom-color: transparent;
+}
+
+/* Cells: horizontal rules full strength, column rules softer; tabular figures everywhere */
+.datatable .dt-cell {
+	border-top-color: var(--zg-table-line);
+	border-right-color: var(--zg-table-line-soft);
+}
+.datatable .dt-scrollable .dt-cell__content,
+.datatable .dt-footer .dt-cell__content {
+	padding-inline: calc(var(--zg-table-pad-x) - var(--dt-focus-border-width));   /* the transparent focus border adds the rest */
+	font-variant-numeric: tabular-nums;                                           /* numeric columns are right-aligned by the column's align option */
+}
+
+/* Header: small semibold muted label. Colour sits on the content box because Frappe pins
+   .datatable .dt-cell { color: ... !important } on the cell itself. */
+.datatable .dt-header .dt-row-header .dt-cell {
+	border-bottom: 1px solid var(--zg-table-line-strong);
+}
+.datatable .dt-header .dt-cell--header .dt-cell__content {
+	background-color: var(--zg-table-head-bg);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+	padding-inline: calc(var(--zg-table-pad-x) - var(--dt-focus-border-width)) var(--dt-spacer-3);   /* end side leaves room for the menu toggle */
+}
+.datatable .dt-header .dt-cell--highlight .dt-cell__content {
+	background-color: var(--dt-light-bg);                      /* column of the focused cell */
+}
+.datatable .dt-cell--header .sort-indicator {
+	margin-inline-start: var(--zg-space-1);
+	color: var(--primary);
+	font-weight: var(--weight-bold);
+}
+/* Sorting lives in the header menu, so the toggle must be reachable without a mouse */
+.datatable .dt-cell--header:focus-within .dt-dropdown__toggle {
+	opacity: 1;
+}
+@media (hover: none) {
+	.datatable .dt-dropdown__toggle {
+		opacity: 1;
+	}
+}
+/* Resize handle becomes a visible 1px grip on header hover */
+.datatable .dt-cell--header:hover .dt-cell__resize-handle {
+	opacity: 1;
+	background: linear-gradient(to right, transparent 2px, var(--zg-table-line-strong) 2px, var(--zg-table-line-strong) 3px, transparent 3px);
+}
+
+/* Inline filter row */
+.datatable .dt-header .dt-row-filter .dt-cell {
+	background-color: var(--zg-table-filter-bg);
+}
+.datatable .dt-row-filter .dt-filter.dt-input {
+	border: 1px solid var(--zg-table-input-border);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-table-bg);
+	color: var(--zg-table-fg);
+	font-size: var(--zg-text-sm);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:hover:not(:focus, :disabled) {
+	border-color: var(--zg-table-head-fg);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:focus {
+	border-color: var(--zg-focus-ring);
+	box-shadow: 0 0 0 1px var(--zg-focus-ring);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:disabled {
+	border-color: transparent;                                 /* checkbox / serial column has no filter */
+	background-color: transparent;
+}
+
+/* Row states. Re-pointing the variables below also retargets 70's !important hover paint. */
+@media (hover: hover) {
+	.datatable .dt-row:not(.dt-row-header, .dt-row-filter, .dt-row-totalRow, .dt-row--highlight):hover {
+		--dt-cell-bg: var(--zg-table-row-hover);
+		--fg-hover-color: var(--zg-table-row-hover);
+	}
+	.datatable .dt-row--highlight:hover {
+		--dt-cell-bg: var(--zg-table-row-selected-hover);
+		--fg-hover-color: var(--zg-table-row-selected-hover);
+		--dt-selection-highlight-color: var(--zg-table-row-selected-hover);
+	}
+}
+.datatable .dt-row--highlight {
+	--dt-cell-bg: var(--zg-table-row-selected);
+	--fg-hover-color: var(--zg-table-row-selected);
+}
+/* Checked row also gets a shape cue (leading bar), not only a tint */
+.datatable .dt-row--highlight .dt-cell:first-child {
+	box-shadow: inset 2px 0 0 var(--primary);
+}
+.datatable[dir="rtl"] .dt-row--highlight .dt-cell:first-child {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+
+/* Sticky columns must stay opaque and follow the row state (70 pinned them to a grey) */
+.datatable .dt-cell--sticky {
+	background-color: var(--dt-cell-bg);
+}
+.datatable .dt-cell--highlight {
+	background-color: var(--dt-light-bg);
+}
+
+/* Cell focus and in-place edit: Frappe's gray-200 / #9bccf8 borders are ~1.2:1 */
+.datatable .dt-cell--focus .dt-cell__content,
+.datatable .dt-cell__edit {
+	border-color: var(--zg-focus-ring);
+}
+.datatable .dt-cell__edit .form-control {
+	--focus-default: none;                                     /* the edit cell has its own 2px border; 10-controls would add a !important halo */
+	--focus-red: none;
+}
+
+/* Totals row (footer sits outside the scroller) */
+.datatable .dt-footer {
+	--dt-cell-bg: var(--zg-table-head-bg);
+}
+.datatable .dt-footer .dt-cell {
+	border-top-color: var(--zg-table-line-strong);
+}
+
+/* Header menu */
+.dt-dropdown-container .dt-dropdown__list {
+	padding-block: var(--zg-space-1);
+	border: 1px solid var(--zg-table-line-strong);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--popover-bg);
+	box-shadow: var(--shadow-lg);
+	color: var(--zg-table-fg);
+	font-size: var(--zg-text-base);
+}
+.dt-dropdown-container .dt-dropdown__list-item {
+	padding: var(--zg-space-2) var(--zg-space-3);
+}
+.dt-dropdown-container .dt-dropdown__list-item:hover {
+	background-color: var(--zg-table-row-hover);
+}
+
+/* Empty and loading */
+.datatable .dt-scrollable__no-data .no-data-message {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+}
+.datatable .dt-freeze {
+	background-color: var(--zg-table-bg);
+	opacity: 0.7;
+}
+.datatable .dt-freeze__message {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-md);
+}
+
+/* Keep trackpad swipes inside the table instead of navigating back */
+.datatable .dt-scrollable,
+.report-wrapper {
+	overscroll-behavior-x: contain;
+}
+
+/* --------------------------------------------
+   2. CHILD-TABLE GRIDS (.form-grid)
+   The right-hand row sheet (.grid-row-open .form-in-grid) is 60's and is not touched.
+   Numeric columns already carry .text-right (grid_row.js make_column), which stays.
+   -------------------------------------------- */
+.form-grid {
+	border-color: var(--zg-table-line-strong);
+	border-radius: var(--zg-table-radius);
+}
+.form-grid.error {
+	border-color: var(--zg-danger-fg);
+	box-shadow: 0 0 0 1px var(--zg-danger-fg);                 /* thicker, not only redder */
+}
+.form-grid-container {
+	overscroll-behavior-x: contain;
+}
+
+/* Header (Frappe paints it gray-600 on subtle-fg: 1.3:1 in dark) */
+.form-grid .grid-heading-row {
+	border-bottom-color: var(--zg-table-line-strong);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.form-grid .grid-heading-row .grid-static-col .static-area.reqd::after {
+	color: color-mix(in srgb, var(--zg-danger-fg) 80%, var(--text-color));   /* Frappe red-400 is ~3:1; plain danger text is 4.3:1 on the header fill */
+}
+
+/* Rows and cells */
+.form-grid .grid-row > .row .col {
+	border-inline-end-color: var(--zg-table-line-soft);
+}
+.form-grid .grid-body .grid-row {
+	border-bottom-color: var(--zg-table-line);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);   /* Frappe: transition 0.2s (= all) */
+}
+.form-grid .grid-body .grid-static-col,
+.form-grid .grid-body .row-index {
+	height: var(--zg-table-row-h);                             /* Frappe: 43px */
+}
+.form-grid .grid-body .data-row {
+	color: var(--zg-table-fg);                                 /* Frappe: muted body text */
+	font-size: var(--zg-text-base);
+}
+.form-grid .grid-body .data-row .row-index {
+	color: var(--zg-table-fg-muted);
+	font-variant-numeric: tabular-nums;
+}
+.form-grid .grid-body .grid-static-col.text-right {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Hover / checked rows. Cell paint is a literal var(--fg-color), so the row re-points it for its cells.
+   The row being edited keeps the plain surface. */
+@media (hover: hover) {
+	.form-grid .grid-body .grid-row:hover > .data-row:not(.editable-row) {
+		--fg-color: var(--zg-table-row-hover);
+	}
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row:not(.editable-row) {
+	--fg-color: var(--zg-table-row-selected);
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row > .row-check {
+	box-shadow: inset 2px 0 0 var(--primary);                  /* shape cue next to the checked box */
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row > .row-check:dir(rtl) {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+
+/* Required-but-empty / invalid cells: add an underline so the state is not only a tint */
+.validated-form .grid-body .grid-static-col.error:not(:focus-visible),
+.editable-form .grid-body .grid-static-col.invalid:not(:focus-visible) {
+	box-shadow: inset 0 -2px 0 var(--zg-danger-fg);
+}
+
+/* Keyboard focus on a cell (Frappe: 1px gray-400 !important border) */
+.form-grid .grid-static-col:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--zg-focus-ring);
+}
+
+/* Editable cell controls. 10-controls still gives every .form-layout .form-control "padding: 8px 10px !important"
+   and a !important box-shadow read from --focus-default / --focus-red, and 83 leaves grid cells alone, so the
+   ring is re-pointed through those variables: inset, because an outer halo is clipped by the next cell. */
+.form-grid .grid-body .editable-row .form-control {
+	--focus-default: inset 0 0 0 2px var(--zg-focus-ring);
+	--focus-red: inset 0 0 0 2px var(--zg-danger-fg);
+}
+.form-grid .grid-body .editable-row input.form-control,
+.form-grid .grid-body .editable-row select.form-control {
+	height: var(--zg-table-row-h);                             /* Frappe: height auto, ~37px inside a 43px cell */
+}
+.form-grid .grid-body .editable-row .frappe-control[data-fieldtype="Select"].form-group .select-icon {
+	top: 50%;                                                  /* Frappe: top 9px, tuned to 43px */
+	transform: translateY(-50%);
+}
+.form-grid .grid-body .editable-row input[data-fieldtype="Percent"] {
+	text-align: right;                                         /* Frappe aligns Int / Float / Currency only; the static cell is right-aligned */
+}
+.form-grid .grid-body .editable-row input[data-fieldtype="Int"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Float"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Currency"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Percent"] {
+	font-variant-numeric: tabular-nums;
+}
+.form-grid .grid-body .editable-row input.form-control.invalid:not(:focus) {
+	box-shadow: inset 0 -2px 0 var(--zg-danger-fg);
+}
+
+/* Action column: edit-row icon */
+.form-grid .grid-body .btn-open-row {
+	--icon-stroke: var(--zg-table-fg-muted);
+}
+.form-grid .grid-body .col:hover > .btn-open-row {
+	--icon-stroke: var(--primary);
+}
+
+/* Empty state: .text-extra-muted paints var(--gray-500) !important (3:1 light, 2:1 dark) */
+.form-grid .grid-empty {
+	--gray-500: var(--zg-table-fg-muted);
+	height: var(--zg-table-row-h);
+	padding-block: 0;
+	background-color: var(--zg-table-bg);
+	font-size: var(--zg-text-base);
+}
+
+/* Pager under the grid */
+.grid-pagination .page-text {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-sm);
+}
+.grid-pagination .current-page-number {
+	background-color: transparent;
+	color: var(--zg-table-fg);
+	font-variant-numeric: tabular-nums;
+}
+.grid-pagination .current-page-number:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);                   /* Frappe: outline none */
+	outline-offset: 1px;
+}
+
+/* --------------------------------------------
+   3. LIST VIEW
+   Row paint goes through --zg-row-bg so the container, the sticky action column (.level-right)
+   and Frappe's own hover / focus rules (which read --highlight-color) always agree.
+   -------------------------------------------- */
+.list-row-container {
+	--zg-row-bg: var(--zg-table-bg);
+	--highlight-color: var(--zg-row-bg);
+	--text-muted: var(--zg-table-fg-muted);                    /* muted cells and links stay >= 4.5:1 on tinted rows */
+	border-bottom: 1px solid var(--zg-table-line);             /* full-bleed divider; replaces 70's second line under .list-row's own */
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+/* Doubled class = (0,2,0), which ties with 70's and Frappe's :hover paint and wins by order */
+.list-row-container.list-row-container {
+	background-color: var(--zg-row-bg);
+}
+.list-row-container:last-child {
+	border-bottom-color: transparent;                          /* the paging bar draws its own top rule */
+}
+.list-row-container:has(> .list-row-head) {
+	--zg-row-bg: var(--zg-table-head-bg);
+	border-bottom: 0;                                          /* the header draws its own rule */
+}
+@media (hover: hover) {
+	.list-row-container:hover:has(> .list-row) {
+		--zg-row-bg: var(--zg-table-row-hover);
+	}
+}
+.list-row-container:has(.list-row-checkbox:checked) {
+	--zg-row-bg: var(--zg-table-row-selected);
+	box-shadow: inset 2px 0 0 var(--primary);                  /* shape cue next to the checked box */
+}
+.list-row-container:has(.list-row-checkbox:checked):dir(rtl) {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+@media (hover: hover) {
+	.list-row-container:has(.list-row-checkbox:checked):hover {
+		--zg-row-bg: var(--zg-table-row-selected-hover);
+	}
+}
+.list-row-container:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;                                      /* inside: the list card clips outer outlines */
+}
+
+.list-row-container .list-row {
+	min-height: var(--zg-table-row-h);
+	border-bottom: 0;
+	font-size: var(--zg-text-base);
+}
+.list-row-container .list-row .level-right {
+	background-color: var(--zg-row-bg);                        /* sticky column must stay opaque; Frappe uses --bg-color */
+}
+.list-row-container .list-subject a {
+	font-weight: var(--weight-medium);
+}
+.list-row-container .list-row-col.text-right {
+	font-variant-numeric: tabular-nums;                        /* numeric fields carry .text-right (list_view.js) */
+}
+
+/* Header. It carries .text-muted (colour !important), so the label colour is set through --text-muted. */
+.list-row-container .list-row-head {
+	--text-muted: var(--zg-table-head-fg);
+	height: var(--zg-table-head-h);
+	border-bottom: 1px solid var(--zg-table-line-strong);
+	border-radius: 0;
+	background-color: var(--zg-table-head-bg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.list-row-container .list-row-head .level-item,
+.list-row-container .list-row-head .list-subject {
+	font-weight: inherit;
+}
+.list-row-container .list-row-head .list-count {
+	font-weight: var(--weight-regular);
+	letter-spacing: normal;
+	text-transform: none;                                      /* "20 of 1,234" is not a label */
+}
+.list-row-container .list-row-head .list-row-col > [data-sort-by]:hover {
+	color: var(--zg-table-fg);
+	text-underline-offset: 3px;                                /* Frappe adds the underline and pointer */
+}
+
+/* --------------------------------------------
+   4. PLAIN TABLES (Bootstrap .table in dialogs / HTML fields, markdown + HTML previews)
+   Print formats keep their own look; rich-text tables (.ql-editor) are document content.
+   -------------------------------------------- */
+.table:where(:not(.print-format *)) th,
+.table:where(:not(.print-format *)) td {
+	padding: var(--zg-space-2) var(--zg-table-pad-x);
+}
+.table-sm:where(:not(.print-format *)) th,
+.table-sm:where(:not(.print-format *)) td {
+	padding: var(--zg-space-1) var(--zg-space-2);
+}
+.table:where(:not(.print-format *)) thead th {
+	border-bottom: 1px solid var(--zg-table-line-strong);      /* Bootstrap: 2px */
+	background-color: var(--zg-table-head-bg);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.table:where(:not(.print-format *)) .text-right {
+	font-variant-numeric: tabular-nums;
+}
+.table-striped:where(:not(.print-format *)) tbody tr:nth-of-type(odd) {
+	background-color: var(--zg-wash-2);                        /* Bootstrap: rgba(0,0,0,.05), invisible in dark */
+}
+@media (hover: hover) {
+	.table-hover:where(:not(.print-format *)) tbody tr:hover {
+		background-color: var(--zg-table-row-hover);
+		color: var(--zg-table-fg);                             /* Bootstrap swaps to muted on hover */
+	}
+}
+.table-responsive {
+	overscroll-behavior-x: contain;
+}
+.markdown-preview table th,
+.html-preview table th {
+	background-color: var(--zg-table-head-bg);
+	font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------
+   5. RTL AND TOUCH
+   -------------------------------------------- */
+:root:dir(rtl) {
+	--zg-table-head-tracking: 0;
+}
+
+@media (pointer: coarse) {
+	:root {
+		--zg-table-row-h: 44px;
+		--zg-table-head-h: 44px;
+	}
+	/* Frappe sizes the checkbox hit area from these (default row height 30px) */
+	.frappe-list {
+		--list-row-height: var(--zg-table-row-h);
+		--list-checkbox-padding: calc((var(--list-row-height) - var(--checkbox-size)) / 2);
+	}
+	.form-grid .grid-row-check::after {
+		inset: -13px;                                          /* Frappe: -8px (30px target) */
+	}
+}
+/* ============================================
+   85. STATUS & BADGE SYSTEM — indicator pills, dots, .badge, tag pills
+   One semantic palette for every status indicator, driven by the --zg-success / warning /
+   danger / info tokens (02) plus a neutral and purple / cyan / pink. Supersedes the pill
+   rules in 70 (list view), 60 (shortcut-widget and number-card pills) and Frappe's own
+   per-colour pill rules. Both themes swap by token (section 1); nothing here is a hex.
+
+   How it works: a colour class (.green, .red, ...) only picks a hue (--zg-st-hue). Every
+   surface is then derived from that hue, so adding a colour is one line:
+     tint     color-mix(hue @ --zg-badge-tint, transparent)          pill background
+     text     color-mix(hue @ --zg-badge-keep, --zg-badge-ink)       >= 5.5:1 on the tint, both themes
+     ring     inset 1px of the hue @ --zg-badge-ring                 keeps the pill edge visible
+     dot      6px leading dot in the hue (>= 3:1 on the tint). Neutral and "new" statuses
+              (gray, grey, light-blue) get a HOLLOW dot, so "inactive / offline / draft" differs
+              from "active / online" by shape as well as colour. The label text is always shown.
+
+   Frappe v16 DOM (verified in frappe/public/js): list view and form header render
+   <span class="indicator-pill {colour} [filterable] no-indicator-dot"><span>label</span></span>
+   (page.js set_indicator, list_view.js get_indicator_html); Select values in list rows use
+   .indicator-pill without no-indicator-dot; number cards use .indicator-pill-round.green|red;
+   dot + label markup is .indicator.{colour} (form dashboard, msgprint title, report cells).
+   Frappe hides the dot on form / list pills (no-indicator-dot); section 5 restores it.
+
+   Logical status -> Frappe colour class (chosen by Frappe / ERPNext / the doctype, not by CSS):
+     Draft .............. red      (docstatus 0 default; Sales Invoice "Draft")
+     Pending / Open / To Bill / To Deliver / Unpaid / On Hold / Not Saved ... orange
+     Partly Paid ........ yellow
+     Approved / Completed / Closed / Paid / Active / Available / Success ..... green
+     Synced / Online .... green    (set it in get_indicator or a DocType State)
+     Submitted / Enabled  blue     (docstatus 1 default; workflow style Primary)
+     Scheduled / New .... light-blue (workflow style Info)
+     Cancelled / Overdue / Failed / Rejected / Error ......................... red
+     Inactive / Disabled / Expired / Return / Credit Note Issued / Offline ... gray or grey
+     Internal Transfer / Archived ... darkgrey
+     Workflow style Inverse ......... black (Frappe emits the class but ships no CSS for it)
+     cyan, purple, pink: unused by Frappe defaults; for custom states, e.g. Syncing = cyan,
+     Processing = purple, Priority = pink (DocType State colours: Blue Cyan Gray Green
+     Light Blue Orange Pink Purple Red Yellow).
+   Frappe never emits "lightblue" (the class is light-blue), so it is not styled, and it has no
+   .label status class (only Plyr's), so none is styled either.
+   ============================================ */
+
+/* --------------------------------------------
+   1. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Hues. Status roles come straight from the alert tokens in 02, so they follow any change there.
+	   Orange sits between warning and danger (escalating); "info" leans on the brand blue. */
+	--zg-badge-ink: var(--heading-color);
+	--zg-hue-success: var(--zg-success-fg);
+	--zg-hue-warning: var(--zg-warning-fg);
+	--zg-hue-danger: var(--zg-danger-fg);
+	--zg-hue-info: color-mix(in srgb, var(--primary) 70%, var(--zg-info-fg));
+	--zg-hue-orange: color-mix(in srgb, var(--zg-warning-fg) 55%, var(--zg-danger-fg));
+	--zg-hue-neutral: var(--text-muted);
+	--zg-hue-neutral-strong: color-mix(in srgb, var(--text-muted) 55%, var(--zg-badge-ink));
+	--zg-hue-purple: var(--zg-accent-purple-fg);
+	--zg-hue-cyan: var(--cyan-700);
+	--zg-hue-pink: var(--pink-600);
+
+	/* Recipe (percentages). Contrast of text on its tint, worst case over page / card / row-hover surfaces,
+	   both themes: >= 5.5:1 at rest, >= 5.0:1 hovered, >= 4.6:1 pressed. */
+	--zg-badge-tint: 12%;
+	--zg-badge-step: 8%;       /* added to the tint on hover; 1.5x on press */
+	--zg-badge-keep: 62%;      /* share of the hue kept in the text colour; the rest is ink */
+	--zg-badge-ring: 24%;
+
+	/* Sizes */
+	--zg-badge-h: 20px;
+	--zg-badge-h-lg: 22px;
+	--zg-badge-dot: 6px;
+	--zg-badge-gap: 6px;       /* dot to label (Frappe's own value) */
+
+	/* Readable text for each role, for rules outside the pills (number-card stats, custom widgets) */
+	--zg-success-text: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-warning-text: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-danger-text: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-info-text: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-neutral-text: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-keep), var(--zg-badge-ink));
+}
+
+[data-theme="dark"] {
+	/* Frappe's palette cyan / pink are mid-tones; lift them so dot and tint hold up on dark surfaces */
+	--zg-hue-cyan: var(--cyan-400);
+	--zg-hue-pink: color-mix(in srgb, var(--pink-500) 70%, var(--zg-badge-ink));
+
+	--zg-badge-tint: 14%;
+	--zg-badge-keep: 65%;
+	--zg-badge-ring: 30%;
+
+	/* 00-tokens defines these four in its light block only, so the light values bleed into dark mode
+	   (a pale pill, a pale kanban column). Restore Frappe's dark pairing using theme tokens. */
+	--bg-blue: var(--surface-blue-1);
+	--bg-light-blue: var(--surface-blue-1);
+	--text-on-blue: var(--zg-info-fg);
+	--text-on-light-blue: var(--zg-info-fg);
+}
+
+/* More contrast on request: more ink in the text, a firmer ring */
+@media (prefers-contrast: more) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-badge-keep: 35%;
+		--zg-badge-ring: 60%;
+	}
+}
+
+/* --------------------------------------------
+   2. COLOUR CLASS -> HUE
+   Frappe's 12 classes (indicator.scss) plus black (workflow Inverse). Defaults first, then each colour.
+   -------------------------------------------- */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+) {
+	--zg-st-tint: var(--zg-badge-tint);
+	--zg-st-dot-fill: var(--zg-st-hue);   /* solid dot; hollow variants below set this to transparent */
+	--zg-st-dot-ring: 0px;
+}
+
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).green { --zg-st-hue: var(--zg-hue-success); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).red { --zg-st-hue: var(--zg-hue-danger); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).orange { --zg-st-hue: var(--zg-hue-orange); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).yellow { --zg-st-hue: var(--zg-hue-warning); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).blue { --zg-st-hue: var(--zg-hue-info); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).cyan { --zg-st-hue: var(--zg-hue-cyan); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).purple { --zg-st-hue: var(--zg-hue-purple); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).pink { --zg-st-hue: var(--zg-hue-pink); }
+
+/* Neutral family: gray / grey = inactive, draft-like, offline (hollow dot); darkgrey = closed, archived (solid, stronger) */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round):is(.gray, .grey) {
+	--zg-st-hue: var(--zg-hue-neutral);
+	--zg-st-dot-fill: transparent;
+	--zg-st-dot-ring: 1.5px;
+}
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).darkgrey {
+	--zg-st-hue: var(--zg-hue-neutral-strong);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.4);
+}
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).black {
+	--zg-st-hue: var(--zg-badge-ink);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.2);
+}
+
+/* Light-blue = informational / new: same hue as blue, a lighter tint and a hollow dot */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).light-blue {
+	--zg-st-hue: var(--zg-hue-info);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 0.6);
+	--zg-st-dot-fill: transparent;
+	--zg-st-dot-ring: 1.5px;
+}
+
+/* --------------------------------------------
+   3. PILL SHAPE
+   Replaces Frappe's 4.5px padding / regular weight / --border-radius-full, and 70's 4px-radius variant.
+   -------------------------------------------- */
+.indicator-pill,
+.indicator-pill-right {
+	height: var(--zg-badge-h);
+	padding: 0 var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+.indicator-pill-round {
+	padding: 0;
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: 1;
+}
+
+/* --------------------------------------------
+   4. PILL SURFACE — tint, text, ring, and the hover / press steps of clickable pills
+   -------------------------------------------- */
+:is(.indicator-pill, .indicator-pill-right, .indicator-pill-round):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+) {
+	background: color-mix(in srgb, var(--zg-st-hue) var(--zg-st-tint), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+
+/* List-view pills are click-to-filter (.filterable, cursor set by Frappe) */
+.indicator-pill.filterable {
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+:is(.indicator-pill, .indicator-pill-right):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+).filterable:hover {
+	background: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + var(--zg-badge-step)), transparent);
+}
+:is(.indicator-pill, .indicator-pill-right):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+).filterable:active {
+	background: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + 1.5 * var(--zg-badge-step)), transparent);
+}
+
+/* --------------------------------------------
+   5. LEADING DOT
+   The shape that carries status next to the colour. Frappe's colour rule paints it with --text-on-*
+   (a different colour from the new text), so it is re-pointed at the hue here.
+   -------------------------------------------- */
+:is(.indicator, .indicator-pill):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+)::before,
+.indicator-pill-right:is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+)::after {
+	background: var(--zg-st-dot-fill);
+	box-shadow: inset 0 0 0 var(--zg-st-dot-ring) var(--zg-st-hue);
+}
+
+/* Form header and list rows ship .no-indicator-dot, which would leave the colour as the only cue.
+   Give them the dot back, unless the pill is empty (kanban / colour swatches), asks for no margin, or
+   already holds the 8px dot the mobile form header draws itself (.indicator-doc-html). */
+.indicator-pill.no-indicator-dot:not(.no-margin):not(:empty):not(:has(.indicator-doc-html))::before {
+	content: "";
+	flex-shrink: 0;
+	width: var(--zg-badge-dot);
+	height: var(--zg-badge-dot);
+	border-radius: 50%;
+	margin-inline-end: var(--zg-badge-gap);
+}
+
+/* --------------------------------------------
+   6. .indicator — dot + label (form dashboard, msgprint title, report cells, link formatters)
+   Frappe's dark mode paints this dot with --bg-* (a near-black tint on a dark surface): invisible.
+   -------------------------------------------- */
+.indicator::before {
+	flex-shrink: 0;
+	border-radius: 50%;
+}
+
+/* --------------------------------------------
+   7. WHERE THEY APPEAR
+   -------------------------------------------- */
+/* Form header: a touch larger than list pills, next to the 20px title */
+.title-area .indicator-pill {
+	height: var(--zg-badge-h-lg);
+	font-size: var(--zg-text-sm);
+}
+
+/* Shortcut-widget count pills (supersedes 60's 4px-radius rule at equal specificity) */
+.widget.shortcut-widget-box .indicator-pill {
+	padding: 0 var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+}
+
+/* Number card percentage: Frappe sizes the circle to 18px; 60 squared it off (4px radius, 2px 6px padding) */
+.widget.number-widget-box .percentage-stat-area .indicator-pill-round {
+	padding: 0;
+	border-radius: 50%;
+	font-size: var(--zg-text-xs);
+}
+/* The arrow icon is the non-colour cue; Frappe strokes it --green-500 / --red-500 (about 2.3:1 on the tint) */
+.widget.number-widget-box .widget-body .widget-content :is(.green-stat, .red-stat) .indicator-pill-round use {
+	stroke: currentColor;
+}
+.widget.number-widget-box .widget-body .widget-content .green-stat { color: var(--zg-success-text); }
+.widget.number-widget-box .widget-body .widget-content .red-stat { color: var(--zg-danger-text); }
+/* --gray-600 is the near-black #30363D in dark mode */
+.widget.number-widget-box .widget-body .widget-content .grey-stat { color: var(--text-muted); }
+
+/* --------------------------------------------
+   8. .badge (Bootstrap) — Frappe paints the variants with fixed hex fills
+   Tinted like the pills; no dot because a badge always carries its own text or count. Core desk
+   emits .badge only in the naming-series editor (badge-light / badge-dark); this is for the rest.
+   Mapping: primary = brand blue, info = cyan, secondary / light = neutral, dark = strong neutral.
+   -------------------------------------------- */
+.badge {
+	padding: 2px var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	letter-spacing: 0.01em;
+	font-variant-numeric: tabular-nums;
+}
+.badge-pill {
+	padding-inline: var(--zg-space-2);
+}
+
+:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark) {
+	--zg-st-tint: var(--zg-badge-tint);
+	background-color: color-mix(in srgb, var(--zg-st-hue) var(--zg-st-tint), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+.badge-primary { --zg-st-hue: var(--zg-hue-info); }
+.badge-secondary { --zg-st-hue: var(--zg-hue-neutral); }
+.badge-success { --zg-st-hue: var(--zg-hue-success); }
+.badge-info { --zg-st-hue: var(--zg-hue-cyan); }
+.badge-warning { --zg-st-hue: var(--zg-hue-warning); }
+.badge-danger { --zg-st-hue: var(--zg-hue-danger); }
+.badge-light {
+	--zg-st-hue: var(--zg-hue-neutral);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 0.6);
+}
+.badge-dark {
+	--zg-st-hue: var(--zg-hue-neutral-strong);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.4);
+}
+
+/* Links styled as badges: one hover step and a visible keyboard ring (Frappe sets outline:0 and a 50% halo on :focus) */
+a.badge {
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+a.badge:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark):hover {
+	background-color: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + var(--zg-badge-step)), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+}
+a.badge:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark):active {
+	background-color: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + 1.5 * var(--zg-badge-step)), transparent);
+}
+a.badge:focus {
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+a.badge:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+
+/* --------------------------------------------
+   9. .tag-pill — list-view and kanban document tags
+   List rows colour each tag with INLINE style="background-color: var(--{c}-avatar-bg); color:
+   var(--{c}-avatar-color)" (frappe.get_palette). Inline wins over any rule, so the variables are
+   re-mapped on the pill itself instead: same palette, tint + readable ink, both themes, no !important.
+   The form sidebar's tag chips (.data-pill) are styled in 20 and left alone.
+   -------------------------------------------- */
+.tag-pill {
+	--orange-avatar-bg: color-mix(in srgb, var(--zg-hue-orange) var(--zg-badge-tint), transparent);
+	--orange-avatar-color: color-mix(in srgb, var(--zg-hue-orange) var(--zg-badge-keep), var(--zg-badge-ink));
+	--pink-avatar-bg: color-mix(in srgb, var(--zg-hue-pink) var(--zg-badge-tint), transparent);
+	--pink-avatar-color: color-mix(in srgb, var(--zg-hue-pink) var(--zg-badge-keep), var(--zg-badge-ink));
+	--blue-avatar-bg: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-tint), transparent);
+	--blue-avatar-color: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-keep), var(--zg-badge-ink));
+	--green-avatar-bg: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-tint), transparent);
+	--green-avatar-color: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-keep), var(--zg-badge-ink));
+	--dark-green-avatar-bg: var(--green-avatar-bg);
+	--dark-green-avatar-color: var(--green-avatar-color);
+	--red-avatar-bg: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-tint), transparent);
+	--red-avatar-color: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-keep), var(--zg-badge-ink));
+	--yellow-avatar-bg: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-tint), transparent);
+	--yellow-avatar-color: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-keep), var(--zg-badge-ink));
+	--purple-avatar-bg: color-mix(in srgb, var(--zg-hue-purple) var(--zg-badge-tint), transparent);
+	--purple-avatar-color: color-mix(in srgb, var(--zg-hue-purple) var(--zg-badge-keep), var(--zg-badge-ink));
+	--gray-avatar-bg: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-tint), transparent);
+	--gray-avatar-color: var(--zg-neutral-text);
+}
+
+/* Shape and the neutral default (the "+N" overflow chip has no inline colour). Width is left to
+   Frappe: 60px in list rows, auto in kanban cards. The dark selector matches Frappe's own specificity. */
+.tag-pill,
+[data-theme="dark"] .tag-pill {
+	padding: 2px var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	background-color: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-tint), transparent);
+	color: var(--zg-neutral-text);
+	font-size: var(--zg-text-xs);
+	font-weight: 500;
+	line-height: var(--zg-leading-tight);
+}
+
+/* --------------------------------------------
+   10. COARSE POINTERS & FORCED COLOURS
+   Pills are display-only; the click-to-filter list pill is a secondary shortcut inside a row whose
+   own tap target is the primary one. The kanban column-colour swatches are real buttons, so they grow.
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.kanban .kanban-column .kanban-column-header .column-options .button-group div.indicator-pill {
+		width: 40px;
+		height: 40px;
+		justify-content: center;
+	}
+}
+
+/* Windows high-contrast: tints and inset rings are dropped, so give the edge and the dots system colours */
+@media (forced-colors: active) {
+	:is(.indicator-pill, .indicator-pill-right, .indicator-pill-round, .badge, .tag-pill) {
+		border: 1px solid CanvasText;
+	}
+	:is(.indicator, .indicator-pill):is(.green, .red, .orange, .yellow, .blue, .cyan, .purple, .pink, .darkgrey, .black)::before,
+	.indicator-pill-right:is(.green, .red, .orange, .yellow, .blue, .cyan, .purple, .pink, .darkgrey, .black)::after {
+		forced-color-adjust: none;
+		background: CanvasText;
+	}
+	:is(.indicator, .indicator-pill):is(.light-blue, .gray, .grey)::before,
+	.indicator-pill-right:is(.light-blue, .gray, .grey)::after {
+		forced-color-adjust: none;
+		background: Canvas;
+		border: 1.5px solid CanvasText;
+	}
+}
+/* ============================================
+   86. TABS, MENUS, POPOVERS & DIALOGS
+   Form / settings / notification tabs; Bootstrap dropdowns, Frappe context menus, the awesomebar
+   result list, popovers and tooltips; modals (frappe.ui.Dialog, msgprint, confirm, warn).
+   Supersedes 10-controls §5b (form tabs), 40 §18 (tooltip) and 70 §28 (dialogs) at equal or higher
+   specificity. Every state reads a token below, so light / dark swap by token.
+
+   Frappe DOM this targets (v16.29):
+     form tab      ul.nav.form-tabs > li.nav-item > button.nav-link[role=tab]            (form/tab.js)
+     page menu     div.menu-btn-group > ul.dropdown-menu > li > a.dropdown-item          (ui/page.js)
+     context menu  div.frappe-menu.context-menu > div.dropdown-menu-item > a             (ui/menu.js)
+     dialog        div.modal > .modal-dialog > .modal-content > .modal-header (.title-section,
+                   .modal-actions) + .modal-body + .modal-footer (.custom-actions, .standard-actions)
+                                                                                         (dom.js get_modal)
+     msgprint      .modal-body > .msgprint ; frappe.confirm / frappe.warn add .frappe-confirm-message ;
+                   frappe.warn turns the primary into .btn-danger                        (ui/messages.js)
+   Frappe marks no destructive menu item: page.add_menu_item() has no class option, so the only hook
+   is the Bootstrap utility .text-danger (styled below for custom code).
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Tabs */
+	--zg-tab-h: 36px;
+	--zg-tab-pad-y: var(--zg-space-2);
+	--zg-tab-pad-x: var(--zg-space-3);
+	--zg-tab-fg: var(--text-muted);
+	--zg-tab-fg-hover: var(--text-color);
+	--zg-tab-fg-active: var(--primary);
+	--zg-tab-fg-disabled: var(--text-light);
+	--zg-tab-bg-hover: color-mix(in srgb, var(--text-color) 5%, transparent);
+	--zg-tab-bg-active: color-mix(in srgb, var(--primary) 8%, transparent);
+	--zg-tab-line-hover: var(--dark-border-color);
+
+	/* Menus and popovers. Text on the hover / active fills is >= 4.5:1 in both themes. */
+	--zg-menu-bg: var(--popover-bg);
+	--zg-menu-border: var(--dark-border-color);
+	--zg-menu-shadow: var(--shadow-lg);
+	--zg-menu-radius: var(--zg-radius-lg);
+	--zg-menu-item-radius: var(--zg-radius-md);
+	--zg-menu-item-h: 32px;
+	--zg-menu-pad-y: 7px;
+	--zg-menu-pad-x: 10px;
+	--zg-menu-fg: var(--text-color);
+	--zg-menu-fg-meta: color-mix(in srgb, var(--text-muted) 70%, var(--text-color));   /* shortcuts, descriptions, headers */
+	--zg-menu-fg-disabled: var(--text-light);
+	--zg-menu-fg-active: var(--primary);
+	--zg-menu-bg-hover: var(--fg-hover-color);
+	--zg-menu-bg-active: color-mix(in srgb, var(--primary) 10%, var(--zg-menu-bg));   /* current item / keyboard selection */
+	--zg-menu-bg-press: color-mix(in srgb, var(--primary) 16%, var(--zg-menu-bg));
+	--zg-menu-divider: color-mix(in srgb, var(--border-color) 50%, var(--dark-border-color));
+	--zg-menu-danger-fg: color-mix(in srgb, var(--zg-danger-fg) 82%, var(--heading-color));
+	--zg-menu-danger-bg: color-mix(in srgb, var(--zg-danger-fg) 8%, var(--zg-menu-bg));
+	--zg-menu-danger-bg-press: color-mix(in srgb, var(--zg-danger-fg) 16%, var(--zg-menu-bg));
+
+	/* Frappe's own .dropdown-item padding (applied with !important) reads this variable */
+	--dropdown-padding: var(--zg-menu-pad-y) var(--zg-menu-pad-x);
+
+	/* Tooltips: navy chip on light, raised grey chip on dark (a navy chip vanishes on a dark page) */
+	--zg-tooltip-bg: var(--gray-900);
+	--zg-tooltip-fg: var(--zg-on-primary);
+
+	/* Dialogs */
+	--zg-dlg-radius: var(--border-radius-2xl);
+	--zg-dlg-shadow: var(--shadow-xl);
+	--zg-dlg-footer-bg: color-mix(in srgb, var(--text-color) 4%, var(--modal-bg));
+	--zg-dlg-scrim: var(--zg-rail-bg);                         /* near-black navy; opacity below */
+	--zg-dlg-scrim-opacity: 0.55;
+}
+
+[data-theme="dark"] {
+	--zg-tooltip-bg: var(--surface-gray-3);
+	--zg-tooltip-fg: var(--heading-color);
+	--zg-dlg-scrim-opacity: 0.7;
+}
+
+/* Touch: 40px rows and tabs */
+@media (pointer: coarse) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-tab-h: 40px;
+		--zg-menu-item-h: 40px;
+		--zg-menu-pad-y: 11px;
+	}
+}
+
+/* ============================================
+   1. TABS
+   ============================================ */
+
+/* --------------------------------------------
+   1a. Form tabs (also tabs in dialogs and the icon picker). Frappe styles .nav-link at (0,4,0), matched
+   here. 10-controls §5b carries !important on border, padding, margin and colours, so it must go for the
+   active / hover rules below to take effect in full.
+   -------------------------------------------- */
+.form-tabs-list .form-tabs {
+	gap: var(--zg-space-1);
+	padding-inline: var(--zg-space-1);
+	overflow-x: auto;                          /* Frappe: overflow: overlay on both axes; narrow screens scroll the strip */
+	overflow-y: hidden;
+	overscroll-behavior-x: contain;
+	scroll-padding-inline: var(--zg-space-4);  /* keyboard-focused tab scrolls into view with room to spare */
+	scrollbar-width: thin;
+}
+.form-tabs-list .form-tabs .nav-item {
+	flex: none;
+	margin: 0;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link {
+	align-items: center;                       /* Frappe already makes the button a flex row */
+	gap: var(--zg-space-2);                    /* icon + label */
+	min-height: var(--zg-tab-h);
+	padding: var(--zg-tab-pad-y) var(--zg-tab-pad-x);
+	margin: 0;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: var(--zg-radius-sm) var(--zg-radius-sm) 0 0;
+	background-color: transparent;
+	color: var(--zg-tab-fg);
+	font-size: var(--zg-text-base);
+	font-weight: 500;                          /* one weight for every state: bold-on-select shifts the neighbours */
+	line-height: var(--zg-leading-tight);
+	cursor: pointer;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.form-tabs-list .form-tabs .nav-item .nav-link :is(.icon, .es-icon) {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	--icon-stroke: currentColor;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:not(.active):not(:disabled):not(.disabled):hover {
+	border-bottom-color: var(--zg-tab-line-hover);
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+
+/* Active: colour + 2px line + tint, so the state is not colour alone */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	padding-bottom: var(--zg-tab-pad-y);       /* Frappe trims 1px to make room for its 1px underline */
+	border-bottom: 2px solid var(--zg-tab-fg-active);
+	background-color: var(--zg-tab-bg-active);
+	color: var(--zg-tab-fg-active);
+	font-weight: 500;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:disabled,
+.form-tabs-list .form-tabs .nav-item .nav-link.disabled {
+	border-bottom-color: transparent;
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+	cursor: not-allowed;
+}
+
+/* Frappe sets outline:none + bold on a focused tab. The ring sits inside the box: the strip scrolls,
+   so an outer ring would be clipped. */
+.form-tabs-list .form-tabs .nav-item .nav-link:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+	font-weight: 500;
+}
+
+/* --------------------------------------------
+   1b. Notification panel tabs (li.notifications-category; not focusable markup, so hover / active only)
+   -------------------------------------------- */
+.notifications-list .notification-item-tabs .notifications-category {
+	border-bottom: 2px solid transparent;
+	color: var(--zg-tab-fg);                   /* Frappe: --text-light, 3.3:1 on white */
+	font-weight: 500;
+	user-select: none;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.notifications-list .notification-item-tabs .notifications-category:hover {
+	color: var(--zg-tab-fg-hover);
+}
+.notifications-list .notification-item-tabs .notifications-category.active {
+	border-bottom-color: var(--zg-tab-fg-active);
+	color: var(--heading-color);
+}
+
+/* --------------------------------------------
+   1c. Bootstrap .nav-tabs / .nav-pills (custom pages). Frappe hard-codes #e2e2e2 / #fff here, so the
+   active tab is a white block in dark mode.
+   -------------------------------------------- */
+.nav-tabs {
+	border-bottom-color: var(--border-color);
+}
+.nav-tabs .nav-link {
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: var(--zg-radius-sm) var(--zg-radius-sm) 0 0;
+	background-color: transparent;
+	color: var(--zg-tab-fg);
+	font-weight: 500;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+	border-color: transparent transparent var(--zg-tab-line-hover);
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+	border-color: transparent transparent var(--zg-tab-fg-active);
+	background-color: var(--zg-tab-bg-active);
+	color: var(--zg-tab-fg-active);
+}
+.nav-tabs .nav-link.disabled {
+	border-color: transparent;
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+}
+.nav-tabs .nav-link:focus-visible,
+.nav-pills .nav-link:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+
+.nav-pills .nav-link {
+	border-radius: var(--zg-radius-md);
+	color: var(--zg-tab-fg);
+	font-weight: 500;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+.nav-pills .nav-link:hover {
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-tab-fg-active);
+}
+.nav-pills .nav-link.disabled {
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+}
+
+/* --------------------------------------------
+   1d. Settings dialog tabs (vertical list in a modal). Frappe's active fill is --surface-white on a
+   --surface-menu-bar (#fff) sidebar in light, so the current tab was a 4% shadow.
+   -------------------------------------------- */
+.settings-dialog-tab-item {
+	border-radius: var(--zg-radius-md);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease);
+}
+.settings-dialog-tab-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);   /* Frappe: a 2px --outline-gray-3 halo, 2.4:1 on white */
+	outline-offset: -2px;
+	box-shadow: none;
+}
+.settings-dialog-tab-item.active,
+.settings-dialog-tab-item.active:hover,
+[data-theme="dark"] .settings-dialog-tab-item.active {
+	background-color: var(--zg-tab-bg-active);
+	box-shadow: inset 3px 0 0 var(--zg-tab-fg-active);   /* bar + tint: not colour alone */
+}
+.settings-dialog-tab-item.active .settings-dialog-tab-label {
+	color: var(--zg-tab-fg-active);
+	font-weight: 600;
+}
+.settings-dialog-tab-item.active .settings-dialog-tab-icon {
+	color: var(--zg-tab-fg-active);
+	--icon-stroke: var(--zg-tab-fg-active);
+}
+
+/* Narrow: the 14rem sidebar leaves a phone no room for the panel; the tabs become a scrolling strip */
+@media (max-width: 767.98px) {
+	.settings-dialog {
+		flex-direction: column;
+	}
+	.settings-dialog-sidebar {
+		flex-direction: row;
+		flex-shrink: 0;
+		width: auto;
+		margin: 0;
+		padding: var(--zg-space-1) var(--zg-space-2);
+		overflow-x: auto;
+		overflow-y: hidden;
+		border-bottom: 1px solid var(--border-color);
+	}
+	.settings-dialog-group-header {
+		display: none;
+	}
+	.settings-dialog-tab-group {
+		display: flex;
+		padding-bottom: 0;
+	}
+	.settings-dialog-tab-list {
+		flex-direction: row;
+		padding: 0;
+	}
+	.settings-dialog-tab-item {
+		flex-shrink: 0;
+		width: auto;
+		white-space: nowrap;
+	}
+	.settings-dialog-tab-item.active,
+	.settings-dialog-tab-item.active:hover,
+	[data-theme="dark"] .settings-dialog-tab-item.active {
+		box-shadow: inset 0 -3px 0 var(--zg-tab-fg-active);   /* start bar becomes an underline */
+	}
+	.settings-dialog-panel {
+		padding: var(--zg-space-4);
+	}
+}
+
+@media (pointer: coarse) {
+	.settings-dialog-tab-item {
+		min-height: var(--zg-tab-h);
+	}
+}
+
+/* ============================================
+   2. DROPDOWN & CONTEXT MENUS
+   ============================================ */
+
+/* --------------------------------------------
+   2a. Bootstrap .dropdown-menu (page Menu / Actions, inner button groups, sort selector, group-by,
+   list settings...). Frappe's 1px border is --subtle-accent, which is the card colour in dark.
+   -------------------------------------------- */
+.dropdown-menu {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--zg-menu-shadow);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+	max-width: calc(100vw - var(--zg-space-4));
+	max-height: min(500px, calc(100vh - var(--zg-space-8)));
+}
+
+/* Items. Frappe: padding comes from --dropdown-padding with !important (re-pointed in the tokens),
+   radius 8px, hover = focus, pressed = a literal #7c7c7c fill. */
+.dropdown-menu .dropdown-item {
+	min-height: var(--zg-menu-item-h);
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-tight);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease),
+		color var(--zg-duration-fast) var(--zg-ease);
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+	background-color: var(--zg-menu-bg-hover);
+	color: var(--zg-menu-fg);
+}
+/* The ring sits inside the item: the menu scrolls (overflow: auto), so an outer ring is clipped */
+.dropdown-menu .dropdown-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+/* Current item (sort order, select-group): tint + weight, not colour alone */
+.dropdown-menu .dropdown-item.active {
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-menu-fg-active);
+	font-weight: 600;
+}
+.dropdown-menu .dropdown-item.active:hover,
+.dropdown-menu .dropdown-item.active:focus {
+	background-color: var(--zg-menu-bg-press);
+	color: var(--zg-menu-fg-active);
+}
+/* Pressed. The second selector beats Frappe's .dropdown-menu a:not([href]):hover:active (white text). */
+.dropdown-menu .dropdown-item:active,
+.dropdown-menu a.dropdown-item:not([href]):hover:active {
+	background-color: var(--zg-menu-bg-press);
+	color: var(--zg-menu-fg-active);
+	--icon-stroke: currentColor;               /* Frappe flips icons to --fg-color on :active (white on its grey fill) */
+}
+.dropdown-menu .dropdown-item.disabled,
+.dropdown-menu .dropdown-item:disabled {
+	background-color: transparent;
+	color: var(--zg-menu-fg-disabled);
+}
+
+/* Destructive item (opt-in hook, see header). Frappe's .text-danger is a literal #e03636 !important. */
+.dropdown-menu .dropdown-item.text-danger {
+	color: var(--zg-menu-danger-fg) !important; /* important: Frappe's .text-danger is !important and only 4.4:1 */
+}
+.dropdown-menu .dropdown-item.text-danger:hover,
+.dropdown-menu .dropdown-item.text-danger:focus {
+	background-color: var(--zg-menu-danger-bg);
+}
+.dropdown-menu .dropdown-item.text-danger:active {
+	background-color: var(--zg-menu-danger-bg-press);
+}
+
+/* Grouped sections: header label, plain text row, divider */
+.dropdown-menu .dropdown-header {
+	padding: var(--zg-space-2) var(--zg-menu-pad-x) var(--zg-space-1);
+	color: var(--zg-menu-fg-meta);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.dropdown-menu .dropdown-item-text {
+	padding: var(--zg-menu-pad-y) var(--zg-menu-pad-x);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+}
+.dropdown-menu .dropdown-divider,
+.dropdown-menu .divider {
+	border-top-color: var(--zg-menu-divider);
+}
+/* Keyboard shortcut hint in page menus (Frappe: --ink-gray-4, 3.4:1) */
+.dropdown-menu .menu-item-shortcut {
+	color: var(--zg-menu-fg-meta);
+}
+
+/* --------------------------------------------
+   2b. Frappe context menu (frappe.ui.menu: sidebar item edit menu, app switcher). Items are <a>
+   without href unless a link is given, so they are not tab stops; the focus ring covers the ones that are.
+   -------------------------------------------- */
+.frappe-menu {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--zg-menu-shadow);
+	max-height: calc(100vh - var(--zg-space-4));
+	overflow-y: auto;
+}
+.frappe-menu .dropdown-menu-item {
+	border-radius: var(--zg-menu-item-radius);
+}
+.frappe-menu .dropdown-menu-item:hover:has(a) {
+	background-color: var(--zg-menu-bg-hover);
+}
+.frappe-menu .dropdown-menu-item:active:has(a) {
+	background-color: var(--zg-menu-bg-press);
+}
+.frappe-menu .dropdown-menu-item a {
+	height: auto;                              /* Frappe: 28px */
+	min-height: var(--zg-menu-item-h);
+	padding: var(--zg-space-1) var(--zg-menu-pad-x);
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);                  /* beats the global a:hover link colour too */
+	font-size: var(--zg-text-base);
+}
+.frappe-menu .dropdown-menu-item a:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+.frappe-menu .dropdown-menu-item .menu-item-shortcut {
+	color: var(--zg-menu-fg-meta);
+}
+.frappe-menu .dropdown-divider {
+	border-top-color: var(--zg-menu-divider);
+}
+
+/* --------------------------------------------
+   2c. Awesomebar (Ctrl+K search modal): input row, result list, key-hint footer.
+   Frappe's --awesomplete-hover-bg stays light in dark (the light :root block wins), so the selected
+   row was a light slab with light text; every state is repainted from the menu tokens.
+   -------------------------------------------- */
+.navbar-modal-wrapper .awesomplete ul {
+	max-height: min(60vh, 360px);              /* Frappe: min(60vh, 300px) */
+}
+.navbar-modal-wrapper .awesomplete ul > li {
+	--text-muted: var(--zg-menu-fg-meta);      /* the description line is .text-muted !important; re-point instead */
+	padding: var(--zg-space-2) var(--zg-space-3);
+	border-inline-start: 3px solid transparent;   /* reserved so rows do not shift when selected */
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+}
+.navbar-modal-wrapper .awesomplete ul > li > a {
+	color: inherit;                            /* the global link blue is wrong for a result list */
+	text-decoration: none;
+}
+.navbar-modal-wrapper .awesomplete ul > li:hover {
+	background-color: var(--zg-menu-bg-hover);
+	color: var(--zg-menu-fg);
+}
+.navbar-modal-wrapper .awesomplete ul > li[aria-selected="true"] {
+	border-inline-start-color: var(--primary);    /* bar + tint: selection is not colour alone */
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-menu-fg);
+}
+.awesomebar-modal-footer {
+	color: var(--zg-menu-fg-meta);
+	font-size: var(--zg-text-sm);
+}
+.awesomebar-modal-footer .help-navigation .help-item {
+	border: 1px solid var(--border-color);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--subtle-fg);
+	color: var(--zg-menu-fg-meta);
+}
+@media (pointer: coarse) {
+	.cool-awesomebar-modal-footer {
+		display: none;                         /* keyboard hints are noise on touch */
+	}
+}
+
+/* --------------------------------------------
+   2d. User menu popover (40 §22): item states only; the layout stays in 40
+   -------------------------------------------- */
+.saas-user-menu-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+	background: var(--st-item-hover);
+	color: var(--st-text-primary);
+	text-decoration: none;
+}
+.saas-user-menu-item.highlight:focus-visible {
+	background: var(--st-update-bg);
+	color: var(--st-update-color);
+}
+.saas-user-menu-item:active {
+	background: color-mix(in srgb, var(--primary) 12%, var(--st-sidebar-bg));
+	color: var(--st-text-primary);
+}
+
+/* ============================================
+   3. POPOVERS & TOOLTIPS
+   Bootstrap's popover arrow already reads --dark-border-color / --popover-bg; giving the box the same
+   1px border makes the arrow line up (Frappe sets border: 0).
+   ============================================ */
+.popover {
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--shadow-xl);
+}
+.popover-header {
+	border-bottom: 1px solid var(--border-color);   /* Frappe: a literal #f2f2f2, a bright line in dark */
+	border-radius: calc(var(--zg-menu-radius) - 1px) calc(var(--zg-menu-radius) - 1px) 0 0;
+	background-color: var(--zg-menu-bg);
+	color: var(--heading-color);
+	font-size: var(--zg-text-base);
+	font-weight: 600;
+}
+/* Bootstrap blends the arrow into the header with a literal white line */
+.bs-popover-bottom .popover-header::before,
+.bs-popover-auto[x-placement^="bottom"] .popover-header::before {
+	border-bottom-color: var(--zg-menu-bg);
+}
+
+/* Tooltip chip and its arrow (Frappe: #000 arrow on a navy / grey chip) */
+.tooltip .tooltip-inner {
+	max-width: min(280px, calc(100vw - var(--zg-space-4)));
+	background-color: var(--zg-tooltip-bg);
+	color: var(--zg-tooltip-fg);
+	line-height: var(--zg-leading-tight);
+}
+.tooltip.show {
+	opacity: 1;                                /* Frappe: .9, which costs contrast */
+}
+.bs-tooltip-top .arrow::before,
+.bs-tooltip-auto[x-placement^="top"] .arrow::before {
+	border-top-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-right .arrow::before,
+.bs-tooltip-auto[x-placement^="right"] .arrow::before {
+	border-right-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-bottom .arrow::before,
+.bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+	border-bottom-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-left .arrow::before,
+.bs-tooltip-auto[x-placement^="left"] .arrow::before {
+	border-left-color: var(--zg-tooltip-bg);
+}
+
+/* ============================================
+   4. DIALOGS & MODALS
+   ============================================ */
+
+/* --------------------------------------------
+   4a. Overlay
+   -------------------------------------------- */
+.modal-backdrop {
+	background-color: var(--zg-dlg-scrim);
+}
+.modal-backdrop.show {
+	opacity: var(--zg-dlg-scrim-opacity);      /* Frappe: .8; 70: .45 of a colour that is the dark page itself */
+}
+
+/* --------------------------------------------
+   4b. Shell. 70 clipped .modal-content with overflow:hidden, which also turns it into the scroll container
+   for Frappe's position:sticky header / footer (they stopped sticking). Header and footer take the corner
+   radius from the content instead, so nothing needs clipping. (0,1,0) on purpose: the settings dialog's
+   own .settings-dialog-wrapper .modal-content { overflow: hidden } keeps winning.
+   -------------------------------------------- */
+.modal-content {
+	border-radius: var(--zg-dlg-radius);
+	box-shadow: var(--zg-dlg-shadow);
+	overflow: visible;
+}
+
+/* Frappe's dark rule points --border-color and --control-bg at --gray-800, which this theme defines as the
+   modal surface itself: every separator and field fill inside a dark dialog disappeared. */
+[data-theme="dark"] .modal {
+	--border-color: var(--dark-border-color);
+	--control-bg: var(--subtle-fg);
+}
+
+/* --------------------------------------------
+   4c. Header, title, close / minimise
+   Frappe's .modal .modal-header (0,2,0) beat 70's padding and title size; matched here.
+   -------------------------------------------- */
+.modal .modal-header {
+	min-height: 44px;                          /* = the 44px pitch Frappe stacks minimised dialogs at */
+	padding: var(--zg-space-2) var(--zg-space-4);
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
+}
+.modal .modal-header .title-section {
+	align-items: center;
+	min-width: 0;
+}
+.modal .modal-header .modal-title {
+	color: var(--heading-color);
+	font-size: var(--zg-text-lg);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	overflow-wrap: anywhere;
+}
+.modal .modal-header .modal-actions {
+	flex-shrink: 0;
+	align-items: center;
+	gap: var(--zg-space-1);
+}
+
+/* Destructive dialogs (frappe.warn turns the primary into .btn-danger): a 3px accent on the top edge, in
+   addition to the red action and the title text. The inset shadow follows the inherited corner radius. */
+.modal:has(.modal-footer .standard-actions .btn-danger) .modal-header {
+	box-shadow: inset 0 3px 0 var(--zg-danger-solid);
+}
+
+/* --------------------------------------------
+   4d. Body
+   -------------------------------------------- */
+.modal .modal-body {
+	padding: var(--zg-space-4);
+	color: var(--text-color);
+}
+
+/* --------------------------------------------
+   4e. Footer. DOM: .custom-actions (left) + .standard-actions (secondary, then primary). Emphasis comes
+   from 82 (btn-primary / btn-default / btn-danger); this section owns layout. Frappe's own footer
+   background is `inherit`, so 70's tint never applied.
+   -------------------------------------------- */
+.modal .modal-footer {
+	gap: var(--zg-space-2);
+	padding: var(--zg-space-3) var(--zg-space-4);
+	border-bottom-left-radius: inherit;
+	border-bottom-right-radius: inherit;
+	background-color: var(--zg-dlg-footer-bg);
+}
+.modal .modal-footer .custom-actions,
+.modal .modal-footer .standard-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--zg-space-2);
+}
+.modal .modal-footer .standard-actions {
+	justify-content: flex-end;
+	margin-inline-start: auto;
+}
+.modal .modal-footer .standard-actions button:not(:last-child) {
+	margin-right: 0;                           /* gap replaces Frappe's --margin-xs */
+}
+.modal .modal-footer .standard-actions .btn {
+	min-width: 72px;                           /* short labels (Yes / No) still get a comfortable target */
+}
+
+/* --------------------------------------------
+   4f. msgprint / confirm / warn content
+   -------------------------------------------- */
+.msgprint {
+	color: var(--text-color);
+	font-size: var(--zg-text-md);
+	line-height: var(--zg-leading-normal);
+}
+.msgprint hr {
+	margin: var(--zg-space-3) 0;
+	border-top-color: var(--border-color);     /* Frappe: rgba(0,0,0,.1), invisible in dark */
+}
+.msgprint pre {
+	max-height: 40vh;
+	padding: var(--zg-space-3);
+	border: 1px solid var(--border-color);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--subtle-fg);
+	color: var(--text-color);                  /* Frappe: --text-light, 3.3:1 */
+	font-size: var(--zg-text-sm);
+}
+.frappe-confirm-message {
+	margin: 0;
+	color: var(--text-color);
+	font-size: var(--zg-text-md);
+	line-height: var(--zg-leading-normal);
+}
+
+/* --------------------------------------------
+   4g. Small screens: a full-width bottom sheet. The modal itself still scrolls (Frappe's model, which
+   keeps Link dropdowns and the sticky header / footer working); the dialog is bottom-aligned inside it.
+   Left alone: the minimised dock, the desktop folder view, the search palette (input must stay on top
+   under the keyboard), video help, and the settings dialog (it sets its own height).
+   -------------------------------------------- */
+@media (max-width: 575.98px) {
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		display: flex;
+		align-items: flex-end;
+		min-height: 100%;
+		max-width: none;
+		margin: 0;
+		padding-top: env(safe-area-inset-top);
+	}
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-content {
+		border-radius: var(--zg-dlg-radius) var(--zg-dlg-radius) 0 0;
+		border-bottom-width: 0;
+	}
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-footer {
+		padding-bottom: calc(var(--zg-space-3) + env(safe-area-inset-bottom));
+	}
+	/* Slide up from the bottom edge instead of down from above (Frappe: translateY(-15%)) */
+	.modal.fade:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		transform: translateY(var(--zg-space-8));
+	}
+	.modal.show:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		transform: none;
+	}
+
+	/* Actions share the row equally: two thumb-sized targets instead of two small buttons at the right edge */
+	.modal .modal-footer .standard-actions {
+		flex: 1 1 100%;
+	}
+	.modal .modal-footer .standard-actions .btn {
+		flex: 1 1 0;
+	}
+}
+/* ============================================
+   87. RESPONSIVE — breakpoints, mobile navigation drawer, small-screen layout
+   Behaviour of the drawer lives in saas_theme.js ("Mobile navigation drawer").
+   ============================================ */
+
+/*
+ * BREAKPOINTS — the same cut-offs Frappe/Bootstrap use, so this file agrees with .hidden-xs,
+ * frappe.is_mobile() (< 768) and the page-head hamburger (shown < 992).
+ *
+ *   token        px    what changes
+ *   --zg-bp-sm    576  phone   (<= 576):          workspace rail = off-canvas drawer, no sidebar strip
+ *   --zg-bp-md    768  Frappe mobile (<= 767.98): sidebar panel = off-canvas overlay, form columns max 2-up
+ *   --zg-bp-lg    992  tablet  (<= 991.98):       compact icon-only rail, panel toggled by Frappe's hamburger
+ *   --zg-bp-xl   1200  desktop (>= 992):          rail + sidebar + content, untouched by this file
+ *
+ * CSS cannot read var() inside @media, so the numbers are repeated in the queries below;
+ * saas_theme.js reads --zg-bp-sm so the drawer and the stylesheet switch at the same width.
+ * The partials this file builds on are desktop-first, so overrides use max-width ranges;
+ * "tablet" starts at 576.02px so fractional widths between 576 and 577 are not left in a gap.
+ */
+
+/* --------------------------------------------
+   0. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-bp-sm: 576px;
+	--zg-bp-md: 768px;
+	--zg-bp-lg: 992px;
+	--zg-bp-xl: 1200px;
+
+	/* Geometry */
+	--zg-drawer-width: min(300px, calc(100vw - 56px));   /* always leaves a 56px strip of scrim to tap */
+	--zg-rail-compact-width: 60px;                       /* icon-only rail width (50-shell-rail-desk :root) */
+	--zg-panel-offset: 0px;                              /* where Frappe's off-canvas sidebar panel starts (clear of the rail) */
+	--zg-drawer-dir: 1;                                  /* 1 = LTR, -1 = RTL; flips every slide-in */
+	--zg-nav-target: 40px;                               /* minimum touch target for shell controls */
+
+	/* Safe-area insets: 0 on screens without a notch / home indicator */
+	--zg-safe-top: env(safe-area-inset-top, 0px);
+	--zg-safe-right: env(safe-area-inset-right, 0px);
+	--zg-safe-bottom: env(safe-area-inset-bottom, 0px);
+	--zg-safe-left: env(safe-area-inset-left, 0px);
+
+	/* Scrim behind the drawer / panel (navy tint of the rail surface) */
+	--zg-drawer-scrim: color-mix(in srgb, var(--zg-rail-bg) 55%, transparent);
+}
+
+[data-theme="dark"] {
+	--zg-drawer-scrim: color-mix(in srgb, var(--zg-rail-bg) 75%, transparent);
+}
+
+:root:dir(rtl) {
+	--zg-drawer-dir: -1;
+}
+
+/* --------------------------------------------
+   1. MOBILE NAVIGATION DRAWER (<= 576px)
+   The workspace rail (.st-workspace-rail) becomes an off-canvas drawer. JS adds the pieces below:
+   .st-mobile-nav-trigger (menu button in every page head), .st-mobile-nav-head (title + close inside
+   the rail) and .st-mobile-nav-scrim. They stay hidden at every other width.
+   -------------------------------------------- */
+.st-mobile-nav-trigger,
+.st-mobile-nav-head,
+.st-mobile-nav-scrim {
+	display: none;
+}
+
+@media (max-width: 576px) {
+
+	/* The rail leaves the flow and becomes the drawer.
+	   display:flex because 50 hides the rail at this width, and jQuery .show() on a CSS-hidden element
+	   pins an inline "block"; a later .hide() (pages without a sidebar) still wins as an inline "none". */
+	.st-workspace-rail {
+		display: flex;
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		inset-inline-start: 0;
+		width: var(--zg-drawer-width);
+		min-width: 0;
+		height: auto;
+		align-items: stretch;
+		padding: max(14px, var(--zg-safe-top)) 0 max(14px, var(--zg-safe-bottom));
+		z-index: var(--zg-z-drawer);
+		box-shadow: var(--shadow-xl);
+		transform: translateX(calc(var(--zg-drawer-dir) * -100%));
+		visibility: hidden;
+		transition: transform var(--zg-duration-base) var(--zg-ease), visibility var(--zg-duration-base);
+	}
+
+	/* Opening flips visibility at once (0s): a focus() right after the class change must not hit a hidden box.
+	   Closing keeps the base transition, so the box stays visible for the whole slide-out. */
+	body.st-mobile-nav-open .st-workspace-rail {
+		transform: none;
+		visibility: visible;
+		transition: transform var(--zg-duration-base) var(--zg-ease), visibility 0s;
+	}
+
+	/* Labels are always on in the drawer (touch has no hover tooltips). The selectors carry `body` so they
+	   tie with, and by order beat, the `body.st-rail-expanded` rules in 50 whatever state the user stored. */
+	.st-rail-tooltip {
+		display: none;
+	}
+
+	body .st-workspace-rail .st-rail-top {
+		align-items: stretch;
+		overscroll-behavior: contain;
+	}
+
+	body .st-workspace-rail .st-rail-item {
+		width: 100%;
+		height: 44px;
+		justify-content: flex-start;
+		gap: var(--zg-space-3);
+		padding: 0 var(--zg-space-3);
+	}
+
+	body .st-workspace-rail .st-rail-label {
+		display: block;
+		font-size: var(--zg-text-md);
+	}
+
+	body .st-workspace-rail .st-rail-search {
+		padding: 0 var(--zg-space-3) var(--zg-space-2);
+		margin-bottom: 0;
+	}
+
+	body .st-workspace-rail .st-rail-search-btn {
+		display: none;
+	}
+
+	body .st-workspace-rail .st-rail-search-box {
+		display: flex;
+		height: 44px;
+	}
+
+	body .st-workspace-rail .st-rail-search-box:focus-within {
+		border-color: var(--zg-white-80);               /* 25% white on the dark rail is under 3:1 */
+	}
+
+	body .st-workspace-rail .st-rail-search-box input {
+		font-size: var(--zg-text-lg);                   /* 16px: iOS does not zoom the page on focus */
+	}
+
+	/* Text on the dark rail: 50 uses 35% white (about 2.9:1); 65% is 8:1 */
+	body .st-workspace-rail .st-rail-search-box input::placeholder,
+	body .st-workspace-rail .st-rail-empty {
+		color: var(--zg-white-65);
+	}
+
+	.st-workspace-rail .st-rail-search-clear {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+		margin-inline-end: calc(var(--zg-space-3) * -1);
+		line-height: var(--zg-nav-target);
+		text-align: center;
+	}
+
+	/* Expand/collapse and drag-resize make no sense for a drawer */
+	.st-workspace-rail .st-rail-bottom,
+	.st-workspace-rail .st-rail-resizer {
+		display: none;
+	}
+
+	/* Keyboard focus on the dark surface: white ring drawn inside, so the scrolling list cannot clip it */
+	body .st-workspace-rail :where([role="button"]):focus-visible {
+		outline: 2px solid var(--zg-white-90);
+		outline-offset: -2px;
+	}
+
+	/* Header row: title + close button */
+	.st-mobile-nav-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--zg-space-2);
+		flex-shrink: 0;
+		padding-block-end: var(--zg-space-2);
+		padding-inline: var(--zg-space-4) var(--zg-space-3);
+	}
+
+	.st-mobile-nav-title {
+		min-width: 0;
+		overflow: hidden;
+		font-size: var(--zg-text-lg);
+		font-weight: 600;
+		line-height: var(--zg-leading-tight);
+		color: var(--zg-white-90);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.st-mobile-nav-close {
+		display: flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		border-radius: var(--zg-radius-md);
+		color: var(--zg-white-80);
+		cursor: pointer;
+		transition: background var(--zg-duration-fast) var(--zg-ease), color var(--zg-duration-fast) var(--zg-ease);
+	}
+
+	.st-mobile-nav-close:hover {
+		background: var(--zg-white-08);
+		color: var(--zg-white-100);
+	}
+
+	.st-mobile-nav-close:active {
+		background: var(--zg-white-12);
+	}
+
+	.st-mobile-nav-close svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* Menu trigger in the page head. Frappe's own hamburger (it toggles the sidebar panel) steps aside:
+	   choosing a workspace in the drawer opens that panel, so nothing is unreachable. */
+	body.st-dual-sidebar .page-title .sidebar-toggle-btn {
+		display: none;
+	}
+
+	body.st-dual-sidebar .st-mobile-nav-trigger {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		margin-inline: calc(var(--zg-space-2) * -1) var(--zg-space-1);
+		border-radius: var(--zg-radius-md);
+		color: var(--text-color);
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		transition: background var(--zg-duration-fast) var(--zg-ease), color var(--zg-duration-fast) var(--zg-ease);
+	}
+
+	.st-mobile-nav-trigger:hover {
+		background: var(--subtle-fg);
+	}
+
+	.st-mobile-nav-trigger:active {
+		background: color-mix(in srgb, var(--subtle-fg) 70%, var(--border-color));
+	}
+
+	.st-mobile-nav-trigger[aria-expanded="true"] {
+		background: var(--subtle-fg);
+		color: var(--primary);
+	}
+
+	.st-mobile-nav-trigger svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* Scrim */
+	.st-mobile-nav-scrim {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: calc(var(--zg-z-drawer) - 1);
+		background: var(--zg-drawer-scrim);
+		opacity: 0;
+		visibility: hidden;
+		touch-action: none;
+		-webkit-tap-highlight-color: transparent;
+		transition: opacity var(--zg-duration-base) var(--zg-ease), visibility var(--zg-duration-base);
+	}
+
+	body.st-mobile-nav-open .st-mobile-nav-scrim {
+		opacity: 1;
+		visibility: visible;
+		transition: opacity var(--zg-duration-base) var(--zg-ease), visibility 0s;
+	}
+
+	/* Scroll lock: the desk scrolls inside .main-section, not the body, so both are locked. */
+	body.st-mobile-nav-open,
+	body.st-mobile-nav-open .main-section {
+		overflow: hidden;
+	}
+}
+
+/* Windows high-contrast: author backgrounds are replaced by Canvas, which would turn the scrim opaque */
+@media (forced-colors: active) {
+	.st-mobile-nav-scrim {
+		forced-color-adjust: none;
+	}
+}
+
+/* --------------------------------------------
+   2. SIDEBAR PANEL, FRAPPE MOBILE RANGE (<= 767.98px)
+   Frappe's intent below 768px: no icon strip, and an expanded panel is an overlay. 40-shell keeps a 56px
+   strip on phones and 50-shell forces `position: relative` (which pushes the content), so restore it.
+   Frappe's hamburger (page head) and the panel's own toggle still open/close it, as does the overlay.
+   -------------------------------------------- */
+@media (min-width: 576.02px) and (max-width: 767.98px) {
+	body.st-dual-sidebar {
+		--zg-panel-offset: var(--zg-rail-compact-width);      /* sits to the right of the compact rail */
+	}
+}
+
+@media (max-width: 767.98px) {
+
+	.body-sidebar-container:not(.expanded) .body-sidebar {
+		width: 0;
+		padding: 0;
+		border-width: 0;
+	}
+
+	body.st-dual-sidebar .body-sidebar-container.expanded .body-sidebar,
+	.body-sidebar-container.expanded .body-sidebar {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		inset-inline-start: var(--zg-panel-offset);
+		width: min(var(--st-sidebar-width), calc(100vw - var(--zg-panel-offset) - 40px));
+		height: auto;
+		padding-top: max(14px, var(--zg-safe-top));
+		padding-bottom: max(14px, var(--zg-safe-bottom));
+		z-index: calc(var(--zg-z-drawer) - 2);
+		box-shadow: var(--shadow-xl);
+		animation: st-panel-in var(--zg-duration-base) var(--zg-ease);
+	}
+
+	/* Frappe's overlay (inline z-index 1021) dims the page right of the panel; here it covers everything
+	   to the right of the rail so a tap anywhere outside closes the panel (Frappe wires that click). */
+	.body-sidebar-container.expanded .overlay {
+		inset: 0;
+		inset-inline-start: var(--zg-panel-offset);
+		position: fixed;
+		width: auto;
+		height: auto;
+		background: var(--zg-drawer-scrim);
+	}
+
+	.body-sidebar-container .sidebar-resize-handle {
+		display: none;                                      /* a mouse affordance that mis-taps on touch */
+	}
+
+	/* The notification list is `position: fixed`; 50 offsets it by rail + panel widths, which pushes it off-screen here */
+	body .body-sidebar-container .body-sidebar .standard-items-sections .dropdown-notifications .notifications-list,
+	body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notifications .notifications-list {
+		left: var(--zg-panel-offset);
+	}
+}
+
+@keyframes st-panel-in {
+	from { transform: translateX(calc(var(--zg-drawer-dir) * -100%)); }
+	to   { transform: none; }
+}
+
+/* --------------------------------------------
+   3. TABLET (577px - 991px): COMPACT RAIL
+   Icons only, whatever expanded/collapsed state the user stored on desktop. The expand toggle,
+   resizer and filter box are hidden: they would only change a state that cannot show here.
+   The left sidebar panel stays collapsible: overlay up to 767px (section 2), Frappe's normal
+   in-flow expand/collapse (chevron and page-head hamburger) from 768px.
+   -------------------------------------------- */
+
+/* One icon size for the drawer and the compact rail, whatever state was stored: 20px, the collapsed-rail size.
+   50-shell-rail-desk sets the expanded 16px with !important at this same specificity, so it needs !important too. */
+@media (max-width: 991.98px) {
+	body.st-rail-expanded .st-rail-icon svg,
+	body.st-rail-expanded .st-rail-icon .icon,
+	body.st-rail-resizing .st-rail-icon svg,
+	body.st-rail-resizing .st-rail-icon .icon {
+		width: 20px !important; /* important: beats the expanded-mode !important in 50 */
+		height: 20px !important; /* important: beats the expanded-mode !important in 50 */
+	}
+}
+
+@media (min-width: 576.02px) and (max-width: 991.98px) {
+	body.st-rail-expanded {
+		--st-rail-width: var(--zg-rail-compact-width);
+	}
+
+	body.st-rail-expanded .st-rail-item,
+	body.st-rail-resizing .st-rail-item {
+		width: 44px;
+		height: 44px;
+		justify-content: center;
+		gap: 0;
+		padding: 0;
+	}
+
+	body.st-rail-expanded .st-rail-label,
+	body.st-rail-resizing .st-rail-label {
+		display: none;
+	}
+
+	.st-workspace-rail .st-rail-search,
+	.st-workspace-rail .st-rail-bottom,
+	.st-workspace-rail .st-rail-resizer {
+		display: none;
+	}
+}
+
+/* --------------------------------------------
+   4. PAGE HEAD (<= 767.98px)
+   Frappe's v16 desk has no top navbar: the sticky .page-head (hamburger, breadcrumbs, actions) is the bar.
+   Its row is `flex-nowrap`, so wrapping happens inside the actions: the head grows only when it must.
+   -------------------------------------------- */
+@media (max-width: 767.98px) {
+	.page-head .page-head-content {
+		height: auto;
+		min-height: var(--page-head-height);
+	}
+
+	.page-head .standard-items-section {
+		flex: 0 1 auto;
+		min-width: 0;
+	}
+
+	.page-head .page-actions,
+	.page-head .standard-actions {
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		row-gap: var(--zg-space-1);
+	}
+}
+
+/* --------------------------------------------
+   5. CONTENT LAYOUT (<= 991.98px)
+   Verified in Frappe's compiled CSS before adding: Bootstrap's .col-sm-* are width:100% below 576px, so form
+   columns are already single-column on phones; list view already scrolls sideways inside .result-container
+   (overflow-x:auto); report view / query report inside .dt-scrollable and .report-wrapper (overflow:auto).
+   What is missing: 3-5 column sections stay cramped from 576 to 767px, flex children cannot shrink, the Form
+   sidebar keeps its 277px beside the form, and inner scrollers chain their scroll to the page.
+   -------------------------------------------- */
+@media (max-width: 991.98px) {
+	.layout-main-section-wrapper {
+		min-width: 0;
+	}
+
+	.layout-main-section .frappe-list .result-container,
+	.report-wrapper,
+	.dt-scrollable {
+		overscroll-behavior-x: contain;
+	}
+}
+
+@media (min-width: 576.02px) and (max-width: 767.98px) {
+	.form-column.col-sm-4,
+	.form-column.col-sm-3,
+	.form-column.col-sm-2,
+	.form-column.col-sm-20 {
+		flex: 0 0 50%;
+		max-width: 50%;
+	}
+}
+
+@media (max-width: 767.98px) {
+	/* Form: the right sidebar (attachments, comments count, tags) stacks under the form instead of squeezing it.
+	   Display is not touched, so a hidden sidebar (.hide-sidebar) stays hidden. */
+	body[data-route^="Form"] .layout-main {
+		flex-wrap: wrap;
+	}
+
+	body[data-route^="Form"] .layout-main-section-wrapper {
+		flex: 1 1 100%;
+		width: 100%;
+	}
+
+	body[data-route^="Form"] .layout-side-section {
+		flex: 1 1 100%;
+		width: 100%;
+		min-width: 0;
+		height: auto;
+		position: static;
+		overflow: visible;
+		border-left-width: 0;
+		border-top: 1px solid var(--border-color);
+	}
+
+	body[data-route^="Form"] .layout-side-section .form-sidebar {
+		width: 100%;
+	}
+}
+
+/* --------------------------------------------
+   6. TOASTS AND SAFE AREAS
+   Dialogs are not handled here: 86 (section 4g) makes them a full-width bottom sheet below 576px, with the
+   safe-area padding, at a higher specificity than a rule in this file could match.
+   -------------------------------------------- */
+@media (max-width: 576px) {
+	/* Toasts: Frappe pins the container to the right edge; 80 sizes them to the viewport minus 24px */
+	#alert-container {
+		right: var(--zg-space-3);
+		bottom: max(var(--zg-space-3), var(--zg-safe-bottom));
+	}
+}
+
+@media (max-width: 991.98px) {
+	.page-head .page-head-content {
+		padding-left: var(--zg-safe-left);                  /* landscape notch */
+		padding-right: var(--zg-safe-right);
+	}
+}
+
+/* --------------------------------------------
+   7. DESK PAGE (/desk) NAVBAR (<= 576px)
+   UNVERIFIED against Frappe's sources: the desktop-page classes are not in the reference bundle; they are
+   taken from 50-shell-rail-desk.css. Search collapses to an icon, the shortcut hint goes, gutters shrink.
+   -------------------------------------------- */
+@media (max-width: 576px) {
+	.desktop-wrapper .navbar-container {
+		padding-inline: var(--zg-space-3);
+	}
+
+	.desktop-wrapper .desktop-container {
+		padding: var(--zg-space-6) var(--zg-space-3) var(--zg-space-4);
+	}
+
+	.desktop-wrapper .desktop-keyboard-shortcut {
+		display: none;
+	}
+
+	.desktop-wrapper .desktop-navbar-modal-search {
+		flex: 0 0 auto;
+		width: var(--zg-nav-target);
+		max-width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		padding: 0;
+		justify-content: center;
+	}
+
+	.desktop-wrapper .desktop-search-icon {
+		gap: 0;
+		font-size: 0;                                       /* hides the label text; the svg keeps its own size */
+	}
+}
+
+/* --------------------------------------------
+   8. COARSE POINTERS: 40px targets for shell controls
+   Buttons, inputs, tables and badges own their touch sizes (82-85); this covers the shell. min-height is
+   used so rows that are already taller (the 44px rail rows) are left alone.
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.body-sidebar .standard-sidebar-item .item-anchor:not(.section-break),
+	.body-sidebar .onboarding-sidebar,
+	.saas-user-menu-item,
+	.sidebar-header-menu .dropdown-menu-item a,
+	.st-rail-toggle,
+	.st-rail-search-btn,
+	body.st-rail-expanded .st-rail-item {
+		min-height: var(--zg-nav-target);
+	}
+
+	.page-title .sidebar-toggle-btn {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+		align-items: center;
+		justify-content: center;
+	}
+
+	.modal-header .modal-actions .btn-modal-minimize,
+	.modal-header .modal-actions .btn-modal-close {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+	}
+
+	/* No keyboard to press Ctrl+K on */
+	.body-sidebar .sidebar-item-suffix .keyboard-shortcut {
+		display: none;
+	}
+}
+/* ===== 88. ACCENT COLOURS =====
+ * Blue stays the action colour (buttons, links, focus, active states). On top of it,
+ * navigation and dashboard chrome get a multi-hue accent so the UI is not monochrome.
+ * Hue = position in its list (8-step cycle: blue, green, amber, purple, pink, teal, red, indigo).
+ * Colours come from the --zg-accent-* pairs (02-tokens-semantic), which swap for dark mode.
+ */
+
+/* Cycle: set the current item's hue variables */
+
+.st-rail-top .st-rail-item:nth-child(8n+1),
+.desktop-wrapper .desktop-icon:nth-child(8n+1),
+.body-sidebar .sidebar-item-container:nth-child(8n+1),
+.codex-editor__redactor > .ce-block:nth-child(8n+1) {
+	--zg-hue-bg: var(--zg-accent-blue-bg);
+	--zg-hue-fg: var(--zg-accent-blue-fg);
+	--zg-hue-rail: var(--zg-rail-hue-1);
+	--zg-hue-rot: 0deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+2),
+.desktop-wrapper .desktop-icon:nth-child(8n+2),
+.body-sidebar .sidebar-item-container:nth-child(8n+2),
+.codex-editor__redactor > .ce-block:nth-child(8n+2) {
+	--zg-hue-bg: var(--zg-accent-green-bg);
+	--zg-hue-fg: var(--zg-accent-green-fg);
+	--zg-hue-rail: var(--zg-rail-hue-2);
+	--zg-hue-rot: -68deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+3),
+.desktop-wrapper .desktop-icon:nth-child(8n+3),
+.body-sidebar .sidebar-item-container:nth-child(8n+3),
+.codex-editor__redactor > .ce-block:nth-child(8n+3) {
+	--zg-hue-bg: var(--zg-accent-amber-bg);
+	--zg-hue-fg: var(--zg-accent-amber-fg);
+	--zg-hue-rail: var(--zg-rail-hue-3);
+	--zg-hue-rot: -168deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+4),
+.desktop-wrapper .desktop-icon:nth-child(8n+4),
+.body-sidebar .sidebar-item-container:nth-child(8n+4),
+.codex-editor__redactor > .ce-block:nth-child(8n+4) {
+	--zg-hue-bg: var(--zg-accent-purple-bg);
+	--zg-hue-fg: var(--zg-accent-purple-fg);
+	--zg-hue-rail: var(--zg-rail-hue-4);
+	--zg-hue-rot: 72deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+5),
+.desktop-wrapper .desktop-icon:nth-child(8n+5),
+.body-sidebar .sidebar-item-container:nth-child(8n+5),
+.codex-editor__redactor > .ce-block:nth-child(8n+5) {
+	--zg-hue-bg: var(--zg-accent-pink-bg);
+	--zg-hue-fg: var(--zg-accent-pink-fg);
+	--zg-hue-rail: var(--zg-rail-hue-5);
+	--zg-hue-rot: 127deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+6),
+.desktop-wrapper .desktop-icon:nth-child(8n+6),
+.body-sidebar .sidebar-item-container:nth-child(8n+6),
+.codex-editor__redactor > .ce-block:nth-child(8n+6) {
+	--zg-hue-bg: var(--zg-accent-teal-bg);
+	--zg-hue-fg: var(--zg-accent-teal-fg);
+	--zg-hue-rail: var(--zg-rail-hue-6);
+	--zg-hue-rot: -33deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+7),
+.desktop-wrapper .desktop-icon:nth-child(8n+7),
+.body-sidebar .sidebar-item-container:nth-child(8n+7),
+.codex-editor__redactor > .ce-block:nth-child(8n+7) {
+	--zg-hue-bg: var(--zg-accent-red-bg);
+	--zg-hue-fg: var(--zg-accent-red-fg);
+	--zg-hue-rail: var(--zg-rail-hue-7);
+	--zg-hue-rot: 157deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+8),
+.desktop-wrapper .desktop-icon:nth-child(8n+8),
+.body-sidebar .sidebar-item-container:nth-child(8n+8),
+.codex-editor__redactor > .ce-block:nth-child(8n+8) {
+	--zg-hue-bg: var(--zg-accent-indigo-bg);
+	--zg-hue-fg: var(--zg-accent-indigo-fg);
+	--zg-hue-rail: var(--zg-rail-hue-8);
+	--zg-hue-rot: 27deg;
+}
+
+/* --- Workspace rail (dark surface): tinted icons; hover/active keep the existing white/brand states --- */
+.st-rail-top .st-rail-item:not(.active):not(:hover) .st-rail-icon :is(svg, .icon) {
+	color: var(--zg-hue-rail);
+	stroke: var(--zg-hue-rail);
+}
+
+/* --- Desk module picker: tinted tile + matching icon colour (image/logo tiles are left alone) --- */
+.desktop-wrapper .desktop-icon .icon-container:has(.icon) {
+	background: var(--zg-hue-bg);
+}
+.desktop-wrapper .desktop-icon .icon-container:has(.icon) .icon {
+	color: var(--zg-hue-fg);
+	stroke: var(--zg-hue-fg);
+}
+.desktop-wrapper .desktop-icon .icon-container:has(.icon):hover {
+	background: color-mix(in srgb, var(--zg-hue-fg) 22%, var(--zg-hue-bg));
+}
+
+/* ERPNext's module tiles are fixed solid-blue SVG files; rotate their hue per tile (white stays white).
+   Logo tiles (Frappe, ZATCA, custom images) are untouched — only the /solid/ artwork. */
+.desktop-wrapper .desktop-icon .icon-container img.app-icon[src*="/desktop_icons/solid/"] {
+	filter: hue-rotate(var(--zg-hue-rot, 0deg));
+}
+
+/* --- Workspace sidebar: tinted icons on inactive items (active item keeps its white-on-blue) --- */
+.body-sidebar .sidebar-item-container .standard-sidebar-item:not(.active-sidebar) .sidebar-item-icon :is(svg, .icon) {
+	color: var(--zg-hue-fg);
+	stroke: var(--zg-hue-fg);
+}
+
+/* --- Dashboard KPI + shortcut cards: coloured top edge (a pseudo-element, so the widgets'
+   !important hover/dark box-shadow and border rules in 60 can't wipe it out) --- */
+.codex-editor__redactor > .ce-block .widget:is(.number-widget-box, .shortcut-widget-box) {
+	position: relative;
+}
+.codex-editor__redactor > .ce-block .widget:is(.number-widget-box, .shortcut-widget-box)::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 3px;
+	background: var(--zg-hue-fg, var(--primary));
+	pointer-events: none;
 }
 /* ============================================
    31. ACCESSIBILITY & MOTION

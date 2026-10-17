@@ -62,7 +62,7 @@
 
 .form-sidebar .form-name-copy {
 	font-size: 11px !important;
-	color: var(--gray-500);
+	color: var(--text-muted);
 }
 
 /* --- Action icons row (like, print, edit, fav) --- */
@@ -341,7 +341,7 @@
 .form-sidebar .sidebar-menu li {
 	padding: 4px 0;
 	font-size: 11px !important;
-	color: var(--gray-500);
+	color: var(--text-muted);
 	border: none;
 	line-height: 1.5;
 }

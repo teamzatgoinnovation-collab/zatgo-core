@@ -31,13 +31,13 @@
 .widget .widget-head .widget-title {
 	font-weight: 600 !important;
 	font-size: 12px !important;
-	color: var(--gray-600) !important;
+	color: var(--text-muted) !important;
 	letter-spacing: 0.01em;
 }
 
 .widget .widget-head .widget-subtitle {
 	font-size: 11px;
-	color: var(--gray-400);
+	color: var(--text-muted);
 }
 
 /* --- Widget control (menu) --- */
@@ -78,13 +78,7 @@
 
 .widget.number-widget-box .stat-period {
 	font-size: 11px;
-	color: var(--gray-400);
-}
-
-.widget.number-widget-box .percentage-stat-area .indicator-pill-round {
-	font-size: 11px;
-	padding: 2px 6px;
-	border-radius: var(--border-radius-sm);
+	color: var(--text-muted);
 }
 
 /* --- Chart widget --- */
@@ -99,7 +93,7 @@
 .widget.dashboard-widget-box .widget-title {
 	font-size: 12px;
 	font-weight: 600;
-	color: var(--gray-600);
+	color: var(--text-muted);
 }
 
 .widget.dashboard-widget-box .widget-body {
@@ -151,12 +145,6 @@
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--heading-color);
-}
-
-.widget.shortcut-widget-box .indicator-pill {
-	font-size: 11px;
-	border-radius: var(--border-radius-sm);
-	padding: 2px 8px;
 }
 
 /* --- Quick list widget --- */
@@ -254,7 +242,7 @@
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	color: var(--gray-600);
+	color: var(--text-muted);
 	margin: 0;
 	padding: 10px 14px;
 	background: var(--zg-wash-1);

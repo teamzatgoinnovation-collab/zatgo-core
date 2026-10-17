@@ -1,0 +1,570 @@
+/* ============================================
+   87. RESPONSIVE — breakpoints, mobile navigation drawer, small-screen layout
+   Behaviour of the drawer lives in saas_theme.js ("Mobile navigation drawer").
+   ============================================ */
+
+/*
+ * BREAKPOINTS — the same cut-offs Frappe/Bootstrap use, so this file agrees with .hidden-xs,
+ * frappe.is_mobile() (< 768) and the page-head hamburger (shown < 992).
+ *
+ *   token        px    what changes
+ *   --zg-bp-sm    576  phone   (<= 576):          workspace rail = off-canvas drawer, no sidebar strip
+ *   --zg-bp-md    768  Frappe mobile (<= 767.98): sidebar panel = off-canvas overlay, form columns max 2-up
+ *   --zg-bp-lg    992  tablet  (<= 991.98):       compact icon-only rail, panel toggled by Frappe's hamburger
+ *   --zg-bp-xl   1200  desktop (>= 992):          rail + sidebar + content, untouched by this file
+ *
+ * CSS cannot read var() inside @media, so the numbers are repeated in the queries below;
+ * saas_theme.js reads --zg-bp-sm so the drawer and the stylesheet switch at the same width.
+ * The partials this file builds on are desktop-first, so overrides use max-width ranges;
+ * "tablet" starts at 576.02px so fractional widths between 576 and 577 are not left in a gap.
+ */
+
+/* --------------------------------------------
+   0. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-bp-sm: 576px;
+	--zg-bp-md: 768px;
+	--zg-bp-lg: 992px;
+	--zg-bp-xl: 1200px;
+
+	/* Geometry */
+	--zg-drawer-width: min(300px, calc(100vw - 56px));   /* always leaves a 56px strip of scrim to tap */
+	--zg-rail-compact-width: 60px;                       /* icon-only rail width (50-shell-rail-desk :root) */
+	--zg-panel-offset: 0px;                              /* where Frappe's off-canvas sidebar panel starts (clear of the rail) */
+	--zg-drawer-dir: 1;                                  /* 1 = LTR, -1 = RTL; flips every slide-in */
+	--zg-nav-target: 40px;                               /* minimum touch target for shell controls */
+
+	/* Safe-area insets: 0 on screens without a notch / home indicator */
+	--zg-safe-top: env(safe-area-inset-top, 0px);
+	--zg-safe-right: env(safe-area-inset-right, 0px);
+	--zg-safe-bottom: env(safe-area-inset-bottom, 0px);
+	--zg-safe-left: env(safe-area-inset-left, 0px);
+
+	/* Scrim behind the drawer / panel (navy tint of the rail surface) */
+	--zg-drawer-scrim: color-mix(in srgb, var(--zg-rail-bg) 55%, transparent);
+}
+
+[data-theme="dark"] {
+	--zg-drawer-scrim: color-mix(in srgb, var(--zg-rail-bg) 75%, transparent);
+}
+
+:root:dir(rtl) {
+	--zg-drawer-dir: -1;
+}
+
+/* --------------------------------------------
+   1. MOBILE NAVIGATION DRAWER (<= 576px)
+   The workspace rail (.st-workspace-rail) becomes an off-canvas drawer. JS adds the pieces below:
+   .st-mobile-nav-trigger (menu button in every page head), .st-mobile-nav-head (title + close inside
+   the rail) and .st-mobile-nav-scrim. They stay hidden at every other width.
+   -------------------------------------------- */
+.st-mobile-nav-trigger,
+.st-mobile-nav-head,
+.st-mobile-nav-scrim {
+	display: none;
+}
+
+@media (max-width: 576px) {
+
+	/* The rail leaves the flow and becomes the drawer.
+	   display:flex because 50 hides the rail at this width, and jQuery .show() on a CSS-hidden element
+	   pins an inline "block"; a later .hide() (pages without a sidebar) still wins as an inline "none". */
+	.st-workspace-rail {
+		display: flex;
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		inset-inline-start: 0;
+		width: var(--zg-drawer-width);
+		min-width: 0;
+		height: auto;
+		align-items: stretch;
+		padding: max(14px, var(--zg-safe-top)) 0 max(14px, var(--zg-safe-bottom));
+		z-index: var(--zg-z-drawer);
+		box-shadow: var(--shadow-xl);
+		transform: translateX(calc(var(--zg-drawer-dir) * -100%));
+		visibility: hidden;
+		transition: transform var(--zg-duration-base) var(--zg-ease), visibility var(--zg-duration-base);
+	}
+
+	/* Opening flips visibility at once (0s): a focus() right after the class change must not hit a hidden box.
+	   Closing keeps the base transition, so the box stays visible for the whole slide-out. */
+	body.st-mobile-nav-open .st-workspace-rail {
+		transform: none;
+		visibility: visible;
+		transition: transform var(--zg-duration-base) var(--zg-ease), visibility 0s;
+	}
+
+	/* Labels are always on in the drawer (touch has no hover tooltips). The selectors carry `body` so they
+	   tie with, and by order beat, the `body.st-rail-expanded` rules in 50 whatever state the user stored. */
+	.st-rail-tooltip {
+		display: none;
+	}
+
+	body .st-workspace-rail .st-rail-top {
+		align-items: stretch;
+		overscroll-behavior: contain;
+	}
+
+	body .st-workspace-rail .st-rail-item {
+		width: 100%;
+		height: 44px;
+		justify-content: flex-start;
+		gap: var(--zg-space-3);
+		padding: 0 var(--zg-space-3);
+	}
+
+	body .st-workspace-rail .st-rail-label {
+		display: block;
+		font-size: var(--zg-text-md);
+	}
+
+	body .st-workspace-rail .st-rail-search {
+		padding: 0 var(--zg-space-3) var(--zg-space-2);
+		margin-bottom: 0;
+	}
+
+	body .st-workspace-rail .st-rail-search-btn {
+		display: none;
+	}
+
+	body .st-workspace-rail .st-rail-search-box {
+		display: flex;
+		height: 44px;
+	}
+
+	body .st-workspace-rail .st-rail-search-box:focus-within {
+		border-color: var(--zg-white-80);               /* 25% white on the dark rail is under 3:1 */
+	}
+
+	body .st-workspace-rail .st-rail-search-box input {
+		font-size: var(--zg-text-lg);                   /* 16px: iOS does not zoom the page on focus */
+	}
+
+	/* Text on the dark rail: 50 uses 35% white (about 2.9:1); 65% is 8:1 */
+	body .st-workspace-rail .st-rail-search-box input::placeholder,
+	body .st-workspace-rail .st-rail-empty {
+		color: var(--zg-white-65);
+	}
+
+	.st-workspace-rail .st-rail-search-clear {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+		margin-inline-end: calc(var(--zg-space-3) * -1);
+		line-height: var(--zg-nav-target);
+		text-align: center;
+	}
+
+	/* Expand/collapse and drag-resize make no sense for a drawer */
+	.st-workspace-rail .st-rail-bottom,
+	.st-workspace-rail .st-rail-resizer {
+		display: none;
+	}
+
+	/* Keyboard focus on the dark surface: white ring drawn inside, so the scrolling list cannot clip it */
+	body .st-workspace-rail :where([role="button"]):focus-visible {
+		outline: 2px solid var(--zg-white-90);
+		outline-offset: -2px;
+	}
+
+	/* Header row: title + close button */
+	.st-mobile-nav-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--zg-space-2);
+		flex-shrink: 0;
+		padding-block-end: var(--zg-space-2);
+		padding-inline: var(--zg-space-4) var(--zg-space-3);
+	}
+
+	.st-mobile-nav-title {
+		min-width: 0;
+		overflow: hidden;
+		font-size: var(--zg-text-lg);
+		font-weight: 600;
+		line-height: var(--zg-leading-tight);
+		color: var(--zg-white-90);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.st-mobile-nav-close {
+		display: flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		border-radius: var(--zg-radius-md);
+		color: var(--zg-white-80);
+		cursor: pointer;
+		transition: background var(--zg-duration-fast) var(--zg-ease), color var(--zg-duration-fast) var(--zg-ease);
+	}
+
+	.st-mobile-nav-close:hover {
+		background: var(--zg-white-08);
+		color: var(--zg-white-100);
+	}
+
+	.st-mobile-nav-close:active {
+		background: var(--zg-white-12);
+	}
+
+	.st-mobile-nav-close svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* Menu trigger in the page head. Frappe's own hamburger (it toggles the sidebar panel) steps aside:
+	   choosing a workspace in the drawer opens that panel, so nothing is unreachable. */
+	body.st-dual-sidebar .page-title .sidebar-toggle-btn {
+		display: none;
+	}
+
+	body.st-dual-sidebar .st-mobile-nav-trigger {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		margin-inline: calc(var(--zg-space-2) * -1) var(--zg-space-1);
+		border-radius: var(--zg-radius-md);
+		color: var(--text-color);
+		cursor: pointer;
+		-webkit-tap-highlight-color: transparent;
+		transition: background var(--zg-duration-fast) var(--zg-ease), color var(--zg-duration-fast) var(--zg-ease);
+	}
+
+	.st-mobile-nav-trigger:hover {
+		background: var(--subtle-fg);
+	}
+
+	.st-mobile-nav-trigger:active {
+		background: color-mix(in srgb, var(--subtle-fg) 70%, var(--border-color));
+	}
+
+	.st-mobile-nav-trigger[aria-expanded="true"] {
+		background: var(--subtle-fg);
+		color: var(--primary);
+	}
+
+	.st-mobile-nav-trigger svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	/* Scrim */
+	.st-mobile-nav-scrim {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: calc(var(--zg-z-drawer) - 1);
+		background: var(--zg-drawer-scrim);
+		opacity: 0;
+		visibility: hidden;
+		touch-action: none;
+		-webkit-tap-highlight-color: transparent;
+		transition: opacity var(--zg-duration-base) var(--zg-ease), visibility var(--zg-duration-base);
+	}
+
+	body.st-mobile-nav-open .st-mobile-nav-scrim {
+		opacity: 1;
+		visibility: visible;
+		transition: opacity var(--zg-duration-base) var(--zg-ease), visibility 0s;
+	}
+
+	/* Scroll lock: the desk scrolls inside .main-section, not the body, so both are locked. */
+	body.st-mobile-nav-open,
+	body.st-mobile-nav-open .main-section {
+		overflow: hidden;
+	}
+}
+
+/* Windows high-contrast: author backgrounds are replaced by Canvas, which would turn the scrim opaque */
+@media (forced-colors: active) {
+	.st-mobile-nav-scrim {
+		forced-color-adjust: none;
+	}
+}
+
+/* --------------------------------------------
+   2. SIDEBAR PANEL, FRAPPE MOBILE RANGE (<= 767.98px)
+   Frappe's intent below 768px: no icon strip, and an expanded panel is an overlay. 40-shell keeps a 56px
+   strip on phones and 50-shell forces `position: relative` (which pushes the content), so restore it.
+   Frappe's hamburger (page head) and the panel's own toggle still open/close it, as does the overlay.
+   -------------------------------------------- */
+@media (min-width: 576.02px) and (max-width: 767.98px) {
+	body.st-dual-sidebar {
+		--zg-panel-offset: var(--zg-rail-compact-width);      /* sits to the right of the compact rail */
+	}
+}
+
+@media (max-width: 767.98px) {
+
+	.body-sidebar-container:not(.expanded) .body-sidebar {
+		width: 0;
+		padding: 0;
+		border-width: 0;
+	}
+
+	body.st-dual-sidebar .body-sidebar-container.expanded .body-sidebar,
+	.body-sidebar-container.expanded .body-sidebar {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		inset-inline-start: var(--zg-panel-offset);
+		width: min(var(--st-sidebar-width), calc(100vw - var(--zg-panel-offset) - 40px));
+		height: auto;
+		padding-top: max(14px, var(--zg-safe-top));
+		padding-bottom: max(14px, var(--zg-safe-bottom));
+		z-index: calc(var(--zg-z-drawer) - 2);
+		box-shadow: var(--shadow-xl);
+		animation: st-panel-in var(--zg-duration-base) var(--zg-ease);
+	}
+
+	/* Frappe's overlay (inline z-index 1021) dims the page right of the panel; here it covers everything
+	   to the right of the rail so a tap anywhere outside closes the panel (Frappe wires that click). */
+	.body-sidebar-container.expanded .overlay {
+		inset: 0;
+		inset-inline-start: var(--zg-panel-offset);
+		position: fixed;
+		width: auto;
+		height: auto;
+		background: var(--zg-drawer-scrim);
+	}
+
+	.body-sidebar-container .sidebar-resize-handle {
+		display: none;                                      /* a mouse affordance that mis-taps on touch */
+	}
+
+	/* The notification list is `position: fixed`; 50 offsets it by rail + panel widths, which pushes it off-screen here */
+	body .body-sidebar-container .body-sidebar .standard-items-sections .dropdown-notifications .notifications-list,
+	body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notifications .notifications-list {
+		left: var(--zg-panel-offset);
+	}
+}
+
+@keyframes st-panel-in {
+	from { transform: translateX(calc(var(--zg-drawer-dir) * -100%)); }
+	to   { transform: none; }
+}
+
+/* --------------------------------------------
+   3. TABLET (577px - 991px): COMPACT RAIL
+   Icons only, whatever expanded/collapsed state the user stored on desktop. The expand toggle,
+   resizer and filter box are hidden: they would only change a state that cannot show here.
+   The left sidebar panel stays collapsible: overlay up to 767px (section 2), Frappe's normal
+   in-flow expand/collapse (chevron and page-head hamburger) from 768px.
+   -------------------------------------------- */
+
+/* One icon size for the drawer and the compact rail, whatever state was stored: 20px, the collapsed-rail size.
+   50-shell-rail-desk sets the expanded 16px with !important at this same specificity, so it needs !important too. */
+@media (max-width: 991.98px) {
+	body.st-rail-expanded .st-rail-icon svg,
+	body.st-rail-expanded .st-rail-icon .icon,
+	body.st-rail-resizing .st-rail-icon svg,
+	body.st-rail-resizing .st-rail-icon .icon {
+		width: 20px !important; /* important: beats the expanded-mode !important in 50 */
+		height: 20px !important; /* important: beats the expanded-mode !important in 50 */
+	}
+}
+
+@media (min-width: 576.02px) and (max-width: 991.98px) {
+	body.st-rail-expanded {
+		--st-rail-width: var(--zg-rail-compact-width);
+	}
+
+	body.st-rail-expanded .st-rail-item,
+	body.st-rail-resizing .st-rail-item {
+		width: 44px;
+		height: 44px;
+		justify-content: center;
+		gap: 0;
+		padding: 0;
+	}
+
+	body.st-rail-expanded .st-rail-label,
+	body.st-rail-resizing .st-rail-label {
+		display: none;
+	}
+
+	.st-workspace-rail .st-rail-search,
+	.st-workspace-rail .st-rail-bottom,
+	.st-workspace-rail .st-rail-resizer {
+		display: none;
+	}
+}
+
+/* --------------------------------------------
+   4. PAGE HEAD (<= 767.98px)
+   Frappe's v16 desk has no top navbar: the sticky .page-head (hamburger, breadcrumbs, actions) is the bar.
+   Its row is `flex-nowrap`, so wrapping happens inside the actions: the head grows only when it must.
+   -------------------------------------------- */
+@media (max-width: 767.98px) {
+	.page-head .page-head-content {
+		height: auto;
+		min-height: var(--page-head-height);
+	}
+
+	.page-head .standard-items-section {
+		flex: 0 1 auto;
+		min-width: 0;
+	}
+
+	.page-head .page-actions,
+	.page-head .standard-actions {
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		row-gap: var(--zg-space-1);
+	}
+}
+
+/* --------------------------------------------
+   5. CONTENT LAYOUT (<= 991.98px)
+   Verified in Frappe's compiled CSS before adding: Bootstrap's .col-sm-* are width:100% below 576px, so form
+   columns are already single-column on phones; list view already scrolls sideways inside .result-container
+   (overflow-x:auto); report view / query report inside .dt-scrollable and .report-wrapper (overflow:auto).
+   What is missing: 3-5 column sections stay cramped from 576 to 767px, flex children cannot shrink, the Form
+   sidebar keeps its 277px beside the form, and inner scrollers chain their scroll to the page.
+   -------------------------------------------- */
+@media (max-width: 991.98px) {
+	.layout-main-section-wrapper {
+		min-width: 0;
+	}
+
+	.layout-main-section .frappe-list .result-container,
+	.report-wrapper,
+	.dt-scrollable {
+		overscroll-behavior-x: contain;
+	}
+}
+
+@media (min-width: 576.02px) and (max-width: 767.98px) {
+	.form-column.col-sm-4,
+	.form-column.col-sm-3,
+	.form-column.col-sm-2,
+	.form-column.col-sm-20 {
+		flex: 0 0 50%;
+		max-width: 50%;
+	}
+}
+
+@media (max-width: 767.98px) {
+	/* Form: the right sidebar (attachments, comments count, tags) stacks under the form instead of squeezing it.
+	   Display is not touched, so a hidden sidebar (.hide-sidebar) stays hidden. */
+	body[data-route^="Form"] .layout-main {
+		flex-wrap: wrap;
+	}
+
+	body[data-route^="Form"] .layout-main-section-wrapper {
+		flex: 1 1 100%;
+		width: 100%;
+	}
+
+	body[data-route^="Form"] .layout-side-section {
+		flex: 1 1 100%;
+		width: 100%;
+		min-width: 0;
+		height: auto;
+		position: static;
+		overflow: visible;
+		border-left-width: 0;
+		border-top: 1px solid var(--border-color);
+	}
+
+	body[data-route^="Form"] .layout-side-section .form-sidebar {
+		width: 100%;
+	}
+}
+
+/* --------------------------------------------
+   6. TOASTS AND SAFE AREAS
+   Dialogs are not handled here: 86 (section 4g) makes them a full-width bottom sheet below 576px, with the
+   safe-area padding, at a higher specificity than a rule in this file could match.
+   -------------------------------------------- */
+@media (max-width: 576px) {
+	/* Toasts: Frappe pins the container to the right edge; 80 sizes them to the viewport minus 24px */
+	#alert-container {
+		right: var(--zg-space-3);
+		bottom: max(var(--zg-space-3), var(--zg-safe-bottom));
+	}
+}
+
+@media (max-width: 991.98px) {
+	.page-head .page-head-content {
+		padding-left: var(--zg-safe-left);                  /* landscape notch */
+		padding-right: var(--zg-safe-right);
+	}
+}
+
+/* --------------------------------------------
+   7. DESK PAGE (/desk) NAVBAR (<= 576px)
+   UNVERIFIED against Frappe's sources: the desktop-page classes are not in the reference bundle; they are
+   taken from 50-shell-rail-desk.css. Search collapses to an icon, the shortcut hint goes, gutters shrink.
+   -------------------------------------------- */
+@media (max-width: 576px) {
+	.desktop-wrapper .navbar-container {
+		padding-inline: var(--zg-space-3);
+	}
+
+	.desktop-wrapper .desktop-container {
+		padding: var(--zg-space-6) var(--zg-space-3) var(--zg-space-4);
+	}
+
+	.desktop-wrapper .desktop-keyboard-shortcut {
+		display: none;
+	}
+
+	.desktop-wrapper .desktop-navbar-modal-search {
+		flex: 0 0 auto;
+		width: var(--zg-nav-target);
+		max-width: var(--zg-nav-target);
+		height: var(--zg-nav-target);
+		padding: 0;
+		justify-content: center;
+	}
+
+	.desktop-wrapper .desktop-search-icon {
+		gap: 0;
+		font-size: 0;                                       /* hides the label text; the svg keeps its own size */
+	}
+}
+
+/* --------------------------------------------
+   8. COARSE POINTERS: 40px targets for shell controls
+   Buttons, inputs, tables and badges own their touch sizes (82-85); this covers the shell. min-height is
+   used so rows that are already taller (the 44px rail rows) are left alone.
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.body-sidebar .standard-sidebar-item .item-anchor:not(.section-break),
+	.body-sidebar .onboarding-sidebar,
+	.saas-user-menu-item,
+	.sidebar-header-menu .dropdown-menu-item a,
+	.st-rail-toggle,
+	.st-rail-search-btn,
+	body.st-rail-expanded .st-rail-item {
+		min-height: var(--zg-nav-target);
+	}
+
+	.page-title .sidebar-toggle-btn {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+		align-items: center;
+		justify-content: center;
+	}
+
+	.modal-header .modal-actions .btn-modal-minimize,
+	.modal-header .modal-actions .btn-modal-close {
+		min-width: var(--zg-nav-target);
+		min-height: var(--zg-nav-target);
+	}
+
+	/* No keyboard to press Ctrl+K on */
+	.body-sidebar .sidebar-item-suffix .keyboard-shortcut {
+		display: none;
+	}
+}

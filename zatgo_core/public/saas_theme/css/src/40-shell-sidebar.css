@@ -719,7 +719,6 @@ body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notificati
    ============================================ */
 
 .tooltip .tooltip-inner {
-	background: var(--gray-900);
 	border-radius: var(--border-radius-sm);
 	font-size: 12px;
 	font-weight: 500;
@@ -748,11 +747,6 @@ body.st-dual-sidebar .body-sidebar-container:not(.expanded) .dropdown-notificati
 .body-sidebar .bottom-edit-controls {
 	gap: 8px;
 	padding: 8px 0;
-}
-
-.body-sidebar .bottom-edit-controls .btn {
-	border-radius: 4px;
-	font-size: 13px;
 }
 
 /* ============================================

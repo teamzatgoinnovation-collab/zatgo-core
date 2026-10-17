@@ -38,7 +38,6 @@
 	line-height: var(--zg-leading-normal);
 }
 .msg-box .null-state { opacity: 0.85; }
-.msg-box .msg-box-action,
 .msg-box p { margin-top: var(--zg-space-2); }
 
 /* Skeleton loader — opt-in utility; animation is disabled under reduced motion (see 90-a11y) */

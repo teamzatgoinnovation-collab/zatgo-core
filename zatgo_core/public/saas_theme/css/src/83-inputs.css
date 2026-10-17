@@ -1,0 +1,682 @@
+/* ============================================
+   83. FORM CONTROLS — inputs, selects, Link / autocomplete, pickers, check / radio / switch,
+   attach, validation, labels and help text
+   Loads after 10-controls (section 5) and supersedes it; all colours come from tokens, so
+   light / dark swap in the two token blocks below.
+   Scope: field controls (.frappe-control). Grid cells (.grid-body) and report-view cell editors
+   (.datatable) are table territory and are deliberately left alone, as are the navbar search and
+   the workspace rail search.
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS (--zg-field-*)
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-field-height: 36px;
+	--zg-field-height-sm: 32px;           /* compact filter bars (.input-xs) */
+	--zg-field-target: 32px;              /* min row height of options / check labels */
+	--zg-field-option-pad-y: 6px;
+	--zg-field-pad-x: 10px;
+	--zg-field-pad-y: 8px;
+	--zg-field-radius: var(--zg-radius-sm);
+
+	--zg-field-bg: var(--fg-color);
+	--zg-field-bg-sunken: var(--subtle-fg);                    /* read-only / disabled / file drop area */
+	--zg-field-border: var(--gray-500);                        /* >= 3:1 against the card surface */
+	--zg-field-border-hover: var(--gray-600);
+	--zg-field-border-quiet: var(--border-color);              /* inactive boxes, separators */
+	--zg-field-faint: var(--gray-500);                         /* inactive picker days */
+	--zg-field-text-2: var(--gray-700);                        /* secondary text that sits on hover / selected tints (>= 4.5:1) */
+	--zg-field-error: var(--zg-danger-fg);
+	--zg-field-error-soft: var(--zg-danger-bg);
+	--zg-field-on-accent: var(--zg-on-primary);                /* text / thumb sitting on --primary */
+	--zg-field-selected: color-mix(in srgb, var(--primary) 10%, transparent);
+
+	--zg-field-ring: 0 0 0 1px var(--zg-focus-ring), 0 0 0 4px color-mix(in srgb, var(--zg-focus-ring) 24%, transparent);
+	--zg-field-ring-error: 0 0 0 1px var(--zg-field-error), 0 0 0 4px color-mix(in srgb, var(--zg-field-error) 24%, transparent);
+}
+
+[data-theme="dark"] {
+	/* Frappe's gray scale is inverted in dark; Frappe's own disabled / hover tokens are not restated
+	   by 01-tokens-dark (they stay light), so every role used below is restated here. */
+	--zg-field-bg: var(--control-bg);
+	--zg-field-bg-sunken: var(--bg-color);
+	--zg-field-border: var(--gray-400);
+	--zg-field-border-hover: var(--gray-300);
+	--zg-field-faint: var(--gray-400);
+	--zg-field-text-2: var(--text-muted);
+	--zg-field-on-accent: var(--bg-color);
+}
+
+/* Touch: 40px targets, and 16px text so iOS does not zoom the page on focus */
+@media (pointer: coarse) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-field-height: 40px;
+		--zg-field-height-sm: 40px;
+		--zg-field-target: 40px;
+		--zg-field-option-pad-y: 10px;
+	}
+}
+
+/* --------------------------------------------
+   1. LABELS, REQUIRED MARKER, DESCRIPTIONS
+   -------------------------------------------- */
+.frappe-control .control-label {
+	margin-bottom: var(--zg-space-1);
+	color: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	font-weight: 500;
+	line-height: var(--zg-leading-tight);
+}
+
+/* Frappe paints the asterisk with its pale --red-400; the asterisk (not colour) carries "required" */
+.frappe-control .control-label.reqd::after,
+.frappe-control .label-area.reqd::after {
+	content: " *";
+	color: var(--zg-field-error);
+	white-space: nowrap;
+}
+
+/* Field description. .text-extra-muted paints with var(--gray-500) !important (3:1 on light, 2:1 on
+   dark), so re-point that variable on the element instead of fighting the !important. */
+.frappe-control .help-box {
+	--gray-500: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	line-height: var(--zg-leading-normal);
+}
+
+/* Section / column descriptions use --text-light, which fails 4.5:1 */
+.form-section .form-section-description,
+.form-column .form-column-description {
+	color: var(--text-muted);
+}
+
+/* --------------------------------------------
+   2. TEXT INPUTS, SELECT, TEXTAREA
+   FIELD := .frappe-control .form-control:where(:not(.grid-body *, .datatable *))  (specificity 0,2,0)
+   -------------------------------------------- */
+
+/* Frappe's own --focus-default / --focus-red feed 10-controls' !important focus rule; re-pointing
+   them on the control itself gives the new ring without another !important. */
+.frappe-control .form-control,
+.frappe-control .ql-editor {
+	--focus-default: var(--zg-field-ring);
+	--focus-red: var(--zg-field-ring-error);
+}
+
+/* A field's validation tokens (Frappe's pink --red-400 fails 3:1) */
+.frappe-control {
+	--error-border: var(--zg-field-error);
+	--error-bg: var(--zg-field-error-soft);
+}
+
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height);
+	padding-block: 0;                      /* theme --input-padding is 14px 12px: 28px of padding leaves no text room in a 26-32px filter input */
+	padding-inline: var(--zg-field-pad-x);
+	border: 1px solid var(--zg-field-border);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg);
+	box-shadow: var(--shadow-xs);
+	color: var(--text-color);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-tight);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+
+/* Hover (never over focus, disabled, read-only or an error border) */
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):hover:where(:not(:focus, :disabled, [readonly])) {
+	border-color: var(--zg-field-border-hover);
+}
+
+/* Compact filter bars: still >= 32px */
+.frappe-control .form-control.input-xs:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height-sm);
+}
+
+.frappe-control .form-control::placeholder {
+	color: var(--text-muted);              /* 4.5:1; Frappe's gray-500 is 3:1 */
+	opacity: 1;
+}
+
+/* Multi-line */
+.frappe-control textarea.form-control:where(:not(.grid-body *, .datatable *)) {
+	height: auto;
+	min-height: calc(var(--zg-field-height) * 2 + var(--zg-space-1));
+	padding-block: var(--zg-field-pad-y);
+	line-height: var(--zg-leading-normal);
+	resize: vertical;
+}
+
+/* Select: native popup follows the theme; the chevron is vertically centred (Frappe pins it at top: 3px) */
+.frappe-control select.form-control:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height);        /* 10-controls' .form-page select.form-control (0,2,1) outranks the generic rule */
+	cursor: pointer;
+	text-overflow: ellipsis;
+}
+.frappe-control select.form-control.input-xs:where(:not(.grid-body *, .datatable *)) {
+	height: var(--zg-field-height-sm);
+}
+.frappe-control[data-fieldtype="Select"] select.form-control {
+	padding-inline-end: 28px !important; /* important: 10-controls forces padding:8px 10px !important on form fields, which sends the text under the chevron */
+}
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .select-icon,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .select-icon.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .placeholder,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"] .control-input .placeholder.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .select-icon,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .select-icon.xs,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .placeholder,
+.frappe-control:where(:not(.grid-body *, .datatable *))[data-fieldtype="Select"].form-group .placeholder.xs {
+	top: 50%;
+	transform: translateY(-50%);          /* grid cells keep Frappe's own top offsets */
+}
+.frappe-control[data-fieldtype="Select"] .placeholder {
+	--gray-500: var(--text-muted);         /* .text-extra-muted !important, see help-box */
+}
+[data-theme="dark"] .frappe-control .form-control {
+	color-scheme: dark;                    /* native select popup, number spinners */
+}
+
+/* Numbers line up in columns of figures */
+.frappe-control input[data-fieldtype="Int"],
+.frappe-control input[data-fieldtype="Float"],
+.frappe-control input[data-fieldtype="Currency"],
+.frappe-control input[data-fieldtype="Percent"] {
+	font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------
+   3. READ-ONLY, DISABLED AND STATIC VALUES
+   Disabled = dimmed + not-allowed; read-only = sunken but fully legible (it is data).
+   -------------------------------------------- */
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):disabled {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+	color: var(--text-muted);
+	cursor: not-allowed;
+}
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *))[readonly] {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+	color: var(--text-color);
+	cursor: default;
+}
+
+/* Read-only value shown instead of an input (.control-value). Same height as the input so the
+   form does not jump; Frappe's disabled tokens stay light in dark mode, so tokens are used here. */
+.frappe-control .like-disabled-input {
+	min-height: var(--zg-field-height);
+	padding: var(--zg-field-pad-y) var(--zg-field-pad-x);
+	border: 1px solid var(--zg-field-border-quiet);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg-sunken);
+	color: var(--text-color);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+	overflow-wrap: anywhere;
+	cursor: default;
+}
+
+/* --------------------------------------------
+   4. VALIDATION
+   Frappe marks a bad field with .has-error on the .frappe-control wrapper (mandatory + empty, or
+   df.invalid) and reports the text through msgprint; the only text attached to a field is its
+   .help-box. So the state is: error border (token above), a 2px-weight ring, the label turned red
+   with an alert icon (so colour is not the only cue), and the description turned red.
+   -------------------------------------------- */
+.frappe-control.has-error .form-control:where(:not(.grid-body *, .datatable *)) {
+	box-shadow: 0 0 0 1px var(--zg-field-error);
+}
+
+.frappe-control.has-error .control-label,
+.frappe-control.has-error .checkbox .label-area,
+.frappe-control.has-error .switch-control .label-area {
+	color: var(--zg-field-error);
+}
+.frappe-control.has-error .control-label::before,
+.frappe-control.has-error .checkbox .label-area::before,
+.frappe-control.has-error .switch-control .label-area::before {
+	content: "";
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-end: 0.3em;
+	vertical-align: -0.15em;
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.2'/%3E%3Cpath d='M8 4.8v3.8M8 11.2v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.2'/%3E%3Cpath d='M8 4.8v3.8M8 11.2v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.frappe-control.has-error .help-box {
+	--gray-500: var(--zg-field-error);     /* see section 1 */
+}
+
+/* MultiSelectPills: Frappe draws the error border on the outer .control-input, which would double up
+   with the bordered inner box */
+.frappe-control[data-fieldtype="MultiSelectPills"].has-error .control-input {
+	border: 0;
+}
+.frappe-control[data-fieldtype="MultiSelectPills"].has-error .table-multiselect.form-control {
+	border-color: var(--zg-field-error);
+}
+
+/* --------------------------------------------
+   5. LINK / AUTOCOMPLETE
+   -------------------------------------------- */
+
+/* Open / clear buttons sit inside the input: inset them so the input border stays whole */
+.frappe-control .control-input .link-btn {    /* scoped to field inputs: the form timeline reuses .link-btn for plain action buttons */
+	inset-block-start: 1px;
+	inset-inline-end: 1px;
+	height: calc(100% - 2px);
+	padding-inline: var(--zg-space-1);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-field-bg);
+	color: var(--text-muted);
+}
+.frappe-control .control-input .link-btn a:hover {
+	color: var(--primary);
+}
+.frappe-control .control-input .link-btn .btn-clear:hover {
+	color: var(--zg-field-error);          /* Frappe's var(--error-color) is undefined */
+}
+
+/* Dropdown (Link, Autocomplete, MultiSelectPills, filter values) */
+.frappe-control .awesomplete > [role="listbox"] {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--dark-border-color);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--popover-bg);
+	box-shadow: var(--shadow-lg);
+}
+.frappe-control .awesomplete > [role="listbox"] > li,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] {
+	padding: var(--zg-field-option-pad-y) var(--zg-space-2);
+	border-inline-start: 3px solid transparent;   /* keyboard selection bar, reserved so rows do not shift */
+	border-radius: var(--zg-radius-sm);
+	font-size: var(--zg-text-base);
+}
+.frappe-control .awesomplete > [role="listbox"] > li:hover,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"]:hover {
+	background-color: var(--fg-hover-color);       /* Frappe's --awesomplete-hover-bg stays light in dark */
+}
+.frappe-control .awesomplete > [role="listbox"] > li[aria-selected="true"],
+.frappe-control .awesomplete > [role="listbox"] > [role="option"][aria-selected="true"] {
+	border-inline-start-color: var(--primary);     /* bar + tint: selection is not colour alone */
+	background-color: var(--zg-field-selected);
+}
+.frappe-control .awesomplete > [role="listbox"] > li strong,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] strong {
+	font-size: var(--zg-text-base);
+	font-weight: 600;
+}
+.frappe-control .awesomplete > [role="listbox"] > li .small,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] .small {
+	color: var(--zg-field-text-2);
+	font-size: var(--zg-text-sm);
+}
+.frappe-control .awesomplete > [role="listbox"] > li .link-option,
+.frappe-control .awesomplete > [role="listbox"] > [role="option"] .link-option {
+	color: var(--primary);                         /* "Create a new ..." / "Advanced Search" rows */
+	font-weight: 500;
+}
+
+/* --------------------------------------------
+   6. PASSWORD, MULTISELECT, TAG PILLS
+   -------------------------------------------- */
+.frappe-control[data-fieldtype="Password"] .control-input-wrapper .toggle-password {
+	display: flex;                         /* .hidden / .hide are display:none !important, so toggling still works */
+	align-items: center;
+	height: var(--zg-field-height);
+	padding-block: 0;
+	color: var(--text-muted);
+}
+.frappe-control[data-fieldtype="Password"] .control-input-wrapper .toggle-password:hover {
+	color: var(--text-color);
+}
+
+/* The wrapper is a .form-control with a fixed height in forms (10-controls); it must grow with its pills */
+.frappe-control .table-multiselect.form-control {
+	height: auto;
+	min-height: var(--zg-field-height);
+	padding-block: var(--zg-space-1);
+}
+/* Its inner <input> has no own border, so the wrapper carries the focus ring */
+.frappe-control .table-multiselect.form-control:focus-within {
+	border-color: var(--zg-focus-ring);
+	box-shadow: var(--zg-field-ring);
+}
+/* The typing input inside the box is borderless: Frappe tints it with --control-bg, which shows as a grey bar on a white box */
+.frappe-control .table-multiselect .input-with-feedback {
+	background-color: transparent;
+	box-shadow: none;
+}
+.frappe-control .table-multiselect .tb-selected-value {
+	padding: 2px var(--zg-space-2);
+	border: 1px solid var(--dark-border-color);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-field-bg-sunken);   /* --subtle-fg equals the field fill in dark and the chip vanishes */
+	color: var(--text-color);
+	font-size: var(--zg-text-sm);
+}
+.frappe-control .table-multiselect .tb-selected-value .btn-remove {
+	margin-inline-start: var(--zg-space-1);
+	color: var(--text-muted);
+	cursor: pointer;
+}
+.frappe-control .table-multiselect .tb-selected-value .btn-remove:hover {
+	color: var(--zg-field-error);
+}
+
+/* MultiSelect list: trigger text centred, selected row uses a themed tint (Frappe's is a light yellow) */
+.frappe-control .multiselect-list .status-text {
+	top: 50%;
+	transform: translateY(-50%);
+}
+.multiselect-list .selectable-item.selected {
+	background-color: var(--zg-field-selected);
+}
+
+/* --------------------------------------------
+   7. CHECKBOX AND RADIO
+   Frappe sizes these (--checkbox-size) and draws the tick; the theme sets colour, focus, disabled.
+   Global on purpose: list / report / grid checkboxes should look the same as field checkboxes.
+   -------------------------------------------- */
+input[type="checkbox"] {
+	border-color: var(--zg-field-border);
+	background-color: var(--zg-field-bg);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+input[type="checkbox"]:hover:where(:not(:checked, :disabled)),
+input[type="radio"]:hover:where(:not(:disabled))::before {
+	border-color: var(--zg-field-border-hover);
+}
+input[type="checkbox"]:disabled,
+input[type="checkbox"].disabled-deselected {
+	border-color: var(--zg-field-border-quiet);
+	background-color: var(--zg-field-bg-sunken);
+	box-shadow: none;
+}
+
+input[type="radio"]::before {
+	border-color: var(--zg-field-border);
+	background-color: var(--zg-field-bg);
+}
+input[type="radio"]:checked::before {
+	border-color: var(--primary);
+	box-shadow: inset 0 0 0 3px var(--zg-field-bg);   /* Frappe's gap is hardcoded white */
+}
+input[type="radio"]:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+/* Focus: same ring as 90-a11y, on the box itself (Frappe's is a 25% halo) */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+input[type="checkbox"]:focus:not(:focus-visible) {
+	box-shadow: none;
+}
+
+/* Clickable label, dimmed when disabled */
+.checkbox label {
+	cursor: pointer;
+}
+.checkbox label:has(input:disabled) {
+	cursor: not-allowed;
+}
+.checkbox label:has(input:disabled) .label-area {
+	color: var(--text-muted);
+}
+
+/* --------------------------------------------
+   8. SWITCH
+   New field type (.switch-control) and the legacy .switch / .slider (timeline toggle).
+   Off = grey track, on = brand track with the thumb sliding: position is the non-colour cue.
+   -------------------------------------------- */
+.switch-control .switch-visual {
+	width: 32px;
+	height: 18px;
+	background-color: var(--zg-field-border);
+	transition: background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch-control .switch-thumb {
+	width: 14px;
+	height: 14px;
+	background-color: var(--zg-field-bg);
+	transition: transform var(--zg-duration-base) var(--zg-ease),
+		background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch-control .input-area:has(input:checked) ~ .switch-visual {
+	background-color: var(--primary);
+}
+.switch-control .input-area:has(input:checked) ~ .switch-visual .switch-thumb {
+	background-color: var(--zg-field-on-accent);
+	transform: translateX(14px);
+}
+.frappe-rtl .switch-control .input-area:has(input:checked) ~ .switch-visual .switch-thumb {
+	transform: translateX(-14px);
+}
+.switch-control:hover .input-area:not(:has(input:checked)) ~ .switch-visual {
+	background-color: var(--zg-field-border-hover);
+}
+.switch-control:hover .input-area:has(input:checked) ~ .switch-visual {
+	background-color: color-mix(in srgb, var(--primary) 85%, var(--text-color));
+}
+.switch-control .input-area:has(input:focus-visible) ~ .switch-visual {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+.switch-control:has(input:disabled) .input-area:has(input:checked) ~ .switch-visual {
+	opacity: 0.55;
+}
+
+.switch .slider {
+	background-color: var(--zg-field-border);
+	transition: background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch .slider::before {
+	background-color: var(--zg-field-bg);
+	transition: transform var(--zg-duration-base) var(--zg-ease),
+		background-color var(--zg-duration-base) var(--zg-ease);
+}
+.switch input:checked + .slider {
+	background-color: var(--primary);
+}
+.switch input:checked + .slider::before {
+	background-color: var(--zg-field-on-accent);
+}
+.switch input:focus-visible + .slider {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+	box-shadow: none;
+}
+
+/* --------------------------------------------
+   9. DATE / DATETIME / TIME PICKERS (air-datepicker; Frappe sets its tokens, but leaves cyan
+   defaults, light-only greys and white-on-primary text in place)
+   -------------------------------------------- */
+.datepicker {
+	border-color: var(--dark-border-color);
+	border-radius: var(--zg-radius-lg);
+	background: var(--popover-bg);
+	box-shadow: var(--shadow-xl);
+	font-size: var(--zg-text-base);
+}
+.datepicker--pointer {
+	background: var(--popover-bg);
+	border-color: var(--dark-border-color);
+}
+.datepicker--nav-title {
+	border-radius: var(--zg-radius-sm);
+	color: var(--text-color);
+	font-weight: 600;
+}
+.datepicker--nav-title i {
+	color: var(--text-muted);
+}
+.datepicker--nav-action path {
+	stroke: var(--text-muted);
+}
+.datepicker--nav-action:hover path {
+	stroke: var(--text-color);
+}
+.datepicker--day-name {
+	color: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	font-weight: 500;
+}
+
+.datepicker--cell {
+	height: var(--zg-field-target);
+	border-radius: var(--zg-radius-sm);
+}
+.datepicker--cell.-current- {
+	box-shadow: inset 0 0 0 1px var(--primary);    /* today: ring + bold (Frappe), not colour alone */
+}
+.datepicker--cell.-selected-,
+.datepicker--cell.-selected-.-current-,
+.datepicker--cell.-current-.-selected- {
+	border-radius: var(--zg-radius-sm);
+	box-shadow: none;
+	color: var(--zg-field-on-accent);
+}
+.datepicker--cell.-selected-.-focus-,
+.datepicker--cell.-in-range-.-focus- {
+	color: var(--zg-field-on-accent);
+}
+.datepicker--cell.-disabled-,
+.datepicker--cell.-disabled-.-focus-,
+.datepicker--cell-day.-other-month-,
+.datepicker--cell-year.-other-decade- {
+	color: var(--zg-field-faint);
+}
+.datepicker--cell-day.-other-month-:hover,
+.datepicker--cell-year.-other-decade-:hover {
+	color: var(--text-muted);
+}
+.-selected-.datepicker--cell-day.-other-month-,
+.-selected-.datepicker--cell-year.-other-decade- {
+	background: color-mix(in srgb, var(--date-active-bg) 55%, transparent);
+	color: var(--text-color);              /* on-accent text would be too faint on the 55% tint */
+}
+
+.datepicker--button {
+	height: var(--zg-field-target);
+	border-radius: var(--zg-radius-sm);
+	color: var(--primary);
+	font-weight: 500;
+}
+.datepicker--button:hover {
+	color: var(--primary);
+}
+
+/* Time sliders: thumbs were white with a light-grey edge */
+.datepicker--time-row input[type="range"]::-webkit-slider-thumb {
+	border-color: var(--zg-field-border);
+	background: var(--zg-field-bg);
+}
+.datepicker--time-row input[type="range"]::-moz-range-thumb {
+	border-color: var(--zg-field-border);
+	background: var(--zg-field-bg);
+}
+.datepicker--time-row input[type="range"]:hover::-webkit-slider-thumb {
+	border-color: var(--zg-field-border-hover);
+}
+.datepicker--time-row input[type="range"]:hover::-moz-range-thumb {
+	border-color: var(--zg-field-border-hover);
+}
+.datepicker--time-row input[type="range"]:focus::-webkit-slider-thumb {
+	border-color: var(--primary);
+	background: var(--primary);
+}
+.datepicker--time-row input[type="range"]:focus::-moz-range-thumb {
+	border-color: var(--primary);
+	background: var(--primary);
+}
+.datepicker--time-current-hours.-focus-::after,
+.datepicker--time-current-minutes.-focus-::after,
+.datepicker--time-current-seconds.-focus-::after {
+	box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* --------------------------------------------
+   10. ATTACH AND FILE UPLOAD
+   -------------------------------------------- */
+.frappe-control[data-fieldtype="Attach"] .attached-file,
+.frappe-control[data-fieldtype="Attach Image"] .attached-file {
+	min-height: var(--zg-field-height);
+	border: 1px solid var(--zg-field-border-quiet);
+	border-radius: var(--zg-field-radius);
+	background-color: var(--zg-field-bg-sunken);
+}
+
+/* Upload dialog drop area (Vue scoped styles load later, hence the extra ancestor classes) */
+.modal-body .file-uploader .file-upload-area {
+	border: 1px dashed var(--zg-field-border);
+	border-radius: var(--zg-radius-lg);
+	background-color: var(--zg-field-bg-sunken);
+	transition: border-color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+.modal-body .file-uploader .file-upload-area:hover,
+.modal-body .file-uploader .file-upload-area:focus-within {
+	border-color: var(--primary);
+	background-color: var(--zg-field-selected);
+}
+.modal-body .file-uploader .file-upload-area .btn-file-upload:hover {
+	background-color: var(--fg-hover-color);
+}
+
+/* --------------------------------------------
+   11. TEXT EDITOR (Quill) AND CODE
+   -------------------------------------------- */
+.frappe-control .ql-toolbar.ql-snow,
+.frappe-control .ql-container.ql-snow {
+	border-color: var(--zg-field-border);
+}
+.frappe-control .ql-container.ql-snow {
+	background-color: var(--zg-field-bg);
+}
+.frappe-control .ql-editor:not(.read-mode) {
+	background-color: var(--zg-field-bg);
+}
+.frappe-control .ql-editor.ql-blank::before {
+	color: var(--text-muted);              /* Frappe uses rgba(0,0,0,.6): invisible in dark */
+	font-style: normal;
+}
+.frappe-control .ace_editor {
+	border: 1px solid var(--zg-field-border);
+	border-radius: var(--zg-field-radius);
+}
+
+/* --------------------------------------------
+   12. TOUCH
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.frappe-control .form-control:where(:not(.grid-body *, .datatable *)) {
+		font-size: var(--zg-text-lg);
+	}
+	.checkbox label,
+	.switch-control {
+		align-items: center;
+		min-height: var(--zg-field-target);
+		padding-top: 0;
+	}
+	.datepicker--nav {
+		min-height: var(--zg-field-target);
+	}
+}

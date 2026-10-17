@@ -683,10 +683,6 @@ body.st-dual-sidebar .onb-panel {
 	border-color: var(--gray-300);
 }
 
-.desktop-wrapper .edit-mode-buttons .btn {
-	border-radius: var(--border-radius-md);
-}
-
 /* ===== Page indicator ===== */
 .desktop-wrapper .page-indicator {
 	background: var(--gray-300);

@@ -1,0 +1,399 @@
+/* ============================================
+   85. STATUS & BADGE SYSTEM — indicator pills, dots, .badge, tag pills
+   One semantic palette for every status indicator, driven by the --zg-success / warning /
+   danger / info tokens (02) plus a neutral and purple / cyan / pink. Supersedes the pill
+   rules in 70 (list view), 60 (shortcut-widget and number-card pills) and Frappe's own
+   per-colour pill rules. Both themes swap by token (section 1); nothing here is a hex.
+
+   How it works: a colour class (.green, .red, ...) only picks a hue (--zg-st-hue). Every
+   surface is then derived from that hue, so adding a colour is one line:
+     tint     color-mix(hue @ --zg-badge-tint, transparent)          pill background
+     text     color-mix(hue @ --zg-badge-keep, --zg-badge-ink)       >= 5.5:1 on the tint, both themes
+     ring     inset 1px of the hue @ --zg-badge-ring                 keeps the pill edge visible
+     dot      6px leading dot in the hue (>= 3:1 on the tint). Neutral and "new" statuses
+              (gray, grey, light-blue) get a HOLLOW dot, so "inactive / offline / draft" differs
+              from "active / online" by shape as well as colour. The label text is always shown.
+
+   Frappe v16 DOM (verified in frappe/public/js): list view and form header render
+   <span class="indicator-pill {colour} [filterable] no-indicator-dot"><span>label</span></span>
+   (page.js set_indicator, list_view.js get_indicator_html); Select values in list rows use
+   .indicator-pill without no-indicator-dot; number cards use .indicator-pill-round.green|red;
+   dot + label markup is .indicator.{colour} (form dashboard, msgprint title, report cells).
+   Frappe hides the dot on form / list pills (no-indicator-dot); section 5 restores it.
+
+   Logical status -> Frappe colour class (chosen by Frappe / ERPNext / the doctype, not by CSS):
+     Draft .............. red      (docstatus 0 default; Sales Invoice "Draft")
+     Pending / Open / To Bill / To Deliver / Unpaid / On Hold / Not Saved ... orange
+     Partly Paid ........ yellow
+     Approved / Completed / Closed / Paid / Active / Available / Success ..... green
+     Synced / Online .... green    (set it in get_indicator or a DocType State)
+     Submitted / Enabled  blue     (docstatus 1 default; workflow style Primary)
+     Scheduled / New .... light-blue (workflow style Info)
+     Cancelled / Overdue / Failed / Rejected / Error ......................... red
+     Inactive / Disabled / Expired / Return / Credit Note Issued / Offline ... gray or grey
+     Internal Transfer / Archived ... darkgrey
+     Workflow style Inverse ......... black (Frappe emits the class but ships no CSS for it)
+     cyan, purple, pink: unused by Frappe defaults; for custom states, e.g. Syncing = cyan,
+     Processing = purple, Priority = pink (DocType State colours: Blue Cyan Gray Green
+     Light Blue Orange Pink Purple Red Yellow).
+   Frappe never emits "lightblue" (the class is light-blue), so it is not styled, and it has no
+   .label status class (only Plyr's), so none is styled either.
+   ============================================ */
+
+/* --------------------------------------------
+   1. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Hues. Status roles come straight from the alert tokens in 02, so they follow any change there.
+	   Orange sits between warning and danger (escalating); "info" leans on the brand blue. */
+	--zg-badge-ink: var(--heading-color);
+	--zg-hue-success: var(--zg-success-fg);
+	--zg-hue-warning: var(--zg-warning-fg);
+	--zg-hue-danger: var(--zg-danger-fg);
+	--zg-hue-info: color-mix(in srgb, var(--primary) 70%, var(--zg-info-fg));
+	--zg-hue-orange: color-mix(in srgb, var(--zg-warning-fg) 55%, var(--zg-danger-fg));
+	--zg-hue-neutral: var(--text-muted);
+	--zg-hue-neutral-strong: color-mix(in srgb, var(--text-muted) 55%, var(--zg-badge-ink));
+	--zg-hue-purple: var(--zg-accent-purple-fg);
+	--zg-hue-cyan: var(--cyan-700);
+	--zg-hue-pink: var(--pink-600);
+
+	/* Recipe (percentages). Contrast of text on its tint, worst case over page / card / row-hover surfaces,
+	   both themes: >= 5.5:1 at rest, >= 5.0:1 hovered, >= 4.6:1 pressed. */
+	--zg-badge-tint: 12%;
+	--zg-badge-step: 8%;       /* added to the tint on hover; 1.5x on press */
+	--zg-badge-keep: 62%;      /* share of the hue kept in the text colour; the rest is ink */
+	--zg-badge-ring: 24%;
+
+	/* Sizes */
+	--zg-badge-h: 20px;
+	--zg-badge-h-lg: 22px;
+	--zg-badge-dot: 6px;
+	--zg-badge-gap: 6px;       /* dot to label (Frappe's own value) */
+
+	/* Readable text for each role, for rules outside the pills (number-card stats, custom widgets) */
+	--zg-success-text: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-warning-text: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-danger-text: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-info-text: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-keep), var(--zg-badge-ink));
+	--zg-neutral-text: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-keep), var(--zg-badge-ink));
+}
+
+[data-theme="dark"] {
+	/* Frappe's palette cyan / pink are mid-tones; lift them so dot and tint hold up on dark surfaces */
+	--zg-hue-cyan: var(--cyan-400);
+	--zg-hue-pink: color-mix(in srgb, var(--pink-500) 70%, var(--zg-badge-ink));
+
+	--zg-badge-tint: 14%;
+	--zg-badge-keep: 65%;
+	--zg-badge-ring: 30%;
+
+	/* 00-tokens defines these four in its light block only, so the light values bleed into dark mode
+	   (a pale pill, a pale kanban column). Restore Frappe's dark pairing using theme tokens. */
+	--bg-blue: var(--surface-blue-1);
+	--bg-light-blue: var(--surface-blue-1);
+	--text-on-blue: var(--zg-info-fg);
+	--text-on-light-blue: var(--zg-info-fg);
+}
+
+/* More contrast on request: more ink in the text, a firmer ring */
+@media (prefers-contrast: more) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-badge-keep: 35%;
+		--zg-badge-ring: 60%;
+	}
+}
+
+/* --------------------------------------------
+   2. COLOUR CLASS -> HUE
+   Frappe's 12 classes (indicator.scss) plus black (workflow Inverse). Defaults first, then each colour.
+   -------------------------------------------- */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+) {
+	--zg-st-tint: var(--zg-badge-tint);
+	--zg-st-dot-fill: var(--zg-st-hue);   /* solid dot; hollow variants below set this to transparent */
+	--zg-st-dot-ring: 0px;
+}
+
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).green { --zg-st-hue: var(--zg-hue-success); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).red { --zg-st-hue: var(--zg-hue-danger); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).orange { --zg-st-hue: var(--zg-hue-orange); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).yellow { --zg-st-hue: var(--zg-hue-warning); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).blue { --zg-st-hue: var(--zg-hue-info); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).cyan { --zg-st-hue: var(--zg-hue-cyan); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).purple { --zg-st-hue: var(--zg-hue-purple); }
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).pink { --zg-st-hue: var(--zg-hue-pink); }
+
+/* Neutral family: gray / grey = inactive, draft-like, offline (hollow dot); darkgrey = closed, archived (solid, stronger) */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round):is(.gray, .grey) {
+	--zg-st-hue: var(--zg-hue-neutral);
+	--zg-st-dot-fill: transparent;
+	--zg-st-dot-ring: 1.5px;
+}
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).darkgrey {
+	--zg-st-hue: var(--zg-hue-neutral-strong);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.4);
+}
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).black {
+	--zg-st-hue: var(--zg-badge-ink);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.2);
+}
+
+/* Light-blue = informational / new: same hue as blue, a lighter tint and a hollow dot */
+:is(.indicator, .indicator-pill, .indicator-pill-right, .indicator-pill-round).light-blue {
+	--zg-st-hue: var(--zg-hue-info);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 0.6);
+	--zg-st-dot-fill: transparent;
+	--zg-st-dot-ring: 1.5px;
+}
+
+/* --------------------------------------------
+   3. PILL SHAPE
+   Replaces Frappe's 4.5px padding / regular weight / --border-radius-full, and 70's 4px-radius variant.
+   -------------------------------------------- */
+.indicator-pill,
+.indicator-pill-right {
+	height: var(--zg-badge-h);
+	padding: 0 var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+.indicator-pill-round {
+	padding: 0;
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: 1;
+}
+
+/* --------------------------------------------
+   4. PILL SURFACE — tint, text, ring, and the hover / press steps of clickable pills
+   -------------------------------------------- */
+:is(.indicator-pill, .indicator-pill-right, .indicator-pill-round):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+) {
+	background: color-mix(in srgb, var(--zg-st-hue) var(--zg-st-tint), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+
+/* List-view pills are click-to-filter (.filterable, cursor set by Frappe) */
+.indicator-pill.filterable {
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+:is(.indicator-pill, .indicator-pill-right):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+).filterable:hover {
+	background: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + var(--zg-badge-step)), transparent);
+}
+:is(.indicator-pill, .indicator-pill-right):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+).filterable:active {
+	background: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + 1.5 * var(--zg-badge-step)), transparent);
+}
+
+/* --------------------------------------------
+   5. LEADING DOT
+   The shape that carries status next to the colour. Frappe's colour rule paints it with --text-on-*
+   (a different colour from the new text), so it is re-pointed at the hue here.
+   -------------------------------------------- */
+:is(.indicator, .indicator-pill):is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+)::before,
+.indicator-pill-right:is(
+	.green, .red, .orange, .yellow, .blue, .light-blue, .cyan, .purple, .pink, .gray, .grey, .darkgrey, .black
+)::after {
+	background: var(--zg-st-dot-fill);
+	box-shadow: inset 0 0 0 var(--zg-st-dot-ring) var(--zg-st-hue);
+}
+
+/* Form header and list rows ship .no-indicator-dot, which would leave the colour as the only cue.
+   Give them the dot back, unless the pill is empty (kanban / colour swatches), asks for no margin, or
+   already holds the 8px dot the mobile form header draws itself (.indicator-doc-html). */
+.indicator-pill.no-indicator-dot:not(.no-margin):not(:empty):not(:has(.indicator-doc-html))::before {
+	content: "";
+	flex-shrink: 0;
+	width: var(--zg-badge-dot);
+	height: var(--zg-badge-dot);
+	border-radius: 50%;
+	margin-inline-end: var(--zg-badge-gap);
+}
+
+/* --------------------------------------------
+   6. .indicator — dot + label (form dashboard, msgprint title, report cells, link formatters)
+   Frappe's dark mode paints this dot with --bg-* (a near-black tint on a dark surface): invisible.
+   -------------------------------------------- */
+.indicator::before {
+	flex-shrink: 0;
+	border-radius: 50%;
+}
+
+/* --------------------------------------------
+   7. WHERE THEY APPEAR
+   -------------------------------------------- */
+/* Form header: a touch larger than list pills, next to the 20px title */
+.title-area .indicator-pill {
+	height: var(--zg-badge-h-lg);
+	font-size: var(--zg-text-sm);
+}
+
+/* Shortcut-widget count pills (supersedes 60's 4px-radius rule at equal specificity) */
+.widget.shortcut-widget-box .indicator-pill {
+	padding: 0 var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+}
+
+/* Number card percentage: Frappe sizes the circle to 18px; 60 squared it off (4px radius, 2px 6px padding) */
+.widget.number-widget-box .percentage-stat-area .indicator-pill-round {
+	padding: 0;
+	border-radius: 50%;
+	font-size: var(--zg-text-xs);
+}
+/* The arrow icon is the non-colour cue; Frappe strokes it --green-500 / --red-500 (about 2.3:1 on the tint) */
+.widget.number-widget-box .widget-body .widget-content :is(.green-stat, .red-stat) .indicator-pill-round use {
+	stroke: currentColor;
+}
+.widget.number-widget-box .widget-body .widget-content .green-stat { color: var(--zg-success-text); }
+.widget.number-widget-box .widget-body .widget-content .red-stat { color: var(--zg-danger-text); }
+/* --gray-600 is the near-black #30363D in dark mode */
+.widget.number-widget-box .widget-body .widget-content .grey-stat { color: var(--text-muted); }
+
+/* --------------------------------------------
+   8. .badge (Bootstrap) — Frappe paints the variants with fixed hex fills
+   Tinted like the pills; no dot because a badge always carries its own text or count. Core desk
+   emits .badge only in the naming-series editor (badge-light / badge-dark); this is for the rest.
+   Mapping: primary = brand blue, info = cyan, secondary / light = neutral, dark = strong neutral.
+   -------------------------------------------- */
+.badge {
+	padding: 2px var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	letter-spacing: 0.01em;
+	font-variant-numeric: tabular-nums;
+}
+.badge-pill {
+	padding-inline: var(--zg-space-2);
+}
+
+:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark) {
+	--zg-st-tint: var(--zg-badge-tint);
+	background-color: color-mix(in srgb, var(--zg-st-hue) var(--zg-st-tint), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+.badge-primary { --zg-st-hue: var(--zg-hue-info); }
+.badge-secondary { --zg-st-hue: var(--zg-hue-neutral); }
+.badge-success { --zg-st-hue: var(--zg-hue-success); }
+.badge-info { --zg-st-hue: var(--zg-hue-cyan); }
+.badge-warning { --zg-st-hue: var(--zg-hue-warning); }
+.badge-danger { --zg-st-hue: var(--zg-hue-danger); }
+.badge-light {
+	--zg-st-hue: var(--zg-hue-neutral);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 0.6);
+}
+.badge-dark {
+	--zg-st-hue: var(--zg-hue-neutral-strong);
+	--zg-st-tint: calc(var(--zg-badge-tint) * 1.4);
+}
+
+/* Links styled as badges: one hover step and a visible keyboard ring (Frappe sets outline:0 and a 50% halo on :focus) */
+a.badge {
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+a.badge:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark):hover {
+	background-color: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + var(--zg-badge-step)), transparent);
+	color: color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-keep), var(--zg-badge-ink));
+}
+a.badge:is(.badge-primary, .badge-secondary, .badge-success, .badge-info, .badge-warning, .badge-danger, .badge-light, .badge-dark):active {
+	background-color: color-mix(in srgb, var(--zg-st-hue) calc(var(--zg-st-tint) + 1.5 * var(--zg-badge-step)), transparent);
+}
+a.badge:focus {
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--zg-st-hue) var(--zg-badge-ring), transparent);
+}
+a.badge:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+
+/* --------------------------------------------
+   9. .tag-pill — list-view and kanban document tags
+   List rows colour each tag with INLINE style="background-color: var(--{c}-avatar-bg); color:
+   var(--{c}-avatar-color)" (frappe.get_palette). Inline wins over any rule, so the variables are
+   re-mapped on the pill itself instead: same palette, tint + readable ink, both themes, no !important.
+   The form sidebar's tag chips (.data-pill) are styled in 20 and left alone.
+   -------------------------------------------- */
+.tag-pill {
+	--orange-avatar-bg: color-mix(in srgb, var(--zg-hue-orange) var(--zg-badge-tint), transparent);
+	--orange-avatar-color: color-mix(in srgb, var(--zg-hue-orange) var(--zg-badge-keep), var(--zg-badge-ink));
+	--pink-avatar-bg: color-mix(in srgb, var(--zg-hue-pink) var(--zg-badge-tint), transparent);
+	--pink-avatar-color: color-mix(in srgb, var(--zg-hue-pink) var(--zg-badge-keep), var(--zg-badge-ink));
+	--blue-avatar-bg: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-tint), transparent);
+	--blue-avatar-color: color-mix(in srgb, var(--zg-hue-info) var(--zg-badge-keep), var(--zg-badge-ink));
+	--green-avatar-bg: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-tint), transparent);
+	--green-avatar-color: color-mix(in srgb, var(--zg-hue-success) var(--zg-badge-keep), var(--zg-badge-ink));
+	--dark-green-avatar-bg: var(--green-avatar-bg);
+	--dark-green-avatar-color: var(--green-avatar-color);
+	--red-avatar-bg: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-tint), transparent);
+	--red-avatar-color: color-mix(in srgb, var(--zg-hue-danger) var(--zg-badge-keep), var(--zg-badge-ink));
+	--yellow-avatar-bg: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-tint), transparent);
+	--yellow-avatar-color: color-mix(in srgb, var(--zg-hue-warning) var(--zg-badge-keep), var(--zg-badge-ink));
+	--purple-avatar-bg: color-mix(in srgb, var(--zg-hue-purple) var(--zg-badge-tint), transparent);
+	--purple-avatar-color: color-mix(in srgb, var(--zg-hue-purple) var(--zg-badge-keep), var(--zg-badge-ink));
+	--gray-avatar-bg: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-tint), transparent);
+	--gray-avatar-color: var(--zg-neutral-text);
+}
+
+/* Shape and the neutral default (the "+N" overflow chip has no inline colour). Width is left to
+   Frappe: 60px in list rows, auto in kanban cards. The dark selector matches Frappe's own specificity. */
+.tag-pill,
+[data-theme="dark"] .tag-pill {
+	padding: 2px var(--zg-space-2);
+	border-radius: var(--zg-radius-pill);
+	background-color: color-mix(in srgb, var(--zg-hue-neutral) var(--zg-badge-tint), transparent);
+	color: var(--zg-neutral-text);
+	font-size: var(--zg-text-xs);
+	font-weight: 500;
+	line-height: var(--zg-leading-tight);
+}
+
+/* --------------------------------------------
+   10. COARSE POINTERS & FORCED COLOURS
+   Pills are display-only; the click-to-filter list pill is a secondary shortcut inside a row whose
+   own tap target is the primary one. The kanban column-colour swatches are real buttons, so they grow.
+   -------------------------------------------- */
+@media (pointer: coarse) {
+	.kanban .kanban-column .kanban-column-header .column-options .button-group div.indicator-pill {
+		width: 40px;
+		height: 40px;
+		justify-content: center;
+	}
+}
+
+/* Windows high-contrast: tints and inset rings are dropped, so give the edge and the dots system colours */
+@media (forced-colors: active) {
+	:is(.indicator-pill, .indicator-pill-right, .indicator-pill-round, .badge, .tag-pill) {
+		border: 1px solid CanvasText;
+	}
+	:is(.indicator, .indicator-pill):is(.green, .red, .orange, .yellow, .blue, .cyan, .purple, .pink, .darkgrey, .black)::before,
+	.indicator-pill-right:is(.green, .red, .orange, .yellow, .blue, .cyan, .purple, .pink, .darkgrey, .black)::after {
+		forced-color-adjust: none;
+		background: CanvasText;
+	}
+	:is(.indicator, .indicator-pill):is(.light-blue, .gray, .grey)::before,
+	.indicator-pill-right:is(.light-blue, .gray, .grey)::after {
+		forced-color-adjust: none;
+		background: Canvas;
+		border: 1.5px solid CanvasText;
+	}
+}

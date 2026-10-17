@@ -2,34 +2,6 @@
    26. LIST VIEW
    ============================================ */
 
-/* Status/indicator pills — shared base so list view row status pills
-   (.indicator-pill.green/red/...) match the already-styled dashboard
-   widget pills instead of a third near-duplicate rule. */
-.indicator-pill {
-	border-radius: var(--border-radius-sm);
-	font-size: 11px;
-	padding: 2px 8px;
-	font-weight: 500;
-}
-
-.list-row-container {
-	border-bottom: 1px solid var(--border-color);
-	transition: background 0.12s ease;
-}
-
-.list-row-container:hover {
-	background: var(--fg-hover-color);
-}
-
-.list-row-container .list-row-head {
-	border-bottom: 1px solid var(--border-color);
-	color: var(--text-muted);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.01em;
-	text-transform: uppercase;
-}
-
 .list-row-checkbox {
 	accent-color: var(--primary);
 }
@@ -51,117 +23,21 @@
 	box-shadow: var(--shadow-xs);
 }
 
-.list-paging-area .btn,
-.sort-selector .btn {
-	border-radius: var(--border-radius-sm);
-}
-
 /* ============================================
    27. REPORT VIEW
    ============================================ */
 
 .datatable-wrapper {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	overflow: hidden;
+	overflow: hidden;  /* border/radius: 84-tables.css */
 }
 
 .dt-scrollable {
 	background: var(--card-bg);
 }
 
-.dt-row-header .dt-cell {
-	background: var(--card-bg);
-	border-bottom: 1px solid var(--border-color);
-	color: var(--text-muted);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.01em;
-	text-transform: uppercase;
-}
-
-.dt-row-filter .dt-cell {
-	background: var(--subtle-fg);
-}
-
-.dt-cell {
-	border-color: var(--border-color);
-}
-
-.dt-cell--sticky {
-	background: var(--gray-50);
-}
-
-.dt-row:not(.dt-row-header):not(.dt-row-filter):hover .dt-cell {
-	background: var(--fg-hover-color) !important;
-}
-
-.dt-input {
-	border-radius: var(--border-radius-sm);
-	font-size: 12px;
-}
-
-.dt-dropdown-container .dt-dropdown__list {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	box-shadow: var(--shadow-lg);
-	background: var(--card-bg);
-}
-
-.dt-dropdown__list-item:hover {
-	background: var(--fg-hover-color);
-}
-
-[data-theme="dark"] .dt-cell--sticky {
-	background: var(--gray-800);
-}
-
 /* ============================================
-   28. DIALOGS & MODALS (frappe.ui.Dialog / frappe.get_modal)
+   28. DIALOGS & MODALS — moved to 86-tabs-menus-dialogs.css
    ============================================ */
-
-.modal-content {
-	border-radius: var(--border-radius-2xl);
-	border: 1px solid var(--border-color);
-	box-shadow: var(--shadow-xl);
-	background: var(--modal-bg);
-	overflow: hidden;
-}
-
-.modal-header {
-	padding: 14px 20px;
-	border-bottom: 1px solid var(--border-color);
-	background: var(--modal-bg);
-}
-
-.modal-header .modal-title {
-	font-size: 15px;
-	font-weight: 600;
-	color: var(--heading-color);
-}
-
-.modal-header .modal-actions .btn-modal-minimize,
-.modal-header .modal-actions .btn-modal-close {
-	border-radius: var(--border-radius-md);
-	transition: background 0.12s ease;
-}
-
-.modal-header .modal-actions .btn-modal-minimize:hover,
-.modal-header .modal-actions .btn-modal-close:hover {
-	background: var(--fg-hover-color);
-}
-
-.modal-footer {
-	background: var(--subtle-accent);
-	border-top: 1px solid var(--border-color);
-	border-radius: 0 0 var(--border-radius-2xl) var(--border-radius-2xl);
-}
-
-/* Branded overlay tint instead of the generic bootstrap black */
-.modal-backdrop.show {
-	background-color: var(--gray-900);
-	opacity: 0.45;
-}
 
 /* ============================================
    29. KANBAN BOARD
@@ -198,7 +74,7 @@
 	text-transform: uppercase;
 	letter-spacing: 0.02em;
 	font-size: 11.5px;
-	color: var(--gray-600);
+	color: var(--text-muted);
 }
 
 .kanban-column .column-options a {
@@ -207,17 +83,6 @@
 }
 
 .kanban-column .column-options a:hover {
-	background: var(--fg-hover-color);
-}
-
-.kanban-column .dropdown-menu {
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-md);
-	box-shadow: var(--shadow-lg);
-	background: var(--card-bg);
-}
-
-.kanban-column .dropdown-menu .dropdown-item:hover {
 	background: var(--fg-hover-color);
 }
 

@@ -1,0 +1,753 @@
+/* ============================================
+   86. TABS, MENUS, POPOVERS & DIALOGS
+   Form / settings / notification tabs; Bootstrap dropdowns, Frappe context menus, the awesomebar
+   result list, popovers and tooltips; modals (frappe.ui.Dialog, msgprint, confirm, warn).
+   Supersedes 10-controls §5b (form tabs), 40 §18 (tooltip) and 70 §28 (dialogs) at equal or higher
+   specificity. Every state reads a token below, so light / dark swap by token.
+
+   Frappe DOM this targets (v16.29):
+     form tab      ul.nav.form-tabs > li.nav-item > button.nav-link[role=tab]            (form/tab.js)
+     page menu     div.menu-btn-group > ul.dropdown-menu > li > a.dropdown-item          (ui/page.js)
+     context menu  div.frappe-menu.context-menu > div.dropdown-menu-item > a             (ui/menu.js)
+     dialog        div.modal > .modal-dialog > .modal-content > .modal-header (.title-section,
+                   .modal-actions) + .modal-body + .modal-footer (.custom-actions, .standard-actions)
+                                                                                         (dom.js get_modal)
+     msgprint      .modal-body > .msgprint ; frappe.confirm / frappe.warn add .frappe-confirm-message ;
+                   frappe.warn turns the primary into .btn-danger                        (ui/messages.js)
+   Frappe marks no destructive menu item: page.add_menu_item() has no class option, so the only hook
+   is the Bootstrap utility .text-danger (styled below for custom code).
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Tabs */
+	--zg-tab-h: 36px;
+	--zg-tab-pad-y: var(--zg-space-2);
+	--zg-tab-pad-x: var(--zg-space-3);
+	--zg-tab-fg: var(--text-muted);
+	--zg-tab-fg-hover: var(--text-color);
+	--zg-tab-fg-active: var(--primary);
+	--zg-tab-fg-disabled: var(--text-light);
+	--zg-tab-bg-hover: color-mix(in srgb, var(--text-color) 5%, transparent);
+	--zg-tab-bg-active: color-mix(in srgb, var(--primary) 8%, transparent);
+	--zg-tab-line-hover: var(--dark-border-color);
+
+	/* Menus and popovers. Text on the hover / active fills is >= 4.5:1 in both themes. */
+	--zg-menu-bg: var(--popover-bg);
+	--zg-menu-border: var(--dark-border-color);
+	--zg-menu-shadow: var(--shadow-lg);
+	--zg-menu-radius: var(--zg-radius-lg);
+	--zg-menu-item-radius: var(--zg-radius-md);
+	--zg-menu-item-h: 32px;
+	--zg-menu-pad-y: 7px;
+	--zg-menu-pad-x: 10px;
+	--zg-menu-fg: var(--text-color);
+	--zg-menu-fg-meta: color-mix(in srgb, var(--text-muted) 70%, var(--text-color));   /* shortcuts, descriptions, headers */
+	--zg-menu-fg-disabled: var(--text-light);
+	--zg-menu-fg-active: var(--primary);
+	--zg-menu-bg-hover: var(--fg-hover-color);
+	--zg-menu-bg-active: color-mix(in srgb, var(--primary) 10%, var(--zg-menu-bg));   /* current item / keyboard selection */
+	--zg-menu-bg-press: color-mix(in srgb, var(--primary) 16%, var(--zg-menu-bg));
+	--zg-menu-divider: color-mix(in srgb, var(--border-color) 50%, var(--dark-border-color));
+	--zg-menu-danger-fg: color-mix(in srgb, var(--zg-danger-fg) 82%, var(--heading-color));
+	--zg-menu-danger-bg: color-mix(in srgb, var(--zg-danger-fg) 8%, var(--zg-menu-bg));
+	--zg-menu-danger-bg-press: color-mix(in srgb, var(--zg-danger-fg) 16%, var(--zg-menu-bg));
+
+	/* Frappe's own .dropdown-item padding (applied with !important) reads this variable */
+	--dropdown-padding: var(--zg-menu-pad-y) var(--zg-menu-pad-x);
+
+	/* Tooltips: navy chip on light, raised grey chip on dark (a navy chip vanishes on a dark page) */
+	--zg-tooltip-bg: var(--gray-900);
+	--zg-tooltip-fg: var(--zg-on-primary);
+
+	/* Dialogs */
+	--zg-dlg-radius: var(--border-radius-2xl);
+	--zg-dlg-shadow: var(--shadow-xl);
+	--zg-dlg-footer-bg: color-mix(in srgb, var(--text-color) 4%, var(--modal-bg));
+	--zg-dlg-scrim: var(--zg-rail-bg);                         /* near-black navy; opacity below */
+	--zg-dlg-scrim-opacity: 0.55;
+}
+
+[data-theme="dark"] {
+	--zg-tooltip-bg: var(--surface-gray-3);
+	--zg-tooltip-fg: var(--heading-color);
+	--zg-dlg-scrim-opacity: 0.7;
+}
+
+/* Touch: 40px rows and tabs */
+@media (pointer: coarse) {
+	:root,
+	[data-theme="light"],
+	[data-theme="dark"] {
+		--zg-tab-h: 40px;
+		--zg-menu-item-h: 40px;
+		--zg-menu-pad-y: 11px;
+	}
+}
+
+/* ============================================
+   1. TABS
+   ============================================ */
+
+/* --------------------------------------------
+   1a. Form tabs (also tabs in dialogs and the icon picker). Frappe styles .nav-link at (0,4,0), matched
+   here. 10-controls §5b carries !important on border, padding, margin and colours, so it must go for the
+   active / hover rules below to take effect in full.
+   -------------------------------------------- */
+.form-tabs-list .form-tabs {
+	gap: var(--zg-space-1);
+	padding-inline: var(--zg-space-1);
+	overflow-x: auto;                          /* Frappe: overflow: overlay on both axes; narrow screens scroll the strip */
+	overflow-y: hidden;
+	overscroll-behavior-x: contain;
+	scroll-padding-inline: var(--zg-space-4);  /* keyboard-focused tab scrolls into view with room to spare */
+	scrollbar-width: thin;
+}
+.form-tabs-list .form-tabs .nav-item {
+	flex: none;
+	margin: 0;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link {
+	align-items: center;                       /* Frappe already makes the button a flex row */
+	gap: var(--zg-space-2);                    /* icon + label */
+	min-height: var(--zg-tab-h);
+	padding: var(--zg-tab-pad-y) var(--zg-tab-pad-x);
+	margin: 0;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: var(--zg-radius-sm) var(--zg-radius-sm) 0 0;
+	background-color: transparent;
+	color: var(--zg-tab-fg);
+	font-size: var(--zg-text-base);
+	font-weight: 500;                          /* one weight for every state: bold-on-select shifts the neighbours */
+	line-height: var(--zg-leading-tight);
+	cursor: pointer;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.form-tabs-list .form-tabs .nav-item .nav-link :is(.icon, .es-icon) {
+	flex: none;
+	width: 14px;
+	height: 14px;
+	--icon-stroke: currentColor;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:not(.active):not(:disabled):not(.disabled):hover {
+	border-bottom-color: var(--zg-tab-line-hover);
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+
+/* Active: colour + 2px line + tint, so the state is not colour alone */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	padding-bottom: var(--zg-tab-pad-y);       /* Frappe trims 1px to make room for its 1px underline */
+	border-bottom: 2px solid var(--zg-tab-fg-active);
+	background-color: var(--zg-tab-bg-active);
+	color: var(--zg-tab-fg-active);
+	font-weight: 500;
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:disabled,
+.form-tabs-list .form-tabs .nav-item .nav-link.disabled {
+	border-bottom-color: transparent;
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+	cursor: not-allowed;
+}
+
+/* Frappe sets outline:none + bold on a focused tab. The ring sits inside the box: the strip scrolls,
+   so an outer ring would be clipped. */
+.form-tabs-list .form-tabs .nav-item .nav-link:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+	font-weight: 500;
+}
+
+/* --------------------------------------------
+   1b. Notification panel tabs (li.notifications-category; not focusable markup, so hover / active only)
+   -------------------------------------------- */
+.notifications-list .notification-item-tabs .notifications-category {
+	border-bottom: 2px solid transparent;
+	color: var(--zg-tab-fg);                   /* Frappe: --text-light, 3.3:1 on white */
+	font-weight: 500;
+	user-select: none;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.notifications-list .notification-item-tabs .notifications-category:hover {
+	color: var(--zg-tab-fg-hover);
+}
+.notifications-list .notification-item-tabs .notifications-category.active {
+	border-bottom-color: var(--zg-tab-fg-active);
+	color: var(--heading-color);
+}
+
+/* --------------------------------------------
+   1c. Bootstrap .nav-tabs / .nav-pills (custom pages). Frappe hard-codes #e2e2e2 / #fff here, so the
+   active tab is a white block in dark mode.
+   -------------------------------------------- */
+.nav-tabs {
+	border-bottom-color: var(--border-color);
+}
+.nav-tabs .nav-link {
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: var(--zg-radius-sm) var(--zg-radius-sm) 0 0;
+	background-color: transparent;
+	color: var(--zg-tab-fg);
+	font-weight: 500;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease);
+}
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link:focus {
+	border-color: transparent transparent var(--zg-tab-line-hover);
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+	border-color: transparent transparent var(--zg-tab-fg-active);
+	background-color: var(--zg-tab-bg-active);
+	color: var(--zg-tab-fg-active);
+}
+.nav-tabs .nav-link.disabled {
+	border-color: transparent;
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+}
+.nav-tabs .nav-link:focus-visible,
+.nav-pills .nav-link:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+
+.nav-pills .nav-link {
+	border-radius: var(--zg-radius-md);
+	color: var(--zg-tab-fg);
+	font-weight: 500;
+	transition: color var(--zg-duration-fast) var(--zg-ease),
+		background-color var(--zg-duration-fast) var(--zg-ease);
+}
+.nav-pills .nav-link:hover {
+	background-color: var(--zg-tab-bg-hover);
+	color: var(--zg-tab-fg-hover);
+}
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-tab-fg-active);
+}
+.nav-pills .nav-link.disabled {
+	background-color: transparent;
+	color: var(--zg-tab-fg-disabled);
+}
+
+/* --------------------------------------------
+   1d. Settings dialog tabs (vertical list in a modal). Frappe's active fill is --surface-white on a
+   --surface-menu-bar (#fff) sidebar in light, so the current tab was a 4% shadow.
+   -------------------------------------------- */
+.settings-dialog-tab-item {
+	border-radius: var(--zg-radius-md);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease);
+}
+.settings-dialog-tab-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);   /* Frappe: a 2px --outline-gray-3 halo, 2.4:1 on white */
+	outline-offset: -2px;
+	box-shadow: none;
+}
+.settings-dialog-tab-item.active,
+.settings-dialog-tab-item.active:hover,
+[data-theme="dark"] .settings-dialog-tab-item.active {
+	background-color: var(--zg-tab-bg-active);
+	box-shadow: inset 3px 0 0 var(--zg-tab-fg-active);   /* bar + tint: not colour alone */
+}
+.settings-dialog-tab-item.active .settings-dialog-tab-label {
+	color: var(--zg-tab-fg-active);
+	font-weight: 600;
+}
+.settings-dialog-tab-item.active .settings-dialog-tab-icon {
+	color: var(--zg-tab-fg-active);
+	--icon-stroke: var(--zg-tab-fg-active);
+}
+
+/* Narrow: the 14rem sidebar leaves a phone no room for the panel; the tabs become a scrolling strip */
+@media (max-width: 767.98px) {
+	.settings-dialog {
+		flex-direction: column;
+	}
+	.settings-dialog-sidebar {
+		flex-direction: row;
+		flex-shrink: 0;
+		width: auto;
+		margin: 0;
+		padding: var(--zg-space-1) var(--zg-space-2);
+		overflow-x: auto;
+		overflow-y: hidden;
+		border-bottom: 1px solid var(--border-color);
+	}
+	.settings-dialog-group-header {
+		display: none;
+	}
+	.settings-dialog-tab-group {
+		display: flex;
+		padding-bottom: 0;
+	}
+	.settings-dialog-tab-list {
+		flex-direction: row;
+		padding: 0;
+	}
+	.settings-dialog-tab-item {
+		flex-shrink: 0;
+		width: auto;
+		white-space: nowrap;
+	}
+	.settings-dialog-tab-item.active,
+	.settings-dialog-tab-item.active:hover,
+	[data-theme="dark"] .settings-dialog-tab-item.active {
+		box-shadow: inset 0 -3px 0 var(--zg-tab-fg-active);   /* start bar becomes an underline */
+	}
+	.settings-dialog-panel {
+		padding: var(--zg-space-4);
+	}
+}
+
+@media (pointer: coarse) {
+	.settings-dialog-tab-item {
+		min-height: var(--zg-tab-h);
+	}
+}
+
+/* ============================================
+   2. DROPDOWN & CONTEXT MENUS
+   ============================================ */
+
+/* --------------------------------------------
+   2a. Bootstrap .dropdown-menu (page Menu / Actions, inner button groups, sort selector, group-by,
+   list settings...). Frappe's 1px border is --subtle-accent, which is the card colour in dark.
+   -------------------------------------------- */
+.dropdown-menu {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--zg-menu-shadow);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+	max-width: calc(100vw - var(--zg-space-4));
+	max-height: min(500px, calc(100vh - var(--zg-space-8)));
+}
+
+/* Items. Frappe: padding comes from --dropdown-padding with !important (re-pointed in the tokens),
+   radius 8px, hover = focus, pressed = a literal #7c7c7c fill. */
+.dropdown-menu .dropdown-item {
+	min-height: var(--zg-menu-item-h);
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-tight);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease),
+		color var(--zg-duration-fast) var(--zg-ease);
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+	background-color: var(--zg-menu-bg-hover);
+	color: var(--zg-menu-fg);
+}
+/* The ring sits inside the item: the menu scrolls (overflow: auto), so an outer ring is clipped */
+.dropdown-menu .dropdown-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+/* Current item (sort order, select-group): tint + weight, not colour alone */
+.dropdown-menu .dropdown-item.active {
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-menu-fg-active);
+	font-weight: 600;
+}
+.dropdown-menu .dropdown-item.active:hover,
+.dropdown-menu .dropdown-item.active:focus {
+	background-color: var(--zg-menu-bg-press);
+	color: var(--zg-menu-fg-active);
+}
+/* Pressed. The second selector beats Frappe's .dropdown-menu a:not([href]):hover:active (white text). */
+.dropdown-menu .dropdown-item:active,
+.dropdown-menu a.dropdown-item:not([href]):hover:active {
+	background-color: var(--zg-menu-bg-press);
+	color: var(--zg-menu-fg-active);
+	--icon-stroke: currentColor;               /* Frappe flips icons to --fg-color on :active (white on its grey fill) */
+}
+.dropdown-menu .dropdown-item.disabled,
+.dropdown-menu .dropdown-item:disabled {
+	background-color: transparent;
+	color: var(--zg-menu-fg-disabled);
+}
+
+/* Destructive item (opt-in hook, see header). Frappe's .text-danger is a literal #e03636 !important. */
+.dropdown-menu .dropdown-item.text-danger {
+	color: var(--zg-menu-danger-fg) !important; /* important: Frappe's .text-danger is !important and only 4.4:1 */
+}
+.dropdown-menu .dropdown-item.text-danger:hover,
+.dropdown-menu .dropdown-item.text-danger:focus {
+	background-color: var(--zg-menu-danger-bg);
+}
+.dropdown-menu .dropdown-item.text-danger:active {
+	background-color: var(--zg-menu-danger-bg-press);
+}
+
+/* Grouped sections: header label, plain text row, divider */
+.dropdown-menu .dropdown-header {
+	padding: var(--zg-space-2) var(--zg-menu-pad-x) var(--zg-space-1);
+	color: var(--zg-menu-fg-meta);
+	font-size: var(--zg-text-xs);
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+.dropdown-menu .dropdown-item-text {
+	padding: var(--zg-menu-pad-y) var(--zg-menu-pad-x);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+}
+.dropdown-menu .dropdown-divider,
+.dropdown-menu .divider {
+	border-top-color: var(--zg-menu-divider);
+}
+/* Keyboard shortcut hint in page menus (Frappe: --ink-gray-4, 3.4:1) */
+.dropdown-menu .menu-item-shortcut {
+	color: var(--zg-menu-fg-meta);
+}
+
+/* --------------------------------------------
+   2b. Frappe context menu (frappe.ui.menu: sidebar item edit menu, app switcher). Items are <a>
+   without href unless a link is given, so they are not tab stops; the focus ring covers the ones that are.
+   -------------------------------------------- */
+.frappe-menu {
+	padding: var(--zg-space-1);
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--zg-menu-shadow);
+	max-height: calc(100vh - var(--zg-space-4));
+	overflow-y: auto;
+}
+.frappe-menu .dropdown-menu-item {
+	border-radius: var(--zg-menu-item-radius);
+}
+.frappe-menu .dropdown-menu-item:hover:has(a) {
+	background-color: var(--zg-menu-bg-hover);
+}
+.frappe-menu .dropdown-menu-item:active:has(a) {
+	background-color: var(--zg-menu-bg-press);
+}
+.frappe-menu .dropdown-menu-item a {
+	height: auto;                              /* Frappe: 28px */
+	min-height: var(--zg-menu-item-h);
+	padding: var(--zg-space-1) var(--zg-menu-pad-x);
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);                  /* beats the global a:hover link colour too */
+	font-size: var(--zg-text-base);
+}
+.frappe-menu .dropdown-menu-item a:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+}
+.frappe-menu .dropdown-menu-item .menu-item-shortcut {
+	color: var(--zg-menu-fg-meta);
+}
+.frappe-menu .dropdown-divider {
+	border-top-color: var(--zg-menu-divider);
+}
+
+/* --------------------------------------------
+   2c. Awesomebar (Ctrl+K search modal): input row, result list, key-hint footer.
+   Frappe's --awesomplete-hover-bg stays light in dark (the light :root block wins), so the selected
+   row was a light slab with light text; every state is repainted from the menu tokens.
+   -------------------------------------------- */
+.navbar-modal-wrapper .awesomplete ul {
+	max-height: min(60vh, 360px);              /* Frappe: min(60vh, 300px) */
+}
+.navbar-modal-wrapper .awesomplete ul > li {
+	--text-muted: var(--zg-menu-fg-meta);      /* the description line is .text-muted !important; re-point instead */
+	padding: var(--zg-space-2) var(--zg-space-3);
+	border-inline-start: 3px solid transparent;   /* reserved so rows do not shift when selected */
+	border-radius: var(--zg-menu-item-radius);
+	color: var(--zg-menu-fg);
+	font-size: var(--zg-text-base);
+}
+.navbar-modal-wrapper .awesomplete ul > li > a {
+	color: inherit;                            /* the global link blue is wrong for a result list */
+	text-decoration: none;
+}
+.navbar-modal-wrapper .awesomplete ul > li:hover {
+	background-color: var(--zg-menu-bg-hover);
+	color: var(--zg-menu-fg);
+}
+.navbar-modal-wrapper .awesomplete ul > li[aria-selected="true"] {
+	border-inline-start-color: var(--primary);    /* bar + tint: selection is not colour alone */
+	background-color: var(--zg-menu-bg-active);
+	color: var(--zg-menu-fg);
+}
+.awesomebar-modal-footer {
+	color: var(--zg-menu-fg-meta);
+	font-size: var(--zg-text-sm);
+}
+.awesomebar-modal-footer .help-navigation .help-item {
+	border: 1px solid var(--border-color);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--subtle-fg);
+	color: var(--zg-menu-fg-meta);
+}
+@media (pointer: coarse) {
+	.cool-awesomebar-modal-footer {
+		display: none;                         /* keyboard hints are noise on touch */
+	}
+}
+
+/* --------------------------------------------
+   2d. User menu popover (40 §22): item states only; the layout stays in 40
+   -------------------------------------------- */
+.saas-user-menu-item:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;
+	background: var(--st-item-hover);
+	color: var(--st-text-primary);
+	text-decoration: none;
+}
+.saas-user-menu-item.highlight:focus-visible {
+	background: var(--st-update-bg);
+	color: var(--st-update-color);
+}
+.saas-user-menu-item:active {
+	background: color-mix(in srgb, var(--primary) 12%, var(--st-sidebar-bg));
+	color: var(--st-text-primary);
+}
+
+/* ============================================
+   3. POPOVERS & TOOLTIPS
+   Bootstrap's popover arrow already reads --dark-border-color / --popover-bg; giving the box the same
+   1px border makes the arrow line up (Frappe sets border: 0).
+   ============================================ */
+.popover {
+	border: 1px solid var(--zg-menu-border);
+	border-radius: var(--zg-menu-radius);
+	background-color: var(--zg-menu-bg);
+	box-shadow: var(--shadow-xl);
+}
+.popover-header {
+	border-bottom: 1px solid var(--border-color);   /* Frappe: a literal #f2f2f2, a bright line in dark */
+	border-radius: calc(var(--zg-menu-radius) - 1px) calc(var(--zg-menu-radius) - 1px) 0 0;
+	background-color: var(--zg-menu-bg);
+	color: var(--heading-color);
+	font-size: var(--zg-text-base);
+	font-weight: 600;
+}
+/* Bootstrap blends the arrow into the header with a literal white line */
+.bs-popover-bottom .popover-header::before,
+.bs-popover-auto[x-placement^="bottom"] .popover-header::before {
+	border-bottom-color: var(--zg-menu-bg);
+}
+
+/* Tooltip chip and its arrow (Frappe: #000 arrow on a navy / grey chip) */
+.tooltip .tooltip-inner {
+	max-width: min(280px, calc(100vw - var(--zg-space-4)));
+	background-color: var(--zg-tooltip-bg);
+	color: var(--zg-tooltip-fg);
+	line-height: var(--zg-leading-tight);
+}
+.tooltip.show {
+	opacity: 1;                                /* Frappe: .9, which costs contrast */
+}
+.bs-tooltip-top .arrow::before,
+.bs-tooltip-auto[x-placement^="top"] .arrow::before {
+	border-top-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-right .arrow::before,
+.bs-tooltip-auto[x-placement^="right"] .arrow::before {
+	border-right-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-bottom .arrow::before,
+.bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+	border-bottom-color: var(--zg-tooltip-bg);
+}
+.bs-tooltip-left .arrow::before,
+.bs-tooltip-auto[x-placement^="left"] .arrow::before {
+	border-left-color: var(--zg-tooltip-bg);
+}
+
+/* ============================================
+   4. DIALOGS & MODALS
+   ============================================ */
+
+/* --------------------------------------------
+   4a. Overlay
+   -------------------------------------------- */
+.modal-backdrop {
+	background-color: var(--zg-dlg-scrim);
+}
+.modal-backdrop.show {
+	opacity: var(--zg-dlg-scrim-opacity);      /* Frappe: .8; 70: .45 of a colour that is the dark page itself */
+}
+
+/* --------------------------------------------
+   4b. Shell. 70 clipped .modal-content with overflow:hidden, which also turns it into the scroll container
+   for Frappe's position:sticky header / footer (they stopped sticking). Header and footer take the corner
+   radius from the content instead, so nothing needs clipping. (0,1,0) on purpose: the settings dialog's
+   own .settings-dialog-wrapper .modal-content { overflow: hidden } keeps winning.
+   -------------------------------------------- */
+.modal-content {
+	border-radius: var(--zg-dlg-radius);
+	box-shadow: var(--zg-dlg-shadow);
+	overflow: visible;
+}
+
+/* Frappe's dark rule points --border-color and --control-bg at --gray-800, which this theme defines as the
+   modal surface itself: every separator and field fill inside a dark dialog disappeared. */
+[data-theme="dark"] .modal {
+	--border-color: var(--dark-border-color);
+	--control-bg: var(--subtle-fg);
+}
+
+/* --------------------------------------------
+   4c. Header, title, close / minimise
+   Frappe's .modal .modal-header (0,2,0) beat 70's padding and title size; matched here.
+   -------------------------------------------- */
+.modal .modal-header {
+	min-height: 44px;                          /* = the 44px pitch Frappe stacks minimised dialogs at */
+	padding: var(--zg-space-2) var(--zg-space-4);
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
+}
+.modal .modal-header .title-section {
+	align-items: center;
+	min-width: 0;
+}
+.modal .modal-header .modal-title {
+	color: var(--heading-color);
+	font-size: var(--zg-text-lg);
+	font-weight: 600;
+	line-height: var(--zg-leading-tight);
+	overflow-wrap: anywhere;
+}
+.modal .modal-header .modal-actions {
+	flex-shrink: 0;
+	align-items: center;
+	gap: var(--zg-space-1);
+}
+
+/* Destructive dialogs (frappe.warn turns the primary into .btn-danger): a 3px accent on the top edge, in
+   addition to the red action and the title text. The inset shadow follows the inherited corner radius. */
+.modal:has(.modal-footer .standard-actions .btn-danger) .modal-header {
+	box-shadow: inset 0 3px 0 var(--zg-danger-solid);
+}
+
+/* --------------------------------------------
+   4d. Body
+   -------------------------------------------- */
+.modal .modal-body {
+	padding: var(--zg-space-4);
+	color: var(--text-color);
+}
+
+/* --------------------------------------------
+   4e. Footer. DOM: .custom-actions (left) + .standard-actions (secondary, then primary). Emphasis comes
+   from 82 (btn-primary / btn-default / btn-danger); this section owns layout. Frappe's own footer
+   background is `inherit`, so 70's tint never applied.
+   -------------------------------------------- */
+.modal .modal-footer {
+	gap: var(--zg-space-2);
+	padding: var(--zg-space-3) var(--zg-space-4);
+	border-bottom-left-radius: inherit;
+	border-bottom-right-radius: inherit;
+	background-color: var(--zg-dlg-footer-bg);
+}
+.modal .modal-footer .custom-actions,
+.modal .modal-footer .standard-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--zg-space-2);
+}
+.modal .modal-footer .standard-actions {
+	justify-content: flex-end;
+	margin-inline-start: auto;
+}
+.modal .modal-footer .standard-actions button:not(:last-child) {
+	margin-right: 0;                           /* gap replaces Frappe's --margin-xs */
+}
+.modal .modal-footer .standard-actions .btn {
+	min-width: 72px;                           /* short labels (Yes / No) still get a comfortable target */
+}
+
+/* --------------------------------------------
+   4f. msgprint / confirm / warn content
+   -------------------------------------------- */
+.msgprint {
+	color: var(--text-color);
+	font-size: var(--zg-text-md);
+	line-height: var(--zg-leading-normal);
+}
+.msgprint hr {
+	margin: var(--zg-space-3) 0;
+	border-top-color: var(--border-color);     /* Frappe: rgba(0,0,0,.1), invisible in dark */
+}
+.msgprint pre {
+	max-height: 40vh;
+	padding: var(--zg-space-3);
+	border: 1px solid var(--border-color);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--subtle-fg);
+	color: var(--text-color);                  /* Frappe: --text-light, 3.3:1 */
+	font-size: var(--zg-text-sm);
+}
+.frappe-confirm-message {
+	margin: 0;
+	color: var(--text-color);
+	font-size: var(--zg-text-md);
+	line-height: var(--zg-leading-normal);
+}
+
+/* --------------------------------------------
+   4g. Small screens: a full-width bottom sheet. The modal itself still scrolls (Frappe's model, which
+   keeps Link dropdowns and the sticky header / footer working); the dialog is bottom-aligned inside it.
+   Left alone: the minimised dock, the desktop folder view, the search palette (input must stay on top
+   under the keyboard), video help, and the settings dialog (it sets its own height).
+   -------------------------------------------- */
+@media (max-width: 575.98px) {
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		display: flex;
+		align-items: flex-end;
+		min-height: 100%;
+		max-width: none;
+		margin: 0;
+		padding-top: env(safe-area-inset-top);
+	}
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-content {
+		border-radius: var(--zg-dlg-radius) var(--zg-dlg-radius) 0 0;
+		border-bottom-width: 0;
+	}
+	.modal:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-footer {
+		padding-bottom: calc(var(--zg-space-3) + env(safe-area-inset-bottom));
+	}
+	/* Slide up from the bottom edge instead of down from above (Frappe: translateY(-15%)) */
+	.modal.fade:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		transform: translateY(var(--zg-space-8));
+	}
+	.modal.show:not(:is(.modal-minimize, .desktop-modal, .search-dialog, .video-modal, .settings-dialog-wrapper)):not(:has(.navbar-modal-wrapper)) .modal-dialog {
+		transform: none;
+	}
+
+	/* Actions share the row equally: two thumb-sized targets instead of two small buttons at the right edge */
+	.modal .modal-footer .standard-actions {
+		flex: 1 1 100%;
+	}
+	.modal .modal-footer .standard-actions .btn {
+		flex: 1 1 0;
+	}
+}

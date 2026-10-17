@@ -1,0 +1,125 @@
+/* ===== 88. ACCENT COLOURS =====
+ * Blue stays the action colour (buttons, links, focus, active states). On top of it,
+ * navigation and dashboard chrome get a multi-hue accent so the UI is not monochrome.
+ * Hue = position in its list (8-step cycle: blue, green, amber, purple, pink, teal, red, indigo).
+ * Colours come from the --zg-accent-* pairs (02-tokens-semantic), which swap for dark mode.
+ */
+
+/* Cycle: set the current item's hue variables */
+
+.st-rail-top .st-rail-item:nth-child(8n+1),
+.desktop-wrapper .desktop-icon:nth-child(8n+1),
+.body-sidebar .sidebar-item-container:nth-child(8n+1),
+.codex-editor__redactor > .ce-block:nth-child(8n+1) {
+	--zg-hue-bg: var(--zg-accent-blue-bg);
+	--zg-hue-fg: var(--zg-accent-blue-fg);
+	--zg-hue-rail: var(--zg-rail-hue-1);
+	--zg-hue-rot: 0deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+2),
+.desktop-wrapper .desktop-icon:nth-child(8n+2),
+.body-sidebar .sidebar-item-container:nth-child(8n+2),
+.codex-editor__redactor > .ce-block:nth-child(8n+2) {
+	--zg-hue-bg: var(--zg-accent-green-bg);
+	--zg-hue-fg: var(--zg-accent-green-fg);
+	--zg-hue-rail: var(--zg-rail-hue-2);
+	--zg-hue-rot: -68deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+3),
+.desktop-wrapper .desktop-icon:nth-child(8n+3),
+.body-sidebar .sidebar-item-container:nth-child(8n+3),
+.codex-editor__redactor > .ce-block:nth-child(8n+3) {
+	--zg-hue-bg: var(--zg-accent-amber-bg);
+	--zg-hue-fg: var(--zg-accent-amber-fg);
+	--zg-hue-rail: var(--zg-rail-hue-3);
+	--zg-hue-rot: -168deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+4),
+.desktop-wrapper .desktop-icon:nth-child(8n+4),
+.body-sidebar .sidebar-item-container:nth-child(8n+4),
+.codex-editor__redactor > .ce-block:nth-child(8n+4) {
+	--zg-hue-bg: var(--zg-accent-purple-bg);
+	--zg-hue-fg: var(--zg-accent-purple-fg);
+	--zg-hue-rail: var(--zg-rail-hue-4);
+	--zg-hue-rot: 72deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+5),
+.desktop-wrapper .desktop-icon:nth-child(8n+5),
+.body-sidebar .sidebar-item-container:nth-child(8n+5),
+.codex-editor__redactor > .ce-block:nth-child(8n+5) {
+	--zg-hue-bg: var(--zg-accent-pink-bg);
+	--zg-hue-fg: var(--zg-accent-pink-fg);
+	--zg-hue-rail: var(--zg-rail-hue-5);
+	--zg-hue-rot: 127deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+6),
+.desktop-wrapper .desktop-icon:nth-child(8n+6),
+.body-sidebar .sidebar-item-container:nth-child(8n+6),
+.codex-editor__redactor > .ce-block:nth-child(8n+6) {
+	--zg-hue-bg: var(--zg-accent-teal-bg);
+	--zg-hue-fg: var(--zg-accent-teal-fg);
+	--zg-hue-rail: var(--zg-rail-hue-6);
+	--zg-hue-rot: -33deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+7),
+.desktop-wrapper .desktop-icon:nth-child(8n+7),
+.body-sidebar .sidebar-item-container:nth-child(8n+7),
+.codex-editor__redactor > .ce-block:nth-child(8n+7) {
+	--zg-hue-bg: var(--zg-accent-red-bg);
+	--zg-hue-fg: var(--zg-accent-red-fg);
+	--zg-hue-rail: var(--zg-rail-hue-7);
+	--zg-hue-rot: 157deg;
+}
+.st-rail-top .st-rail-item:nth-child(8n+8),
+.desktop-wrapper .desktop-icon:nth-child(8n+8),
+.body-sidebar .sidebar-item-container:nth-child(8n+8),
+.codex-editor__redactor > .ce-block:nth-child(8n+8) {
+	--zg-hue-bg: var(--zg-accent-indigo-bg);
+	--zg-hue-fg: var(--zg-accent-indigo-fg);
+	--zg-hue-rail: var(--zg-rail-hue-8);
+	--zg-hue-rot: 27deg;
+}
+
+/* --- Workspace rail (dark surface): tinted icons; hover/active keep the existing white/brand states --- */
+.st-rail-top .st-rail-item:not(.active):not(:hover) .st-rail-icon :is(svg, .icon) {
+	color: var(--zg-hue-rail);
+	stroke: var(--zg-hue-rail);
+}
+
+/* --- Desk module picker: tinted tile + matching icon colour (image/logo tiles are left alone) --- */
+.desktop-wrapper .desktop-icon .icon-container:has(.icon) {
+	background: var(--zg-hue-bg);
+}
+.desktop-wrapper .desktop-icon .icon-container:has(.icon) .icon {
+	color: var(--zg-hue-fg);
+	stroke: var(--zg-hue-fg);
+}
+.desktop-wrapper .desktop-icon .icon-container:has(.icon):hover {
+	background: color-mix(in srgb, var(--zg-hue-fg) 22%, var(--zg-hue-bg));
+}
+
+/* ERPNext's module tiles are fixed solid-blue SVG files; rotate their hue per tile (white stays white).
+   Logo tiles (Frappe, ZATCA, custom images) are untouched — only the /solid/ artwork. */
+.desktop-wrapper .desktop-icon .icon-container img.app-icon[src*="/desktop_icons/solid/"] {
+	filter: hue-rotate(var(--zg-hue-rot, 0deg));
+}
+
+/* --- Workspace sidebar: tinted icons on inactive items (active item keeps its white-on-blue) --- */
+.body-sidebar .sidebar-item-container .standard-sidebar-item:not(.active-sidebar) .sidebar-item-icon :is(svg, .icon) {
+	color: var(--zg-hue-fg);
+	stroke: var(--zg-hue-fg);
+}
+
+/* --- Dashboard KPI + shortcut cards: coloured top edge (a pseudo-element, so the widgets'
+   !important hover/dark box-shadow and border rules in 60 can't wipe it out) --- */
+.codex-editor__redactor > .ce-block .widget:is(.number-widget-box, .shortcut-widget-box) {
+	position: relative;
+}
+.codex-editor__redactor > .ce-block .widget:is(.number-widget-box, .shortcut-widget-box)::before {
+	content: "";
+	position: absolute;
+	inset: 0 0 auto 0;
+	height: 3px;
+	background: var(--zg-hue-fg, var(--primary));
+	pointer-events: none;
+}
