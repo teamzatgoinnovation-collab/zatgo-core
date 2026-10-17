@@ -1,5 +1,5 @@
 /**
- * Chat AI -- UI strings (EN / AR / ML).
+ * ZatGo AI (ZAI) -- UI strings (EN / AR / ML).
  *
  * chat_ai.i18n.strings(code) returns the dictionary for a language merged over
  * English, so a key missing from AR or ML falls back to EN instead of showing
@@ -55,8 +55,8 @@
 		modeAuto: "Auto",
 
 		// shell
-		brand: "Chat AI",
-		open: "Open Chat AI",
+		brand: "ZatGo AI",
+		open: "Open ZatGo AI",
 		close: "Close",
 		language: "Language",
 		menu: "More options",
@@ -219,7 +219,7 @@
 		help: "Keyboard shortcuts",
 		kbSend: "Send message",
 		kbNewline: "New line",
-		kbToggle: "Open or close Chat AI",
+		kbToggle: "Open or close ZatGo AI",
 		kbSearch: "Search conversations",
 		kbNew: "Start a new chat",
 		kbStop: "Stop generating, close menus, close the panel",
@@ -236,7 +236,7 @@
 		// a11y
 		replyReady: "Assistant replied",
 		mathLoading: "Formula",
-		noScript: "Chat AI could not load its display libraries; showing plain text.",
+		noScript: "ZatGo AI could not load its display libraries; showing plain text.",
 	};
 
 	const ar = {
@@ -276,8 +276,8 @@
 		artifact: "نتيجة",
 		modeAuto: "تلقائي",
 
-		brand: "Chat AI",
-		open: "فتح Chat AI",
+		brand: "ZatGo AI",
+		open: "فتح ZatGo AI",
 		close: "إغلاق",
 		language: "اللغة",
 		menu: "خيارات إضافية",
@@ -429,7 +429,7 @@
 		help: "اختصارات اللوحة",
 		kbSend: "إرسال الرسالة",
 		kbNewline: "سطر جديد",
-		kbToggle: "فتح أو إغلاق Chat AI",
+		kbToggle: "فتح أو إغلاق ZatGo AI",
 		kbSearch: "البحث في المحادثات",
 		kbNew: "بدء محادثة جديدة",
 		kbStop: "إيقاف التوليد أو إغلاق القوائم أو اللوحة",

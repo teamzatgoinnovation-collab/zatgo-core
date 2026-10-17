@@ -1,6 +1,6 @@
-# Self-hosted AI for Chat AI (no external API)
+# ZatGo AI (ZAI): self-hosted AI, no external API
 
-Chat AI talks to any OpenAI-compatible server, so it can run entirely on your own hardware:
+ZatGo AI (the Chat AI module) talks to any OpenAI-compatible server, so it can run entirely on your own hardware:
 
 | Capability | Self-hosted service | Needs |
 |---|---|---|

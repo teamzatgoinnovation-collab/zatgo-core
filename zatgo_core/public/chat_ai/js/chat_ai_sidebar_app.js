@@ -1,5 +1,5 @@
 /**
- * Chat AI — Vue 3 Desk slide-out.
+ * ZatGo AI (ZAI) — Vue 3 Desk slide-out.
  *
  * Pure logic lives in chat_ai.logic (chat_ai_logic.js), strings in chat_ai.i18n,
  * markdown + sanitising in chat_ai.createMarkdown (chat_ai_markdown.js). This file wires
@@ -2027,7 +2027,7 @@ chat_ai.sidebar.AppOptions = {
     :aria-label="ui.open"
     @click="toggle()"
   >
-    <span class="cai-launcher-mark" aria-hidden="true">AI</span>
+    <span class="cai-launcher-mark" aria-hidden="true">ZAI</span>
   </button>
 
   <div v-if="open" class="cai-scrim" @click="toggle(false)" aria-hidden="true"></div>
