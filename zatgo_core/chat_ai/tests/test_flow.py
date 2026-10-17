@@ -299,7 +299,7 @@ class TestWebSearch(FlowCase):
 	]}}).encode()
 
 	def _web_cfg(self, **kw):
-		return {"enable_web_search": 1, "web_search_api_key": "brave-test", "web_search_max_results": 3, **kw}
+		return {"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-test", "web_search_max_results": 3, **kw}
 
 	def test_search_answer_carries_only_returned_sources(self):
 		brave = ScriptedServer([(200, JSON, self.BRAVE)])
@@ -333,9 +333,10 @@ class TestWebSearch(FlowCase):
 
 	def test_web_tools_are_hidden_when_switched_off_or_unkeyed_or_toggled_off(self):
 		for cfg, kwargs in (
-			({"enable_web_search": 0, "web_search_api_key": "k"}, {}),
-			({"enable_web_search": 1, "web_search_api_key": ""}, {}),
-			({"enable_web_search": 1, "web_search_api_key": "k"}, {"web": 0}),
+			({"enable_web_search": 0, "web_search_provider": "Brave", "web_search_api_key": "k"}, {}),
+			({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": ""}, {}),
+			({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": ""}, {}),
+			({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}, {"web": 0}),
 		):
 			srv = self.provider(plan(simple=False, tools=["calculator"], skills=["workspace"]), stream("done"), **cfg)
 			self.send(self.session(), "hello there my friend, please do something", **kwargs)
@@ -344,10 +345,10 @@ class TestWebSearch(FlowCase):
 			self.assertNotIn("fetch_url", offered, (cfg, kwargs))
 
 	def test_forced_web_without_a_key_is_a_clear_configuration_message(self):
-		srv = self.provider(plan(), stream("never"), enable_web_search=1, web_search_api_key="")
+		srv = self.provider(plan(), stream("never"), enable_web_search=1, web_search_provider="SearXNG", web_search_url="")
 		res = self.send(self.session(), "search the web for ZATCA", web=1)
 		self.assertTrue(res["ok"])
-		self.assertIn("no search API key", res["data"]["content"])
+		self.assertIn("not configured", res["data"]["content"])
 		self.assertEqual(srv.requests, [])  # nothing was sent to the model, nothing invented
 
 	def test_failed_search_does_not_fabricate_sources(self):

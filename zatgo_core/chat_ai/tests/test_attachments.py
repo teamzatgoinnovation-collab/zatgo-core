@@ -19,6 +19,7 @@ from werkzeug.datastructures import FileStorage
 
 from zatgo_core.chat_ai.api import chat
 from zatgo_core.chat_ai.core.files.validate import UploadError
+from zatgo_core.chat_ai.core.providers.errors import ProviderError
 from zatgo_core.chat_ai.erpnext import attachments as svc
 from zatgo_core.chat_ai.erpnext import knowledge, sessions
 from zatgo_core.chat_ai.erpnext.orchestrator import _filter_workspace_tools
@@ -428,7 +429,7 @@ class TestWorkspaceTools(_Base):
 		).encode()
 		srv = ScriptedServer([(200, "application/json", body)] * 2)
 		self.addCleanup(srv.stop)
-		cfg = {**SETTINGS, "enable_web_search": 1, "web_search_api_key": "brave-key", "web_search_max_results": 5}
+		cfg = {**SETTINGS, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-key", "web_search_max_results": 5}
 		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: dict(cfg)), mock.patch(
 			"zatgo_core.chat_ai.core.web_search.BRAVE_URL", srv.url + "/res/v1/web/search"
 		):
@@ -445,6 +446,46 @@ class TestWorkspaceTools(_Base):
 		self.assertIn("q=zatca+phase+2", req["path"])
 		self.assertEqual({k.lower(): v for k, v in req["headers"].items()}["x-subscription-token"], "brave-key")
 
+	def test_searxng_needs_no_key_and_returns_numbered_sources(self):
+		body = json.dumps({"results": [
+			{"title": "ZATCA <b>FAQ</b>", "url": "https://zatca.gov.sa/faq", "content": "Phase 2 <i>details</i>", "publishedDate": "2026-01-02"},
+			{"title": "x", "url": "ftp://bad.example/x", "content": "dropped: not http(s)"},
+			{"title": "Second", "url": "https://example.org/b", "content": "more"},
+		]}).encode()
+		srv = ScriptedServer([(200, "application/json", body)])
+		self.addCleanup(srv.stop)
+		cfg = {**SETTINGS, "enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": srv.url + "/", "web_search_max_results": 5}
+		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: dict(cfg)):
+			frappe.flags.chat_ai_refs = []
+			out = wtools._web_search("zatca phase 2")
+		self.assertEqual([r["ref"] for r in out["results"]], [1, 2])
+		self.assertEqual((out["results"][0]["title"], out["results"][0]["domain"]), ("ZATCA FAQ", "zatca.gov.sa"))
+		req = srv.requests[0]
+		self.assertTrue(req["path"].startswith("/search?"))
+		self.assertIn("format=json", req["path"])
+		self.assertIn("q=zatca+phase+2", req["path"])
+		self.assertNotIn("x-subscription-token", {k.lower() for k in req["headers"]})  # nothing leaves with a key
+
+	def test_searxng_configuration_and_failure_modes(self):
+		from zatgo_core.chat_ai.core import web_search as ws
+
+		self.assertFalse(ws.is_configured({"enable_web_search": 0, "web_search_url": "http://s"}))
+		self.assertFalse(ws.is_configured({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": ""}))
+		self.assertTrue(ws.is_configured({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": "http://s:8080"}))
+		self.assertFalse(ws.is_configured({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_url": "http://s"}))
+		self.assertTrue(ws.is_configured({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}))
+		with self.assertRaises(ws.WebToolError):
+			ws.SearXNGSearch("not-a-url").search("q")
+		srv = ScriptedServer([(403, "text/plain", b"Forbidden")])
+		self.addCleanup(srv.stop)
+		with self.assertRaises(ws.WebToolError) as cm:
+			ws.SearXNGSearch(srv.url).search("q")
+		self.assertIn("json format", str(cm.exception))  # the usual misconfiguration is named
+		srv2 = ScriptedServer([(500, "text/plain", b"boom")])
+		self.addCleanup(srv2.stop)
+		with self.assertRaises(ProviderError):
+			ws.SearXNGSearch(srv2.url).search("q")
+
 	def test_web_search_disabled_or_unkeyed_is_a_clear_error(self):
 		with self.assertRaises(ValueError) as cm:
 			wtools._web_search("anything")  # SETTINGS has it off
@@ -452,7 +493,11 @@ class TestWorkspaceTools(_Base):
 		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: {**SETTINGS, "enable_web_search": 1}):
 			with self.assertRaises(ValueError) as cm:
 				wtools._web_search("anything")
-		self.assertIn("API key", str(cm.exception))
+		self.assertIn("SearXNG URL", str(cm.exception))  # the default provider is the self-hosted one
+		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: {**SETTINGS, "enable_web_search": 1, "web_search_provider": "Brave"}):
+			with self.assertRaises(ValueError) as cm:
+				wtools._web_search("anything")
+		self.assertIn("API key", str(cm.exception))  # the default provider is the self-hosted one
 
 	def test_fetch_url_only_opens_urls_the_user_or_a_search_supplied(self):
 		cfg = {**SETTINGS, "enable_web_search": 1}
@@ -480,8 +525,9 @@ class TestWorkspaceTools(_Base):
 		offered = lambda s: sorted(t.name for t in _filter_workspace_tools([T(n) for n in names], s))  # noqa: E731
 		self.assertEqual(offered({}), ["calculator", "search"])
 		self.assertEqual(offered({"_has_files": True}), ["analyze_table", "calculator", "file_search", "search"])
-		self.assertEqual(offered({"enable_web_search": 1}), ["calculator", "search"])  # switch without a key
-		self.assertEqual(offered({"enable_web_search": 1, "web_search_api_key": "k"}), ["calculator", "fetch_url", "search", "web_search"])
+		self.assertEqual(offered({"enable_web_search": 1}), ["calculator", "search"])  # switch without a URL or key
+		self.assertEqual(offered({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}), ["calculator", "fetch_url", "search", "web_search"])
+		self.assertEqual(offered({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": "http://s:8080"}), ["calculator", "fetch_url", "search", "web_search"])
 
 
 class TestSessionLifecycle(_Base):
@@ -652,7 +698,7 @@ class TestChatApi(_Base):
 	def test_list_models_reports_what_is_usable(self):
 		frappe.set_user(self.owner)
 		cfg = {**SETTINGS, "provider": "Anthropic", "default_model": "m-balanced", "model_fast": "m-fast", "model_vision": "m-fast",
-			   "fallback_model": "m-fallback", "enable_model_routing": 1, "enable_web_search": 1, "web_search_api_key": "k"}
+			   "fallback_model": "m-fallback", "enable_model_routing": 1, "enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": "http://searxng:8080"}
 		with mock.patch("zatgo_core.chat_ai.erpnext.settings.get_settings_dict", return_value=cfg):
 			data = chat.list_models()["data"]
 		self.assertEqual([m["name"] for m in data["models"]], ["m-balanced", "m-fast", "m-fallback"])
@@ -660,6 +706,7 @@ class TestChatApi(_Base):
 		self.assertTrue(data["routing"])
 		self.assertTrue(data["features"]["web_search"])
 		self.assertNotIn("web_search_api_key", json.dumps(data))  # never expose keys to the browser
+		self.assertNotIn("searxng:8080", json.dumps(data))  # nor internal service URLs
 		self.assertEqual(data["max_upload_mb"], 20)
 
 	def test_send_rejects_foreign_sessions_before_any_work(self):
@@ -669,3 +716,55 @@ class TestChatApi(_Base):
 			with self.assertRaises(frappe.PermissionError):
 				chat.send(session=s, message="hi")
 		rt.assert_not_called()
+
+
+class TestSelfHostedSetup(_Base):
+	"""setup_self_hosted.configure(): one call points Chat AI at local services."""
+
+	FIELDS = ["provider", "api_endpoint", "default_model", "embedding_provider", "embedding_endpoint", "embedding_model",
+			  "enable_web_search", "web_search_provider", "web_search_url", "context_window_tokens", "request_timeout_seconds", "max_tokens"]
+
+	def setUp(self):
+		super().setUp()
+		saved = {f: frappe.db.get_single_value("Chat AI Settings", f) for f in self.FIELDS}
+
+		def restore():
+			for f, v in saved.items():
+				frappe.db.set_single_value("Chat AI Settings", f, v)
+
+		self.addCleanup(restore)
+
+	def test_configure_points_everything_at_local_services(self):
+		from zatgo_core.chat_ai import setup_self_hosted as sh
+
+		with mock.patch.object(frappe.db, "commit"):  # keep the test transactional
+			values = sh.configure("http://llm:8080/", embed_url="http://embed:8080", searxng_url="http://searxng:8080/")
+		s = frappe.get_single("Chat AI Settings")
+		self.assertEqual((s.provider, s.api_endpoint, s.default_model), ("Custom OpenAI-compatible", "http://llm:8080/v1", "qwen2.5-3b"))
+		self.assertEqual((s.embedding_provider, s.embedding_endpoint, s.embedding_model), ("Custom OpenAI-compatible", "http://embed:8080/v1", "nomic-embed-text"))
+		self.assertEqual((s.enable_web_search, s.web_search_provider, s.web_search_url), (1, "SearXNG", "http://searxng:8080"))
+		self.assertEqual((s.context_window_tokens, s.request_timeout_seconds), (8192, 300))
+		self.assertNotIn("api_key", values)  # keys are never touched
+
+	def test_rejects_a_bad_url_and_skips_optional_services(self):
+		from zatgo_core.chat_ai import setup_self_hosted as sh
+
+		with self.assertRaises(frappe.ValidationError):
+			sh.configure("llm:8080")
+		with mock.patch.object(frappe.db, "commit"):
+			values = sh.configure("http://llm:8080/v1")
+		self.assertNotIn("embedding_endpoint", values)
+		self.assertNotIn("web_search_url", values)
+		self.assertEqual(values["api_endpoint"], "http://llm:8080/v1")  # an existing /v1 is not doubled
+
+	def test_check_reports_each_service(self):
+		from zatgo_core.chat_ai import setup_self_hosted as sh
+
+		srv = ScriptedServer([(200, "application/json", b"{}")] * 3)
+		self.addCleanup(srv.stop)
+		with mock.patch.object(frappe.db, "commit"):
+			sh.configure(srv.url, embed_url="http://127.0.0.1:9", searxng_url=srv.url)
+		out = sh.check()
+		self.assertTrue(out["chat"].startswith("ok"))
+		self.assertTrue(out["embeddings"].startswith("unreachable"))
+		self.assertTrue(out["web_search"].startswith("ok"))

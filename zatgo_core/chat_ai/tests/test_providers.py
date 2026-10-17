@@ -268,3 +268,32 @@ class TestStreamRound(IntegrationTestCase):
 		prov = _FakeProvider([], raises=ProviderError("boom", code="auth"))
 		with self.assertRaises(ProviderError):
 			streaming.stream_round(prov, [], settings={"enable_streaming": 1}, session="S")
+
+
+class TestEmbeddingEndpoint(IntegrationTestCase):
+	"""Embeddings may live on another server or provider than chat; they must not inherit the chat URL."""
+
+	def test_separate_embedding_server(self):
+		p = from_settings(
+			{"provider": "Custom OpenAI-compatible", "api_endpoint": "http://llm:8080/v1", "default_model": "chat-m",
+			 "embedding_provider": "Custom OpenAI-compatible", "embedding_endpoint": "http://embed:8080/v1", "embedding_model": "emb-m"},
+			for_embedding=True,
+		)
+		self.assertEqual((p.api_endpoint, p.model), ("http://embed:8080/v1", "emb-m"))
+
+	def test_same_provider_without_its_own_endpoint_shares_the_chat_endpoint(self):
+		p = from_settings(
+			{"provider": "Custom OpenAI-compatible", "api_endpoint": "http://llm:8080/v1", "default_model": "chat-m",
+			 "embedding_provider": "Custom OpenAI-compatible", "embedding_model": "emb-m"},
+			for_embedding=True,
+		)
+		self.assertEqual(p.api_endpoint, "http://llm:8080/v1")
+
+	def test_a_different_embedding_provider_never_inherits_the_chat_endpoint(self):
+		p = from_settings(
+			{"provider": "Custom OpenAI-compatible", "api_endpoint": "http://llm:8080/v1", "default_model": "chat-m",
+			 "embedding_provider": "OpenAI", "embedding_api_key": "k"},
+			for_embedding=True,
+		)
+		self.assertEqual(p.api_endpoint, "https://api.openai.com/v1")
+		self.assertEqual(p.model, "text-embedding-3-small")  # and never the chat model's name

@@ -16,6 +16,7 @@ from zatgo_core.chat_ai.core.context import compact_json, estimate_tokens, fit_h
 from zatgo_core.chat_ai.core.providers.base import LLMMessage
 from zatgo_core.chat_ai.core.providers.errors import ProviderError
 from zatgo_core.chat_ai.core.routing import allowed_models, pick_model
+from zatgo_core.chat_ai.core.web_search import is_configured as is_web_configured
 from zatgo_core.chat_ai.erpnext import attachments as attachments_svc
 from zatgo_core.chat_ai.erpnext import conversation_summary
 from zatgo_core.chat_ai.core.providers.registry import ProviderRegistry
@@ -376,9 +377,9 @@ def run_turn(
 			markdown="The selected model can't read images. Choose a vision-capable model or remove the image."
 		)
 		return _persist(session, memory, user_message, resp, settings, tokens=(0, 0), error=True)
-	if settings.get("_web_requested") and settings.get("enable_web_search") and not settings.get("web_search_api_key"):
+	if settings.get("_web_requested") and settings.get("enable_web_search") and not is_web_configured(settings):
 		resp = AssistantResponse(
-			markdown="Web search is turned on but no search API key is configured. Ask an administrator to set it in Chat AI Settings."
+			markdown="Web search is turned on but not configured (it needs a SearXNG URL or a search API key). Ask an administrator to set it in Chat AI Settings."
 		)
 		return _persist(session, memory, user_message, resp, settings, tokens=(0, 0), error=True)
 	settings["_attachments"] = atts
@@ -955,7 +956,7 @@ def _fallback_provider(settings: dict, exc: ProviderError):
 def _filter_workspace_tools(tools: list, settings: dict) -> list:
 	"""Offer workspace tools only where they can work: web tools need the switch and a
 	key, file tools need files in the conversation."""
-	web_ok = bool(settings.get("enable_web_search") and settings.get("web_search_api_key"))
+	web_ok = is_web_configured(settings)
 	files_ok = bool(settings.get("_has_files"))
 	hide = set()
 	if not web_ok:

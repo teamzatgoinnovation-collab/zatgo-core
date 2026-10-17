@@ -94,12 +94,73 @@ class BraveSearch(WebSearchProvider):
 		return results
 
 
+class SearXNGSearch(WebSearchProvider):
+	"""A self-hosted SearXNG instance (JSON format enabled): no API key, no account. The URL is
+	configured by an administrator and may be internal (that is the point), so it is not subject
+	to the public-address rule that guards fetch_url."""
+
+	name = "SearXNG"
+
+	def __init__(self, base_url: str, *, timeout: int = 25):
+		self.base_url, self.timeout = (base_url or "").strip().rstrip("/"), timeout
+
+	def search(self, query: str, count: int = 5) -> list[SearchResult]:
+		if not self.base_url.startswith(("http://", "https://")):
+			raise WebToolError("Web search is not configured: set the SearXNG URL in Chat AI Settings.")
+		q = urllib.parse.urlencode({"q": query[:400], "format": "json", "safesearch": 1})
+		req = urllib.request.Request(
+			f"{self.base_url}/search?{q}", headers={"Accept": "application/json", "User-Agent": "ZatGoChatAI/1.0"}
+		)
+		try:
+			with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+				data = json.loads(resp.read(2_000_000).decode("utf-8", "replace"))
+		except urllib.error.HTTPError as exc:
+			if exc.code == 403:
+				raise WebToolError(
+					"SearXNG refused the request: enable the json format in its settings (search.formats)."
+				) from exc
+			raise from_http_status(exc.code, "") from exc
+		except (urllib.error.URLError, OSError, ValueError) as exc:
+			raise from_exception(exc) from exc
+		results = []
+		for item in data.get("results") or []:
+			url = item.get("url") or ""
+			if not url.startswith(("http://", "https://")):
+				continue
+			results.append(
+				SearchResult(
+					title=_strip_tags(item.get("title") or url),
+					url=url,
+					domain=domain_of(url),
+					snippet=_strip_tags(item.get("content") or ""),
+					age=str(item.get("publishedDate") or ""),
+				)
+			)
+			if len(results) >= max(1, min(int(count or 5), 10)):
+				break
+		return results
+
+
+PROVIDERS = ("Brave", "SearXNG")
+
+
+def is_configured(settings: dict) -> bool:
+	"""Switched on AND usable: Brave needs a key, SearXNG needs its URL."""
+	if not settings.get("enable_web_search"):
+		return False
+	if (settings.get("web_search_provider") or "SearXNG") == "Brave":
+		return bool(settings.get("web_search_api_key"))
+	return bool((settings.get("web_search_url") or "").strip())
+
+
 def get_provider(settings: dict) -> WebSearchProvider:
 	if not settings.get("enable_web_search"):
 		raise WebToolError("Web search is turned off.")
-	name = settings.get("web_search_provider") or "Brave"
+	name = settings.get("web_search_provider") or "SearXNG"
 	if name == "Brave":
 		return BraveSearch(settings.get("web_search_api_key") or "")
+	if name == "SearXNG":
+		return SearXNGSearch(settings.get("web_search_url") or "")
 	raise WebToolError(f"Unknown web search provider '{name}'.")
 
 

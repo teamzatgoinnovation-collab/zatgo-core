@@ -506,6 +506,7 @@ def list_models():
 	_ensure_user()
 	from zatgo_core.chat_ai.core.providers.registry import get_capabilities
 	from zatgo_core.chat_ai.core.routing import SLOTS, allowed_models
+	from zatgo_core.chat_ai.core.web_search import is_configured as is_web_configured
 	from zatgo_core.chat_ai.erpnext.settings import get_settings_dict
 
 	s = get_settings_dict()
@@ -525,7 +526,7 @@ def list_models():
 			"features": {
 				"file_upload": bool(s.get("enable_file_upload", 1)),
 				"vision": bool(s.get("enable_vision", 1)) and caps.get("vision", False),
-				"web_search": bool(s.get("enable_web_search") and s.get("web_search_api_key")),
+				"web_search": is_web_configured(s),
 				"streaming": bool(s.get("enable_streaming", 1)),
 			},
 			"max_upload_mb": frappe.utils.cint(s.get("max_upload_mb") or 15),

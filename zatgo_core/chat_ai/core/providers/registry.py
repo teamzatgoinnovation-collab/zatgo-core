@@ -66,7 +66,14 @@ def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> L
 		label = _normalize_provider_label(label, api_key)
 		model = settings.get("default_model") or _DEFAULT_MODELS.get(label) or "gpt-4o"
 
-	endpoint = (settings.get("api_endpoint") or "").strip() or _default_endpoint(label)
+	if for_embedding:
+		# A separate embedding server (e.g. llama.cpp serves chat and embeddings from different
+		# processes) or a different provider must not inherit the chat endpoint.
+		own = (settings.get("embedding_endpoint") or "").strip()
+		same_provider = label == (settings.get("provider") or "OpenAI")
+		endpoint = own or ((settings.get("api_endpoint") or "").strip() if same_provider else "") or _default_endpoint(label)
+	else:
+		endpoint = (settings.get("api_endpoint") or "").strip() or _default_endpoint(label)
 	if not endpoint:
 		raise RuntimeError(
 			f"API Endpoint is required for provider '{label}'. "

@@ -1,0 +1,56 @@
+# Self-hosted AI for Chat AI: chat model + embeddings (llama.cpp) and web search (SearXNG).
+# No external API, no API keys; nothing is published to the host. The services join the bench's
+# Docker network so Frappe reaches them by name (http://zatgo-llm:8080 ...).
+#
+#   ./setup.sh            # downloads the models (resumable), starts the stack
+#
+# CPU-only by design (the llama.cpp "server" image). On a GPU host use a CUDA tag of the same image.
+name: zatgo-ai
+
+services:
+  llm:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: zatgo-llm
+    restart: unless-stopped
+    volumes:
+      - ./models:/models:ro
+    command: >
+      -m /models/${LLM_FILE:-qwen2.5-3b-instruct-q4_k_m.gguf}
+      --alias ${LLM_ALIAS:-qwen2.5-3b}
+      --host 0.0.0.0 --port 8080
+      -c ${LLM_CTX:-8192} -t ${LLM_THREADS:-4} -np 1
+      --jinja
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  embed:
+    image: ghcr.io/ggml-org/llama.cpp:server
+    container_name: zatgo-embed
+    restart: unless-stopped
+    volumes:
+      - ./models:/models:ro
+    command: >
+      -m /models/${EMBED_FILE:-nomic-embed-text-v1.5.Q4_K_M.gguf}
+      --alias ${EMBED_ALIAS:-nomic-embed-text}
+      --host 0.0.0.0 --port 8080
+      --embeddings --pooling mean
+      -c 2048 -b 2048 -ub 2048 -t 2
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: zatgo-searxng
+    restart: unless-stopped
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:?run ./setup.sh (it creates .env)}
+      SEARXNG_BASE_URL: http://zatgo-searxng:8080/
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+
+networks:
+  default:
+    name: ${BENCH_NETWORK:-devcontainer_default}
+    external: true

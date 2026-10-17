@@ -17,6 +17,7 @@
   "embedding_section",
   "embedding_provider",
   "embedding_model",
+  "embedding_endpoint",
   "embedding_api_key",
   "conversation_section",
   "default_language",
@@ -94,6 +95,7 @@
   "column_break_ws",
   "enable_web_search",
   "web_search_provider",
+  "web_search_url",
   "web_search_api_key",
   "web_search_max_results",
   "routing_section",
@@ -633,19 +635,21 @@
    "fieldtype": "Check",
    "label": "Enable Web Search",
    "default": "0",
-   "description": "Needs a Web Search API key below."
+   "description": "Needs a SearXNG URL (self-hosted, no key) or a Brave API key below."
   },
   {
    "fieldname": "web_search_provider",
    "fieldtype": "Select",
    "label": "Web Search Provider",
-   "options": "Brave",
-   "default": "Brave"
+   "options": "SearXNG\nBrave",
+   "default": "SearXNG"
   },
   {
    "fieldname": "web_search_api_key",
    "fieldtype": "Password",
-   "label": "Web Search API Key"
+   "label": "Web Search API Key",
+   "depends_on": "eval:doc.web_search_provider=='Brave'",
+   "description": "Only for Brave (an external API). SearXNG needs no key."
   },
   {
    "fieldname": "web_search_max_results",
@@ -735,6 +739,19 @@
    "label": "Max Tokens per User per Month",
    "default": "0",
    "description": "0 = unlimited."
+  },
+  {
+   "fieldname": "web_search_url",
+   "fieldtype": "Data",
+   "label": "SearXNG URL",
+   "depends_on": "eval:doc.web_search_provider=='SearXNG'",
+   "description": "Base URL of your SearXNG instance, e.g. http://searxng:8080. The json format must be enabled in its settings."
+  },
+  {
+   "fieldname": "embedding_endpoint",
+   "fieldtype": "Data",
+   "label": "Embedding Endpoint",
+   "description": "OpenAI-compatible base URL of the embedding server when it is not the chat endpoint (e.g. a second llama.cpp server)."
   }
  ],
  "issingle": 1,
