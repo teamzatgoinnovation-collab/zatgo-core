@@ -86,15 +86,18 @@
 	stroke: var(--zg-hue-rail);
 }
 
-/* --- Desk module picker: tinted tile + matching icon colour (image/logo tiles are left alone) --- */
-.desktop-wrapper .desktop-icon .icon-container:has(.icon) {
+/* --- Desk module picker: tinted tile + matching icon colour.
+   Only tiles that rely on the theme's own background: Frappe paints a tile inline (style="background-color:...") when the
+   Desktop Icon sets a colour — typically a white letter/icon on gray — and those keep their original look. Letter tiles
+   (.desktop-alphabet, e.g. a "Z" for ZatGo) are fill-based, so stroke-tinting them would outline the glyph. --- */
+.desktop-wrapper .desktop-icon .icon-container:has(.icon):not([style*="background-color"]) {
 	background: var(--zg-hue-bg);
 }
-.desktop-wrapper .desktop-icon .icon-container:has(.icon) .icon {
+.desktop-wrapper .desktop-icon .icon-container:has(.icon):not([style*="background-color"]) .icon:not(.desktop-alphabet) {
 	color: var(--zg-hue-fg);
 	stroke: var(--zg-hue-fg);
 }
-.desktop-wrapper .desktop-icon .icon-container:has(.icon):hover {
+.desktop-wrapper .desktop-icon .icon-container:has(.icon):not([style*="background-color"]):hover {
 	background: color-mix(in srgb, var(--zg-hue-fg) 22%, var(--zg-hue-bg));
 }
 
