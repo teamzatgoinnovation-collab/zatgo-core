@@ -1,0 +1,551 @@
+/* ============================================
+   84. TABLE SYSTEM — report view / datatable, child-table grids, list view, plain tables
+   One table language: small semibold muted header labels, 1px row dividers, tinted hover and
+   selected rows, tabular numerals, themed focus rings. Every colour is a --zg-table-* token
+   derived from existing theme tokens, so light and dark swap in the two blocks below.
+
+   Frappe v16.29 DOM this targets:
+	 report view / query report  .datatable > .dt-header (.dt-row-header, .dt-row-filter) + .dt-scrollable + .dt-footer
+	 child tables                .form-grid > .grid-heading-row + .grid-body > .rows > .grid-row > .data-row.row > .col
+	 list view                   .list-row-container > .list-row | header.list-row-head (first container is sticky via Frappe list.scss)
+	 plain tables                Bootstrap .table, .markdown-preview / .html-preview table
+   Row height is NOT one CSS value everywhere: frappe-datatable sizes rows from its JS option
+   cellHeight (35 report view, 33 query report) and feeds the same number to its virtual scroller,
+   so CSS never resizes .dt-row / .dt-cell. List and grid rows use --zg-table-row-h.
+   Frappe has no density toggle; to add one, override --zg-table-row-h / --zg-table-head-h on an
+   ancestor of the table.
+
+   Row state is painted through variables where the existing paint cannot be out-ranked without
+   !important: a datatable row re-points --dt-cell-bg and --fg-hover-color (70's hover rule is
+   !important and reads the latter), a grid row re-points --fg-color (cell paint is a literal
+   var(--fg-color)), a list row owns --zg-row-bg. Dark mode: 00-tokens declares --highlight-color
+   only in its light block, which also matches <html> in dark, so Frappe's dark value never
+   applies; the datatable re-points the --dt-* variables that read it and each list row
+   re-points --highlight-color itself.
+   10-controls still has !important rules on .form-control (padding, focus box-shadow) and 83
+   leaves grid / datatable cells to this file, so cell-editor focus rings go through
+   --focus-default / --focus-red rather than a competing box-shadow.
+   ============================================ */
+
+/* --------------------------------------------
+   0. TOKENS (--zg-table-*)
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	--zg-table-row-h: 40px;                /* list + grid body rows */
+	--zg-table-head-h: 36px;               /* list header (grid header stays Frappe's 32px: its cell padding is !important) */
+	--zg-table-pad-x: 10px;                /* cell inline padding, same as the field padding in 83 */
+	--zg-table-radius: var(--zg-radius-md);
+	--zg-table-head-tracking: 0.04em;      /* reset to 0 in RTL: letter-spacing breaks Arabic joining */
+
+	--zg-table-bg: var(--fg-color);
+	--zg-table-head-bg: var(--subtle-fg);
+	--zg-table-filter-bg: color-mix(in srgb, var(--subtle-fg) 45%, var(--fg-color));
+	--zg-table-row-hover: color-mix(in srgb, var(--primary) 4%, var(--fg-color));
+	--zg-table-row-selected: color-mix(in srgb, var(--primary) 8%, var(--fg-color));
+	--zg-table-row-selected-hover: color-mix(in srgb, var(--primary) 12%, var(--fg-color));
+
+	--zg-table-fg: var(--text-color);
+	--zg-table-fg-muted: color-mix(in srgb, var(--text-muted) 75%, var(--text-color));   /* 5.1:1 on the header fill, 4.5:1+ on every row tint */
+	--zg-table-head-fg: color-mix(in srgb, var(--text-muted) 60%, var(--text-color));    /* 5.7:1 on the header fill (plain --text-muted is 4.3:1) */
+
+	--zg-table-line: var(--border-color);                 /* row dividers */
+	--zg-table-line-soft: color-mix(in srgb, var(--border-color) 50%, var(--fg-color));   /* column dividers */
+	--zg-table-line-strong: var(--dark-border-color);     /* frame, header rule, totals rule */
+	--zg-table-input-border: color-mix(in srgb, var(--text-muted) 80%, var(--fg-color));   /* inline filter boxes: >= 3.1:1 in both themes */
+}
+
+[data-theme="dark"] {
+	--zg-table-row-hover: color-mix(in srgb, var(--primary) 8%, var(--fg-color));
+	--zg-table-row-selected: color-mix(in srgb, var(--primary) 14%, var(--fg-color));
+	--zg-table-row-selected-hover: color-mix(in srgb, var(--primary) 18%, var(--fg-color));
+	--zg-table-line: var(--dark-border-color);            /* --border-color is 1.1:1 on the dark surface */
+	--zg-table-line-soft: var(--border-color);
+	--zg-table-line-strong: color-mix(in srgb, var(--dark-border-color) 60%, var(--text-muted));
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--zg-table-line: var(--text-muted);
+		--zg-table-line-soft: var(--text-muted);
+		--zg-table-line-strong: var(--text-color);
+	}
+}
+
+/* --------------------------------------------
+   1. REPORT VIEW, QUERY REPORT, DIALOG PICKERS (frappe-datatable)
+   -------------------------------------------- */
+/* Frappe feeds these from --highlight-color (light in dark mode, see header) and a few literals */
+.datatable {
+	--dt-border-color: var(--zg-table-line);
+	--dt-cell-bg: var(--zg-table-bg);
+	--dt-header-cell-bg: var(--zg-table-head-bg);
+	--dt-light-bg: var(--zg-table-row-selected);                 /* selected cell range, dragged header */
+	--dt-selection-highlight-color: var(--zg-table-row-selected);  /* checked rows */
+	border-radius: var(--zg-table-radius);
+	font-size: var(--zg-text-base);
+}
+
+/* Frame (report view; query-report tables are framed by their own cell borders) */
+.datatable-wrapper {
+	border-color: var(--zg-table-line-strong);
+	border-radius: var(--zg-table-radius);
+}
+/* The frame draws the right and bottom edge, so the last column / last row skip theirs (was doubled) */
+.datatable-wrapper .dt-cell:last-child {
+	border-right-color: transparent;
+}
+.report-view .datatable-wrapper .dt-row:last-child:not(.dt-row-filter) .dt-cell {
+	border-bottom-color: transparent;
+}
+
+/* Cells: horizontal rules full strength, column rules softer; tabular figures everywhere */
+.datatable .dt-cell {
+	border-top-color: var(--zg-table-line);
+	border-right-color: var(--zg-table-line-soft);
+}
+.datatable .dt-scrollable .dt-cell__content,
+.datatable .dt-footer .dt-cell__content {
+	padding-inline: calc(var(--zg-table-pad-x) - var(--dt-focus-border-width));   /* the transparent focus border adds the rest */
+	font-variant-numeric: tabular-nums;                                           /* numeric columns are right-aligned by the column's align option */
+}
+
+/* Header: small semibold muted label. Colour sits on the content box because Frappe pins
+   .datatable .dt-cell { color: ... !important } on the cell itself. */
+.datatable .dt-header .dt-row-header .dt-cell {
+	border-bottom: 1px solid var(--zg-table-line-strong);
+}
+.datatable .dt-header .dt-cell--header .dt-cell__content {
+	background-color: var(--zg-table-head-bg);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+	padding-inline: calc(var(--zg-table-pad-x) - var(--dt-focus-border-width)) var(--dt-spacer-3);   /* end side leaves room for the menu toggle */
+}
+.datatable .dt-header .dt-cell--highlight .dt-cell__content {
+	background-color: var(--dt-light-bg);                      /* column of the focused cell */
+}
+.datatable .dt-cell--header .sort-indicator {
+	margin-inline-start: var(--zg-space-1);
+	color: var(--primary);
+	font-weight: var(--weight-bold);
+}
+/* Sorting lives in the header menu, so the toggle must be reachable without a mouse */
+.datatable .dt-cell--header:focus-within .dt-dropdown__toggle {
+	opacity: 1;
+}
+@media (hover: none) {
+	.datatable .dt-dropdown__toggle {
+		opacity: 1;
+	}
+}
+/* Resize handle becomes a visible 1px grip on header hover */
+.datatable .dt-cell--header:hover .dt-cell__resize-handle {
+	opacity: 1;
+	background: linear-gradient(to right, transparent 2px, var(--zg-table-line-strong) 2px, var(--zg-table-line-strong) 3px, transparent 3px);
+}
+
+/* Inline filter row */
+.datatable .dt-header .dt-row-filter .dt-cell {
+	background-color: var(--zg-table-filter-bg);
+}
+.datatable .dt-row-filter .dt-filter.dt-input {
+	border: 1px solid var(--zg-table-input-border);
+	border-radius: var(--zg-radius-sm);
+	background-color: var(--zg-table-bg);
+	color: var(--zg-table-fg);
+	font-size: var(--zg-text-sm);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:hover:not(:focus, :disabled) {
+	border-color: var(--zg-table-head-fg);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:focus {
+	border-color: var(--zg-focus-ring);
+	box-shadow: 0 0 0 1px var(--zg-focus-ring);
+}
+.datatable .dt-row-filter .dt-filter.dt-input:disabled {
+	border-color: transparent;                                 /* checkbox / serial column has no filter */
+	background-color: transparent;
+}
+
+/* Row states. Re-pointing the variables below also retargets 70's !important hover paint. */
+@media (hover: hover) {
+	.datatable .dt-row:not(.dt-row-header, .dt-row-filter, .dt-row-totalRow, .dt-row--highlight):hover {
+		--dt-cell-bg: var(--zg-table-row-hover);
+		--fg-hover-color: var(--zg-table-row-hover);
+	}
+	.datatable .dt-row--highlight:hover {
+		--dt-cell-bg: var(--zg-table-row-selected-hover);
+		--fg-hover-color: var(--zg-table-row-selected-hover);
+		--dt-selection-highlight-color: var(--zg-table-row-selected-hover);
+	}
+}
+.datatable .dt-row--highlight {
+	--dt-cell-bg: var(--zg-table-row-selected);
+	--fg-hover-color: var(--zg-table-row-selected);
+}
+/* Checked row also gets a shape cue (leading bar), not only a tint */
+.datatable .dt-row--highlight .dt-cell:first-child {
+	box-shadow: inset 2px 0 0 var(--primary);
+}
+.datatable[dir="rtl"] .dt-row--highlight .dt-cell:first-child {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+
+/* Sticky columns must stay opaque and follow the row state (70 pinned them to a grey) */
+.datatable .dt-cell--sticky {
+	background-color: var(--dt-cell-bg);
+}
+.datatable .dt-cell--highlight {
+	background-color: var(--dt-light-bg);
+}
+
+/* Cell focus and in-place edit: Frappe's gray-200 / #9bccf8 borders are ~1.2:1 */
+.datatable .dt-cell--focus .dt-cell__content,
+.datatable .dt-cell__edit {
+	border-color: var(--zg-focus-ring);
+}
+.datatable .dt-cell__edit .form-control {
+	--focus-default: none;                                     /* the edit cell has its own 2px border; 10-controls would add a !important halo */
+	--focus-red: none;
+}
+
+/* Totals row (footer sits outside the scroller) */
+.datatable .dt-footer {
+	--dt-cell-bg: var(--zg-table-head-bg);
+}
+.datatable .dt-footer .dt-cell {
+	border-top-color: var(--zg-table-line-strong);
+}
+
+/* Header menu */
+.dt-dropdown-container .dt-dropdown__list {
+	padding-block: var(--zg-space-1);
+	border: 1px solid var(--zg-table-line-strong);
+	border-radius: var(--zg-radius-md);
+	background-color: var(--popover-bg);
+	box-shadow: var(--shadow-lg);
+	color: var(--zg-table-fg);
+	font-size: var(--zg-text-base);
+}
+.dt-dropdown-container .dt-dropdown__list-item {
+	padding: var(--zg-space-2) var(--zg-space-3);
+}
+.dt-dropdown-container .dt-dropdown__list-item:hover {
+	background-color: var(--zg-table-row-hover);
+}
+
+/* Empty and loading */
+.datatable .dt-scrollable__no-data .no-data-message {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-base);
+	line-height: var(--zg-leading-normal);
+}
+.datatable .dt-freeze {
+	background-color: var(--zg-table-bg);
+	opacity: 0.7;
+}
+.datatable .dt-freeze__message {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-md);
+}
+
+/* Keep trackpad swipes inside the table instead of navigating back */
+.datatable .dt-scrollable,
+.report-wrapper {
+	overscroll-behavior-x: contain;
+}
+
+/* --------------------------------------------
+   2. CHILD-TABLE GRIDS (.form-grid)
+   The right-hand row sheet (.grid-row-open .form-in-grid) is 60's and is not touched.
+   Numeric columns already carry .text-right (grid_row.js make_column), which stays.
+   -------------------------------------------- */
+.form-grid {
+	border-color: var(--zg-table-line-strong);
+	border-radius: var(--zg-table-radius);
+}
+.form-grid.error {
+	border-color: var(--zg-danger-fg);
+	box-shadow: 0 0 0 1px var(--zg-danger-fg);                 /* thicker, not only redder */
+}
+.form-grid-container {
+	overscroll-behavior-x: contain;
+}
+
+/* Header (Frappe paints it gray-600 on subtle-fg: 1.3:1 in dark) */
+.form-grid .grid-heading-row {
+	border-bottom-color: var(--zg-table-line-strong);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.form-grid .grid-heading-row .grid-static-col .static-area.reqd::after {
+	color: color-mix(in srgb, var(--zg-danger-fg) 80%, var(--text-color));   /* Frappe red-400 is ~3:1; plain danger text is 4.3:1 on the header fill */
+}
+
+/* Rows and cells */
+.form-grid .grid-row > .row .col {
+	border-inline-end-color: var(--zg-table-line-soft);
+}
+.form-grid .grid-body .grid-row {
+	border-bottom-color: var(--zg-table-line);
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);   /* Frappe: transition 0.2s (= all) */
+}
+.form-grid .grid-body .grid-static-col,
+.form-grid .grid-body .row-index {
+	height: var(--zg-table-row-h);                             /* Frappe: 43px */
+}
+.form-grid .grid-body .data-row {
+	color: var(--zg-table-fg);                                 /* Frappe: muted body text */
+	font-size: var(--zg-text-base);
+}
+.form-grid .grid-body .data-row .row-index {
+	color: var(--zg-table-fg-muted);
+	font-variant-numeric: tabular-nums;
+}
+.form-grid .grid-body .grid-static-col.text-right {
+	font-variant-numeric: tabular-nums;
+}
+
+/* Hover / checked rows. Cell paint is a literal var(--fg-color), so the row re-points it for its cells.
+   The row being edited keeps the plain surface. */
+@media (hover: hover) {
+	.form-grid .grid-body .grid-row:hover > .data-row:not(.editable-row) {
+		--fg-color: var(--zg-table-row-hover);
+	}
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row:not(.editable-row) {
+	--fg-color: var(--zg-table-row-selected);
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row > .row-check {
+	box-shadow: inset 2px 0 0 var(--primary);                  /* shape cue next to the checked box */
+}
+.form-grid .grid-body .grid-row:has(> .data-row .grid-row-check:checked) > .data-row > .row-check:dir(rtl) {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+
+/* Required-but-empty / invalid cells: add an underline so the state is not only a tint */
+.validated-form .grid-body .grid-static-col.error:not(:focus-visible),
+.editable-form .grid-body .grid-static-col.invalid:not(:focus-visible) {
+	box-shadow: inset 0 -2px 0 var(--zg-danger-fg);
+}
+
+/* Keyboard focus on a cell (Frappe: 1px gray-400 !important border) */
+.form-grid .grid-static-col:focus-visible {
+	box-shadow: inset 0 0 0 2px var(--zg-focus-ring);
+}
+
+/* Editable cell controls. 10-controls still gives every .form-layout .form-control "padding: 8px 10px !important"
+   and a !important box-shadow read from --focus-default / --focus-red, and 83 leaves grid cells alone, so the
+   ring is re-pointed through those variables: inset, because an outer halo is clipped by the next cell. */
+.form-grid .grid-body .editable-row .form-control {
+	--focus-default: inset 0 0 0 2px var(--zg-focus-ring);
+	--focus-red: inset 0 0 0 2px var(--zg-danger-fg);
+}
+.form-grid .grid-body .editable-row input.form-control,
+.form-grid .grid-body .editable-row select.form-control {
+	height: var(--zg-table-row-h);                             /* Frappe: height auto, ~37px inside a 43px cell */
+}
+.form-grid .grid-body .editable-row .frappe-control[data-fieldtype="Select"].form-group .select-icon {
+	top: 50%;                                                  /* Frappe: top 9px, tuned to 43px */
+	transform: translateY(-50%);
+}
+.form-grid .grid-body .editable-row input[data-fieldtype="Percent"] {
+	text-align: right;                                         /* Frappe aligns Int / Float / Currency only; the static cell is right-aligned */
+}
+.form-grid .grid-body .editable-row input[data-fieldtype="Int"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Float"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Currency"],
+.form-grid .grid-body .editable-row input[data-fieldtype="Percent"] {
+	font-variant-numeric: tabular-nums;
+}
+.form-grid .grid-body .editable-row input.form-control.invalid:not(:focus) {
+	box-shadow: inset 0 -2px 0 var(--zg-danger-fg);
+}
+
+/* Action column: edit-row icon */
+.form-grid .grid-body .btn-open-row {
+	--icon-stroke: var(--zg-table-fg-muted);
+}
+.form-grid .grid-body .col:hover > .btn-open-row {
+	--icon-stroke: var(--primary);
+}
+
+/* Empty state: .text-extra-muted paints var(--gray-500) !important (3:1 light, 2:1 dark) */
+.form-grid .grid-empty {
+	--gray-500: var(--zg-table-fg-muted);
+	height: var(--zg-table-row-h);
+	padding-block: 0;
+	background-color: var(--zg-table-bg);
+	font-size: var(--zg-text-base);
+}
+
+/* Pager under the grid */
+.grid-pagination .page-text {
+	color: var(--zg-table-fg-muted);
+	font-size: var(--zg-text-sm);
+}
+.grid-pagination .current-page-number {
+	background-color: transparent;
+	color: var(--zg-table-fg);
+	font-variant-numeric: tabular-nums;
+}
+.grid-pagination .current-page-number:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);                   /* Frappe: outline none */
+	outline-offset: 1px;
+}
+
+/* --------------------------------------------
+   3. LIST VIEW
+   Row paint goes through --zg-row-bg so the container, the sticky action column (.level-right)
+   and Frappe's own hover / focus rules (which read --highlight-color) always agree.
+   -------------------------------------------- */
+.list-row-container {
+	--zg-row-bg: var(--zg-table-bg);
+	--highlight-color: var(--zg-row-bg);
+	--text-muted: var(--zg-table-fg-muted);                    /* muted cells and links stay >= 4.5:1 on tinted rows */
+	border-bottom: 1px solid var(--zg-table-line);             /* full-bleed divider; replaces 70's second line under .list-row's own */
+	transition: background-color var(--zg-duration-fast) var(--zg-ease);
+}
+/* Doubled class = (0,2,0), which ties with 70's and Frappe's :hover paint and wins by order */
+.list-row-container.list-row-container {
+	background-color: var(--zg-row-bg);
+}
+.list-row-container:last-child {
+	border-bottom-color: transparent;                          /* the paging bar draws its own top rule */
+}
+.list-row-container:has(> .list-row-head) {
+	--zg-row-bg: var(--zg-table-head-bg);
+	border-bottom: 0;                                          /* the header draws its own rule */
+}
+@media (hover: hover) {
+	.list-row-container:hover:has(> .list-row) {
+		--zg-row-bg: var(--zg-table-row-hover);
+	}
+}
+.list-row-container:has(.list-row-checkbox:checked) {
+	--zg-row-bg: var(--zg-table-row-selected);
+	box-shadow: inset 2px 0 0 var(--primary);                  /* shape cue next to the checked box */
+}
+.list-row-container:has(.list-row-checkbox:checked):dir(rtl) {
+	box-shadow: inset -2px 0 0 var(--primary);
+}
+@media (hover: hover) {
+	.list-row-container:has(.list-row-checkbox:checked):hover {
+		--zg-row-bg: var(--zg-table-row-selected-hover);
+	}
+}
+.list-row-container:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: -2px;                                      /* inside: the list card clips outer outlines */
+}
+
+.list-row-container .list-row {
+	min-height: var(--zg-table-row-h);
+	border-bottom: 0;
+	font-size: var(--zg-text-base);
+}
+.list-row-container .list-row .level-right {
+	background-color: var(--zg-row-bg);                        /* sticky column must stay opaque; Frappe uses --bg-color */
+}
+.list-row-container .list-subject a {
+	font-weight: var(--weight-medium);
+}
+.list-row-container .list-row-col.text-right {
+	font-variant-numeric: tabular-nums;                        /* numeric fields carry .text-right (list_view.js) */
+}
+
+/* Header. It carries .text-muted (colour !important), so the label colour is set through --text-muted. */
+.list-row-container .list-row-head {
+	--text-muted: var(--zg-table-head-fg);
+	height: var(--zg-table-head-h);
+	border-bottom: 1px solid var(--zg-table-line-strong);
+	border-radius: 0;
+	background-color: var(--zg-table-head-bg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.list-row-container .list-row-head .level-item,
+.list-row-container .list-row-head .list-subject {
+	font-weight: inherit;
+}
+.list-row-container .list-row-head .list-count {
+	font-weight: var(--weight-regular);
+	letter-spacing: normal;
+	text-transform: none;                                      /* "20 of 1,234" is not a label */
+}
+.list-row-container .list-row-head .list-row-col > [data-sort-by]:hover {
+	color: var(--zg-table-fg);
+	text-underline-offset: 3px;                                /* Frappe adds the underline and pointer */
+}
+
+/* --------------------------------------------
+   4. PLAIN TABLES (Bootstrap .table in dialogs / HTML fields, markdown + HTML previews)
+   Print formats keep their own look; rich-text tables (.ql-editor) are document content.
+   -------------------------------------------- */
+.table:where(:not(.print-format *)) th,
+.table:where(:not(.print-format *)) td {
+	padding: var(--zg-space-2) var(--zg-table-pad-x);
+}
+.table-sm:where(:not(.print-format *)) th,
+.table-sm:where(:not(.print-format *)) td {
+	padding: var(--zg-space-1) var(--zg-space-2);
+}
+.table:where(:not(.print-format *)) thead th {
+	border-bottom: 1px solid var(--zg-table-line-strong);      /* Bootstrap: 2px */
+	background-color: var(--zg-table-head-bg);
+	color: var(--zg-table-head-fg);
+	font-size: var(--zg-text-xs);
+	font-weight: var(--weight-semibold);
+	letter-spacing: var(--zg-table-head-tracking);
+	text-transform: uppercase;
+}
+.table:where(:not(.print-format *)) .text-right {
+	font-variant-numeric: tabular-nums;
+}
+.table-striped:where(:not(.print-format *)) tbody tr:nth-of-type(odd) {
+	background-color: var(--zg-wash-2);                        /* Bootstrap: rgba(0,0,0,.05), invisible in dark */
+}
+@media (hover: hover) {
+	.table-hover:where(:not(.print-format *)) tbody tr:hover {
+		background-color: var(--zg-table-row-hover);
+		color: var(--zg-table-fg);                             /* Bootstrap swaps to muted on hover */
+	}
+}
+.table-responsive {
+	overscroll-behavior-x: contain;
+}
+.markdown-preview table th,
+.html-preview table th {
+	background-color: var(--zg-table-head-bg);
+	font-weight: var(--weight-semibold);
+}
+
+/* --------------------------------------------
+   5. RTL AND TOUCH
+   -------------------------------------------- */
+:root:dir(rtl) {
+	--zg-table-head-tracking: 0;
+}
+
+@media (pointer: coarse) {
+	:root {
+		--zg-table-row-h: 44px;
+		--zg-table-head-h: 44px;
+	}
+	/* Frappe sizes the checkbox hit area from these (default row height 30px) */
+	.frappe-list {
+		--list-row-height: var(--zg-table-row-h);
+		--list-checkbox-padding: calc((var(--list-row-height) - var(--checkbox-size)) / 2);
+	}
+	.form-grid .grid-row-check::after {
+		inset: -13px;                                          /* Frappe: -8px (30px target) */
+	}
+}

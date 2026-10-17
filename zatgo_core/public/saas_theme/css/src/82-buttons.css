@@ -1,0 +1,505 @@
+/* ============================================
+   82. BUTTON SYSTEM — variants, sizes, states, groups
+   The one authoritative definition of .btn (supersedes 10-controls §4 and the generic
+   .btn rules in 40/50/60/70). Variant and size classes only set --zg-btn-* custom
+   properties; one set of state rules (rest, hover, open, press, focus, disabled,
+   working) reads them, so every variant behaves alike and light/dark swap by token.
+
+   Frappe v16.29 DOM this targets: sizes btn-xs / btn-sm (btn-md appears only in web forms,
+   btn-lg nowhere in Frappe JS, both styled for completeness), variants btn-primary /
+   btn-default / btn-secondary / btn-ghost / btn-danger / btn-success / btn-info /
+   btn-warning / btn-link / btn-primary-light, icon-btn, btn-group, data-toggle="dropdown".
+   "Working" is not a class: Frappe only does prop("disabled") while a request runs
+   (request.js, save.js, page.js) and sets body[data-ajax-state="triggered"].
+   ============================================ */
+
+/* --------------------------------------------
+   1. TOKENS
+   -------------------------------------------- */
+:root,
+[data-theme="light"] {
+	/* Size scale: height / inline padding / type */
+	--zg-btn-h-xs: 24px;
+	--zg-btn-h-sm: 28px;
+	--zg-btn-h-md: 32px;
+	--zg-btn-h-lg: 40px;
+	--zg-btn-px-xs: var(--zg-space-2);
+	--zg-btn-px-sm: 10px;
+	--zg-btn-px-md: var(--zg-space-3);
+	--zg-btn-px-lg: var(--zg-space-4);
+	--zg-btn-fs-xs: var(--zg-text-sm);
+	--zg-btn-fs-sm: var(--zg-text-sm);
+	--zg-btn-fs-md: var(--zg-text-base);
+	--zg-btn-fs-lg: var(--zg-text-md);
+	--zg-btn-touch: 40px;                                   /* minimum hit area for coarse pointers */
+
+	/* Solid fills darken toward this on hover / press (navy in light, near-black in dark) */
+	--zg-btn-shade: var(--gray-900);
+
+	/* Primary */
+	--zg-btn-primary-bg: var(--primary);
+	--zg-btn-primary-bg-hover: var(--primary-hover);
+	--zg-btn-primary-bg-active: var(--primary-active);
+	--zg-btn-primary-fg: var(--zg-on-primary);
+	--zg-btn-primary-shadow: var(--shadow-primary-sm);
+	--zg-btn-primary-shadow-hover: var(--shadow-primary-md);
+
+	/* Status fills (white text) and the same hue as text on a plain surface */
+	--zg-btn-danger-bg: var(--zg-danger-solid);
+	--zg-btn-danger-fg: var(--zg-on-primary);
+	--zg-btn-danger-text: var(--zg-danger-solid);
+	--zg-btn-success-bg: color-mix(in srgb, var(--alert-text-success) 88%, var(--zg-btn-shade));
+	--zg-btn-success-fg: var(--zg-on-primary);
+	--zg-btn-success-text: var(--zg-btn-success-bg);
+	--zg-btn-warning-bg: var(--zg-accent-amber-fg);         /* amber needs dark text */
+	--zg-btn-warning-fg: var(--gray-900);
+
+	/* Neutral (default / secondary / light / outline) */
+	--zg-btn-neutral-bg: var(--btn-default-bg);
+	--zg-btn-neutral-bg-hover: var(--btn-default-hover-bg);
+	--zg-btn-neutral-bg-active: color-mix(in srgb, var(--btn-default-hover-bg) 85%, var(--text-color));
+	--zg-btn-neutral-fg: var(--text-color);
+	--zg-btn-neutral-border: var(--dark-border-color);
+	--zg-btn-neutral-border-hover: color-mix(in srgb, var(--dark-border-color) 55%, var(--text-muted));
+
+	/* Tonal (btn-info, btn-primary-light): same pair the alerts use */
+	--zg-btn-tonal-bg: var(--zg-info-bg);
+	--zg-btn-tonal-bg-hover: color-mix(in srgb, var(--zg-info-fg) 10%, var(--zg-info-bg));
+	--zg-btn-tonal-bg-active: color-mix(in srgb, var(--zg-info-fg) 18%, var(--zg-info-bg));
+	--zg-btn-tonal-fg: var(--zg-info-fg);
+	--zg-btn-tonal-border: color-mix(in srgb, var(--zg-info-fg) 30%, transparent);
+
+	/* Link */
+	--zg-btn-link-fg: var(--ink-blue-link);
+	--zg-btn-link-fg-hover: color-mix(in srgb, var(--ink-blue-link) 75%, var(--heading-color));
+
+	/* 00-tokens hard-codes this in :root, which also wins in dark; derive it so group dividers theme */
+	--btn-group-border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] {
+	/* Dark primary is the light brand blue, so its label is dark (white on it is only ~2.9:1) */
+	--zg-btn-primary-bg-hover: color-mix(in srgb, var(--primary) 84%, var(--zg-white-100));
+	--zg-btn-primary-bg-active: color-mix(in srgb, var(--primary) 86%, var(--zg-btn-shade));
+	--zg-btn-primary-fg: var(--gray-900);
+	--zg-btn-primary-shadow: none;
+	--zg-btn-primary-shadow-hover: none;
+
+	--zg-btn-danger-text: var(--alert-text-danger);
+	--zg-btn-success-bg: color-mix(in srgb, var(--alert-text-success) 50%, var(--zg-btn-shade));
+	--zg-btn-success-text: var(--alert-text-success);
+}
+
+/* --------------------------------------------
+   2. BASE — layout, type, motion (every .btn)
+   Defaults describe a bare, chrome-less button (transparent, muted label), which is what
+   Frappe renders for an unvariated .btn. Variants in §4 override the palette.
+   -------------------------------------------- */
+.btn {
+	/* palette (swapped by variants) */
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);
+	--zg-btn-bg-active: color-mix(in srgb, var(--btn-ghost-hover-bg) 85%, var(--text-color));
+	--zg-btn-fg: var(--text-muted);
+	--zg-btn-fg-hover: var(--text-color);
+	--zg-btn-border: transparent;
+	--zg-btn-border-hover: var(--zg-btn-border);
+	--zg-btn-border-active: var(--zg-btn-border-hover);
+	--zg-btn-shadow: none;
+	--zg-btn-shadow-hover: var(--zg-btn-shadow);
+
+	/* geometry (swapped by size classes) */
+	--zg-btn-h: var(--zg-btn-h-md);
+	--zg-btn-px: var(--zg-btn-px-md);
+	--zg-btn-py: 3px;
+	--zg-btn-fs: var(--zg-btn-fs-md);
+	--zg-btn-radius: var(--zg-radius-md);
+	--zg-btn-gap: calc(var(--zg-space-1) * 1.5);
+	--zg-btn-bw: 1px;
+	--zg-btn-hit: 0px;                                      /* raised to --zg-btn-touch for coarse pointers */
+
+	/* Frappe's own size variable drives .icon-btn width/height and .page-actions .btn height */
+	--btn-height: max(var(--zg-btn-h), var(--zg-btn-hit));
+
+	/* icons follow the label colour in every variant */
+	--icon-stroke: currentColor;
+
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--zg-btn-gap);
+	font-size: var(--zg-btn-fs);
+	font-weight: 500;
+	/* Height without min-/fixed height: a one-line button is exactly --btn-height tall, while components
+	   that set their own smaller height (form-sidebar "+", connections "+") keep winning */
+	line-height: calc(var(--btn-height) - 2 * var(--zg-btn-bw) - 2 * var(--zg-btn-py));
+	letter-spacing: 0.01em;
+	text-align: center;
+	cursor: pointer;
+	background-color: var(--zg-btn-bg);
+	color: var(--zg-btn-fg);
+	/* every variant keeps a 1px border (transparent when borderless): equal box in all variants, and
+	   transparent borders are what make ghost / link buttons visible in forced-colors (high-contrast) mode */
+	border: var(--zg-btn-bw) solid var(--zg-btn-border);
+	border-radius: var(--zg-btn-radius);
+	box-shadow: var(--zg-btn-shadow);
+	transition:
+		background-color var(--zg-duration-fast) var(--zg-ease),
+		border-color var(--zg-duration-fast) var(--zg-ease),
+		color var(--zg-duration-fast) var(--zg-ease),
+		box-shadow var(--zg-duration-fast) var(--zg-ease);
+}
+
+.btn,
+.btn:hover,
+.btn:focus {
+	text-decoration: none;                                  /* beats a:hover underline on a.btn */
+}
+
+.btn-block {
+	display: flex;
+	width: 100%;
+}
+
+/* Icons: fixed box, no auto margins (Frappe's .icon has margin: 0 auto), never squeezed */
+.btn .icon,
+.btn .es-icon {
+	flex: none;
+	margin: 0;
+}
+
+/* --------------------------------------------
+   3. SIZES — xs 24 / sm 28 / md 32 / lg 40
+   Vars here; the one padding rule below must match Frappe's
+   .btn:not(.btn-md):not(.btn-lg):not(.btn-xs) (0,4,0) to win.
+   -------------------------------------------- */
+.btn-xs {
+	--zg-btn-h: var(--zg-btn-h-xs);
+	--zg-btn-px: var(--zg-btn-px-xs);
+	--zg-btn-py: 2px;
+	--zg-btn-fs: var(--zg-btn-fs-xs);
+	--zg-btn-radius: var(--zg-radius-sm);
+	--zg-btn-gap: var(--zg-space-1);
+}
+
+.btn-sm,
+.btn-group-sm > .btn {
+	--zg-btn-h: var(--zg-btn-h-sm);
+	--zg-btn-px: var(--zg-btn-px-sm);
+	--zg-btn-fs: var(--zg-btn-fs-sm);
+}
+
+.btn-lg,
+.btn-group-lg > .btn {
+	--zg-btn-h: var(--zg-btn-h-lg);
+	--zg-btn-px: var(--zg-btn-px-lg);
+	--zg-btn-py: var(--zg-space-1);
+	--zg-btn-fs: var(--zg-btn-fs-lg);
+}
+
+/* The page head runs on the compact scale: plain and icon buttons line up with its btn-sm ones */
+.page-actions .btn:not(.btn-xs):not(.btn-lg) {
+	--zg-btn-h: var(--zg-btn-h-sm);
+	--zg-btn-px: var(--zg-btn-px-sm);
+	--zg-btn-fs: var(--zg-btn-fs-sm);
+}
+.page-actions .btn {
+	border-radius: var(--zg-btn-radius);                    /* Frappe: .page-actions .btn { border-radius: var(--border-radius) } (0,2,0) */
+}
+
+.btn:not(.btn-md):not(.btn-lg):not(.btn-xs),
+.btn.btn-xs:not(.btn-sm):not(.btn-lg),
+.btn.btn-lg:not(.btn-xs):not(.btn-sm) {
+	padding: var(--zg-btn-py) var(--zg-btn-px);
+}
+
+/* Icon-only: square, size from --btn-height (Frappe's .btn.icon-btn already sets width/height from it).
+   (0,5,0) to out-rank Frappe's 6px padding on these */
+.btn.icon-btn {
+	--zg-btn-px: 0px;
+	--zg-btn-py: 0px;
+}
+.btn.icon-btn:not(.btn-md):not(.btn-lg):not(.btn-xs),
+.btn.icon-btn.btn-xs:not(.btn-sm):not(.btn-lg) {
+	padding: 0;
+}
+
+/* Split-button caret segment is narrower than a labelled button */
+.btn.dropdown-toggle-split {
+	--zg-btn-px: var(--zg-space-2);
+}
+
+/* --------------------------------------------
+   4. VARIANTS — palette only
+   -------------------------------------------- */
+
+/* Primary */
+.btn-primary {
+	--zg-btn-bg: var(--zg-btn-primary-bg);
+	--zg-btn-bg-hover: var(--zg-btn-primary-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-primary-bg-active);
+	--zg-btn-fg: var(--zg-btn-primary-fg);
+	--zg-btn-fg-hover: var(--zg-btn-primary-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--zg-btn-shadow: var(--zg-btn-primary-shadow);
+	--zg-btn-shadow-hover: var(--zg-btn-primary-shadow-hover);
+	--icon-fill-bg: var(--zg-btn-bg);
+	white-space: nowrap;
+}
+
+/* Neutral: default / secondary / light */
+.btn-default,
+.btn-secondary,
+.btn-light {
+	--zg-btn-bg: var(--zg-btn-neutral-bg);
+	--zg-btn-bg-hover: var(--zg-btn-neutral-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-neutral-bg-active);
+	--zg-btn-fg: var(--zg-btn-neutral-fg);
+	--zg-btn-fg-hover: var(--zg-btn-neutral-fg);
+	--zg-btn-border: var(--zg-btn-neutral-border);
+	--zg-btn-border-hover: var(--zg-btn-neutral-border-hover);
+}
+
+/* Outline: neutral border, no fill until hovered */
+.btn-outline,
+.btn-outline-secondary {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);
+	--zg-btn-bg-active: var(--zg-btn-neutral-bg-active);
+	--zg-btn-fg: var(--zg-btn-neutral-fg);
+	--zg-btn-fg-hover: var(--zg-btn-neutral-fg);
+	--zg-btn-border: var(--zg-btn-neutral-border);
+	--zg-btn-border-hover: var(--zg-btn-neutral-border-hover);
+}
+
+/* Outline in a status hue: the label shifts toward the heading colour on the tinted hover / press fill
+   (keeps 4.5:1 there in both themes) */
+.btn-outline-primary {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--primary) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--primary) 18%, transparent);
+	--zg-btn-fg: var(--primary);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--primary) 75%, var(--heading-color));
+	--zg-btn-border: var(--primary);
+}
+.btn-outline-danger {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-danger-text) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-danger-text) 18%, transparent);
+	--zg-btn-fg: var(--zg-btn-danger-text);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--zg-btn-danger-text) 75%, var(--heading-color));
+	--zg-btn-border: var(--zg-btn-danger-text);
+}
+.btn-outline-success {
+	--zg-btn-bg: transparent;
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-success-text) 10%, transparent);
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-success-text) 18%, transparent);
+	--zg-btn-fg: var(--zg-btn-success-text);
+	--zg-btn-fg-hover: color-mix(in srgb, var(--zg-btn-success-text) 75%, var(--heading-color));
+	--zg-btn-border: var(--zg-btn-success-text);
+}
+
+/* Ghost: text only, fill on hover */
+.btn-ghost {
+	--zg-btn-fg: var(--text-color);
+	--zg-btn-fg-hover: var(--text-color);
+}
+
+/* Danger / success / warning: solid fills, hover and press darken toward --zg-btn-shade */
+.btn-danger {
+	--zg-btn-bg: var(--zg-btn-danger-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-danger-bg) 88%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-danger-bg) 76%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-danger-fg);
+	--zg-btn-fg-hover: var(--zg-btn-danger-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+.btn-success {
+	--zg-btn-bg: var(--zg-btn-success-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-success-bg) 88%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-success-bg) 76%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-success-fg);
+	--zg-btn-fg-hover: var(--zg-btn-success-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+.btn-warning {
+	--zg-btn-bg: var(--zg-btn-warning-bg);
+	--zg-btn-bg-hover: color-mix(in srgb, var(--zg-btn-warning-bg) 92%, var(--zg-btn-shade));
+	--zg-btn-bg-active: color-mix(in srgb, var(--zg-btn-warning-bg) 84%, var(--zg-btn-shade));
+	--zg-btn-fg: var(--zg-btn-warning-fg);
+	--zg-btn-fg-hover: var(--zg-btn-warning-fg);
+	--zg-btn-border: var(--zg-btn-bg);
+	--zg-btn-border-hover: var(--zg-btn-bg-hover);
+	--zg-btn-border-active: var(--zg-btn-bg-active);
+	--icon-fill-bg: var(--zg-btn-bg);
+}
+
+/* Tonal: btn-info (also Frappe's "selected" marker in gantt / paging) and btn-primary-light
+   (filter / group-by buttons while active, skip link) */
+.btn-info,
+.btn-primary-light {
+	--zg-btn-bg: var(--zg-btn-tonal-bg);
+	--zg-btn-bg-hover: var(--zg-btn-tonal-bg-hover);
+	--zg-btn-bg-active: var(--zg-btn-tonal-bg-active);
+	--zg-btn-fg: var(--zg-btn-tonal-fg);
+	--zg-btn-fg-hover: var(--zg-btn-tonal-fg);
+	--zg-btn-border: var(--zg-btn-tonal-border);
+}
+
+/* Link: label only; hover underlines (a non-colour cue) */
+.btn-link {
+	--zg-btn-fg: var(--zg-btn-link-fg);
+	--zg-btn-fg-hover: var(--zg-btn-link-fg-hover);
+	--zg-btn-bg-hover: transparent;
+	--zg-btn-bg-active: transparent;
+}
+.btn.btn-link {
+	--zg-btn-px: var(--zg-space-2);
+}
+.btn-link.icon-btn {
+	--zg-btn-bg-hover: var(--btn-ghost-hover-bg);           /* no text to underline, so give icon links a hover fill */
+	--zg-btn-bg-active: color-mix(in srgb, var(--btn-ghost-hover-bg) 85%, var(--text-color));
+}
+
+/* Frappe sets bg / colour / border-colour on these (0,2,0) and Bootstrap on their :focus and
+   :disabled; repaint from the palette at the same specificity (this file loads later). */
+.btn:is(
+	.btn-default, .btn-secondary, .btn-light, .btn-ghost, .btn-primary, .btn-danger, .btn-success,
+	.btn-warning, .btn-info, .btn-primary-light, .btn-outline, .btn-outline-primary,
+	.btn-outline-secondary, .btn-outline-danger, .btn-outline-success
+),
+.btn:is(
+	.btn-default, .btn-secondary, .btn-light, .btn-primary, .btn-danger, .btn-success,
+	.btn-warning, .btn-info, .btn-outline-primary, .btn-outline-secondary,
+	.btn-outline-danger, .btn-outline-success
+):focus {
+	background-color: var(--zg-btn-bg);
+	color: var(--zg-btn-fg);
+	border-color: var(--zg-btn-border);
+}
+.btn-link:disabled,
+.btn-link.disabled {
+	color: var(--zg-btn-fg);                                /* Bootstrap greys disabled links to #7c7c7c */
+}
+
+/* --------------------------------------------
+   5. STATES — read the palette, same for every variant
+   -------------------------------------------- */
+
+/* Hover. (0,4,0) beats Frappe's .btn.btn-default:hover (0,3,0) */
+.btn:not(:disabled):not(.disabled):hover {
+	background-color: var(--zg-btn-bg-hover);
+	border-color: var(--zg-btn-border-hover);
+	color: var(--zg-btn-fg-hover);
+	box-shadow: var(--zg-btn-shadow-hover);
+}
+.btn-link:not(:disabled):not(.disabled):hover {
+	text-decoration: underline;
+}
+
+/* Open dropdown (Bootstrap sets aria-expanded on data-toggle="dropdown" triggers) and toggled-on */
+.btn:not(:disabled):not(.disabled)[aria-expanded="true"],
+.btn:not(:disabled):not(.disabled).active {
+	background-color: var(--zg-btn-bg-active);
+	border-color: var(--zg-btn-border-active);
+	color: var(--zg-btn-fg-hover);
+}
+
+/* Press. Frappe paints :active with !important (.btn:active, .btn.btn-primary:active and its
+   dark twin), so this is the one state that cannot win without it. Frappe's own halo
+   (box-shadow: var(--focus-default)) is kept as the pressed cue. */
+.btn:not(:disabled):not(.disabled):active {
+	background-color: var(--zg-btn-bg-active) !important; /* important: Frappe .btn:active / .btn-primary:active use !important */
+	color: var(--zg-btn-fg-hover) !important; /* important: same Frappe rules */
+	border-color: var(--zg-btn-border-active);
+}
+
+/* Focus. Mouse focus keeps the resting look (drops Bootstrap's grey ring left after a click);
+   keyboard focus gets a solid outline that survives every variant, incl. .btn-link whose
+   box-shadow Frappe forces off. */
+.btn:focus,
+.btn.focus {
+	box-shadow: var(--zg-btn-shadow);
+}
+.btn:focus-visible {
+	outline: 2px solid var(--zg-focus-ring);
+	outline-offset: var(--zg-focus-offset);
+}
+.btn-link:focus:not(:focus-visible) {
+	text-decoration: none;                                  /* Bootstrap underlines :focus; keep that for the keyboard only */
+}
+
+/* Disabled (native :disabled, or the .disabled class Frappe's Dialog adds). Not by opacity alone:
+   not-allowed cursor, no shadow, no hover/press (those rules exclude disabled). */
+.btn:disabled,
+.btn.disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+	box-shadow: none;
+}
+.btn-paging.btn-info:disabled {
+	opacity: 1;                                             /* the current page is disabled by Frappe but is "selected", not unavailable */
+	border-color: var(--zg-btn-neutral-border);             /* Frappe paints its fill / label; keep the group's neutral outline */
+}
+
+/* Working. Frappe disables the clicked button for the life of the request and flags
+   body[data-ajax-state="triggered"]; scoped to primary actions in the page head and dialogs
+   so an unrelated disabled button never spins. The ring shape (not colour) signals "busy". */
+body[data-ajax-state="triggered"] :is(.page-actions, .modal-footer) .btn-primary:disabled {
+	opacity: 0.8;
+	cursor: progress;
+}
+body[data-ajax-state="triggered"] :is(.page-actions, .modal-footer) .btn-primary:disabled::before {
+	content: "";
+	flex: none;
+	width: 1em;
+	height: 1em;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: zg-btn-spin 700ms linear infinite;
+}
+@keyframes zg-btn-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* --------------------------------------------
+   6. GROUPS & DROPDOWN TRIGGERS
+   Corner collapsing and the -1px overlap come from Bootstrap's .btn-group rules; radius is
+   declared at (0,1,0) above precisely so those win. Needs 10-controls' `.btn { ... !important }`
+   radius rule gone.
+   -------------------------------------------- */
+
+/* Solid segments need a divider, their border equals their fill */
+.btn-group > .btn:is(.btn-primary, .btn-danger, .btn-success, .btn-warning):not(:first-child) {
+	border-inline-start-color: color-mix(in srgb, var(--zg-btn-fg) 35%, transparent);
+}
+
+/* Bootstrap's caret (.dropdown-toggle::after) carries its own margin; the flex gap already spaces it */
+.btn.dropdown-toggle::after {
+	margin-inline-start: 0;
+}
+
+/* An open group trigger keeps its resting shadow (Bootstrap adds an inset underline) */
+.btn-group.show .dropdown-toggle {
+	box-shadow: var(--zg-btn-shadow);
+}
+
+/* --------------------------------------------
+   7. POINTER ADAPTATION
+   -------------------------------------------- */
+
+/* Touch: 40px minimum hit area for every size (raises --btn-height: line-height, page-head height, icon-btn squares) */
+@media (pointer: coarse) {
+	.btn {
+		--zg-btn-hit: var(--zg-btn-touch);
+	}
+}

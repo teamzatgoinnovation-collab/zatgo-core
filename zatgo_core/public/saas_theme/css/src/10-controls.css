@@ -1,50 +1,12 @@
 /* ============================================
-   4. BUTTONS
+   4. BUTTONS — moved to 82-buttons.css
    ============================================ */
-
-.btn {
-	border-radius: var(--border-radius-sm) !important;
-}
-
-.btn-primary,
-.btn-primary-dark {
-	background-color: var(--primary);
-	border-color: var(--primary);
-	color: var(--zg-on-primary) !important;
-	font-weight: 500;
-	box-shadow: var(--shadow-primary-sm);
-	transition: background 0.15s ease, box-shadow 0.15s ease;
-}
-
-.btn-primary:hover,
-.btn-primary-dark:hover {
-	background-color: var(--primary-hover) !important;
-	border-color: var(--primary-hover) !important;
-	box-shadow: var(--shadow-primary-md);
-}
-
-.btn-primary:focus,
-.btn-primary:focus-visible,
-.btn-primary-dark:focus,
-.btn-primary-dark:focus-visible {
-	box-shadow: var(--focus-blue) !important;
-}
-
-.btn-default {
-	border: 1px solid var(--border-color);
-	font-weight: 500;
-}
 
 /* ============================================
    5. INPUTS — Squarish + Blue Focus
    ============================================ */
 
-/* --- All inputs: squarish corners + blue focus --- */
-.form-control {
-	border-radius: var(--border-radius-sm);
-	transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
+/* --- All inputs: blue focus (radius/transition: see 83-inputs.css) --- */
 .form-control:focus,
 .form-control:focus-visible {
 	box-shadow: var(--focus-default) !important;
@@ -113,38 +75,4 @@
 	border-radius: var(--border-radius-sm);
 }
 
-/* ============================================
-   5b. FORM TABS — Primary active state
-   ============================================ */
-
-.form-tabs .nav-tabs {
-	padding: 0 16px;
-	gap: 0;
-}
-
-.form-tabs .nav-item {
-	margin-right: 4px;
-	margin-left: 0;
-}
-
-.form-tabs .nav-link {
-	border: none;
-	border-bottom: 2px solid transparent !important;
-	border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
-	padding: 8px 10px !important;
-	margin: 0 !important;
-	transition: all 0.15s ease;
-}
-
-.form-tabs .nav-link.active {
-	color: var(--primary) !important;
-	border-bottom: 2px solid var(--primary) !important;
-	background-color: var(--primary-tint-06) !important;
-	font-weight: 600;
-}
-
-.form-tabs .nav-link:hover:not(.active) {
-	color: var(--primary) !important;
-	background-color: var(--primary-tint-03) !important;
-}
-
+/* 5b. FORM TABS — moved to 86-tabs-menus-dialogs.css */

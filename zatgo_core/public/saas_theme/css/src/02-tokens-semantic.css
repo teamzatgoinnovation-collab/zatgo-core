@@ -120,6 +120,18 @@
 	--zg-accent-red-bg: #FDECEA;    --zg-accent-red-fg: #D93025;
 	--zg-accent-indigo-bg: #E8EAF6; --zg-accent-indigo-fg: #3F51B5;
 	--zg-accent-orange-bg: #fff3e0; --zg-accent-orange-fg: #e65100;
+	--zg-accent-pink-bg: #FCE7F1;   --zg-accent-pink-fg: #C2255C;
+	--zg-accent-teal-bg: #DDF4F0;   --zg-accent-teal-fg: #0B7A6E;
+
+	/* Light tints for icons on the always-dark workspace rail (same in both themes) */
+	--zg-rail-hue-1: #7FA0FF;
+	--zg-rail-hue-2: #5CD87D;
+	--zg-rail-hue-3: #FFC94D;
+	--zg-rail-hue-4: #BB86FC;
+	--zg-rail-hue-5: #F783AC;
+	--zg-rail-hue-6: #4FD1C5;
+	--zg-rail-hue-7: #F28B82;
+	--zg-rail-hue-8: #9FA8DA;
 }
 
 [data-theme="dark"] {
@@ -137,4 +149,6 @@
 	--zg-accent-red-bg: rgba(217, 48, 37, 0.15);     --zg-accent-red-fg: #F28B82;
 	--zg-accent-indigo-bg: rgba(63, 81, 181, 0.15);  --zg-accent-indigo-fg: #9FA8DA;
 	--zg-accent-orange-bg: rgba(230, 81, 0, 0.15);   --zg-accent-orange-fg: #ff9800;
+	--zg-accent-pink-bg: rgba(214, 51, 108, 0.15);   --zg-accent-pink-fg: #F783AC;
+	--zg-accent-teal-bg: rgba(13, 148, 136, 0.15);   --zg-accent-teal-fg: #4FD1C5;
 }
