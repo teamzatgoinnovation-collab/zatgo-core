@@ -12,12 +12,12 @@ import frappe
 
 from zatgo_core.chat_ai.core.calc import CalcError, calculate
 from zatgo_core.chat_ai.core.files import table as tbl
-from zatgo_core.chat_ai.core.tool_router.spec import CATEGORY_READ, ToolSpec
+from zatgo_core.chat_ai.core.tool_router.spec import CATEGORY_READ, CATEGORY_WRITE, ToolSpec
 from zatgo_core.chat_ai.core.web_search import WebToolError, assert_public_url, fetch_url, get_provider
 from zatgo_core.chat_ai.erpnext import attachments, knowledge
 from zatgo_core.chat_ai.erpnext.settings import get_settings_dict
 
-WORKSPACE_TOOLS = ("file_search", "analyze_table", "calculator", "web_search", "fetch_url")
+WORKSPACE_TOOLS = ("file_search", "analyze_table", "calculator", "web_search", "fetch_url", "schedule_report")
 _URL = re.compile(r"https?://[^\s<>\"')\]]+")
 
 
@@ -137,8 +137,34 @@ def _fetch_url(url: str):
 	return {"ref": ref, **page}
 
 
+def _schedule_report(title: str, prompt: str, frequency: str = "Daily", time_of_day: str = "08:00",
+					 weekday: str = "Monday", day_of_month: int = 1, email_recipients: str = ""):
+	"""Create a recurring read-only task for the current user (permissions and limits are the
+	document's own validation). Reached only through the write-confirmation flow."""
+	doc = frappe.get_doc({
+		"doctype": "AI Scheduled Task", "title": title, "prompt": prompt, "frequency": frequency,
+		"time_of_day": time_of_day, "weekday": weekday, "day_of_month": day_of_month,
+		"email_recipients": email_recipients, "user": frappe.session.user, "enabled": 1,
+	}).insert()
+	return {"task": doc.name, "title": doc.title, "next_run": str(doc.next_run), "note": "Runs read-only as you; manage it under AI Scheduled Task."}
+
+
 def get_tools() -> list[ToolSpec]:
 	return [
+		ToolSpec(
+			name="schedule_report",
+			description="Schedule a recurring automatic report (e.g. daily stock check, weekly sales summary) that ZatGo AI runs on its own, read-only, and delivers as a notification. Needs the user's confirmation.",
+			category=CATEGORY_WRITE, skill="workspace", confirmation_required=True,
+			parameters={"type": "object", "properties": {
+				"title": {"type": "string"},
+				"prompt": {"type": "string", "description": "What to look up and report, written as a message to the assistant"},
+				"frequency": {"type": "string", "enum": ["Hourly", "Daily", "Weekly", "Monthly"]},
+				"time_of_day": {"type": "string", "description": "HH:MM, 24h"},
+				"weekday": {"type": "string"}, "day_of_month": {"type": "integer"},
+				"email_recipients": {"type": "string"},
+			}, "required": ["title", "prompt", "frequency"]},
+			handler=_schedule_report,
+		),
 		ToolSpec(
 			name="file_search",
 			description="Search the user's attached files (this conversation) and return the most relevant passages with their file names.",

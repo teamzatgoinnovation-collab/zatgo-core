@@ -113,6 +113,7 @@ def get_prompt_text(settings: dict, skill_prompts: list[str] | None = None) -> s
 # Core helpers always kept when shortlisting tools
 _CORE_HELPER_TOOLS = frozenset(
 	{
+		"schedule_report",
 		"file_search",
 		"analyze_table",
 		"calculator",
@@ -199,9 +200,16 @@ def run_turn(
 	model: str | None = None,
 	web: bool | None = None,
 	regenerate: bool = False,
+	unattended: bool = False,
 ) -> dict:
 	settings = get_settings_dict()
 	settings["_turn_start"] = time.time()
+	if unattended:
+		# Scheduled / automatic run: nobody is there to confirm or read a stream. Only read tools
+		# exist for this run -- write tools are refused by category, not merely by confirmation.
+		settings["allowed_tool_categories"] = "read"
+		settings["enable_streaming"] = 0
+	settings["_unattended"] = bool(unattended)
 	settings["_skip_user_insert"] = bool(regenerate)
 	# Reload plugins every turn (cold worker + discovery)
 	try:
@@ -427,6 +435,8 @@ def run_turn(
 			plan.candidate_tools = list(plan.candidate_tools or []) + ["company_status_brief", "dashboard_summary"]
 		plan.candidate_skills = status_candidate_skills(available)
 
+	if settings.get("_unattended"):
+		plan.needs_plan_approval = False  # no one to approve; read-only tools make approval moot
 	if plan.needs_clarification:
 		resp = clarification(plan.clarification_question or "Could you provide more details?")
 		return _persist(session, memory, user_message, resp, settings, tokens=(plan.tokens_in, plan.tokens_out), model=plan.model)

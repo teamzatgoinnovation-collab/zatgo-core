@@ -131,6 +131,9 @@ extend_doctype_class = {
 }
 
 scheduler_events = {
+    "all": [
+        "zatgo_core.services.bundled_apps.chat_ai_all",
+    ],
     "hourly": [
         "zatgo_core.services.bundled_apps.chat_ai_hourly",
     ],
@@ -157,6 +160,7 @@ permission_query_conditions = {
     "AI Chat Message": "zatgo_core.chat_ai.permissions.query_ai_chat_message",
     "AI Conversation Summary": "zatgo_core.chat_ai.permissions.query_ai_conversation_summary",
     "AI Attachment": "zatgo_core.chat_ai.permissions.query_ai_attachment",
+    "AI Scheduled Task": "zatgo_core.chat_ai.permissions.query_ai_scheduled_task",
     # Bundled modules' own DocTypes: no rows where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_query_conditions",
@@ -182,6 +186,7 @@ has_permission = {
     "AI Chat Message": "zatgo_core.chat_ai.permissions.perm_ai_chat_message",
     "AI Conversation Summary": "zatgo_core.chat_ai.permissions.perm_ai_conversation_summary",
     "AI Attachment": "zatgo_core.chat_ai.permissions.perm_ai_attachment",
+    "AI Scheduled Task": "zatgo_core.chat_ai.permissions.perm_ai_scheduled_task",
     # Bundled modules' own DocTypes: nobody's where the module is switched off.
     "*": [
         "zatgo_core.services.bundled_apps.module_doc_has_permission",

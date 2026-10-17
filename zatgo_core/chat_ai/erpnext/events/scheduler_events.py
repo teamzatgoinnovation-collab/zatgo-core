@@ -6,6 +6,16 @@ import frappe
 from frappe.utils import add_days, now_datetime, today
 
 
+def tick():
+	"""Each scheduler tick: queue due ZatGo AI scheduled tasks (cheap: one indexed query)."""
+	try:
+		from zatgo_core.chat_ai.erpnext.scheduled_tasks import run_due
+
+		run_due()
+	except Exception:
+		frappe.log_error(title="chat_ai scheduled tasks tick")
+
+
 def hourly():
 	_ping_provider()
 	_ping_connectors()

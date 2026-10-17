@@ -500,6 +500,10 @@ chat_ai.sidebar.AppOptions = {
 			this.expanded = !this.expanded;
 			localStorage.setItem("chat_ai_wide", this.expanded ? "1" : "0");
 		},
+		openScheduledTasks() {
+			this.menuOpen = false;
+			frappe.set_route("List", "AI Scheduled Task");
+		},
 		closeOverlays() {
 			this.menuOpen = false;
 			this.helpOpen = false;
@@ -2072,6 +2076,7 @@ chat_ai.sidebar.AppOptions = {
           <button type="button" role="menuitem" class="cai-menu-item" @click="exportMarkdown('copy')">{{ ui.copyMarkdown }}</button>
           <button type="button" role="menuitem" class="cai-menu-item" @click="exportMarkdown('download')">{{ ui.downloadMarkdown }}</button>
           <button type="button" role="menuitem" class="cai-menu-item" @click="showArtifacts = true; menuOpen = false; loadArtifacts()">{{ ui.artifacts }}</button>
+          <button type="button" role="menuitem" class="cai-menu-item" @click="openScheduledTasks">{{ ui.scheduledTasks }}</button>
           <button type="button" role="menuitem" class="cai-menu-item" @click="helpOpen = true; menuOpen = false">{{ ui.help }}</button>
           <div class="cai-menu-sep" role="separator"></div>
           <label class="cai-menu-field">

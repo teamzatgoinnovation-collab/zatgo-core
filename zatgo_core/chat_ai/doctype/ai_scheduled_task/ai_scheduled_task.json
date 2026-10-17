@@ -1,0 +1,245 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-10-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "enabled",
+  "user",
+  "prompt",
+  "schedule_section",
+  "frequency",
+  "time_of_day",
+  "column_break_sched",
+  "weekday",
+  "day_of_month",
+  "delivery_section",
+  "email_recipients",
+  "status_section",
+  "next_run",
+  "last_run",
+  "last_status",
+  "column_break_status",
+  "run_state",
+  "run_count",
+  "consecutive_failures",
+  "session",
+  "last_error",
+  "last_result"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "Run As",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "The task runs with this user's permissions and sees only what they may see."
+  },
+  {
+   "fieldname": "prompt",
+   "fieldtype": "Long Text",
+   "label": "What should ZatGo AI do?",
+   "reqd": 1,
+   "description": "Write it like a message to the assistant, e.g. 'List items below their reorder level and the 5 biggest shortages'. Runs read-only: it can look things up and report, never create or change records."
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "frequency",
+   "fieldtype": "Select",
+   "label": "Repeat",
+   "options": "Hourly\nDaily\nWeekly\nMonthly",
+   "default": "Daily",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "time_of_day",
+   "fieldtype": "Time",
+   "label": "Time of day",
+   "default": "08:00:00",
+   "depends_on": "eval:doc.frequency!='Hourly'"
+  },
+  {
+   "fieldname": "column_break_sched",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "weekday",
+   "fieldtype": "Select",
+   "label": "Weekday",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Monday",
+   "depends_on": "eval:doc.frequency=='Weekly'"
+  },
+  {
+   "fieldname": "day_of_month",
+   "fieldtype": "Int",
+   "label": "Day of month (1-28)",
+   "default": "1",
+   "depends_on": "eval:doc.frequency=='Monthly'"
+  },
+  {
+   "fieldname": "delivery_section",
+   "fieldtype": "Section Break",
+   "label": "Delivery"
+  },
+  {
+   "fieldname": "email_recipients",
+   "fieldtype": "Small Text",
+   "label": "Also email the result to",
+   "description": "Comma-separated. You always get a Desk notification and the result in the chat history. Non-managers can email enabled users only."
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Last run"
+  },
+  {
+   "fieldname": "next_run",
+   "fieldtype": "Datetime",
+   "label": "Next run",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "last_run",
+   "fieldtype": "Datetime",
+   "label": "Last run",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_status",
+   "fieldtype": "Select",
+   "label": "Last result",
+   "options": "\nSuccess\nFailed\nSkipped",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "run_state",
+   "fieldtype": "Select",
+   "label": "State",
+   "options": "Idle\nQueued\nRunning",
+   "default": "Idle",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "run_count",
+   "fieldtype": "Int",
+   "label": "Runs",
+   "read_only": 1,
+   "default": "0",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "consecutive_failures",
+   "fieldtype": "Int",
+   "label": "Failures in a row",
+   "read_only": 1,
+   "default": "0",
+   "no_copy": 1,
+   "description": "Three in a row switch the task off."
+  },
+  {
+   "fieldname": "session",
+   "fieldtype": "Link",
+   "label": "Conversation",
+   "options": "AI Chat Session",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last problem",
+   "read_only": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "last_result",
+   "fieldtype": "Long Text",
+   "label": "Last result",
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "issingle": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-10-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Chat AI",
+ "name": "AI Scheduled Task",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "report": 1,
+   "share": 0
+  },
+  {
+   "role": "Chat AI User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "report": 0,
+   "share": 0
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 0
+}

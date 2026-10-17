@@ -236,6 +236,7 @@
 		// a11y
 		replyReady: "Assistant replied",
 		mathLoading: "Formula",
+		scheduledTasks: "Scheduled tasks",
 		noScript: "ZatGo AI could not load its display libraries; showing plain text.",
 	};
 
@@ -430,6 +431,7 @@
 		kbSend: "إرسال الرسالة",
 		kbNewline: "سطر جديد",
 		kbToggle: "فتح أو إغلاق ZatGo AI",
+		scheduledTasks: "المهام المجدولة",
 		kbSearch: "البحث في المحادثات",
 		kbNew: "بدء محادثة جديدة",
 		kbStop: "إيقاف التوليد أو إغلاق القوائم أو اللوحة",

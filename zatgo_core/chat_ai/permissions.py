@@ -26,6 +26,7 @@ OWNER_FIELD: dict[str, tuple[str, str]] = {
 	"AI Usage Daily": ("user", "user"),
 	"AI Chat Message": ("session", "session"),
 	"AI Attachment": ("session", "session"),
+	"AI Scheduled Task": ("user", "user"),
 	"AI Conversation Summary": ("session", "session"),
 }
 
@@ -95,6 +96,7 @@ query_ai_usage_daily = _query("AI Usage Daily")
 query_ai_chat_message = _query("AI Chat Message")
 query_ai_conversation_summary = _query("AI Conversation Summary")
 query_ai_attachment = _query("AI Attachment")
+query_ai_scheduled_task = _query("AI Scheduled Task")
 
 perm_ai_chat_session = _perm("AI Chat Session")
 perm_ai_chat_memory = _perm("AI Chat Memory")
@@ -104,3 +106,4 @@ perm_ai_usage_daily = _perm("AI Usage Daily")
 perm_ai_chat_message = _perm("AI Chat Message")
 perm_ai_conversation_summary = _perm("AI Conversation Summary")
 perm_ai_attachment = _perm("AI Attachment")
+perm_ai_scheduled_task = _perm("AI Scheduled Task")

@@ -80,6 +80,14 @@ def chat_ai_on_cancel(doc, method=None):
         document_events.on_cancel(doc, method)
 
 
+def chat_ai_all():
+    """Every scheduler tick: queue ZatGo AI scheduled tasks that are due."""
+    if is_on("chat_ai"):
+        from zatgo_core.chat_ai.erpnext.events import scheduler_events
+
+        scheduler_events.tick()
+
+
 def chat_ai_hourly():
     if is_on("chat_ai"):
         from zatgo_core.chat_ai.erpnext.events import scheduler_events
