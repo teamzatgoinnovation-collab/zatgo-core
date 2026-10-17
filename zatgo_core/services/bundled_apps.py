@@ -39,7 +39,7 @@ from zatgo_core.services.ui_apps import switches
 
 # switch key -> (module folder, Module Def, Workspace / Workspace Sidebar names it owns)
 BUNDLED = {
-    "chat_ai": ("chat_ai", "Chat AI", ("AI Admin", "Chat AI")),
+    "chat_ai": ("chat_ai", "Chat AI", ("AI Admin", "Chat AI", "ZatGo AI")),
     "tracker": ("tracker", "Tracker", ("Tracker", "Task Management")),
     "zatgo_space": ("zatgo_space", "ZatGo Space", ()),
 }

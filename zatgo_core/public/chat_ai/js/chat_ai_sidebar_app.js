@@ -134,6 +134,16 @@ chat_ai.sidebar = {
 		}
 		this.root = document.getElementById("cai-root");
 		this.app = await chat_ai.vue.mount(this.root, chat_ai.sidebar.AppOptions);
+		this.registerSearch();
+	},
+
+	/** Awesome bar: typing "zatgo ai" or "zai" offers to open the assistant. */
+	registerSearch() {
+		if (!(frappe.search && frappe.search.utils && frappe.search.utils.make_function_searchable)) return;
+		const open = () => chat_ai.sidebar._vm && chat_ai.sidebar._vm.toggle(true);
+		["ZatGo AI", "ZAI", "ZatGo AI assistant chat"].forEach((label, i) =>
+			frappe.search.utils.make_function_searchable(open, i === 2 ? label : "Open " + label)
+		);
 	},
 };
 

@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import frappe
 
-SIDEBAR_NAMES = ("Chat AI", "AI Admin")
+DESK_NAME = "ZatGo AI"  # what users see on Desk; Frappe v16 needs icon label == sidebar name
+SIDEBAR_NAMES = (DESK_NAME, "Chat AI", "AI Admin")  # newest first: the older names are renamed on migrate
 
 
 def has_app_permission():
@@ -216,18 +217,22 @@ def _ensure_desk_entry():
 				sb.app = "zatgo_core"
 				sb.save(ignore_permissions=True)
 
-		# Collapse broken App-type "Chat AI" + nested "AI Admin" into one top-level Link.
-		# Frappe v16 permits Link icons only when label.lower() == Workspace Sidebar name.lower().
-		sidebar_name = "AI Admin"
-		if frappe.db.exists("Workspace Sidebar", "Chat AI"):
-			sidebar_name = "Chat AI"
-		elif frappe.db.exists("Workspace Sidebar", "AI Admin"):
-			# Prefer Desk label "Chat AI" — rename sidebar so boot key matches.
-			try:
-				frappe.rename_doc("Workspace Sidebar", "AI Admin", "Chat AI", force=True, show_alert=False)
-				sidebar_name = "Chat AI"
-			except Exception:
+		# One top-level Link icon. Frappe v16 permits Link icons only when
+		# label.lower() == Workspace Sidebar name.lower(), so the sidebar is renamed to the Desk name.
+		sidebar_name = DESK_NAME
+		if not frappe.db.exists("Workspace Sidebar", DESK_NAME):
+			for old_name in ("Chat AI", "AI Admin"):
+				if frappe.db.exists("Workspace Sidebar", old_name):
+					try:
+						frappe.rename_doc("Workspace Sidebar", old_name, DESK_NAME, force=True, show_alert=False)
+					except Exception:
+						sidebar_name = old_name
+					break
+			else:
 				sidebar_name = "AI Admin"
+		if sidebar_name == DESK_NAME and frappe.db.exists("Workspace Sidebar", DESK_NAME):
+			if frappe.db.get_value("Workspace Sidebar", DESK_NAME, "title") != DESK_NAME:
+				frappe.db.set_value("Workspace Sidebar", DESK_NAME, "title", DESK_NAME)
 
 		desk_label = sidebar_name
 		for name in _chat_ai_icons():
@@ -301,7 +306,7 @@ def _ensure_desk_entry():
 
 
 def _ensure_sidebar():
-	"""The "Chat AI" Workspace Sidebar for the AI Admin workspace, made the way
+	"""The "ZatGo AI" Workspace Sidebar for the AI Admin workspace, made the way
 	Frappe's create_workspace_sidebar_for_workspaces() does at app install --
 	which no longer runs for this module (it is switched on later, per site),
 	and which would also make sidebars for every other public workspace."""
@@ -316,7 +321,7 @@ def _ensure_sidebar():
 	sidebar = frappe.get_doc(
 		{
 			"doctype": "Workspace Sidebar",
-			"title": "Chat AI",
+			"title": DESK_NAME,
 			"header_icon": "bot",
 			"module": "Chat AI",
 			"app": "zatgo_core",
