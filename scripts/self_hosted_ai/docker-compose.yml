@@ -20,12 +20,7 @@ services:
       --host 0.0.0.0 --port 8080
       -c ${LLM_CTX:-8192} -t ${LLM_THREADS:-4} -np 1
       --jinja
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
+    # (the image ships its own curl healthcheck on /health)
 
   embed:
     image: ghcr.io/ggml-org/llama.cpp:server

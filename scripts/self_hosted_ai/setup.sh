@@ -29,7 +29,7 @@ if [ "${1:-}" = "--no-start" ]; then echo "models ready; start with: docker comp
 docker compose up -d
 echo "waiting for the model server (loading a 3B model takes a minute on CPU)..."
 for _ in $(seq 1 60); do
-  docker exec zatgo-llm wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 && break; sleep 5
+  docker exec zatgo-llm curl -sf http://127.0.0.1:8080/health >/dev/null 2>&1 && break; sleep 5
 done
 cat <<MSG
 

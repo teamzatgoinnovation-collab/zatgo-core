@@ -50,4 +50,22 @@ name as `model`. Another model: set `LLM_FILE` / `LLM_ALIAS` in `.env` and place
 
 ## Verification status
 
-See the bottom of this file for what was actually run.
+
+### Run on 2026-10-17 (4 CPU cores, 7 GB RAM, no GPU; Qwen2.5-3B Q4_K_M, nomic-embed-text v1.5, SearXNG)
+
+Real calls through `chat.send`, no mocks; the stack was reached from the Frappe container by service name.
+
+| Turn | Result | Time |
+|---|---|---|
+| "In one sentence, what is VAT?" | correct one-line answer | 63 s |
+| "calculate 1250000 x 0.15 with the calculator" | model called `calculator`; answered 187500.0 | 90 s |
+| Upload `policy.txt` (6 chunks, all embedded), "compressor warranty?" | answered "36 month" from the file | 117 s (upload itself 2 s) |
+| "Search the web: what is ZATCA e-invoicing phase 2?" | SearXNG returned 5 real results, shown as sources; answer cited the guideline PDF | 139 s |
+
+Direct model probe: first token 1.7 s, about 8.5 tokens/s, correct streamed tool call, usage reported.
+
+**Conclusion:** functionally everything works with no external API. It is *slow* on this hardware
+(1-2 minutes per turn), because each turn is a planning call plus the answer with a long system
+prompt, both evaluated on 4 CPU cores. It is practical for light use or demos here; for real use run the same
+stack on a GPU host or a faster CPU. Not verified here: Arabic quality, long documents, a GPU run, the
+chat panel UI against this model (the panel was verified against a scripted provider).
