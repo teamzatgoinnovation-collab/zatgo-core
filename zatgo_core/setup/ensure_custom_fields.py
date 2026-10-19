@@ -53,6 +53,7 @@ def ensure_custom_fields() -> None:
     _run("narration fields", _ensure_narration_fields)
     _run("supplier cr number field", _ensure_supplier_cr_number_field)
     _run("hide duplicate customer arabic name", _ensure_duplicate_customer_arabic_name_hidden)
+    _run("warehouse selectable field", _ensure_warehouse_selectable_field)
 
 
 def _run(label: str, fn) -> None:
@@ -118,6 +119,12 @@ def _ensure_print_computed_fields() -> None:
 
 def _ensure_payment_type_field() -> None:
     from zatgo_core.patches.v0_2_2.add_payment_type_field import execute
+
+    execute()
+
+
+def _ensure_warehouse_selectable_field() -> None:
+    from zatgo_core.patches.v0_4_1.add_warehouse_selectable_field import execute
 
     execute()
 

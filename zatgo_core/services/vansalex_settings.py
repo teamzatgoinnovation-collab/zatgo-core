@@ -324,13 +324,16 @@ def allowed_warehouse(
             )
         if eff["company"] and frappe.db.get_value("Warehouse", wh, "company") != eff["company"]:
             frappe.throw("That warehouse belongs to another company.", frappe.PermissionError)
+        if wh not in {w["name"] for w in selectable_warehouses()}:
+            frappe.throw("That warehouse is not selectable.", frappe.PermissionError)
     return wh
 
 
 def selectable_warehouses() -> list[dict[str, Any]]:
     """Warehouses the caller may pick on the invoice: just their default,
-    or every active leaf warehouse of their company when changing is
-    allowed."""
+    or, when changing is allowed, the company's sellable warehouses ticked
+    "Selectable in VanSaleX" (plus the default, always). If none are ticked
+    yet, every sellable warehouse is offered, as before the flag existed."""
     from zatgo_core.services.van_sale_access import is_vansale_admin
 
     eff = resolve()
@@ -342,6 +345,16 @@ def selectable_warehouses() -> list[dict[str, Any]]:
         if eff["company"]:
             filters["company"] = eff["company"]
         names = frappe.get_all("Warehouse", filters=filters, pluck="name", order_by="name asc")
+        flagged = frappe.get_all(
+            "Warehouse",
+            filters={**filters, "zg_vansalex_selectable": 1},
+            pluck="name",
+            order_by="name asc",
+        )
+        if flagged:
+            names = flagged
+            if eff["warehouse"] and eff["warehouse"] not in names:
+                names.insert(0, eff["warehouse"])
     return [
         {"name": n, "is_default": int(n == eff["warehouse"])}
         for n in names

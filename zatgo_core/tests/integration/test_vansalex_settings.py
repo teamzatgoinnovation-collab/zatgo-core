@@ -23,6 +23,7 @@ from frappe.utils import flt, random_string
 
 from zatgo_core.services.vansalex_service import create_collection, create_order
 from zatgo_core.services.vansalex_settings import (
+    allowed_warehouse,
     resolve,
     selectable_payment_accounts,
     selectable_warehouses,
@@ -313,6 +314,34 @@ class TestVansalexSettings(IntegrationTestCase):
         with self.assertRaises(frappe.ValidationError) as ctx:
             self._sell(warehouse=self.other_warehouse, payment_type="Credit")
         self.assertNotIsInstance(ctx.exception, frappe.PermissionError)
+
+    def _flag_warehouses(self, *flagged: str) -> None:
+        for wh in (self.warehouse, self.other_warehouse):
+            frappe.db.set_value("Warehouse", wh, "zg_vansalex_selectable", int(wh in flagged))
+        self.addCleanup(self._flag_warehouses_off)
+
+    def _flag_warehouses_off(self) -> None:
+        for wh in (self.warehouse, self.other_warehouse):
+            frappe.db.set_value("Warehouse", wh, "zg_vansalex_selectable", 0)
+
+    def test_selectable_flag_filters_picker_and_keeps_default(self) -> None:
+        self._set_profile(allow_warehouse_change="Yes")
+        self._flag_warehouses(self.other_warehouse)
+        frappe.set_user(self.user)
+        rows = selectable_warehouses()
+        names = [w["name"] for w in rows]
+        self.assertIn(self.other_warehouse, names)
+        self.assertEqual(names[0], self.warehouse)  # default always offered, first
+        self.assertEqual(rows[0]["is_default"], 1)
+
+    def test_unflagged_warehouse_refused_for_non_admin(self) -> None:
+        self._set_profile(allow_warehouse_change="Yes")
+        self._flag_warehouses(self.warehouse)  # other_warehouse stays unticked
+        frappe.set_user(self.user)
+        names = {w["name"] for w in selectable_warehouses()}
+        self.assertNotIn(self.other_warehouse, names)
+        with self.assertRaises(frappe.PermissionError):
+            allowed_warehouse(self.other_warehouse)
 
     def test_profile_without_warehouse_uses_company_default(self) -> None:
         if not frappe.db.exists("ZG Company Settings", {"company": self.company}):

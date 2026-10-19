@@ -1,5 +1,11 @@
 # Changelog — ZatGo Core
 
+## Unreleased
+
+- Warehouse custom field `zg_vansalex_selectable` ("Selectable in VanSaleX"): the VanSaleX Source Warehouse picker
+  offers only ticked warehouses (plus the user's default, preselected); none ticked = all sellable, as before.
+  Patch `v0_4_1.add_warehouse_selectable_field`.
+
 ## 0.4.0 — 2026-10-15
 
 ### Added
