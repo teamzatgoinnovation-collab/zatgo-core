@@ -332,7 +332,7 @@ def allowed_warehouse(
 def selectable_warehouses() -> list[dict[str, Any]]:
     """Warehouses the caller may pick on the invoice: just their default,
     or, when changing is allowed, the company's sellable warehouses ticked
-    "Selectable in VanSaleX" (plus the default, always). If none are ticked
+    "Selectable Warehouse" (plus the default, always). If none are ticked
     yet, every sellable warehouse is offered, as before the flag existed."""
     from zatgo_core.services.van_sale_access import is_vansale_admin
 

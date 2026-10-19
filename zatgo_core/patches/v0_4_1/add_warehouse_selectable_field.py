@@ -1,5 +1,6 @@
-"""'Selectable in VanSaleX' checkbox on Warehouse: which warehouses the
-VanSaleX Source Warehouse picker offers (see services/vansalex_settings.py)."""
+"""'Selectable' checkbox on Warehouse: which warehouses the warehouse dropdowns
+(sales/purchase forms, VanSaleX picker) offer. The fieldname keeps its original
+zg_vansalex_ prefix so no data has to move."""
 
 from __future__ import annotations
 
@@ -15,11 +16,11 @@ def execute() -> None:
             "Warehouse": [
                 {
                     "fieldname": "zg_vansalex_selectable",
-                    "label": "Selectable in VanSaleX",
+                    "label": "Selectable Warehouse",
                     "fieldtype": "Check",
                     "default": "0",
                     "insert_after": "disabled",
-                    "description": "Offer this warehouse in the VanSaleX Source Warehouse picker.",
+                    "description": "Offer this warehouse in warehouse dropdowns (sales/purchase forms, VanSaleX). When none is ticked, all are offered.",
                 }
             ],
         },

@@ -41,7 +41,7 @@ def get_default_source_warehouse(company: str | None = None) -> str | None:
 @frappe.whitelist()
 def warehouse_query(doctype, txt, searchfield, start, page_len, filters):
     """Link-field search for warehouse fields on the forms above: only
-    warehouses ticked "Selectable in VanSaleX" (plus the user's default),
+    warehouses ticked "Selectable Warehouse" (plus the user's default),
     or every warehouse when none is ticked yet -- same rule as the VanSaleX
     picker (services/vansalex_settings.py::selectable_warehouses)."""
     filters = frappe.parse_json(filters) if isinstance(filters, str) else (filters or {})

@@ -5,7 +5,7 @@
 for (const doctype of ["Sales Invoice", "Sales Order", "Delivery Note", "Purchase Receipt"]) {
 	frappe.ui.form.on(doctype, {
 		setup(frm) {
-			// Only warehouses ticked "Selectable in VanSaleX" are offered.
+			// Only warehouses ticked "Selectable Warehouse" are offered.
 			const query = () => ({
 				query: "zatgo_core.events.default_source_warehouse.warehouse_query",
 				filters: { company: frm.doc.company },

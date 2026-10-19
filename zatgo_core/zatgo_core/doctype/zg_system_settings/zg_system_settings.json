@@ -27,6 +27,7 @@
     "enable_multi_company",
     "enable_branch_mode",
     "maintenance_mode",
+    "stock_summary_live_only",
     "appearance_section",
     "enable_saas_theme",
     "column_break_appearance",
@@ -239,6 +240,13 @@
       "options": "ZG Enabled Industry",
       "cannot_add_rows": 1,
       "cannot_delete_rows": 1
+    },
+    {
+      "fieldname": "stock_summary_live_only",
+      "fieldtype": "Check",
+      "label": "Stock Summary: only warehouses with stock",
+      "default": "1",
+      "description": "Ticked: the Stock Summary Warehouse dropdown lists only warehouses that hold stock. Unticked: it lists all warehouses."
     }
   ],
   "index_web_pages_for_search": 0,

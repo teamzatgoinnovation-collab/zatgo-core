@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Warehouse custom field `zg_vansalex_selectable` ("Selectable in VanSaleX"): the VanSaleX Source Warehouse picker
+- ZG System Settings → "Stock Summary: only warehouses with stock" (default on): off lists all warehouses.
+
+- Warehouse custom field `zg_vansalex_selectable` ("Selectable Warehouse"): warehouse dropdowns (sales/purchase forms, VanSaleX picker)
   offers only ticked warehouses (plus the user's default, preselected); none ticked = all sellable, as before.
   Patch `v0_4_1.add_warehouse_selectable_field`.
 
