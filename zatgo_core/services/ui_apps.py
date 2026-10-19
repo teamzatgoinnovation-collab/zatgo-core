@@ -25,6 +25,8 @@ from functools import lru_cache
 import frappe
 from frappe.website.page_renderers.template_page import TemplatePage
 
+from zatgo_core.services import app_catalog
+
 SETTINGS = "ZG System Settings"
 
 THEME_CSS = "saas_theme/css/saas_theme.css"
@@ -35,15 +37,9 @@ SWITCHER_JS = "language_switcher/js/language_switcher.js"
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 
 # switch key -> ZG System Settings field
-SWITCH_FIELDS = {
-    "saas_theme": "enable_saas_theme",
-    "language_switcher": "enable_language_switcher",
-    "vansalex_web": "enable_vansalex_web",
-    # Bundled modules (services/bundled_apps.py)
-    "chat_ai": "enable_chat_ai",
-    "tracker": "enable_tracker",
-    "zatgo_space": "enable_zatgo_space",
-}
+# Derived from the app catalog (services/app_catalog.py): a module's own
+# app_manifest.py declares its switch -- nothing to add here for a new sub-app.
+SWITCH_FIELDS = app_catalog.switch_fields()
 
 
 def switches() -> dict[str, bool]:
@@ -160,6 +156,7 @@ def ensure_ui_apps() -> None:
     """after_install / after_migrate: adopt modules of the old separate apps,
     Arabic selectable where the switcher is on, bundled modules set up /
     taken off the Desk per their switch."""
+    app_catalog.ensure_switch_fields()
     _adopt_old_bundled_modules()
     _ensure_bundled_doctypes()
     if switches()["language_switcher"]:

@@ -35,14 +35,12 @@ from functools import lru_cache
 
 import frappe
 
+from zatgo_core.services import app_catalog
 from zatgo_core.services.ui_apps import switches
 
 # switch key -> (module folder, Module Def, Workspace / Workspace Sidebar names it owns)
-BUNDLED = {
-    "chat_ai": ("chat_ai", "Chat AI", ("AI Admin", "Chat AI", "ZatGo AI")),
-    "tracker": ("tracker", "Tracker", ("Tracker", "Task Management")),
-    "zatgo_space": ("zatgo_space", "ZatGo Space", ()),
-}
+# Derived from each module's app_manifest.py (services/app_catalog.py).
+BUNDLED = app_catalog.bundled()
 
 
 def is_on(key: str) -> bool:

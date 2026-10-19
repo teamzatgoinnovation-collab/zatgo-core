@@ -32,6 +32,7 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
         # Bundled modules switched on / off: set up or take away their Desk
         # entries now, not at the next migrate (services/bundled_apps.py).
         from zatgo_core.services.bundled_apps import BUNDLED, sync_bundled_apps
+        from zatgo_core.services.ui_apps import SWITCH_FIELDS
 
         before = self.get_doc_before_save()
         # /login and /vansalex depend on these: drop cached pages (incl. a
@@ -43,7 +44,7 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
 
             clear_website_cache()
         if before is None or any(
-            bool(self.get(f"enable_{key}")) != bool(before.get(f"enable_{key}")) for key in BUNDLED
+            bool(self.get(SWITCH_FIELDS[key])) != bool(before.get(SWITCH_FIELDS[key])) for key in BUNDLED
         ):
             frappe.clear_document_cache(self.doctype, self.name)
             sync_bundled_apps()

@@ -4,7 +4,19 @@ ZatGo Core never hardcodes product menus. Applications register a **manifest**;
 Core persists it as `ZG Registered Application` + `ZG Setting Section` rows.
 Clients and future domain Desk UIs consume these via `zatgo_core.api.v1.config.*`.
 
-## Manifest shape
+## New sub-app inside zatgo_core (module with its own DocTypes)
+
+1. Create `zatgo_core/<module>/` and add the Module Def name to `modules.txt`.
+2. Add `zatgo_core/<module>/app_manifest.py` with `APP = {key, label, group: "bundled", module_def, workspaces, switch_field, settings: [(DocType, label)]}`
+   (see `services/app_catalog.py`). That alone puts it in the **App Settings Hub**
+   (`/app/zg-app-hub`), the plugin registry, `SWITCH_FIELDS` and `BUNDLED`; its
+   `enable_<key>` check field is created on migrate.
+3. Gate every hook through a wrapper in `services/bundled_apps.py` (returns at once when off).
+4. Deploy: `bench clear-cache` **before** `migrate`.
+
+`tests/integration/test_app_hub.py` fails if a module with DocTypes has no manifest.
+
+## Manifest shape (registry, for external apps)
 
 ```python
 MANIFEST = {
