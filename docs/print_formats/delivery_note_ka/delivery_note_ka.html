@@ -1,0 +1,264 @@
+{%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead, footer, print_settings=None, print_heading_template=None) -%}
+    {% if letter_head and not no_letterhead %}
+        <div class="letter-head">{{ letter_head }}</div>
+    {% endif %}
+    {% if print_heading_template %}
+        {{ frappe.render_template(print_heading_template, {"doc": doc}) }}
+    {% endif %}
+{%- endmacro -%}
+
+{# Set to true to show Rate / Amount and totals on the delivery note #}
+{% set show_prices = false %}
+{% set per_page = 15 %}
+{% set total_pages = ((doc.items|length + per_page - 1) // per_page) or 1 %}
+{% for pg in range(total_pages) %}
+{% set is_last = (pg == total_pages - 1) %}
+<div class="page-break po-page">
+
+    <div {% if loop.first and print_settings and print_settings.repeat_header_footer %}id="header-html" class="hidden-pdf"{% endif %}>
+        {{ add_header(loop.index, total_pages, doc, letter_head, no_letterhead, footer, print_settings) }}
+    </div>
+
+    {% set company_doc = frappe.get_doc("Company", doc.company) %}
+    {% set company_address = {} %}
+    {% if doc.get("company_address") or company_doc.get("company_address") %}
+        {% set company_address = frappe.db.get_value("Address", doc.get("company_address") or company_doc.get("company_address"),
+            ["address_line1", "address_line2", "city", "state", "pincode", "country", "phone", "email_id"], as_dict=True) or {} %}
+    {% endif %}
+    {% set cust_addr = {} %}
+    {% if doc.get("customer_address") %}
+        {% set cust_addr = frappe.db.get_value("Address", doc.customer_address,
+            ["address_line1", "address_line2", "city", "state", "pincode", "country", "phone", "email_id"], as_dict=True) or {} %}
+    {% endif %}
+    {% set ship_addr = cust_addr %}
+    {% if doc.get("shipping_address_name") %}
+        {% set ship_addr = frappe.db.get_value("Address", doc.shipping_address_name,
+            ["address_line1", "address_line2", "city", "state", "pincode", "country", "phone", "email_id"], as_dict=True) or cust_addr %}
+    {% endif %}
+    {% set customer_tax_id = doc.tax_id or frappe.db.get_value("Customer", doc.customer, "tax_id") or "" %}
+    {% set sales_order = (doc.items[0].against_sales_order if doc.items else "") %}
+    {% set total_qty = doc.items|sum(attribute="qty") %}
+
+    <style>
+        .po-page { font-family: Inter, "Helvetica Neue", Arial, sans-serif; color: #111827; background: #fff; }
+        .print-format { color: #111827; font-size: 12px; line-height: 17px; padding: 0 !important; margin-left: 0 !important; margin-right: 0 !important; }
+        .print-format-body { padding: 14px 10px 8px !important; }
+        .letter-head { padding: 4px 0 !important; }
+        .text-left { text-align: left; } .text-center { text-align: center; } .text-right { text-align: right; }
+
+        .doc-status { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: .8px; padding: 2px 9px; border-radius: 10px; margin-top: 6px; }
+        .doc-status.draft { background: #FEF3C7; color: #92400E; }
+        .doc-status.cancelled { background: #FEE2E2; color: #B91C1C; }
+
+        /* title band */
+        .title-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; border-bottom: 2px solid #111827; }
+        .title-table td { vertical-align: bottom; padding: 0 0 10px !important; border: none !important; }
+        .po-title { font-size: 24px; line-height: 26px; font-weight: 800; letter-spacing: 1.5px; color: #111827; }
+        .po-number { font-size: 11px; color: #6B7280; margin-top: 3px; }
+        .po-number b { color: #111827; font-weight: 700; }
+
+        /* meta strip */
+        .meta-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 14px; border: 1px solid #E5E7EB; border-radius: 6px; }
+        .meta-table td { width: 25%; padding: 7px 10px !important; vertical-align: top; border: none !important; border-right: 1px solid #E5E7EB !important; }
+        .meta-table td:last-child { border-right: none !important; }
+        .meta-label { font-size: 8px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #6B7280; }
+        .meta-value { font-size: 11px; font-weight: 700; color: #111827; margin-top: 1px; word-break: break-word; }
+
+        /* parties */
+        .party-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-bottom: 14px; }
+        .party-table td { width: 50%; vertical-align: top; padding: 0 !important; border: none !important; }
+        .party-box { padding: 0 14px 0 0; }
+        .party-box.right { padding: 0 0 0 14px; border-left: 1px solid #E5E7EB; }
+        .party-heading { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #2952E3; margin-bottom: 4px; }
+        .party-name { font-size: 13px; line-height: 17px; font-weight: 700; color: #111827; margin-bottom: 3px; word-break: break-word; }
+        .party-line { font-size: 10px; line-height: 15px; color: #4B5563; word-break: break-word; }
+        .party-label { color: #9CA3AF; }
+
+        /* items */
+        .items-table { width: 100%; table-layout: fixed; border-collapse: collapse; page-break-inside: auto; }
+        .items-table thead td { font-size: 8px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #6B7280 !important; background: #F3F4F6; padding: 7px 8px !important; border: none !important; border-top: 1px solid #D1D5DB !important; border-bottom: 1px solid #D1D5DB !important; }
+        .items-table tbody td { font-size: 10px; line-height: 14px; color: #1F2937; padding: 6px 8px !important; border: none !important; border-bottom: 1px solid #EEF0F3 !important; vertical-align: top; word-break: break-word; }
+        .items-table tbody tr { page-break-inside: avoid; }
+        .item-no { color: #9CA3AF; }
+        .item-name { font-weight: 600; color: #111827; }
+        .item-code { font-size: 8px; color: #9CA3AF; margin-top: 1px; }
+        .item-img { width: 100%; border-collapse: collapse; }
+        .items-table .item-img td { border: none !important; padding: 0 !important; background: transparent !important; vertical-align: top; }
+        .item-img img { height: 26px !important; width: 26px !important; object-fit: contain; border-radius: 3px; border: 1px solid #EEF0F3; }
+        .num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .amount-cell { font-weight: 700; color: #111827; }
+
+        /* totals */
+        .summary-table { width: 100%; border-collapse: collapse; margin-top: 12px; page-break-inside: avoid; }
+        .summary-table > tbody > tr > td { border: none !important; padding: 0 !important; vertical-align: top; }
+        .words-box { padding-right: 18px !important; }
+        .words-label { font-size: 8px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #6B7280; margin-bottom: 2px; }
+        .words-text { font-size: 10px; line-height: 15px; color: #374151; }
+        .total-table { width: 100%; border-collapse: collapse; }
+        .total-table td { padding: 4px 8px !important; font-size: 10px; border: none !important; border-bottom: 1px solid #EEF0F3 !important; }
+        .total-label { color: #6B7280; }
+        .total-value { color: #111827; font-weight: 600; white-space: nowrap; }
+        .total-table tr.grand td { background: #111827; color: #fff !important; font-size: 12px; font-weight: 800; padding: 8px !important; border-bottom: none !important; }
+
+        /* terms + sign-off */
+        .terms { margin-top: 16px; font-size: 9px; line-height: 14px; color: #4B5563; word-break: break-word; page-break-inside: avoid; }
+        .terms-title { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #2952E3; margin-bottom: 3px; }
+        .sign-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; margin-top: 38px; page-break-inside: avoid; }
+        .sign-table td { width: 50%; padding: 0 !important; border: none !important; }
+        .sign-line { border-top: 1px solid #9CA3AF; margin: 0 40px 0 0; padding-top: 4px; font-size: 9px; color: #6B7280; }
+        .sign-line.right { margin: 0 0 0 40px; }
+        .items-table .item-qty { font-weight: 700; color: #111827; }
+        .qty-total { width: 100%; border-collapse: collapse; margin-top: 12px; page-break-inside: avoid; }
+        .qty-total td { padding: 8px !important; border: none !important; }
+        .qty-total .qt-label { background: #111827; color: #fff !important; font-size: 11px; font-weight: 800; }
+        .qty-total .qt-value { background: #111827; color: #fff !important; font-size: 12px; font-weight: 800; text-align: right; white-space: nowrap; }
+        .note-box { margin-top: 14px; font-size: 9px; line-height: 14px; color: #4B5563; page-break-inside: avoid; }
+        .note-box .terms-title { margin-bottom: 3px; }
+    </style>
+    <div class="print-format-body">
+
+        <table class="title-table"><tbody><tr>
+            <td>
+                <div class="po-title">{% if doc.is_return %}{{ _("DELIVERY RETURN") }}{% else %}{{ _("DELIVERY NOTE") }}{% endif %}</div>
+                <div class="po-number">{{ _("No.") }} <b>{{ doc.name }}</b>{% if doc.is_return and doc.return_against %} &middot; {{ _("Against") }} {{ doc.return_against }}{% endif %}</div>
+            </td>
+            <td class="text-right">
+                {% if doc.meta.is_submittable and doc.docstatus == 2 %}
+                    <span class="doc-status cancelled">{{ _("CANCELLED") }}</span>
+                {% elif doc.meta.is_submittable and doc.docstatus == 0 and (not print_settings or print_settings.add_draft_heading) %}
+                    <span class="doc-status draft">{{ _("DRAFT") }}</span>
+                {% endif %}
+                {% if total_pages > 1 %}<div class="po-number">{{ _("Page {0} of {1}").format(pg + 1, total_pages) }}</div>{% endif %}
+            </td>
+        </tr></tbody></table>
+
+        <table class="meta-table"><tbody><tr>
+            <td><div class="meta-label">{{ _("Date") }}</div>
+                <div class="meta-value">{% if doc.posting_date %}{{ frappe.utils.format_date(doc.posting_date) }}{% endif %}</div></td>
+            <td><div class="meta-label">{{ _("Sales Order") }}</div>
+                <div class="meta-value">{{ sales_order or "&mdash;" }}</div></td>
+            <td><div class="meta-label">{{ _("Customer PO") }}</div>
+                <div class="meta-value">{{ doc.po_no or "&mdash;" }}</div></td>
+            <td><div class="meta-label">{{ _("Vehicle") }}</div>
+                <div class="meta-value">{{ doc.vehicle_no or "&mdash;" }}</div></td>
+        </tr></tbody></table>
+
+        <table class="party-table"><tbody><tr>
+            <td>
+                <div class="party-box">
+                    <div class="party-heading">{{ _("Customer") }}</div>
+                    <div class="party-name">{{ doc.customer_name or doc.customer }}</div>
+                    {% if cust_addr %}
+                    <div class="party-line">
+                        {% if cust_addr.address_line1 %}{{ cust_addr.address_line1 }}<br>{% endif %}
+                        {% if cust_addr.address_line2 %}{{ cust_addr.address_line2 }}<br>{% endif %}
+                        {% if cust_addr.city %}{{ cust_addr.city }}{% endif %}{% if cust_addr.state %}{% if cust_addr.city %}, {% endif %}{{ cust_addr.state }}{% endif %}{% if cust_addr.pincode %} - {{ cust_addr.pincode }}{% endif %}
+                        {% if cust_addr.country %}<br>{{ cust_addr.country }}{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if cust_addr.phone %}<div class="party-line"><span class="party-label">{{ _("Phone") }}</span> {{ cust_addr.phone }}</div>{% endif %}
+                    {% if customer_tax_id %}<div class="party-line"><span class="party-label">{{ _("VAT") }}</span> {{ customer_tax_id }}</div>{% endif %}
+                </div>
+            </td>
+            <td>
+                <div class="party-box right">
+                    <div class="party-heading">{{ _("Ship To") }}</div>
+                    <div class="party-name">{{ doc.customer_name or doc.customer }}</div>
+                    {% if ship_addr %}
+                    <div class="party-line">
+                        {% if ship_addr.address_line1 %}{{ ship_addr.address_line1 }}<br>{% endif %}
+                        {% if ship_addr.address_line2 %}{{ ship_addr.address_line2 }}<br>{% endif %}
+                        {% if ship_addr.city %}{{ ship_addr.city }}{% endif %}{% if ship_addr.state %}{% if ship_addr.city %}, {% endif %}{{ ship_addr.state }}{% endif %}{% if ship_addr.pincode %} - {{ ship_addr.pincode }}{% endif %}
+                        {% if ship_addr.country %}<br>{{ ship_addr.country }}{% endif %}
+                    </div>
+                    {% endif %}
+                    {% if doc.driver_name or doc.transporter_name %}<div class="party-line" style="margin-top:3px;"><span class="party-label">{{ _("Driver") }}</span> {{ doc.driver_name or doc.transporter_name }}</div>{% endif %}
+                </div>
+            </td>
+        </tr></tbody></table>
+
+        <table class="items-table">
+            <thead><tr>
+                <td class="text-center" style="width:7%;">#</td>
+                <td class="text-left" style="width:{% if show_prices %}41{% else %}63{% endif %}%;">{{ _("Item") }}</td>
+                <td class="text-right" style="width:{% if show_prices %}16{% else %}30{% endif %}%;">{{ _("Qty") }}</td>
+                {% if show_prices %}
+                <td class="text-right" style="width:18%;">{{ _("Rate") }}</td>
+                <td class="text-right" style="width:18%;">{{ _("Amount") }}</td>
+                {% endif %}
+            </tr></thead>
+            <tbody>
+            {% for item in doc.items[pg * per_page : (pg + 1) * per_page] %}
+                <tr>
+                    <td class="text-center item-no">{{ pg * per_page + loop.index }}</td>
+                    <td class="text-left">
+                        <table class="item-img"><tbody><tr>
+                            {% if item.image %}<td style="width:32px;"><img src="{{ item.image | e }}" alt=""></td>{% endif %}
+                            <td>
+                                <div class="item-name">{{ item.item_name or item.item_code }}</div>
+                                {% if item.batch_no or item.serial_no %}<div class="item-code">{% if item.batch_no %}{{ _("Batch") }}: {{ item.batch_no }}{% endif %} {% if item.serial_no %}{{ _("Serial") }}: {{ item.serial_no }}{% endif %}</div>{% endif %}
+                            </td>
+                        </tr></tbody></table>
+                    </td>
+                    <td class="text-right num item-qty">{{ item.get_formatted("qty", doc) }} {{ item.uom or "" }}</td>
+                    {% if show_prices %}
+                    <td class="text-right num">{{ item.get_formatted("net_rate", doc) }}</td>
+                    <td class="text-right num amount-cell">{{ item.get_formatted("net_amount", doc) }}</td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {% if is_last %}
+        <table class="qty-total"><tbody><tr>
+            <td class="qt-label">{{ _("Total Quantity") }}</td>
+            <td class="qt-value">{{ "%g"|format(total_qty) }}</td>
+        </tr></tbody></table>
+
+        {% if show_prices %}
+        <table class="summary-table"><tbody><tr>
+            <td class="words-box" style="width:52%;">
+                <div class="words-label">{{ _("Amount in words") }}</div>
+                <div class="words-text">{{ doc.in_words or "" }}</div>
+            </td>
+            <td style="width:48%;">
+                <table class="total-table"><tbody>
+                    <tr><td class="text-left total-label">{{ _("Sub Total") }}</td><td class="text-right total-value">{{ doc.get_formatted("total", doc) }}</td></tr>
+                    {% for tax in doc.taxes %}
+                        {% if tax.tax_amount %}
+                        <tr><td class="text-left total-label">{{ tax.get_formatted("description") }}{% if tax.rate %} ({{ tax.get_formatted("rate") }}%){% endif %}</td><td class="text-right total-value">{{ tax.get_formatted("tax_amount", doc) }}</td></tr>
+                        {% endif %}
+                    {% endfor %}
+                    <tr class="grand"><td class="text-left">{{ _("Grand Total") }}</td><td class="text-right num">{{ doc.get_formatted("grand_total", doc) }}</td></tr>
+                </tbody></table>
+            </td>
+        </tr></tbody></table>
+        {% endif %}
+
+        {% if doc.terms %}
+        <div class="terms">
+            <div class="terms-title">{{ _("Terms and Conditions") }}</div>
+            {{ doc.terms }}
+        </div>
+        {% endif %}
+
+        <div class="note-box"><div class="terms-title">{{ _("Goods received in good condition") }}</div>{{ _("Please check the items on delivery and report any shortage or damage at the time of receipt.") }}</div>
+
+        <table class="sign-table"><tbody><tr>
+            <td><div class="sign-line">{{ _("Delivered by") }}{% if doc.driver_name %}: {{ doc.driver_name }}{% endif %}</div></td>
+            <td><div class="sign-line right">{{ _("Received by (name, signature, date)") }}</div></td>
+        </tr></tbody></table>
+        {% endif %}
+
+    </div>
+
+    <div {% if loop.first and print_settings and print_settings.repeat_header_footer %}id="footer-html" class="visible-pdf"{% endif %}>
+        {% if not no_letterhead and footer %}<div class="letter-head-footer">{{ footer }}</div>{% endif %}
+        {% if print_settings and print_settings.repeat_header_footer %}
+        <p class="text-center small page-number visible-pdf">{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endfor %}
