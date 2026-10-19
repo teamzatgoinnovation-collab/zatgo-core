@@ -41,7 +41,10 @@ page_renderer = ["zatgo_core.services.ui_apps.ThemedLoginPage"]
 
 # Payment Type (Cash/Credit) UX hint -- purely visual, see the files themselves.
 doctype_js = {
-    "Sales Invoice": "public/js/sales_invoice.js",
+    "Sales Invoice": ["public/js/sales_invoice.js", "public/js/default_source_warehouse.js"],
+    "Sales Order": "public/js/default_source_warehouse.js",
+    "Delivery Note": "public/js/default_source_warehouse.js",
+    "Purchase Receipt": "public/js/default_source_warehouse.js",
     "Purchase Invoice": "public/js/purchase_invoice.js",
     "Payment Entry": "public/js/payment_entry.js",
     "Mode of Payment": "public/js/mode_of_payment.js",
@@ -73,6 +76,7 @@ doc_events = {
             "zatgo_core.services.vansalex_access.check_doc_access",
             "zatgo_core.events.sales_invoice_naming.set_naming_series",
         ],
+        "before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse",
         "validate": [
             "zatgo_core.events.print_fields.populate_print_fields",
             "zatgo_core.services.payment_allocation.validate_sales_invoice",
@@ -101,7 +105,13 @@ doc_events = {
     },
     # VanSaleX Modules & Features backstop for field users on any entry
     # point (services/vansalex_access.py); Sales Invoice / Payment Entry above.
-    "Sales Order": {"before_insert": "zatgo_core.services.vansalex_access.check_doc_access"},
+    "Sales Order": {
+        "before_insert": "zatgo_core.services.vansalex_access.check_doc_access",
+        "before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse",
+    },
+    "Delivery Note": {"before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse"},
+    # "Set Accepted Warehouse"; Rejected Warehouse is deliberately left empty.
+    "Purchase Receipt": {"before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse"},
     "Purchase Order": {"before_insert": "zatgo_core.services.vansalex_access.check_doc_access"},
     # before_save: create AND edit (the app edits through the shared
     # accounting.customers / warehouse.items endpoints).
