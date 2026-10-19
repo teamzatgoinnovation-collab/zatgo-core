@@ -1,0 +1,277 @@
+{%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead, footer, print_settings=None, print_heading_template=None) -%}
+{% if print_heading_template %}
+{{ frappe.render_template(print_heading_template, {"doc":doc}) }}
+{% endif %}
+{%- endmacro -%}
+
+{#- Lookups done once, outside the page loop -#}
+{% set co = frappe.db.get_value("Company", doc.company, ["company_name", "tax_id", "custom_company_registration", "fax", "phone_no"], as_dict=True) or {} %}
+{% set co_addrs = frappe.get_all("Address", filters=[["Dynamic Link", "link_doctype", "=", "Company"], ["Dynamic Link", "link_name", "=", doc.company]], fields=["address_line1", "address_line2", "city", "pincode", "country", "phone", "fax"], order_by="is_your_company_address desc, is_primary_address desc", limit=1) %}
+{% set co_addr = co_addrs[0] if co_addrs else {} %}
+{% set cust = frappe.db.get_value("Customer", doc.customer, ["tax_id", "zatgo_cr_number", "custom_cr_number"], as_dict=True) or {} %}
+{% set addr = frappe.db.get_value("Address", doc.customer_address, ["address_line1", "address_line2", "city", "state", "pincode", "country", "phone", "fax"], as_dict=True) if doc.customer_address else {} %}
+{% set item_naming_by = frappe.db.get_single_value("Stock Settings", "item_naming_by") %}
+
+{% for page in layout %}
+<div class="page-break so">
+	<div {% if print_settings.repeat_header_footer %} id="header-html" class="hidden-pdf" {% endif %}>
+		{{ add_header(loop.index, layout|len, doc, letter_head, no_letterhead, footer, print_settings) }}
+	</div>
+
+	<style>
+		.so {
+			font-family: Inter, "Segoe UI", Arial, sans-serif;
+			color: #1f2937;
+			font-size: 12.5px;
+			line-height: 1.5;
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+		@page { size: A4; margin: 0; }
+		.print-format { padding: 0 !important; margin: 0 !important; }
+		.print-format .print-format-body { padding: 10mm !important; margin: 0 !important; }
+		.print-format .so { padding: 0 !important; margin: 0 !important; }
+		.so table { width: 100%; border-collapse: collapse; }
+		.so td { vertical-align: top; }
+		.so .muted { color: #6b7280; }
+		.so .r { text-align: right; }
+		.so .c { text-align: center; }
+		.so .b { font-weight: 700; }
+		.so .lbl {
+			font-size: 10px;
+			letter-spacing: .06em;
+			text-transform: uppercase;
+			color: #6b7280;
+		}
+		.so tr, .so .card { page-break-inside: avoid; }
+
+		/* Top band: company + document title */
+		.so .band { border-bottom: 3px solid #0f766e; padding-bottom: 10px; margin-bottom: 14px; }
+		.so .band td { padding: 0; }
+		.so .co-name { font-size: 20px; font-weight: 700; color: #0f766e; line-height: 1.2; }
+		.so .co-meta { margin-top: 6px; font-size: 11px; color: #4b5563; }
+		.so .co-meta span { white-space: nowrap; margin-right: 12px; }
+		.so .doc-title { font-size: 20px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+		.so .doc-no { font-size: 13px; color: #4b5563; }
+		.so .status { display: inline-block; margin-top: 4px; padding: 1px 10px; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: .06em; background: #fef3c7; color: #92400e; }
+		.so .status.cancelled { background: #fee2e2; color: #991b1b; }
+
+		/* Info cards */
+		.so .cards { border-spacing: 0; margin-bottom: 14px; }
+		.so .cards > tbody > tr > td { width: 48%; padding: 0; }
+		.so .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; }
+		.so .card-gap { width: 12px !important; }
+		.so .card-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0f766e; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 6px; }
+		.so .kv td { padding: 3px 0; }
+		.so .kv td:first-child { width: 36%; color: #6b7280; padding-right: 8px; }
+
+		/* Items */
+		.so .items { margin-bottom: 12px; }
+		.so .items thead td { background: #f3f4f6; color: #374151; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 7px 8px; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; }
+		.so .items tbody td { padding: 8px; border-bottom: 1px solid #eef0f3; }
+		.so .items tbody tr:last-child td { border-bottom: 1px solid #d1d5db; }
+		.so .items thead { display: table-header-group; }
+		.so .item-ar { display: block; width: 100%; direction: rtl; text-align: right !important; font-size: 15px; font-weight: 600; line-height: 1.4; color: #1f2937; text-align: right; margin-top: 1px; }
+		.so .item-img { height: 24px; width: 24px; border-radius: 4px; margin-right: 8px; vertical-align: middle; }
+
+		/* Summary: words left, totals right */
+		.so .summary > tbody > tr > td { padding: 0; }
+		.so .words { padding-right: 24px !important; }
+		.so .totals { width: 300px; margin-left: auto; }
+		.so .totals td { padding: 5px 8px; border-bottom: 1px solid #eef0f3; }
+		.so .totals td:first-child { color: #6b7280; }
+		.so .totals .grand td { background: #0f766e; color: #fff; font-size: 14px; font-weight: 700; border: 0; }
+		.so .totals .grand td:first-child { color: #fff; }
+
+		/* Bank Details Horizontal Section */
+		.so .bank-details-card { margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; background-color: #f9fafb; page-break-inside: avoid; }
+		.so .bank-details-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0f766e; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 8px; }
+		.so .bank-columns { border-spacing: 0; width: 100%; }
+		.so .bank-columns > tbody > tr > td { width: 49%; padding: 0; vertical-align: top; }
+		.so .bank-col-gap { width: 2% !important; }
+		.so .bank-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 10px; background: #ffffff; height: 100%; }
+
+		/* Override Frappe's default cell padding */
+		.print-format .so .kv td { padding: 2px 0 !important; line-height: 1.45; }
+		.print-format .so .kv td:first-child { padding-right: 8px !important; }
+		.print-format .so .items thead td { padding: 7px 8px !important; }
+		.print-format .so .items tbody td { padding: 8px !important; }
+		.print-format .so .items .nw { white-space: nowrap; }
+		.print-format .so .totals td { padding: 5px 8px !important; }
+		.print-format .so .band td, .print-format .so .summary > tbody > tr > td, .print-format .so .cards > tbody > tr > td { padding: 0 !important; }
+		.print-format .so .words { padding-right: 24px !important; }
+		.print-format .so .card { padding: 10px 12px !important; }
+
+		.so .terms { margin-top: 18px; font-size: 11px; color: #4b5563; }
+		.so .footer-note { margin-top: 24px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center; }
+	</style>
+
+	<div class="print-format-body">
+		<!-- Company band + document title -->
+		<table class="band">
+			<tr>
+				<td>
+					<div class="co-name">{{ co.company_name or doc.company }}</div>
+					<div class="co-meta">
+						{% if co_addr %}
+						<span>{{ co_addr.address_line1 or "" }}{% if co_addr.address_line2 %}, {{ co_addr.address_line2 }}{% endif %}, {{ co_addr.city or "" }} {{ co_addr.pincode or "" }}, {{ co_addr.country or "" }}</span><br>
+						{% endif %}
+						{% if co.phone_no or co_addr.phone %}<span>{{ _("Phone") }}: {{ co.phone_no or co_addr.phone }}</span>{% endif %}
+						{% if co.fax or co_addr.fax %}<span>{{ _("Landline") }}: {{ co.fax or co_addr.fax }}</span>{% endif %}
+						{% if co.tax_id %}<span>{{ _("VAT No.") }}: {{ co.tax_id }}</span>{% endif %}
+						{% if co.custom_company_registration %}<span>{{ _("CR No.") }}: {{ co.custom_company_registration }}</span>{% endif %}
+					</div>
+				</td>
+				<td class="r" style="width: 38%;">
+					<div class="doc-title">{{ _("Sales Order") }}</div>
+					<div class="doc-no">{{ doc.name }}</div>
+					{%- if doc.meta.is_submittable and doc.docstatus==2 -%}
+						<div class="status cancelled" document-status="cancelled">{{ _("CANCELLED") }}</div>
+					{%- elif doc.meta.is_submittable and doc.docstatus==0 and (print_settings==None or print_settings.add_draft_heading) -%}
+						<div class="status" document-status="draft">{{ _("DRAFT") }}</div>
+					{%- endif -%}
+				</td>
+			</tr>
+		</table>
+
+		<!-- Customer + order cards -->
+		<table class="cards">
+			<tr>
+				<td>
+					<div class="card">
+						<div class="card-title">{{ _("Customer") }}</div>
+						<table class="kv">
+							<tr><td>{{ _("Name") }}</td><td class="b">{{ doc.customer_name }}</td></tr>
+							<tr><td>{{ _("Bill to") }}</td><td>
+								{% if addr %}
+									{{ addr.address_line1 or "" }}{% if addr.address_line2 %}, {{ addr.address_line2 }}{% endif %}<br>
+									{{ addr.city or "" }} {{ addr.state or "" }} {{ addr.pincode or "" }} {{ addr.country or "" }}
+								{% else %}-{% endif %}
+							</td></tr>
+							<tr><td>{{ _("VAT No.") }}</td><td>{{ doc.tax_id or cust.tax_id or "-" }}</td></tr>
+							<tr><td>{{ _("CR No.") }}</td><td>{{ cust.zatgo_cr_number or cust.custom_cr_number or "-" }}</td></tr>
+							<tr><td>{{ _("Contact") }}</td><td>{{ (addr.phone or addr.fax) if addr and (addr.phone or addr.fax) else "-" }}</td></tr>
+						</table>
+					</div>
+				</td>
+				<td class="card-gap" style="width: 16px; min-width: 16px;">&nbsp;</td>
+				<td>
+					<div class="card">
+						<div class="card-title">{{ _("Order Details") }}</div>
+						<table class="kv">
+							<tr><td>{{ _("Sales Order") }}</td><td class="b">{{ doc.name }}</td></tr>
+							<tr><td>{{ _("Order Date") }}</td><td>{{ frappe.utils.format_date(doc.transaction_date) }}</td></tr>
+							<tr><td>{{ _("Delivery Date") }}</td><td>{{ frappe.utils.format_date(doc.delivery_date) }}</td></tr>
+							<tr><td>{{ _("Currency") }}</td><td>{{ doc.currency }}</td></tr>
+						</table>
+					</div>
+				</td>
+			</tr>
+		</table>
+
+		<!-- Items -->
+		<table class="items">
+			<thead>
+				<tr>
+					<td class="c" style="width: 4%;">{{ _("No") }}</td>
+					<td style="width: 13%;">{{ _("Item Code") }}</td>
+					<td style="width: 40%;">{{ _("Item") }}</td>
+					<td class="r" style="width: 13%;">{{ _("Quantity") }}</td>
+					<td class="r" style="width: 14%;">{{ _("Rate") }}</td>
+					<td class="r" style="width: 16%;">{{ _("Amount") }}</td>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in doc.items %}
+				<tr>
+					<td class="c muted">{{ loop.index }}</td>
+					<td class="nw">{{ item.item_code }}</td>
+					<td>
+						{% if item.image %}<img class="item-img" src="{{ item.image | e }}" alt="{{ item.item_name | e }}" />{% endif %}
+						<span class="b">{{ item.item_name }}</span>
+						{% set name_ar = frappe.db.get_value("Item", item.item_code, "zatgo_item_name_ar") %}
+						{% if name_ar %}<div class="item-ar" dir="rtl">{{ name_ar }}</div>{% endif %}
+					</td>
+					<td class="r nw">{{ item.get_formatted("qty", 0) }} {{ item.uom }}</td>
+					<td class="r nw">{{ item.get_formatted("net_rate", doc) }}</td>
+					<td class="r nw">{{ item.get_formatted("net_amount", doc) }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<!-- Summary -->
+		<table class="summary">
+			<tr>
+				<td class="words">
+					<div class="lbl" style="border: 0 !important; background: none !important; padding: 0 !important; color: #6b7280 !important; margin: 0 0 2px 0;">{{ _("In Words") }}</div>
+					<div class="text-capitalize">{{ doc.in_words }}</div>
+				</td>
+				<td style="width: 300px;">
+					<table class="totals">
+						<tr><td>{{ _("Sub Total") }}</td><td class="r">{{ doc.get_formatted("total", doc) }}</td></tr>
+						{%- if doc.apply_discount_on == "Net Total" and doc.discount_amount -%}
+						<tr><td>{{ _("Discount") }} ({{ doc.additional_discount_percentage }}%)</td><td class="r">{{ doc.get_formatted("discount_amount", doc) }}</td></tr>
+						{%- endif -%}
+						{%- for tax in doc.taxes -%}
+							{%- if (tax.tax_amount or print_settings.print_taxes_with_zero_amount) and (not tax.included_in_print_rate or doc.flags.show_inclusive_tax_in_print) -%}
+							<tr><td>{{ tax.get_formatted("description") }} ({{ tax.get_formatted("rate") }}%)</td><td class="r">{{ tax.get_formatted("tax_amount") }}</td></tr>
+							{%- endif -%}
+						{%- endfor -%}
+						{%- if doc.apply_discount_on == "Grand Total" and doc.discount_amount -%}
+						<tr><td>{{ _("Discount") }} ({{ doc.additional_discount_percentage }}%)</td><td class="r">{{ doc.get_formatted("discount_amount", doc) }}</td></tr>
+						{%- endif -%}
+						<tr class="grand"><td>{{ _("Grand Total") }}</td><td class="r">{{ doc.get_formatted("grand_total", doc) }}</td></tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+
+		{% if doc.terms %}
+		<div class="terms">
+			<div class="lbl">{{ _("Terms and Conditions") }}</div>
+			{{ doc.terms }}
+		</div>
+		{% endif %}
+
+		<!-- Horizontal Bank Details Section -->
+		<div class="bank-details-card">
+			<div class="bank-details-title">{{ _("Bank Details") }}</div>
+			<table class="bank-columns">
+				<tr>
+					<!-- Riyadh Bank Column -->
+					<td>
+						<div class="bank-box">
+							<table class="kv">
+								<tr><td>{{ _("Bank Name") }}</td><td class="b">Riyadh Bank</td></tr>
+								<tr><td>{{ _("IBAN") }}</td><td class="b" style="letter-spacing: 0.03em;">SA6120000001576153409940</td></tr>
+							</table>
+						</div>
+					</td>
+					<td class="bank-col-gap">&nbsp;</td>
+					<!-- Al Rajhi Bank Column -->
+					<td>
+						<div class="bank-box">
+							<table class="kv">
+								<tr><td>{{ _("Bank Name") }}</td><td class="b">Al Rajhi Bank</td></tr>
+								<tr><td>{{ _("IBAN") }}</td><td class="b" style="letter-spacing: 0.03em;">SA22800000550608016237582</td></tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div {% if print_settings.repeat_header_footer %} id="footer-html" class="visible-pdf" {% endif %}>
+		{% if not no_letterhead and footer %}
+		<div class="letter-head-footer">{{ footer }}</div>
+		{% endif %}
+		{% if print_settings.repeat_header_footer %}
+		<p class="text-center small page-number visible-pdf">
+			{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
+		</p>
+		{% endif %}
+	</div>
+</div>
+{% endfor %}
