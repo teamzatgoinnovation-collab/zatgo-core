@@ -410,10 +410,19 @@ frappe.pages["tracker-org"].on_page_load = function (wrapper) {
 				}
 				return false;
 			},
+			showSeedPasswords(passwords) {
+				const rows = Object.entries(passwords || {});
+				if (!rows.length) return;
+				const body = rows
+					.map(([u, p]) => `<div><b>${frappe.utils.escape_html(u)}</b>: <code>${frappe.utils.escape_html(p)}</code></div>`)
+					.join("");
+				frappe.msgprint({ title: __("Demo passwords (shown once)"), message: body, indicator: "orange" });
+			},
 			async seedDemo() {
-				frappe.confirm(__("Seed demo org users? Password Tracker@123."), async () => {
+				frappe.confirm(__("Seed demo org users? Random passwords are generated and shown once."), async () => {
 					try {
-						await this.call("zatgo_core.tracker.api.v1.hierarchy.seed_demo");
+						const res = await this.call("zatgo_core.tracker.api.v1.hierarchy.seed_demo");
+						this.showSeedPasswords(res && res.passwords);
 						frappe.show_alert({ message: __("Demo org seeded"), indicator: "green" });
 						await this.refresh();
 					} catch (e) {
@@ -426,7 +435,8 @@ frappe.pages["tracker-org"].on_page_load = function (wrapper) {
 					__("Seed full demo: org, project, tasks, tickets, timesheets?"),
 					async () => {
 						try {
-							await this.call("zatgo_core.tracker.api.v1.hierarchy.seed_demo_work");
+							const res = await this.call("zatgo_core.tracker.api.v1.hierarchy.seed_demo_work");
+							this.showSeedPasswords(res && res.login_hint && res.login_hint.passwords);
 							frappe.show_alert({
 								message: __("Demo work seeded"),
 								indicator: "green",

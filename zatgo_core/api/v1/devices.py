@@ -38,6 +38,9 @@ def register_token(token: str, platform: str | None = None, app_id: str | None =
 	now = now_datetime()
 	if existing:
 		doc = frappe.get_doc(DOCTYPE, existing)
+		# A token belongs to whoever registered it; another user must not be able to take it over.
+		if doc.user != user and "System Manager" not in frappe.get_roles(user):
+			return fail("forbidden", "Token is registered to another user")
 		doc.user = user
 		doc.platform = platform
 		doc.app_id = app_id

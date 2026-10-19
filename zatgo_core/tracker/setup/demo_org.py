@@ -46,9 +46,10 @@ def seed_demo_org(company: str | None = None) -> dict:
 		frappe.throw(_("Create a Company first."))
 
 	created = []
+	passwords: dict[str, str] = {}
 	# pass 1: users + employees without reports_to
 	for row in DEMO_USERS:
-		user = _ensure_user(row["email"], row["full_name"], row["frappe_role"])
+		user = _ensure_user(row["email"], row["full_name"], row["frappe_role"], passwords)
 		emp = _ensure_employee(user, row["full_name"], company, row["org_role"], reports_to=None)
 		created.append({"user": user, "employee": emp, "org_role": row["org_role"]})
 
@@ -63,10 +64,11 @@ def seed_demo_org(company: str | None = None) -> dict:
 			frappe.db.set_value("Employee", emp, "reports_to", mgr)
 
 	frappe.db.commit()
-	return {"company": company, "users": created}
+	# Passwords exist only for users created by this run (shown once, never stored).
+	return {"company": company, "users": created, "passwords": passwords}
 
 
-def _ensure_user(email: str, full_name: str, role: str) -> str:
+def _ensure_user(email: str, full_name: str, role: str, passwords: dict[str, str] | None = None) -> str:
 	if not frappe.db.exists("User", email):
 		doc = frappe.get_doc(
 			{
@@ -79,7 +81,10 @@ def _ensure_user(email: str, full_name: str, role: str) -> str:
 			}
 		)
 		doc.insert(ignore_permissions=True)
-		doc.new_password = "Tracker@123"
+		password = frappe.generate_hash(length=16)
+		doc.new_password = password
+		if passwords is not None:
+			passwords[email] = password
 		doc.save(ignore_permissions=True)
 	user = frappe.get_doc("User", email)
 	roles = {r.role for r in user.roles}

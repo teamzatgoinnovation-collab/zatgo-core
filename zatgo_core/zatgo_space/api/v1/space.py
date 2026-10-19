@@ -8,6 +8,7 @@ from typing import Any
 
 import frappe
 from frappe import _
+from frappe.rate_limiter import rate_limit
 from frappe.utils import now_datetime
 
 from zatgo_core.zatgo_space.api.response import fail, ok
@@ -247,6 +248,11 @@ def _serialize_plan(row_or_dict) -> dict[str, Any]:
 	}
 
 
+def _is_staff() -> bool:
+	"""Full tenant detail is for logged-in System Managers; guests get the public minimum."""
+	return frappe.session.user != "Guest" and "System Manager" in frappe.get_roles()
+
+
 @frappe.whitelist(allow_guest=True)
 def list_catalog():
 	"""Plans + installable app catalog for the Space wizard."""
@@ -286,9 +292,14 @@ def list_catalog():
 
 @frappe.whitelist(allow_guest=True)
 def list_sites_usage():
-	"""Active/provisioning sites with soft quotas and last usage snapshot."""
+	"""Active/provisioning sites with soft quotas and last usage snapshot.
+
+	Per-tenant rows (hostnames, plans, usage) are staff-only; guests get no site list.
+	"""
 	pool = _allocated_pool()
 	sites = []
+	if not _is_staff():
+		return ok({"pool": pool, "sites": sites})
 
 	if frappe.db.exists("DocType", "Space Order"):
 		orders = frappe.get_all(
@@ -333,6 +344,7 @@ def list_sites_usage():
 
 
 @frappe.whitelist(allow_guest=True)
+@rate_limit(limit=10, seconds=3600)
 def create_order(
 	slug: str,
 	plan: str,
@@ -427,6 +439,7 @@ def create_order(
 
 
 @frappe.whitelist(allow_guest=True)
+@rate_limit(limit=120, seconds=600)
 def get_order(name: str | None = None, job_id: str | None = None):
 	"""Fetch order status for the wizard."""
 	filters = {}
@@ -451,6 +464,22 @@ def get_order(name: str | None = None, job_id: str | None = None):
 			limit_page_length=100,
 		)
 
+	apps = [{"package": r.app_package, "title": r.title} for r in doc.apps]
+	if not _is_staff():
+		# Guests (the public wizard) get progress only: no job id, error text, usage or log messages.
+		return ok(
+			{
+				"name": doc.name,
+				"slug": doc.slug,
+				"hostname": doc.hostname,
+				"status": doc.status,
+				"deskUrl": doc.desk_url,
+				"plan": doc.plan,
+				"apps": apps,
+				"logs": [{"stage": l.stage, "status": l.status, "creation": l.creation} for l in logs],
+			}
+		)
+
 	ram_limit, disk_limit = _plan_quotas(doc.plan)
 	return ok(
 		{
@@ -466,7 +495,7 @@ def get_order(name: str | None = None, job_id: str | None = None):
 			"diskLimitMb": disk_limit,
 			"ramUsedMb": int(doc.ram_used_mb or 0),
 			"diskUsedMb": int(doc.disk_used_mb or 0),
-			"apps": [{"package": r.app_package, "title": r.title} for r in doc.apps],
+			"apps": apps,
 			"logs": logs,
 		}
 	)

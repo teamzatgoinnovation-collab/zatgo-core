@@ -51,7 +51,7 @@ def seed_demo_data(company: str | None = None) -> dict:
 		"timesheets": timesheets,
 		"sessions": sessions,
 		"login_hint": {
-			"password": "Tracker@123",
+			"passwords": org.get("passwords", {}),
 			"users": [top, sub, worker],
 		},
 	}
