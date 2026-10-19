@@ -1,0 +1,350 @@
+{%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead, footer, print_settings=None, print_heading_template=None) -%}
+{% if letter_head and not no_letterhead %}
+<div class="letter-head">{{ letter_head }}</div>
+{% endif %}
+{% if print_heading_template %}
+{{ frappe.render_template(print_heading_template, {"doc":doc}) }}
+{% endif %}
+{%- endmacro -%}
+
+{% for page in layout %}
+<div class="page-break invoice-page">
+	<div {% if print_settings.repeat_header_footer %} id="header-html" class="hidden-pdf" {% endif %}>
+		{{ add_header(loop.index, layout|len, doc, letter_head, no_letterhead, footer, print_settings) }}
+	</div>
+	
+	{%- if doc.meta.is_submittable and doc.docstatus==2-%}
+		<div class="text-center status-banner cancelled">
+			<h4>{{ _("CANCELLED") }}</h4>
+		</div>
+	{%- endif -%}
+	{%- if doc.meta.is_submittable and doc.docstatus==0 and (print_settings==None or print_settings.add_draft_heading) -%}
+		<div class="text-center status-banner draft">
+			<h4>{{ _("DRAFT") }}</h4>
+		</div>
+	{%- endif -%}
+
+	<style>
+		:root {
+			--primary-color: #0f172a;
+			--text-main: #1e293b;
+			--text-muted: #64748b;
+			--border-color: #e2e8f0;
+			--bg-light: #f8fafc;
+			--accent-bg: #f1f5f9;
+		}
+
+		.invoice-page {
+			font-family: 'Inter', system-ui, -apple-system, sans-serif;
+			color: var(--text-main);
+			font-size: 13px;
+			line-height: 1.5;
+		}
+
+		.print-format-body {
+			padding: 24px !important;
+		}
+
+		/* Status Banners */
+		.status-banner {
+			padding: 8px;
+			margin-bottom: 15px;
+			border-radius: 6px;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+		}
+		.status-banner.cancelled { background: #fee2e2; color: #991b1b; }
+		.status-banner.draft { background: #fef3c7; color: #92400e; }
+
+		/* Typography & Utilities */
+		.title { color: var(--text-muted) !important; font-weight: 500; }
+		.text-muted { color: var(--text-muted) !important; }
+		.text-dark { color: var(--text-main) !important; }
+		.text-left { text-align: left; }
+		.text-center { text-align: center; }
+		.text-right { text-align: right; }
+		.font-bold { font-weight: 600; }
+		
+		.mt-15 { margin-top: 15px; }
+		.mt-20 { margin-top: 20px; }
+
+		/* Modern Grid / Info Section Layout */
+		.invoice-info-container {
+			display: table;
+			width: 100%;
+			margin-bottom: 25px;
+			background: var(--bg-light);
+			border: 1px solid var(--border-color);
+			border-radius: 12px;
+			padding: 16px;
+		}
+		.invoice-info-col {
+			display: table-cell;
+			width: 50%;
+			vertical-align: top;
+			padding: 0 10px;
+		}
+		.invoice-info-col:first-child {
+			border-right: 1px solid var(--border-color);
+		}
+		.info-group {
+			margin-bottom: 8px;
+		}
+		.info-group:last-child {
+			margin-bottom: 0;
+		}
+		.company-tagline {
+			font-size: 11px;
+			color: var(--text-muted);
+			margin-bottom: 4px;
+			text-transform: uppercase;
+			letter-spacing: 0.5px;
+		}
+
+		/* Tables styling */
+		.items-table {
+			width: 100%;
+			border-collapse: separate;
+			border-spacing: 0;
+			border: 1px solid var(--border-color);
+			border-radius: 10px;
+			overflow: hidden;
+			margin-top: 15px;
+		}
+		.items-table th, .items-table td {
+			padding: 10px 12px;
+			border-bottom: 1px solid var(--border-color);
+			vertical-align: middle;
+		}
+		.items-table thead th {
+			background: var(--accent-bg);
+			color: var(--text-muted) !important;
+			font-weight: 600;
+			text-transform: uppercase;
+			font-size: 11px;
+			letter-spacing: 0.5px;
+			border-bottom: 1px solid var(--border-color);
+		}
+		.items-table tbody tr:last-child td {
+			border-bottom: none;
+		}
+
+		/* Totals Section */
+		.totals-wrapper {
+			width: 100%;
+			margin-top: 20px;
+		}
+		.totals-table {
+			width: 320px;
+			float: right;
+			border-collapse: collapse;
+		}
+		.totals-table td {
+			padding: 6px 10px;
+			border-bottom: 1px solid #f1f5f9;
+		}
+
+		/* Grand Total & Words Bar */
+		.grand-total-section {
+			clear: both;
+			background: var(--primary-color);
+			color: #ffffff;
+			border-radius: 10px;
+			padding: 14px 18px;
+			margin-top: 20px;
+			display: table;
+			width: 100%;
+		}
+		.grand-total-section td {
+			vertical-align: middle;
+			border: none;
+		}
+		.in-words-text {
+			font-size: 11px;
+			color: #94a3b8;
+			text-transform: capitalize;
+		}
+
+		/* Terms & Conditions */
+		.info-card {
+			margin-top: 30px;
+			background: var(--bg-light);
+			border: 1px solid var(--border-color);
+			border-radius: 10px;
+			padding: 14px 18px;
+		}
+		.info-card .title {
+			font-weight: 600;
+			margin-bottom: 6px;
+			color: var(--primary-color) !important;
+		}
+	</style>
+
+	<div class="print-format-body">
+		
+		<!-- Header / Info Card combining Customer & Kasib Asia Data -->
+		<div class="invoice-info-container">
+			<!-- Left Column: Customer Details -->
+			<div class="invoice-info-col">
+				<div class="company-tagline">{{ _("Customer Details") }}</div>
+				<div class="font-bold" style="font-size: 15px; margin-bottom: 4px;">{{ doc.customer_name }}</div>
+				<div class="text-muted" style="line-height: 1.4;">
+					{% if doc.customer_address %}
+						{% set customer_address = frappe.db.get_value("Address", doc.customer_address, ["address_line1", "address_line2", "city", "state", "pincode", "country"], as_dict=True) %}
+						{{ customer_address.address_line1 or "" }}<br>
+						{% if customer_address.address_line2 %}{{ customer_address.address_line2 }}<br>{% endif %}
+						{{ customer_address.city or "" }} {{ customer_address.state or "" }} {{ customer_address.pincode or "" }} {{ customer_address.country or "" }}
+					{% else %}
+						{{ _("No Address Specified") }}
+					{% endif %}
+				</div>
+			</div>
+
+			<!-- Right Column: Kasib Asia Data & Document Meta -->
+			<div class="invoice-info-col" style="padding-left: 20px;">
+				<div class="company-tagline">{{ _("Issuer / Supplier Info") }}</div>
+				<div class="font-bold" style="color: var(--primary-color);">Kasib Asia Company (شركة كاسب اسيا)</div>
+				<div class="text-muted" style="margin-bottom: 10px; font-size: 11px;">
+					Jeddah Al Mahajar, Saudi Arabia<br>
+					Email: info@kasibasia.com | Phone: +966 590700400
+				</div>
+				
+				<div style="border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 6px;">
+					<table style="width: 100%; font-size: 12px;">
+						<tr>
+							<td class="title" style="padding: 2px 0; width: 40%;">{{ _("Quotation Ref:") }}</td>
+							<td class="text-right font-bold" style="padding: 2px 0;">{{ doc.name }}</td>
+						</tr>
+						<tr>
+							<td class="title" style="padding: 2px 0;">{{ _("Posting Date:") }}</td>
+							<td class="text-right" style="padding: 2px 0;">{{ frappe.utils.format_date(doc.transaction_date) }}</td>
+						</tr>
+						<tr>
+							<td class="title" style="padding: 2px 0;">{{ _("Valid Till:") }}</td>
+							<td class="text-right" style="padding: 2px 0;">{{ frappe.utils.format_date(doc.valid_till) }}</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<!-- Items Table -->
+		{% set item_naming_by = frappe.db.get_single_value("Stock Settings", "item_naming_by") %}
+		<table class="items-table">
+			<thead>
+				<tr>
+					<th class="text-center" style="width: 40px;">{{ _("No") }}</th>
+					<th class="text-left">{{ _("Item Description") }}</th>
+					{% if item_naming_by != "Item Code" %}
+						<th class="text-left" style="width: 100px;">{{ _("Item Code") }}</th>
+					{% endif %}
+					<th class="text-right" style="width: 90px;">{{ _("Quantity") }}</th>
+					<th class="text-right" style="width: 90px;">{{ _("Rate") }}</th>
+					<th class="text-right" style="width: 100px;">{{ _("Amount") }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in doc.items %}
+				<tr>
+					<td class="text-center text-muted">{{ loop.index }}</td>
+					<td class="text-left">
+						<table style="border-collapse: collapse; width: 100%;">
+							<tr>
+								{% if item.image %}
+								<td style="width: 32px; padding: 0 8px 0 0; border: none;">
+									<img src="{{ item.image | e }}" alt="" style="border-radius: 4px; height: 24px; width: 24px; object-fit: cover;" />
+								</td>
+								{% endif %}
+								<td style="padding: 0; border: none; vertical-align: middle;">
+									<div class="font-bold">{{ item.item_name }}</div>
+									{% if item.description and item.description != item.item_name %}
+										<div class="text-muted" style="font-size: 11px; margin-top: 2px;">{{ item.description | striptags | truncate(80) }}</div>
+									{% endif %}
+								</td>
+							</tr>
+						</table>
+					</td>
+					{% if item_naming_by != "Item Code" %}
+						<td class="text-left text-muted">{{ item.item_code }}</td>
+					{% endif %}
+					<td class="text-right">{{ item.get_formatted("qty", 0) }} <span class="text-muted">{{ item.uom }}</span></td>
+					<td class="text-right">{{ item.get_formatted("net_rate", doc) }}</td>
+					<td class="text-right font-bold">{{ item.get_formatted("net_amount", doc) }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<!-- Totals breakdown -->
+		<div class="totals-wrapper">
+			<table class="totals-table">
+				<tr>
+					<td class="text-right text-muted">{{ _("Sub Total:") }}</td>
+					<td class="text-right font-bold">{{ doc.get_formatted("total", doc) }}</td>
+				</tr>
+
+				{%- if doc.apply_discount_on == "Net Total" and doc.discount_amount -%}
+					<tr>
+						<td class="text-right text-muted">{{ _("Discount") }} ({{ doc.additional_discount_percentage }}%):</td>
+						<td class="text-right" style="color: #dc2626;">-{{ doc.get_formatted("discount_amount", doc) }}</td>
+					</tr>
+				{%- endif -%}
+
+				{%- for tax in doc.taxes -%}
+					{%- if (tax.tax_amount or print_settings.print_taxes_with_zero_amount) and (not tax.included_in_print_rate or doc.flags.show_inclusive_tax_in_print) -%}
+						<tr>
+							<td class="text-right text-muted">{{ tax.description }} ({{ tax.rate }}%):</td>
+							<td class="text-right">{{ tax.get_formatted("tax_amount") }}</td>
+						</tr>
+					{%- endif -%}
+				{%- endfor -%}
+
+				{%- if doc.apply_discount_on == "Grand Total" and doc.discount_amount -%}
+					<tr>
+						<td class="text-right text-muted">{{ _("Discount") }} ({{ doc.additional_discount_percentage }}%):</td>
+						<td class="text-right" style="color: #dc2626;">-{{ doc.get_formatted("discount_amount", doc) }}</td>
+					</tr>
+				{%- endif -%}
+			</table>
+		</div>
+
+		<!-- Grand Total & Words Bar -->
+		<table class="grand-total-section">
+			<tr>
+				<td>
+					<div class="in-words-text">{{ _("Amount in Words") }}</div>
+					<div style="font-size: 12px; font-weight: 500; margin-top: 2px;">{{ doc.in_words }}</div>
+				</td>
+				<td class="text-right" style="width: 180px;">
+					<div style="font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px;">{{ _("Grand Total") }}</div>
+					<div style="font-size: 18px; font-weight: 700; margin-top: 2px;">{{ doc.get_formatted("grand_total", doc) }}</div>
+				</td>
+			</tr>
+		</table>
+
+		<!-- Terms & Conditions -->
+		{% if doc.terms %}
+		<div class="info-card">
+			<div class="title">{{ _("Terms and Conditions") }}</div>
+			<div class="text-muted" style="font-size: 12px; line-height: 1.5;">
+				{{ doc.terms }}
+			</div>
+		</div>
+		{% endif %}
+
+	</div>
+
+	<div {% if print_settings.repeat_header_footer %} id="footer-html" class="visible-pdf" {% endif %}>
+		{% if not no_letterhead and footer %}
+		<div class="letter-head-footer">
+			{{ footer }}
+		</div>
+		{% endif %}
+		{% if print_settings.repeat_header_footer %}
+		<p class="text-center small page-number visible-pdf text-muted mt-15">
+			{{ _("Page {0} of {1}").format('<span class="page"></span>', '<span class="topage"></span>') }}
+		</p>
+		{% endif %}
+	</div>
+</div>
+{% endfor %}
