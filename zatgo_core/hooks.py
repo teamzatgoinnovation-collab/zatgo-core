@@ -53,6 +53,9 @@ doctype_js = {
     "Selling Settings": "public/js/selling_settings.js",
 }
 
+# Stock Summary page: Company filter + only warehouses holding stock.
+page_js = {"stock-balance": "public/js/stock_balance.js"}
+
 # Exposes tlv_to_png_data_uri() to print-format Jinja templates. Calling it
 # via frappe.get_attr(...) from inside a template works under bench execute
 # but is blocked by the sandboxed Jinja environment print formats actually
