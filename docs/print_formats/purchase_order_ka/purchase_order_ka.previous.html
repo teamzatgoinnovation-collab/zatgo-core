@@ -1,0 +1,749 @@
+{%- macro add_header(page_num, max_pages, doc, letter_head, no_letterhead, footer, print_settings=None, print_heading_template=None) -%}
+    {% if letter_head and not no_letterhead %}
+        <div class="letter-head">
+            {{ letter_head }}
+        </div>
+    {% endif %}
+
+    {% if print_heading_template %}
+        {{ frappe.render_template(print_heading_template, {"doc": doc}) }}
+    {% endif %}
+{%- endmacro -%}
+
+{% for page in layout %}
+
+<div class="page-break invoice-page">
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+    <div
+        {% if print_settings and print_settings.repeat_header_footer %}
+            id="header-html"
+            class="hidden-pdf"
+        {% endif %}
+    >
+        {{ add_header(
+            loop.index,
+            layout|len,
+            doc,
+            letter_head,
+            no_letterhead,
+            footer,
+            print_settings
+        ) }}
+    </div>
+
+    <!-- =====================================================
+         DOCUMENT STATUS
+         ===================================================== -->
+    {% if doc.meta.is_submittable and doc.docstatus == 2 %}
+        <div class="document-status cancelled-status">
+            {{ _("CANCELLED") }}
+        </div>
+    {% endif %}
+
+    {% if doc.meta.is_submittable
+        and doc.docstatus == 0
+        and (not print_settings or print_settings.add_draft_heading) %}
+        <div class="document-status draft-status">
+            {{ _("DRAFT") }}
+        </div>
+    {% endif %}
+
+    <!-- =====================================================
+         LOAD COMPANY AND ADDRESS DATA
+         ===================================================== -->
+    {% set company_doc = frappe.get_doc("Company", doc.company) %}
+    {% set company_address_name = doc.get("company_address") or company_doc.get("company_address") %}
+
+    {% set company_address = {} %}
+    {% if company_address_name %}
+        {% set company_address = frappe.db.get_value(
+            "Address",
+            company_address_name,
+            [
+                "address_line1",
+                "address_line2",
+                "city",
+                "state",
+                "pincode",
+                "country",
+                "phone",
+                "email_id"
+            ],
+            as_dict=True
+        ) or {} %}
+    {% endif %}
+
+    {% set supplier_address = {} %}
+    {% if doc.get("supplier_address") %}
+        {% set supplier_address = frappe.db.get_value(
+            "Address",
+            doc.supplier_address,
+            [
+                "address_line1",
+                "address_line2",
+                "city",
+                "state",
+                "pincode",
+                "country",
+                "phone",
+                "email_id"
+            ],
+            as_dict=True
+        ) or {} %}
+    {% endif %}
+
+    {% set company_tax_id = company_doc.get("tax_id") or "" %}
+    {% set supplier_tax_id = frappe.db.get_value(
+        "Supplier",
+        doc.supplier,
+        "tax_id"
+    ) or "" %}
+
+    <!-- =====================================================
+         STYLES
+         ===================================================== -->
+    <style>
+        .invoice-page {
+            font-family: Inter, Arial, sans-serif;
+            color: #171717;
+            background: #ffffff;
+        }
+
+        .print-format {
+            color: #171717;
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 420;
+            line-height: 18px;
+            padding: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        .print-format-body {
+            padding: 12px 8px 8px 8px !important;
+        }
+
+        .letter-head {
+            padding-top: 5px !important;
+            padding-bottom: 5px !important;
+        }
+
+        .title, .text-muted {
+            color: #6F7480 !important;
+        }
+
+        .text-dark {
+            color: #171717 !important;
+        }
+
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-bold { font-weight: 700; }
+
+        .small-text {
+            font-size: 9px;
+            color: #6F7480;
+        }
+
+        .document-status {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 4px 0 8px;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+
+        .cancelled-status {
+            background: #FDECEC;
+            color: #C62828;
+        }
+
+        .draft-status {
+            background: #FFF4DD;
+            color: #A15C00;
+        }
+
+        .party-info-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+            margin: 0 0 8px;
+        }
+
+        .party-info-table > tbody > tr > td {
+            width: 50%;
+            padding: 7px 9px !important;
+            vertical-align: top;
+        }
+
+        .supplier-card {
+            background: #F2F5FF;
+            border-left: 4px solid #2952E3;
+        }
+
+        .company-card {
+            background: #EAF8F1;
+            border-left: 4px solid #219653;
+        }
+
+        .party-heading {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            margin-bottom: 5px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #DDE3F5;
+        }
+
+        .supplier-card .party-heading { color: #2952E3; }
+        .company-card .party-heading { color: #187344; }
+
+        .party-name {
+            font-size: 11px;
+            font-weight: 800;
+            color: #171717;
+            margin-bottom: 3px;
+            line-height: 15px;
+            word-break: break-word;
+        }
+
+        .party-line {
+            font-size: 9px;
+            line-height: 13px;
+            color: #353B45;
+            word-break: break-word;
+        }
+
+        .party-label {
+            font-weight: 700;
+            color: #555E6E;
+        }
+
+        .info-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 8px;
+        }
+
+        .info-table > tbody > tr > td {
+            vertical-align: top;
+        }
+
+        .info-label {
+            color: #6F7480;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: #171717;
+            font-size: 10px;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .items-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 7px;
+            overflow: hidden;
+            border: 1px solid #DDE3F5;
+            page-break-inside: auto;
+        }
+
+        .items-table thead {
+            background: #2952E3;
+        }
+
+        .items-table thead td {
+            color: #FFFFFF !important;
+            background: #2952E3;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 6px 5px !important;
+            line-height: 12px !important;
+            border: none !important;
+            vertical-align: middle;
+        }
+
+        .items-table tbody td {
+            font-size: 9px;
+            color: #252525;
+            padding: 4px 5px !important;
+            line-height: 12px !important;
+            border-bottom: 1px solid #E8EBF2;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        .items-table tbody tr:nth-child(even) td { background: #F5F8FF; }
+        .items-table tbody tr:nth-child(odd) td { background: #FFFFFF; }
+        .items-table tbody tr:last-child td { border-bottom: none; }
+
+        .items-table tbody tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        .item-number {
+            color: #2952E3;
+            font-weight: 700;
+        }
+
+        .quantity-cell {
+            color: #1F3FB5;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .rate-cell {
+            color: #28704A;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .amount-cell {
+            color: #171717;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .item-img {
+            border-collapse: collapse !important;
+            width: 100%;
+            margin: 0 !important;
+        }
+
+        .item-img td {
+            border: none !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
+
+        .item-img img {
+            border-radius: 4px;
+            height: 20px !important;
+            width: 20px !important;
+            object-fit: contain;
+            margin-right: 4px !important;
+            vertical-align: middle;
+        }
+
+        .item-name {
+            font-size: 9px;
+            font-weight: 600;
+            color: #171717;
+            line-height: 12px;
+        }
+
+        .mt-15 { margin-top: 6px; }
+
+        .total-wrapper {
+            float: right;
+            margin-top: 6px;
+            margin-bottom: 4px;
+            width: 45%;
+        }
+
+        .total-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .total-table td {
+            padding: 3px 6px !important;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 10px;
+            line-height: 13px;
+        }
+
+        .total-label {
+            color: #6F7480;
+            font-weight: 500;
+        }
+
+        .total-value {
+            color: #171717;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .grand-total-section {
+            clear: both;
+            margin-top: 5px;
+            border-bottom: 1px solid #DDE3F5;
+            padding-bottom: 5px;
+        }
+
+        .grand-total-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #EEF2FF;
+            border: 1px solid #D7DFFF;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .grand-total-table td {
+            padding: 6px 7px !important;
+            border: none !important;
+            vertical-align: middle;
+        }
+
+        .in-words {
+            color: #424753 !important;
+            word-break: break-word;
+            line-height: 13px;
+            font-size: 9px;
+        }
+
+        .grand-total-label {
+            color: #2952E3;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .grand-total-value {
+            color: #1F3FB5;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .info-card {
+            margin-top: 10px;
+            color: #555E6E;
+            font-size: 9px;
+            line-height: 13px;
+            word-break: break-word;
+        }
+
+        .info-card .title {
+            color: #2952E3 !important;
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .party-info-table,
+        .info-table,
+        .grand-total-table {
+            page-break-inside: avoid;
+        }
+    </style>
+
+    <div class="print-format-body">
+
+        <!-- =====================================================
+             COMPANY + SUPPLIER INFORMATION
+             ===================================================== -->
+        <table class="party-info-table">
+            <tbody>
+                <tr>
+                    <!-- SUPPLIER -->
+                    <td class="supplier-card">
+                        <div class="party-heading">
+                            {{ _("SUPPLIER INFORMATION") }}
+                        </div>
+                        <div class="party-name">
+                            {{ doc.supplier_name or doc.supplier or "" }}
+                        </div>
+
+                        {% if supplier_address %}
+                            <div class="party-line">
+                                {% if supplier_address.address_line1 %}{{ supplier_address.address_line1 }}<br>{% endif %}
+                                {% if supplier_address.address_line2 %}{{ supplier_address.address_line2 }}<br>{% endif %}
+                                {% if supplier_address.city %}{{ supplier_address.city }}{% endif %}
+                                {% if supplier_address.state %}
+                                    {% if supplier_address.city %}, {% endif %}{{ supplier_address.state }}
+                                {% endif %}
+                                {% if supplier_address.pincode %} - {{ supplier_address.pincode }}{% endif %}
+                                {% if supplier_address.country %}<br>{{ supplier_address.country }}{% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if supplier_address.phone %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("Phone:") }}</span> {{ supplier_address.phone }}
+                            </div>
+                        {% endif %}
+
+                        {% if supplier_address.email_id %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("Email:") }}</span> {{ supplier_address.email_id }}
+                            </div>
+                        {% endif %}
+
+                        {% if supplier_tax_id %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("VAT / Tax ID:") }}</span> {{ supplier_tax_id }}
+                            </div>
+                        {% endif %}
+
+                        {% if doc.contact_person %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("Contact Person:") }}</span>
+                                {{ frappe.db.get_value("Contact", doc.contact_person, "first_name") or doc.contact_person }}
+                            </div>
+                        {% endif %}
+                    </td>
+
+                    <!-- COMPANY -->
+                    <td class="company-card">
+                        <div class="party-heading">
+                            {{ _("COMPANY INFORMATION") }}
+                        </div>
+                        <div class="party-name">
+                            {{ company_doc.company_name or doc.company }}
+                        </div>
+
+                        {% if company_address %}
+                            <div class="party-line">
+                                {% if company_address.address_line1 %}{{ company_address.address_line1 }}<br>{% endif %}
+                                {% if company_address.address_line2 %}{{ company_address.address_line2 }}<br>{% endif %}
+                                {% if company_address.city %}{{ company_address.city }}{% endif %}
+                                {% if company_address.state %}
+                                    {% if company_address.city %}, {% endif %}{{ company_address.state }}
+                                {% endif %}
+                                {% if company_address.pincode %} - {{ company_address.pincode }}{% endif %}
+                                {% if company_address.country %}<br>{{ company_address.country }}{% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if company_address.phone or company_doc.get("phone_no") %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("Phone:") }}</span>
+                                {{ company_address.phone or company_doc.get("phone_no") }}
+                            </div>
+                        {% endif %}
+
+                        {% if company_address.email_id or company_doc.get("email") %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("Email:") }}</span>
+                                {{ company_address.email_id or company_doc.get("email") }}
+                            </div>
+                        {% endif %}
+
+                        {% if company_tax_id %}
+                            <div class="party-line">
+                                <span class="party-label">{{ _("VAT / Tax ID:") }}</span>
+                                {{ company_tax_id }}
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- =====================================================
+             PURCHASE ORDER DETAILS
+             ===================================================== -->
+        <table class="info-table">
+            <tbody>
+                <tr>
+                    <td style="width:33.33%; padding:6px 8px !important; background:#F7F8FA;">
+                        <div class="info-label">{{ _("Purchase Order No.") }}</div>
+                        <div class="info-value">{{ doc.name }}</div>
+                    </td>
+                    <td style="width:33.33%; padding:6px 8px !important; background:#F7F8FA;">
+                        <div class="info-label">{{ _("Order Date") }}</div>
+                        <div class="info-value">
+                            {% if doc.transaction_date %}
+                                {{ frappe.utils.format_date(doc.transaction_date) }}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td style="width:33.33%; padding:6px 8px !important; background:#F7F8FA;">
+                        <div class="info-label">{{ _("Required By") }}</div>
+                        <div class="info-value">
+                            {% if doc.schedule_date %}
+                                {{ frappe.utils.format_date(doc.schedule_date) }}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- =====================================================
+             ITEMS TABLE
+             ===================================================== -->
+        <table class="items-table mt-15">
+            <thead>
+                <tr>
+                    <td class="text-center" style="width:8%;">{{ _("No.") }}</td>
+                    <td class="text-left" style="width:44%;">{{ _("Item") }}</td>
+                    <td class="text-right" style="width:16%;">{{ _("Quantity") }}</td>
+                    <td class="text-right" style="width:16%;">{{ _("Rate") }}</td>
+                    <td class="text-right" style="width:16%;">{{ _("Amount") }}</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in doc.items %}
+                    <tr>
+                        <td class="text-center item-number">{{ loop.index }}</td>
+                        <td class="text-left">
+                            <table class="item-img">
+                                <tbody>
+                                    <tr>
+                                        {% if item.image %}
+                                            <td style="width:25px; vertical-align:middle;">
+                                                <img src="{{ item.image | e }}" alt="{{ item.item_name | e }}">
+                                            </td>
+                                        {% endif %}
+                                        <td class="item-name" style="vertical-align:middle;">
+                                            {{ item.item_name or item.item_code }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+                        <td class="text-right quantity-cell">
+                            {{ item.get_formatted("qty", doc) }} {{ item.uom or "" }}
+                        </td>
+                        <td class="text-right rate-cell">
+                            {{ item.get_formatted("net_rate", doc) }}
+                        </td>
+                        <td class="text-right amount-cell">
+                            {{ item.get_formatted("net_amount", doc) }}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- =====================================================
+             TOTALS
+             ===================================================== -->
+        <div class="total-wrapper">
+            <table class="total-table">
+                <tbody>
+                    <tr>
+                        <td class="text-right total-label">{{ _("Sub Total:") }}</td>
+                        <td class="text-right total-value">{{ doc.get_formatted("total", doc) }}</td>
+                    </tr>
+
+                    {% if doc.apply_discount_on == "Net Total" %}
+                        <tr>
+                            <td class="text-right total-label">
+                                {{ _("Discount") }}
+                                {% if doc.additional_discount_percentage %}
+                                    ({{ doc.additional_discount_percentage }}%)
+                                {% endif %}
+                            </td>
+                            <td class="text-right total-value">
+                                {{ doc.get_formatted("discount_amount", doc) }}
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                    {% for tax in doc.taxes %}
+                        {% if (tax.tax_amount or (print_settings and print_settings.print_taxes_with_zero_amount))
+                            and (not tax.included_in_print_rate or doc.flags.show_inclusive_tax_in_print) %}
+                            <tr>
+                                <td class="text-right total-label">
+                                    {{ tax.get_formatted("description") }}
+                                    {% if tax.rate %}({{ tax.get_formatted("rate") }}%){% endif %}
+                                </td>
+                                <td class="text-right total-value">
+                                    {{ tax.get_formatted("tax_amount", doc) }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if doc.apply_discount_on == "Grand Total" %}
+                        <tr>
+                            <td class="text-right total-label">
+                                {{ _("Discount") }}
+                                {% if doc.additional_discount_percentage %}
+                                    ({{ doc.additional_discount_percentage }}%)
+                                {% endif %}
+                            </td>
+                            <td class="text-right total-value">
+                                {{ doc.get_formatted("discount_amount", doc) }}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =====================================================
+             GRAND TOTAL + AMOUNT IN WORDS
+             ===================================================== -->
+        <div class="grand-total-section">
+            <table class="grand-total-table">
+                <tbody>
+                    <tr>
+                        <td class="text-left" style="width:58%;">
+                            <div class="in-words">
+                                <span class="title">{{ _("In Words:") }}</span>
+                                {{ doc.in_words or "" }}
+                            </div>
+                        </td>
+                        <td class="text-right grand-total-label" style="width:20%;">
+                            {{ _("Grand Total:") }}
+                        </td>
+                        <td class="text-right grand-total-value" style="width:22%;">
+                            {{ doc.get_formatted("grand_total", doc) }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =====================================================
+             TERMS AND CONDITIONS
+             ===================================================== -->
+        {% if doc.terms %}
+            <div class="info-card">
+                <div class="title">{{ _("Terms and Conditions") }}</div>
+                {{ doc.terms }}
+            </div>
+        {% endif %}
+
+    </div>
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+    <div
+        {% if print_settings and print_settings.repeat_header_footer %}
+            id="footer-html"
+            class="visible-pdf"
+        {% endif %}
+    >
+        {% if not no_letterhead and footer %}
+            <div class="letter-head-footer">
+                {{ footer }}
+            </div>
+        {% endif %}
+
+        {% if print_settings and print_settings.repeat_header_footer %}
+            <p class="text-center small page-number visible-pdf">
+                {{ _("Page {0} of {1}").format(
+                    '<span class="page"></span>',
+                    '<span class="topage"></span>'
+                ) }}
+            </p>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endfor %}
