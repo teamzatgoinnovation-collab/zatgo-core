@@ -12,6 +12,9 @@ for (const doctype of ["Sales Invoice", "Sales Order", "Delivery Note", "Purchas
 			});
 			frm.set_query("set_warehouse", query);
 			if (frm.fields_dict.rejected_warehouse) frm.set_query("rejected_warehouse", query);
+			// Item rows: same list.
+			frm.set_query("warehouse", "items", query);
+			if (doctype === "Purchase Receipt") frm.set_query("rejected_warehouse", "items", query);
 		},
 		onload(frm) {
 			if (!frm.is_new() || frm.doc.set_warehouse) return;
