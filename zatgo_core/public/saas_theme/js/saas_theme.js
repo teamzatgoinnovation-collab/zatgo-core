@@ -976,7 +976,7 @@ saas_theme.attachments = {
 
 // ===== Financial statements: default print format =====
 // Balance Sheet, Profit and Loss Statement and Trial Balance print with the modern "ZG ..." format
-// (setup/ensure_report_print_formats.py) unless the user picks another in the Print / PDF dialog.
+// (setup/ensure_report_print_formats.py) unless the user picks another in the Print / PDF dialog or a Report Template is selected.
 (function () {
 	const FORMATS = {
 		"Balance Sheet": "ZG Balance Sheet",
@@ -991,7 +991,9 @@ saas_theme.attachments = {
 		const original = QR.prototype.get_custom_format;
 		QR.prototype.get_custom_format = async function (print_settings) {
 			const name = FORMATS[this.report_name];
-			if (name && !print_settings.print_format && !(print_settings.columns || []).length) {
+			// A Report Template changes the row/column shape (and ERPNext then prints with its own grid): leave it alone.
+			const templated = this.get_filter_value && this.get_filter_value("report_template", false);
+			if (name && !templated && !print_settings.print_format && !(print_settings.columns || []).length) {
 				const format = await this.get_report_print_format(name).catch(() => null);
 				if (format) return format;
 			}

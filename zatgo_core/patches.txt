@@ -37,3 +37,4 @@ zatgo_core.patches.v0_3_1.add_supplier_cr_number
 zatgo_core.patches.v0_4_0.enable_restaurant_where_used
 zatgo_core.patches.v0_4_1.add_warehouse_selectable_field
 zatgo_core.patches.v0_4_2.add_supplier_name_arabic
+zatgo_core.patches.v0_4_3.inherit_account_category

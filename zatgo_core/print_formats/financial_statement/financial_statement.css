@@ -36,7 +36,7 @@
 .zgfs-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
 
 @media print {
-	@page { size: A4; margin: 12mm; }
+	@page { margin: 12mm; }
 	.zgfs-table thead { display: table-header-group; }
 	.zgfs-table tr { page-break-inside: avoid; }
 	.zgfs-section td, .zgfs-group td, .zgfs-total td, .zgfs-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

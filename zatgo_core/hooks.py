@@ -70,6 +70,9 @@ jinja = {
 }
 
 doc_events = {
+    "Account": {
+        "before_insert": "zatgo_core.events.account_category.inherit_account_category",
+    },
     "Company": {
         "after_insert": "zatgo_core.events.company.on_company_update",
         "on_update": "zatgo_core.events.company.on_company_update",
