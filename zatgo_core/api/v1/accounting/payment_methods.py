@@ -74,3 +74,38 @@ def account_query(doctype, txt, searchfield, start, page_len, filters):
         as_list=True,
     )
     return sorted(rows, key=lambda r: order.get(r[0], len(order)))
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def payment_account_query(doctype, txt, searchfield, start, page_len, filters):
+    """Cash Account / Bank Account picker on Sales and Purchase Invoice: every
+    enabled ledger of the company that is of the given Account Type or sits
+    under a group of that type ("Cash In Hand", "Bank Accounts" in the chart),
+    through frappe.get_list so the user's Account permissions still apply."""
+    if isinstance(filters, str):
+        filters = json.loads(filters)
+    filters = filters or {}
+    company = filters.get("company")
+    account_type = filters.get("account_type")
+    if not company or account_type not in ("Cash", "Bank"):
+        return []
+    groups = frappe.get_all(
+        "Account",
+        filters={"company": company, "is_group": 1, "account_type": account_type},
+        fields=["lft", "rgt"],
+    )
+    ledgers = frappe.get_list(
+        "Account",
+        filters={"company": company, "is_group": 0, "disabled": 0},
+        or_filters={"name": ["like", f"%{txt}%"], "account_name": ["like", f"%{txt}%"]} if txt else None,
+        fields=["name", "account_currency", "account_type", "lft"],
+        order_by="name asc",
+        limit_page_length=0,
+    )
+    rows = [
+        (r.name, r.account_currency)
+        for r in ledgers
+        if r.account_type == account_type or any(g.lft < r.lft < g.rgt for g in groups)
+    ]
+    return rows[int(start) : int(start) + int(page_len)]

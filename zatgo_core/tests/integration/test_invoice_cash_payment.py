@@ -273,6 +273,37 @@ class TestInvoiceCashPayment(IntegrationTestCase):
         with self.assertRaisesRegex(frappe.ValidationError, "not a Bank-type account"):
             si.submit()
 
+    def test_bank_account_without_type_under_bank_group_is_accepted(self) -> None:
+        group = frappe.db.get_value(
+            "Account", {"company": self.company, "account_type": "Bank", "is_group": 1}, "name"
+        )
+        if not group:
+            self.skipTest("company chart has no Bank-type group")
+        untyped = frappe.get_doc(
+            {
+                "doctype": "Account",
+                "account_name": f"ZG Untyped Bank {random_string(4)}",
+                "company": self.company,
+                "parent_account": group,
+                "account_currency": "SAR",
+            }
+        ).insert(ignore_permissions=True)
+        self.assertFalse(untyped.account_type)
+        si = self._make_sales_invoice("Bank", cash_account=None, custom_bank_account=untyped.name)
+        si.submit()
+        self.assertEqual(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"), 0)
+        # the same ledger is not a Cash account, and the picker lists it for Bank only
+        from zatgo_core.api.v1.accounting.payment_methods import payment_account_query
+
+        def listed(account_type):
+            rows = payment_account_query(
+                "Account", untyped.name, "name", 0, 20, {"company": self.company, "account_type": account_type}
+            )
+            return [r[0] for r in rows]
+
+        self.assertIn(untyped.name, listed("Bank"))
+        self.assertNotIn(untyped.name, listed("Cash"))
+
     # -- Purchase Invoice ---------------------------------------------------
 
     def test_purchase_invoice_cash_auto_creates_and_submits_payment_entry(self) -> None:

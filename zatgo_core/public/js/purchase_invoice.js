@@ -20,21 +20,19 @@
 // only Bank-type ledger accounts, pre-filled from the Bank-type Mode of
 // Payment's default account for this company.
 
+// Every enabled ledger of the company of that Account Type or under a group of it
+// (chart's "Cash In Hand" / "Bank Accounts"); see api/v1/accounting/payment_methods.py.
+const PAYMENT_ACCOUNT_QUERY = "zatgo_core.api.v1.accounting.payment_methods.payment_account_query";
+
 frappe.ui.form.on("Purchase Invoice", {
 	setup(frm) {
 		frm.set_query("custom_cash_account", () => ({
-			filters: {
-				company: frm.doc.company,
-				account_type: "Cash",
-				is_group: 0,
-			},
+			query: PAYMENT_ACCOUNT_QUERY,
+			filters: { company: frm.doc.company, account_type: "Cash" },
 		}));
 		frm.set_query("custom_bank_account", () => ({
-			filters: {
-				company: frm.doc.company,
-				account_type: "Bank",
-				is_group: 0,
-			},
+			query: PAYMENT_ACCOUNT_QUERY,
+			filters: { company: frm.doc.company, account_type: "Bank" },
 		}));
 	},
 	custom_payment_type(frm) {

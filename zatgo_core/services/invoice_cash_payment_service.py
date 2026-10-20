@@ -237,6 +237,27 @@ def _has_submitted_payment_entry(invoice_doctype: str, invoice_name: str) -> boo
     )
 
 
+def under_payment_group(account: str, account_type: str) -> bool:
+    """True when [account] sits under a group account of [account_type] -- the
+    chart's "Cash In Hand" / "Bank Accounts" groups -- so ledgers added there
+    without an Account Type of their own still count as Cash / Bank."""
+    lft, rgt, company = frappe.db.get_value("Account", account, ["lft", "rgt", "company"]) or (None, None, None)
+    if lft is None:
+        return False
+    return bool(
+        frappe.db.exists(
+            "Account",
+            {
+                "company": company,
+                "is_group": 1,
+                "account_type": account_type,
+                "lft": ["<", lft],
+                "rgt": [">", rgt],
+            },
+        )
+    )
+
+
 def _validate_payment_account(account: str, company: str, field_label: str, account_type: str) -> None:
     row = frappe.db.get_value(
         "Account", account, ["company", "account_type", "is_group"], as_dict=True
@@ -253,11 +274,11 @@ def _validate_payment_account(account: str, company: str, field_label: str, acco
             f"{field_label} '{account}' is a group account and cannot receive "
             f"payments directly. Pick a specific ledger account."
         )
-    if row.account_type != account_type:
+    if row.account_type != account_type and not under_payment_group(account, account_type):
         frappe.throw(
             f"{field_label} '{account}' is not a {account_type}-type account "
             f"(account_type={row.account_type!r}). Pick an account with "
-            f"Account Type = {account_type}."
+            f"Account Type = {account_type}, or one under a {account_type}-type group."
         )
 
 
