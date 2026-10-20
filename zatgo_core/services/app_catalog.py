@@ -25,9 +25,12 @@ APP keys:
 from __future__ import annotations
 
 import importlib.util
+import logging
 import os
 from functools import lru_cache
 from typing import Any
+
+logger = logging.getLogger("zatgo_core.app_catalog")
 
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE_MANIFEST = os.path.join(PACKAGE_DIR, "plugins", "manifests", "core_apps.py")
@@ -69,22 +72,46 @@ def module_folders() -> list[str]:
     )
 
 
+_errors: list[str] = []
+
+
+def load_errors() -> list[str]:
+    """Manifests the last catalog build had to skip (empty when all loaded)."""
+    catalog()
+    return list(_errors)
+
+
 @lru_cache(maxsize=None)
 def catalog() -> tuple[dict[str, Any], ...]:
-    """All apps, core first, then each module folder alphabetically."""
+    """All apps, core first, then each module folder alphabetically.
+
+    The core file is ours and must load. A MODULE's manifest that is broken
+    (syntax error, missing key, duplicate key) is logged and skipped: this is
+    imported by ui_apps at import time, so raising here would take every
+    request on every site down for one module's typo. The module is then off
+    the hub and its switch never reads on; `load_errors()` lists what was
+    skipped and tests/integration/test_app_hub.py fails on any.
+    """
+    _errors.clear()
     apps: list[dict[str, Any]] = []
     core = _load(CORE_MANIFEST, "zatgo_core_core_apps")
     for app in core.APPS:
         apps.append(_normalise(app, "plugins/manifests/core_apps.py"))
+    taken = {a["key"] for a in apps}
     for folder in module_folders():
-        mod = _load(os.path.join(PACKAGE_DIR, folder, "app_manifest.py"), f"zatgo_core_{folder}_manifest")
-        app = _normalise(mod.APP, f"{folder}/app_manifest.py")
+        source = f"{folder}/app_manifest.py"
+        try:
+            mod = _load(os.path.join(PACKAGE_DIR, folder, "app_manifest.py"), f"zatgo_core_{folder}_manifest")
+            app = _normalise(mod.APP, source)
+            if app["key"] in taken:
+                raise ValueError(f"duplicate app key {app['key']!r}")
+        except Exception as exc:
+            _errors.append(f"{source}: {exc}")
+            logger.error("Skipping broken app manifest %s: %s", source, exc)
+            continue
         app["folder"] = folder
+        taken.add(app["key"])
         apps.append(app)
-    keys = [a["key"] for a in apps]
-    dupes = {k for k in keys if keys.count(k) > 1}
-    if dupes:
-        raise ValueError(f"duplicate app keys in catalog: {sorted(dupes)}")
     return tuple(apps)
 
 

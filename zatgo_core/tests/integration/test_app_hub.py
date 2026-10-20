@@ -27,6 +27,10 @@ class TestAppHub(IntegrationTestCase):
             if os.path.isdir(frappe.get_app_path("zatgo_core", folder, "doctype")):
                 self.assertIn(folder, app_catalog.module_folders(), f"{folder} lacks app_manifest.py")
 
+    def test_no_manifest_was_skipped(self) -> None:
+        """app_catalog skips (and logs) a broken module manifest instead of raising; here it must be none."""
+        self.assertEqual(app_catalog.load_errors(), [])
+
     def test_switches_derive_from_catalog(self) -> None:
         self.assertEqual(SWITCH_FIELDS, app_catalog.switch_fields())
         self.assertEqual(set(bundled_apps.BUNDLED), {a["key"] for a in app_catalog.catalog() if a["group"] == "bundled"})
