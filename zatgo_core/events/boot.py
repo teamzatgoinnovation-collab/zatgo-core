@@ -26,6 +26,7 @@ def boot_session(bootinfo: Any) -> None:
                     "theme": doc.get("theme"),
                     "default_company": doc.get("default_company"),
                     "maintenance_mode": doc.get("maintenance_mode"),
+                    "autofill_payment_accounts": doc.get("autofill_payment_accounts"),
                 }
 
         flags = []

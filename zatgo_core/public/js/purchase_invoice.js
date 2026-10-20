@@ -47,8 +47,14 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 });
 
+// ZG System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).
+function autofill_enabled() {
+	const system = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.system) || {};
+	return !!system.autofill_payment_accounts;
+}
+
 function prefill_cash_account(frm) {
-	if (frm.doc.custom_payment_type !== "Cash" || frm.doc.custom_cash_account || !frm.doc.company) {
+	if (!autofill_enabled() || frm.doc.custom_payment_type !== "Cash" || frm.doc.custom_cash_account || !frm.doc.company) {
 		return;
 	}
 	frappe.db
@@ -70,7 +76,7 @@ function prefill_cash_account(frm) {
 // Default account of the company's Bank-type Mode of Payment ("Bank" first
 // when there are several). A suggestion only; the server validates the pick.
 function prefill_bank_account(frm) {
-	if (frm.doc.custom_payment_type !== "Bank" || frm.doc.custom_bank_account || !frm.doc.company) {
+	if (!autofill_enabled() || frm.doc.custom_payment_type !== "Bank" || frm.doc.custom_bank_account || !frm.doc.company) {
 		return;
 	}
 	frappe.db

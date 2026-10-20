@@ -28,6 +28,7 @@
     "enable_branch_mode",
     "maintenance_mode",
     "stock_summary_live_only",
+    "autofill_payment_accounts",
     "appearance_section",
     "enable_saas_theme",
     "column_break_appearance",
@@ -167,6 +168,13 @@
       "fieldtype": "Check",
       "label": "Maintenance Mode",
       "default": 0
+    },
+    {
+      "fieldname": "autofill_payment_accounts",
+      "fieldtype": "Check",
+      "label": "Auto-fill Cash / Bank Account on Invoices",
+      "default": 0,
+      "description": "Ticked: picking Payment Type Cash or Bank on a Sales / Purchase Invoice pre-fills the Cash / Bank Account from the Mode of Payment default. Unticked: the account stays empty until the user picks one."
     },
     {
       "fieldname": "appearance_section",
