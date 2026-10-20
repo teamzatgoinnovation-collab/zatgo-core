@@ -1,0 +1,78 @@
+/* ============================================
+   89. FINANCIAL STATEMENTS — Balance Sheet, Profit and Loss Statement, Trial Balance
+   Same datatable as every other report (84-tables); this only adds the hierarchy these three
+   reports carry. Rows with children carry a tree toggle and ERPNext wraps section / total
+   text in <span style="font-weight: bold">; either marks a statement row. Leaf accounts stay
+   plain. Scoped by body[data-route] so no other report is touched.
+   ============================================ */
+:root,
+[data-theme="light"] {
+	--zg-fs-band: color-mix(in srgb, var(--primary) 6%, var(--fg-color));
+	--zg-fs-band-strong: color-mix(in srgb, var(--primary) 11%, var(--fg-color));
+	--zg-fs-rule: color-mix(in srgb, var(--primary) 45%, var(--border-color));
+	--zg-fs-neg: var(--red-600, #c0392b);
+}
+
+[data-theme="dark"] {
+	--zg-fs-band: color-mix(in srgb, var(--primary) 10%, var(--fg-color));
+	--zg-fs-band-strong: color-mix(in srgb, var(--primary) 18%, var(--fg-color));
+	--zg-fs-rule: color-mix(in srgb, var(--primary) 55%, var(--border-color));
+	--zg-fs-neg: var(--red-400, #f08a7e);
+}
+
+/* group / section / total rows: tinted band, heavier rule above */
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-row:has(.dt-cell--col-1 :is(.dt-tree-node__toggle, [style*="font-weight: bold"])):not(.dt-row-header, .dt-row-filter) {
+	--dt-cell-bg: var(--zg-fs-band);
+}
+
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-row:has(.dt-cell--col-1 :is(.dt-tree-node__toggle, [style*="font-weight: bold"])):not(.dt-row-header, .dt-row-filter) .dt-cell {
+	border-top-color: var(--zg-fs-rule);
+}
+
+/* top-level rows (no indent) get the stronger band: the statement's main sections and grand totals */
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-row:has(.dt-cell--col-1 .dt-tree-node[style*="padding-left: 0px"] :is(.dt-tree-node__toggle, [style*="font-weight: bold"])):not(.dt-row-header, .dt-row-filter) {
+	--dt-cell-bg: var(--zg-fs-band-strong);
+}
+
+/* numbers: tabular, negatives in the danger colour */
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-cell__content--col-align-right {
+	font-variant-numeric: tabular-nums;
+}
+
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-cell__content .text-danger,
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .datatable .dt-cell__content[style*="color: red"] {
+	color: var(--zg-fs-neg);
+}
+
+/* the report's filter strip + title: roomier, like a statement header */
+:is(
+	body[data-route="query-report/Balance Sheet"],
+	body[data-route="query-report/Profit and Loss Statement"],
+	body[data-route="query-report/Trial Balance"]
+) .page-head .title-text {
+	letter-spacing: 0.01em;
+}

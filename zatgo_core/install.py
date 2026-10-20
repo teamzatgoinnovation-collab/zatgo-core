@@ -9,6 +9,7 @@ from zatgo_core.setup.ensure_core_desk import ensure_core_desk
 from zatgo_core.setup.ensure_custom_fields import ensure_custom_fields
 from zatgo_core.setup.ensure_mode_of_payment import ensure_mode_of_payment
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
+from zatgo_core.setup.ensure_report_print_formats import ensure_report_print_formats
 from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.ensure_vansalex_access import ensure_vansalex_access
@@ -48,6 +49,10 @@ def after_install() -> None:
         ensure_print_formats()
     except Exception:
         logger.exception("Print format seed failed")
+    try:
+        ensure_report_print_formats()
+    except Exception:
+        logger.exception("Financial statement print format seed failed")
     try:
         ensure_mode_of_payment()
     except Exception:
@@ -101,6 +106,10 @@ def after_migrate() -> None:
         ensure_print_formats()
     except Exception:
         logger.exception("Print format seed failed")
+    try:
+        ensure_report_print_formats()
+    except Exception:
+        logger.exception("Financial statement print format seed failed")
     try:
         ensure_mode_of_payment()
     except Exception:

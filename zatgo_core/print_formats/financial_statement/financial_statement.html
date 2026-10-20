@@ -1,0 +1,85 @@
+{%
+	const report_columns = report.get_columns_for_print().filter(col => !col.hidden);
+
+	if (report_columns.length > 9) {
+		frappe.throw(__("Too many columns. Export the report and print it using a spreadsheet application."));
+	}
+
+	const company = filters.company || "";
+	const currency = filters.presentation_currency || (company && erpnext.get_currency(company)) || "";
+	const user_date = (d) => (d ? frappe.datetime.str_to_user(d) : "");
+
+	let period = "";
+	if (filters.from_date || filters.to_date) {
+		period = `${user_date(filters.from_date)} – ${user_date(filters.to_date)}`;
+	} else if (filters.filter_based_on === "Fiscal Year") {
+		period = filters.from_fiscal_year === filters.to_fiscal_year
+			? filters.from_fiscal_year
+			: `${filters.from_fiscal_year} – ${filters.to_fiscal_year}`;
+	} else if (filters.period_start_date || filters.period_end_date) {
+		period = `${user_date(filters.period_start_date)} – ${user_date(filters.period_end_date)}`;
+	}
+	const periodicity = filters.periodicity && filters.periodicity !== "Yearly" ? filters.periodicity : "";
+
+	const clean = (s) => String(s == null ? "" : s).replace(/^['"]|['"]$/g, "");
+%}
+
+<div class="zgfs">
+	<header class="zgfs-head">
+		<div class="zgfs-co">{{ company }}</div>
+		<div class="zgfs-title">{%= __(report.report_name) %}</div>
+		<div class="zgfs-meta">
+			{% if (period) { %}<span class="zgfs-chip">{%= period %}</span>{% } %}
+			{% if (periodicity) { %}<span class="zgfs-chip">{%= __(periodicity) %}</span>{% } %}
+			{% if (currency) { %}<span class="zgfs-chip">{%= currency %}</span>{% } %}
+		</div>
+		{% if (subtitle && subtitle.trim()) { %}<div class="zgfs-filters">{{ subtitle }}</div>{% } %}
+	</header>
+
+	<table class="zgfs-table">
+		<thead>
+			<tr>
+				{% for (let i = 0; i < report_columns.length; i++) { %}
+					<th class="{%= i === 0 ? 'zgfs-l' : 'zgfs-r' %}">{%= report_columns[i].label %}</th>
+				{% } %}
+			</tr>
+		</thead>
+		<tbody>
+			{% for (let j = 0; j < data.length; j++) { %}
+				{%
+					const row = data[j];
+					const name = clean(row.account_name || row.account || row.section || "");
+					const blank = !name;
+					const top = !(row.parent_account || row.parent_section);
+					const next = data[j + 1];
+					const group = !top && (row.is_group_account || row.is_group || (next && cint(next.indent) > cint(row.indent)));
+					const is_total = /^['"]?\s*(total|الإجمالي|مجموع)/i.test(String(row.account_name || row.account || ""));
+					let cls = "zgfs-leaf";
+					if (blank) cls = "zgfs-gap";
+					else if (is_total || (top && j === data.length - 1)) cls = "zgfs-total";
+					else if (top) cls = "zgfs-section";
+					else if (group) cls = "zgfs-group";
+				%}
+				<tr class="{%= cls %}">
+					{% for (let i = 0; i < report_columns.length; i++) { %}
+						{%
+							const col = report_columns[i];
+							const value = row[col.fieldname];
+							const neg = i > 0 && typeof value === "number" && value < 0;
+						%}
+						{% if (i === 0) { %}
+							<td class="zgfs-l"><span class="zgfs-name" style="--zgfs-indent: {%= cint(row.indent) %}">{{ name }}</span></td>
+						{% } else { %}
+							<td class="zgfs-r {%= neg ? 'zgfs-neg' : '' %}">{% if (!blank && !is_null(value)) { %}{%= frappe.format(value, col, {}, row) %}{% } %}</td>
+						{% } %}
+					{% } %}
+				</tr>
+			{% } %}
+		</tbody>
+	</table>
+
+	<footer class="zgfs-foot">
+		<span>{%= __("Printed on {0}", [frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string())]) %}</span>
+		<span>{{ company }} · {%= __(report.report_name) %}</span>
+	</footer>
+</div>

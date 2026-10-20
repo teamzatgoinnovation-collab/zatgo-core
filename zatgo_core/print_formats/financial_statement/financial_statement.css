@@ -1,0 +1,43 @@
+.zgfs {
+	--ink: #14213d;
+	--muted: #6b7280;
+	--accent: #1e3a8a;
+	--band: #eef2fb;
+	--band-strong: #dfe7f7;
+	--line: #e5e7eb;
+	--neg: #b42318;
+	font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+	font-size: 12.5px;
+	line-height: 1.5;
+	color: var(--ink);
+}
+.zgfs-head { padding: 0 0 14px; margin-bottom: 14px; border-bottom: 3px solid var(--accent); }
+.zgfs-co { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.zgfs-title { font-size: 22px; font-weight: 700; color: var(--accent); margin: 2px 0 8px; }
+.zgfs-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.zgfs-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--band); color: var(--accent); font-weight: 600; font-size: 11.5px; }
+.zgfs-filters { margin-top: 8px; color: var(--muted); font-size: 11.5px; }
+.zgfs-filters .filter-row { display: inline-block; margin-inline-end: 14px; }
+
+.zgfs-table { width: 100%; border-collapse: collapse; table-layout: auto; font-variant-numeric: tabular-nums; }
+.zgfs-table th { padding: 7px 10px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--ink); background: transparent; }
+.zgfs-table td { padding: 5px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.zgfs-l { text-align: start; }
+.zgfs-r { text-align: end; white-space: nowrap; }
+.zgfs-table th.zgfs-r, .zgfs-table td.zgfs-r { width: 1%; min-width: 8.5em; }
+
+.zgfs-name { display: inline-block; padding-inline-start: calc(var(--zgfs-indent, 0) * 1.4em); }
+.zgfs-section td { background: var(--band-strong); font-weight: 700; color: var(--accent); border-top: 1px solid var(--accent); }
+.zgfs-group td { background: var(--band); font-weight: 600; }
+.zgfs-total td { font-weight: 700; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); background: #f8fafc; }
+.zgfs-gap td { border: 0; height: 10px; padding: 0; }
+.zgfs-neg { color: var(--neg); }
+
+.zgfs-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+
+@media print {
+	@page { size: A4; margin: 12mm; }
+	.zgfs-table thead { display: table-header-group; }
+	.zgfs-table tr { page-break-inside: avoid; }
+	.zgfs-section td, .zgfs-group td, .zgfs-total td, .zgfs-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -973,3 +973,33 @@ saas_theme.attachments = {
 	saas_theme.sidebar.closeMobileRail = close;
 })();
 // ===== /Mobile navigation drawer =====
+
+// ===== Financial statements: default print format =====
+// Balance Sheet, Profit and Loss Statement and Trial Balance print with the modern "ZG ..." format
+// (setup/ensure_report_print_formats.py) unless the user picks another in the Print / PDF dialog.
+(function () {
+	const FORMATS = {
+		"Balance Sheet": "ZG Balance Sheet",
+		"Profit and Loss Statement": "ZG Profit and Loss Statement",
+		"Trial Balance": "ZG Trial Balance",
+	};
+
+	function patch() {
+		const QR = frappe.views && frappe.views.QueryReport;
+		if (!QR || QR.prototype._zg_fs_patched) return !!QR;
+		QR.prototype._zg_fs_patched = true;
+		const original = QR.prototype.get_custom_format;
+		QR.prototype.get_custom_format = async function (print_settings) {
+			const name = FORMATS[this.report_name];
+			if (name && !print_settings.print_format && !(print_settings.columns || []).length) {
+				const format = await this.get_report_print_format(name).catch(() => null);
+				if (format) return format;
+			}
+			return original.call(this, print_settings);
+		};
+		return true;
+	}
+
+	if (!patch()) $(document).one("startup", patch);
+})();
+// ===== /Financial statements: default print format =====
