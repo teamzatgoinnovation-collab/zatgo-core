@@ -213,7 +213,14 @@ has_permission = {
 
 # Old method paths of the merged apps (chat_ai.*, tracker.*, zatgo_space.*)
 # -> zatgo_core.<module>.*, for clients built against the old apps.
-from zatgo_core.compat_methods import OLD_METHOD_PATHS as override_whitelisted_methods  # noqa: E402
+from zatgo_core.compat_methods import OLD_METHOD_PATHS  # noqa: E402
+
+# Old app method paths + the IFRS Report Template switch on query reports (services/report_templates.py).
+override_whitelisted_methods = {
+    **OLD_METHOD_PATHS,
+    "frappe.desk.query_report.run": "zatgo_core.overrides.query_report.run",
+    "frappe.desk.query_report.export_query": "zatgo_core.overrides.query_report.export_query",
+}
 
 
 

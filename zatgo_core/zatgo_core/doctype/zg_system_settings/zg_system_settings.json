@@ -29,6 +29,7 @@
     "maintenance_mode",
     "stock_summary_live_only",
     "autofill_payment_accounts",
+    "enable_ifrs_reports",
     "appearance_section",
     "enable_saas_theme",
     "column_break_appearance",
@@ -168,6 +169,13 @@
       "fieldtype": "Check",
       "label": "Maintenance Mode",
       "default": 0
+    },
+    {
+      "fieldname": "enable_ifrs_reports",
+      "fieldtype": "Check",
+      "label": "Enable IFRS Report Templates",
+      "default": 0,
+      "description": "Ticked: Balance Sheet, Profit and Loss and Cash Flow offer the Report Template filter (e.g. Standard Balance Sheet (IFRS)); accounts are picked by Account Category, so categorise the chart first. Unticked: always the classic account-tree report."
     },
     {
       "fieldname": "autofill_payment_accounts",

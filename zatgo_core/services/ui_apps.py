@@ -33,6 +33,7 @@ THEME_CSS = "saas_theme/css/saas_theme.css"
 THEME_JS = "saas_theme/js/saas_theme.js"
 SWITCHER_CSS = "language_switcher/css/language_switcher.css"
 SWITCHER_JS = "language_switcher/js/language_switcher.js"
+IFRS_TOGGLE_JS = "js/ifrs_toggle.js"  # always on: reads the IFRS switch itself
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 
@@ -79,6 +80,7 @@ def desk_includes() -> tuple[list[str], list[str]]:
             on[key] = False  # the old app's own hooks load it -- never twice
     css: list[str] = []
     js: list[str] = []
+    js.append(asset_url(IFRS_TOGGLE_JS))
     if on["saas_theme"]:
         css.append(asset_url(THEME_CSS))
         js.append(asset_url(THEME_JS))
