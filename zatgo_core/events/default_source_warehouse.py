@@ -2,6 +2,9 @@
 Order / Delivery Note, and 'Set Accepted Warehouse' on Purchase Receipt, with
 the user's default warehouse (Rejected Warehouse is never defaulted).
 
+Switchable in ZG System Settings -> "Auto-fill Source Warehouse on Documents"
+(default on): off leaves the field blank, in the form and on save alike.
+
 The default is the one rule in services/vansalex_settings.py (profile ->
 ZG Company Settings -> Stock Settings). It is only used when it belongs to
 the document's company; a warehouse the user already chose is never touched.
@@ -10,8 +13,20 @@ the document's company; a warehouse the user already chose is never touched.
 from __future__ import annotations
 
 import frappe
+from frappe.utils import cint
 
 from zatgo_core.services.vansalex_settings import resolve
+
+
+def autofill_enabled() -> bool:
+    """ZG System Settings -> 'Auto-fill Source Warehouse on Documents' (default on).
+    get_single_value can't tell "never saved" from "unticked" (both 0), so read the
+    row: no row yet means the field default, on -- existing sites keep filling."""
+    rows = frappe.db.sql(
+        "SELECT value FROM `tabSingles` WHERE doctype = %s AND field = %s",
+        ("ZG System Settings", "autofill_source_warehouse"),
+    )
+    return True if not rows else bool(cint(rows[0][0]))
 
 
 def default_source_warehouse(company: str | None = None) -> str | None:
@@ -26,7 +41,7 @@ def default_source_warehouse(company: str | None = None) -> str | None:
 
 
 def set_source_warehouse(doc, method=None) -> None:
-    if doc.docstatus != 0 or doc.get("set_warehouse"):
+    if doc.docstatus != 0 or doc.get("set_warehouse") or not autofill_enabled():
         return
     wh = default_source_warehouse(doc.get("company"))
     if wh:
@@ -35,7 +50,9 @@ def set_source_warehouse(doc, method=None) -> None:
 
 @frappe.whitelist()
 def get_default_source_warehouse(company: str | None = None) -> str | None:
-    return default_source_warehouse(company)
+    """What a new document's Source Warehouse opens with (the form calls this); nothing when auto-fill is off.
+    (The warehouse picker below keeps using the real default either way.)"""
+    return default_source_warehouse(company) if autofill_enabled() else None
 
 
 @frappe.whitelist()

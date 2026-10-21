@@ -29,6 +29,7 @@
     "maintenance_mode",
     "stock_summary_live_only",
     "autofill_payment_accounts",
+    "autofill_source_warehouse",
     "enable_ifrs_reports",
     "appearance_section",
     "enable_saas_theme",
@@ -183,6 +184,13 @@
       "label": "Auto-fill Cash / Bank Account on Invoices",
       "default": 0,
       "description": "Ticked: picking Payment Type Cash or Bank on a Sales / Purchase Invoice pre-fills the Cash / Bank Account from the Mode of Payment default. Unticked: the account stays empty until the user picks one."
+    },
+    {
+      "default": "1",
+      "description": "Ticked: a new Sales Invoice, Sales Order or Delivery Note opens with the user's default warehouse in Source Warehouse (Purchase Receipt: Set Accepted Warehouse), and an empty one is filled when the document is saved. Unticked: the field stays blank until the user picks one; items still use their own default warehouse.",
+      "fieldname": "autofill_source_warehouse",
+      "fieldtype": "Check",
+      "label": "Auto-fill Source Warehouse on Documents"
     },
     {
       "fieldname": "appearance_section",
