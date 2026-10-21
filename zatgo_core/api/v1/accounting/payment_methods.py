@@ -14,7 +14,7 @@ import frappe
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login, require_str
-from zatgo_core.services import payment_allocation
+from zatgo_core.services import payment_allocation, payment_entry_accounts
 
 
 @frappe.whitelist()
@@ -90,22 +90,28 @@ def payment_account_query(doctype, txt, searchfield, start, page_len, filters):
     account_type = filters.get("account_type")
     if not company or account_type not in ("Cash", "Bank"):
         return []
-    groups = frappe.get_all(
-        "Account",
-        filters={"company": company, "is_group": 1, "account_type": account_type},
-        fields=["lft", "rgt"],
-    )
-    ledgers = frappe.get_list(
-        "Account",
-        filters={"company": company, "is_group": 0, "disabled": 0},
-        or_filters={"name": ["like", f"%{txt}%"], "account_name": ["like", f"%{txt}%"]} if txt else None,
-        fields=["name", "account_currency", "account_type", "lft"],
-        order_by="name asc",
-        limit_page_length=0,
-    )
-    rows = [
-        (r.name, r.account_currency)
-        for r in ledgers
-        if r.account_type == account_type or any(g.lft < r.lft < g.rgt for g in groups)
-    ]
+    rows = payment_entry_accounts.chart_ledgers(company, account_type, txt)
+    return rows[int(start) : int(start) + int(page_len)]
+
+
+@frappe.whitelist()
+def payment_entry_account(mode_of_payment: str | None = None, company: str | None = None) -> dict:
+    """Payment Entry form: the Bank Accounts ledger to pre-fill on picking a mode of payment (or none) --
+    services/payment_entry_accounts.py."""
+    require_login()
+    return payment_entry_accounts.resolve(mode_of_payment, company)
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def payment_entry_account_query(doctype, txt, searchfield, start, page_len, filters):
+    """Account Paid To / Paid From picker on Payment Entry: the chart's Bank Accounts for a Bank mode of
+    payment, ERPNext's bank / cash list otherwise (services/payment_entry_accounts.py)."""
+    if isinstance(filters, str):
+        filters = json.loads(filters)
+    filters = filters or {}
+    company = filters.get("company")
+    if not company:
+        return []
+    rows = payment_entry_accounts.account_search(company, filters.get("mode_of_payment"), txt)
     return rows[int(start) : int(start) + int(page_len)]

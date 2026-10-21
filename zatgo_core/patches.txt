@@ -40,3 +40,4 @@ zatgo_core.patches.v0_4_2.add_supplier_name_arabic
 zatgo_core.patches.v0_4_3.inherit_account_category
 zatgo_core.patches.v0_4_4.chat_ai_local_only_on
 zatgo_core.patches.v0_4_5.autofill_source_warehouse_on
+zatgo_core.patches.v0_4_6.autofill_payment_entry_account_on

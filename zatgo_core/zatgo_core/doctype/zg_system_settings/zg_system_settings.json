@@ -30,6 +30,7 @@
     "stock_summary_live_only",
     "autofill_payment_accounts",
     "autofill_source_warehouse",
+    "autofill_payment_entry_account",
     "enable_ifrs_reports",
     "appearance_section",
     "enable_saas_theme",
@@ -191,6 +192,13 @@
       "fieldname": "autofill_source_warehouse",
       "fieldtype": "Check",
       "label": "Auto-fill Source Warehouse on Documents"
+    },
+    {
+      "default": "1",
+      "description": "Ticked: on a Payment Entry with a Bank mode of payment, Account Paid To (Receive) / Account Paid From (Pay) is pre-filled with the mode's default bank account, else the company's default bank account, else the first ledger under Bank Accounts in the chart of accounts, and the list offers only the Bank Accounts ledgers. Other modes keep ERPNext's default. Unticked: the account stays blank until the user picks one, and the list is ERPNext's own.",
+      "fieldname": "autofill_payment_entry_account",
+      "fieldtype": "Check",
+      "label": "Auto-fill Account Paid To / Paid From on Payment Entry"
     },
     {
       "fieldname": "appearance_section",

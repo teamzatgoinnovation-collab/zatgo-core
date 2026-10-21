@@ -3,6 +3,58 @@
 // never derived client-side) in the read-only "Party Balance" field, so
 // the user can see what is actually owed before entering an amount.
 
+// Account Paid To (Receive) / Account Paid From (Pay) from the chart of accounts
+// (ZG System Settings -> "Auto-fill Account Paid To / Paid From on Payment Entry",
+// services/payment_entry_accounts.py). ERPNext fills the field from the Mode of Payment's
+// default account through erpnext.accounts.pos.get_payment_mode_account (shared with POS rows), so
+// that one function is wrapped -- for Payment Entry only -- and the field has a single source:
+//   ticked:   a Bank mode of payment -> the mode's / company's default bank account, else the first
+//             ledger under "Bank Accounts"; any other mode -> ERPNext's own default;
+//   unticked: blank until the user picks one.
+function patch_payment_mode_account() {
+	const pos = window.erpnext && erpnext.accounts && erpnext.accounts.pos;
+	if (!pos || !pos.get_payment_mode_account || pos.get_payment_mode_account.__zg) return;
+	const original = pos.get_payment_mode_account;
+	const patched = function (frm, mode_of_payment, callback) {
+		if (!frm || frm.doctype !== "Payment Entry" || !frm.doc.company || !mode_of_payment) {
+			return original.apply(pos, arguments);
+		}
+		return frappe.call({
+			method: "zatgo_core.api.v1.accounting.payment_methods.payment_entry_account",
+			args: { mode_of_payment, company: frm.doc.company },
+			callback: (r) => {
+				const m = r.message || {};
+				if (!m.enabled) return callback(""); // unticked: blank
+				if (m.mode_type === "Bank" && m.account) return callback(m.account);
+				return original.call(pos, frm, mode_of_payment, callback); // ERPNext's default
+			},
+		});
+	};
+	patched.__zg = true;
+	pos.get_payment_mode_account = patched;
+}
+patch_payment_mode_account();
+
+// The picker of the bank / cash side (Receive -> Account Paid To, Pay -> Account Paid From) lists the
+// chart's "Bank Accounts" ledgers once a Bank mode of payment is chosen; ERPNext's own query is kept
+// for every other case. Installed in refresh: ERPNext sets its queries in setup, ours must come after.
+function bank_side_query(frm, fieldname) {
+	const field = frm.fields_dict[fieldname];
+	if (!field || (field.get_query && field.get_query.__zg)) return;
+	const erpnext_query = field.get_query;
+	const side = fieldname === "paid_to" ? "Receive" : "Pay";
+	const query = function () {
+		const base = erpnext_query ? erpnext_query.apply(this, arguments) : {};
+		if (frm.doc.payment_type !== side || !frm.doc.mode_of_payment || !frm.doc.company) return base;
+		return {
+			query: "zatgo_core.api.v1.accounting.payment_methods.payment_entry_account_query",
+			filters: { company: frm.doc.company, mode_of_payment: frm.doc.mode_of_payment },
+		};
+	};
+	query.__zg = true;
+	frm.set_query(fieldname, query);
+}
+
 frappe.ui.form.on("Payment Entry", {
 	// Narration (`remarks`): once the user writes one, tick ERPNext's own
 	// "Custom Remarks" so save doesn't replace it with auto-text. The server
@@ -36,6 +88,9 @@ frappe.ui.form.on("Payment Entry", {
 		show_party_balance(frm);
 	},
 	refresh: function (frm) {
+		patch_payment_mode_account();
+		bank_side_query(frm, "paid_to");
+		bank_side_query(frm, "paid_from");
 		show_party_balance(frm);
 		show_payment_details_summary(frm);
 	},
