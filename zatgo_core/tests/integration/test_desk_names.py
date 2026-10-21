@@ -147,9 +147,11 @@ class TestRealRecordsAfterSync(IntegrationTestCase):
         frappe.set_user("Administrator")
         core_sidebar.sync_core_sidebar()
         row = frappe.db.get_value(
-            "Workspace Sidebar Item", {"parent": "ZatGo", "label": "ZatGo VanSaleX"}, ["link_type", "link_to"], as_dict=True
+            "Workspace Sidebar Item", {"parent": "ZatGo", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"}, ["label", "child"], as_dict=True
         )
-        self.assertEqual((row.link_type, row.link_to), ("Workspace", "ZatGo VanSaleX"))
+        self.assertIsNotNone(row, "the ZatGo sidebar should link the renamed VanSaleX workspace")
+        self.assertEqual((row.label, row.child), ("Overview", 1))  # inside the "ZatGo VanSaleX" group
+        self.assertTrue(frappe.db.exists("Workspace Sidebar Item", {"parent": "ZatGo", "type": "Section Break", "label": "ZatGo VanSaleX"}))
 
     def test_enabled_apps_have_one_consistent_desk_name(self) -> None:
         from zatgo_core.services import bundled_apps
