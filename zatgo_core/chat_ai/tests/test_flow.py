@@ -299,7 +299,7 @@ class TestWebSearch(FlowCase):
 	]}}).encode()
 
 	def _web_cfg(self, **kw):
-		return {"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-test", "web_search_max_results": 3, **kw}
+		return {"local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-test", "web_search_max_results": 3, **kw}
 
 	def test_search_answer_carries_only_returned_sources(self):
 		brave = ScriptedServer([(200, JSON, self.BRAVE)])

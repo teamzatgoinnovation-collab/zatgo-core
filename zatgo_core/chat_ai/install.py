@@ -117,7 +117,9 @@ def _ensure_settings():
 		doc = frappe.get_single("Chat AI Settings")
 		# Touch defaults if brand-new empty single
 		if not doc.provider:
-			doc.provider = "OpenAI"
+			# Local first: Ollama on this machine / network. External APIs are opt-in
+			# ("Local models only" is off, and a provider is chosen).
+			doc.provider = "Ollama"
 		# Default Model stays blank unless the operator sets it
 		if not getattr(doc, "default_language", None):
 			doc.default_language = "en"
@@ -157,6 +159,9 @@ def _ensure_settings():
 			):
 				doc.tool_max_retries = 1
 			frappe.db.set_global("chat_ai_platform_025_bootstrapped", "1")
+		# Setup, not a configuration change: an older external provider left in the settings
+		# must not make this save fail (the provider factory refuses it at call time instead).
+		doc.flags.ignore_local_only = True
 		doc.save(ignore_permissions=True)
 	except Exception:
 		frappe.log_error(title="chat_ai ensure settings")
@@ -177,26 +182,26 @@ def _sanitize_provider_settings():
 		provider = doc.provider or ""
 		changed = False
 
-		if key.startswith("sk-or-") and provider != "OpenRouter":
+		from zatgo_core.chat_ai.erpnext.settings import local_only_enabled
+
+		local_only = local_only_enabled()
+
+		# An OpenRouter key means OpenRouter -- an external API, so never auto-picked on a
+		# site that is local-only.
+		if not local_only and key.startswith("sk-or-") and provider != "OpenRouter":
 			doc.provider = "OpenRouter"
 			changed = True
 			provider = "OpenRouter"
 
 		if provider == "OpenRouter":
+			# OpenRouter has one real endpoint; a leftover local URL is a misconfig. (Never
+			# applied to Custom / Ollama: a local URL is exactly right there.)
 			if not endpoint or "127.0.0.1" in endpoint or "localhost" in endpoint:
 				doc.api_endpoint = ""
 				changed = True
 
-		if provider == "Custom OpenAI-compatible" and (
-			not endpoint or "127.0.0.1" in endpoint or "localhost" in endpoint
-		):
-			# Avoid silent Connection refused to local dummy port
-			doc.api_endpoint = ""
-			if key.startswith("sk-or-"):
-				doc.provider = "OpenRouter"
-			changed = True
-
 		if changed:
+			doc.flags.ignore_local_only = True
 			doc.save(ignore_permissions=True)
 	except Exception:
 		frappe.log_error(title="chat_ai sanitize provider")

@@ -429,7 +429,7 @@ class TestWorkspaceTools(_Base):
 		).encode()
 		srv = ScriptedServer([(200, "application/json", body)] * 2)
 		self.addCleanup(srv.stop)
-		cfg = {**SETTINGS, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-key", "web_search_max_results": 5}
+		cfg = {**SETTINGS, "local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "brave-key", "web_search_max_results": 5}  # Brave is external: opt out of local-only
 		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: dict(cfg)), mock.patch(
 			"zatgo_core.chat_ai.core.web_search.BRAVE_URL", srv.url + "/res/v1/web/search"
 		):
@@ -473,7 +473,8 @@ class TestWorkspaceTools(_Base):
 		self.assertFalse(ws.is_configured({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": ""}))
 		self.assertTrue(ws.is_configured({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": "http://s:8080"}))
 		self.assertFalse(ws.is_configured({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_url": "http://s"}))
-		self.assertTrue(ws.is_configured({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}))
+		self.assertTrue(ws.is_configured({"local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}))
+		self.assertFalse(ws.is_configured({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}))  # local-only (default) refuses Brave
 		with self.assertRaises(ws.WebToolError):
 			ws.SearXNGSearch("not-a-url").search("q")
 		srv = ScriptedServer([(403, "text/plain", b"Forbidden")])
@@ -494,7 +495,7 @@ class TestWorkspaceTools(_Base):
 			with self.assertRaises(ValueError) as cm:
 				wtools._web_search("anything")
 		self.assertIn("SearXNG URL", str(cm.exception))  # the default provider is the self-hosted one
-		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: {**SETTINGS, "enable_web_search": 1, "web_search_provider": "Brave"}):
+		with mock.patch.object(wtools, "get_settings_dict", side_effect=lambda: {**SETTINGS, "local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave"}):
 			with self.assertRaises(ValueError) as cm:
 				wtools._web_search("anything")
 		self.assertIn("API key", str(cm.exception))  # the default provider is the self-hosted one
@@ -526,7 +527,7 @@ class TestWorkspaceTools(_Base):
 		self.assertEqual(offered({}), ["calculator", "search"])
 		self.assertEqual(offered({"_has_files": True}), ["analyze_table", "calculator", "file_search", "search"])
 		self.assertEqual(offered({"enable_web_search": 1}), ["calculator", "search"])  # switch without a URL or key
-		self.assertEqual(offered({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}), ["calculator", "fetch_url", "search", "web_search"])
+		self.assertEqual(offered({"local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"}), ["calculator", "fetch_url", "search", "web_search"])
 		self.assertEqual(offered({"enable_web_search": 1, "web_search_provider": "SearXNG", "web_search_url": "http://s:8080"}), ["calculator", "fetch_url", "search", "web_search"])
 
 

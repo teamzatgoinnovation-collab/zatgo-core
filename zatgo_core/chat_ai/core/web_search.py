@@ -19,6 +19,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, asdict
 from html.parser import HTMLParser
 
+from zatgo_core.chat_ai.core.providers import local_guard
 from zatgo_core.chat_ai.core.providers.errors import ProviderError, from_exception, from_http_status
 
 BRAVE_URL = "https://api.search.brave.com/res/v1/web/search"
@@ -145,9 +146,14 @@ PROVIDERS = ("Brave", "SearXNG")
 
 
 def is_configured(settings: dict) -> bool:
-	"""Switched on AND usable: Brave needs a key, SearXNG needs its URL."""
+	"""Switched on AND usable: Brave needs a key, SearXNG needs its URL. With 'Local models
+	only' on, only a SearXNG on your own network counts."""
 	if not settings.get("enable_web_search"):
 		return False
+	if local_guard.is_enabled(settings):
+		if (settings.get("web_search_provider") or "SearXNG") == "Brave":
+			return False
+		return local_guard.is_local_url(settings.get("web_search_url") or "")
 	if (settings.get("web_search_provider") or "SearXNG") == "Brave":
 		return bool(settings.get("web_search_api_key"))
 	return bool((settings.get("web_search_url") or "").strip())
@@ -157,6 +163,14 @@ def get_provider(settings: dict) -> WebSearchProvider:
 	if not settings.get("enable_web_search"):
 		raise WebToolError("Web search is turned off.")
 	name = settings.get("web_search_provider") or "SearXNG"
+	if local_guard.is_enabled(settings):
+		if name == "Brave":
+			raise WebToolError("Brave is an external API and 'Local models only' is on: use a SearXNG on your own network.")
+		if name == "SearXNG":
+			try:
+				local_guard.assert_local(settings.get("web_search_url") or "", what="SearXNG URL")
+			except local_guard.ExternalEndpointError as exc:
+				raise WebToolError(str(exc)) from exc
 	if name == "Brave":
 		return BraveSearch(settings.get("web_search_api_key") or "")
 	if name == "SearXNG":

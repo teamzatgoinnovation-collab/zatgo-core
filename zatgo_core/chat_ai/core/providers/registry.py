@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from zatgo_core.chat_ai.core.providers import local_guard
 from zatgo_core.chat_ai.core.providers.base import LLMProvider
 from zatgo_core.chat_ai.core.providers.capabilities import Capabilities, NegotiationResult, PROVIDER_DEFAULTS, negotiate
 from zatgo_core.chat_ai.core.providers.openai_compat import OpenAICompatProvider
@@ -48,10 +49,20 @@ _DEFAULT_EMBEDDING_MODELS = {
 }
 
 
+def default_provider(settings: dict[str, Any]) -> str:
+	"""The provider when none is chosen: Ollama while 'Local models only' is on (the
+	default), OpenAI only on a site that explicitly allowed external APIs."""
+	return "Ollama" if local_guard.is_enabled(settings) else "OpenAI"
+
+
 def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> LLMProvider:
-	"""Build provider from a plain settings dict."""
+	"""Build provider from a plain settings dict.
+
+	With 'Local models only' on (the default) an endpoint outside the private network raises
+	local_guard.ExternalEndpointError before any request is made."""
+	fallback = default_provider(settings)
 	if for_embedding:
-		label = settings.get("embedding_provider") or settings.get("provider") or "OpenAI"
+		label = settings.get("embedding_provider") or settings.get("provider") or fallback
 		api_key = settings.get("embedding_api_key") or settings.get("api_key") or ""
 		label = _normalize_provider_label(label, api_key)
 		# Never fall back to the chat model: a chat model name is not an embedding model.
@@ -61,7 +72,7 @@ def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> L
 			or "text-embedding-3-small"
 		)
 	else:
-		label = settings.get("provider") or "OpenAI"
+		label = settings.get("provider") or fallback
 		api_key = settings.get("api_key") or ""
 		label = _normalize_provider_label(label, api_key)
 		model = settings.get("default_model") or _DEFAULT_MODELS.get(label) or "gpt-4o"
@@ -70,10 +81,15 @@ def from_settings(settings: dict[str, Any], *, for_embedding: bool = False) -> L
 		# A separate embedding server (e.g. llama.cpp serves chat and embeddings from different
 		# processes) or a different provider must not inherit the chat endpoint.
 		own = (settings.get("embedding_endpoint") or "").strip()
-		same_provider = label == (settings.get("provider") or "OpenAI")
+		same_provider = label == (settings.get("provider") or fallback)
 		endpoint = own or ((settings.get("api_endpoint") or "").strip() if same_provider else "") or _default_endpoint(label)
 	else:
 		endpoint = (settings.get("api_endpoint") or "").strip() or _default_endpoint(label)
+	if local_guard.is_enabled(settings):
+		local_guard.assert_local(
+			endpoint or (settings.get("api_endpoint") or "").strip(),
+			what="embedding endpoint" if for_embedding else "model endpoint",
+		)
 	if not endpoint:
 		raise RuntimeError(
 			f"API Endpoint is required for provider '{label}'. "

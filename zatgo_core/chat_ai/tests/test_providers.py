@@ -195,7 +195,8 @@ class TestAnthropicNative(IntegrationTestCase):
 		self.assertEqual(cm.exception.code, "auth")
 
 	def test_registry_picks_native_adapter(self):
-		p = from_settings({"provider": "Anthropic", "api_key": "sk-ant-x", "default_model": "claude-test"})
+		# external on purpose: this test is about adapter selection, so 'Local models only' is off
+		p = from_settings({"provider": "Anthropic", "api_key": "sk-ant-x", "default_model": "claude-test", "local_only": 0})
 		self.assertIsInstance(p, AnthropicProvider)
 		self.assertEqual(p.model, "claude-test")
 		self.assertTrue(ProviderRegistry.requires(p, "tool_calling", "vision").ok)
@@ -292,7 +293,7 @@ class TestEmbeddingEndpoint(IntegrationTestCase):
 	def test_a_different_embedding_provider_never_inherits_the_chat_endpoint(self):
 		p = from_settings(
 			{"provider": "Custom OpenAI-compatible", "api_endpoint": "http://llm:8080/v1", "default_model": "chat-m",
-			 "embedding_provider": "OpenAI", "embedding_api_key": "k"},
+			 "embedding_provider": "OpenAI", "embedding_api_key": "k", "local_only": 0},
 			for_embedding=True,
 		)
 		self.assertEqual(p.api_endpoint, "https://api.openai.com/v1")

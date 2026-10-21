@@ -28,13 +28,17 @@ def _embedder(settings: dict):
 	Opt-in: only when an Embedding Provider is chosen in Chat AI Settings. Having a chat
 	API key must not silently start sending every upload to an embeddings endpoint."""
 	try:
+		from zatgo_core.chat_ai.core.providers import local_guard
 		from zatgo_core.chat_ai.core.providers.registry import from_settings
 
 		if not settings.get("embedding_provider"):
 			return None
-		if not (settings.get("embedding_api_key") or settings.get("api_key")):
-			return None
 		provider = from_settings(settings, for_embedding=True)
+		# A key is needed for a hosted API; a server on your own network (Ollama, llama.cpp)
+		# has none, and demanding one silently turned semantic search off for it.
+		has_key = bool(settings.get("embedding_api_key") or settings.get("api_key"))
+		if not has_key and not local_guard.is_local_url(getattr(provider, "api_endpoint", "")):
+			return None
 		return provider if provider.capabilities.embedding else None
 	except Exception:
 		return None

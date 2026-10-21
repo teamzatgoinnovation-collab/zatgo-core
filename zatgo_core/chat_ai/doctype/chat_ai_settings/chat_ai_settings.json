@@ -5,6 +5,7 @@
  "engine": "InnoDB",
  "field_order": [
   "provider_section",
+  "local_only",
   "provider",
   "api_key",
   "api_endpoint",
@@ -120,11 +121,19 @@
    "label": "LLM Provider"
   },
   {
+   "fieldname": "local_only",
+   "fieldtype": "Check",
+   "label": "Local models only (no external API)",
+   "default": "1",
+   "description": "On: ZatGo AI refuses any model, embedding, web-search or voice endpoint outside your own network, so nothing is sent to OpenAI, Anthropic, Google, OpenRouter or Brave. Untick only to allow an external API on this site."
+  },
+  {
    "fieldname": "provider",
    "fieldtype": "Select",
    "label": "Provider",
    "options": "\nOpenAI\nAnthropic\nGoogle Gemini\nAzure OpenAI\nOllama\nOpenRouter\nCustom OpenAI-compatible",
-   "default": "OpenAI"
+   "default": "Ollama",
+   "description": "Ollama (or another OpenAI-compatible server on your own network) keeps every prompt and document on your servers."
   },
   {
    "fieldname": "api_key",
@@ -134,7 +143,8 @@
   {
    "fieldname": "api_endpoint",
    "fieldtype": "Data",
-   "label": "API Endpoint"
+   "label": "API Endpoint",
+   "description": "Ollama: http://ollama:11434/v1 (blank = http://127.0.0.1:11434/v1). With Local models only on, it must be on your own network."
   },
   {
    "fieldname": "column_break_prov",

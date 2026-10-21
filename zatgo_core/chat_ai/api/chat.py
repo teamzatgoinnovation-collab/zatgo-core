@@ -504,7 +504,7 @@ def delete_attachment(attachment=None):
 def list_models():
 	"""What the composer can offer: selectable models and which features are usable."""
 	_ensure_user()
-	from zatgo_core.chat_ai.core.providers.registry import get_capabilities
+	from zatgo_core.chat_ai.core.providers.registry import default_provider, get_capabilities
 	from zatgo_core.chat_ai.core.routing import SLOTS, allowed_models
 	from zatgo_core.chat_ai.core.web_search import is_configured as is_web_configured
 	from zatgo_core.chat_ai.erpnext.settings import get_settings_dict
@@ -512,7 +512,7 @@ def list_models():
 	s = get_settings_dict()
 	slot_of = {(s.get(k) or "").strip(): k.removeprefix("model_") for k in SLOTS if (s.get(k) or "").strip()}
 	default = (s.get("default_model") or "").strip()
-	caps = get_capabilities(s.get("provider") or "OpenAI").as_dict()
+	caps = get_capabilities(s.get("provider") or default_provider(s)).as_dict()
 	models = [
 		{"name": m, "slot": "balanced" if m == default else slot_of.get(m, "fallback"), "default": m == default}
 		for m in allowed_models(s)

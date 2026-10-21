@@ -1026,7 +1026,7 @@ class TestBraveSearch(unittest.TestCase):
 			ws.get_provider({"enable_web_search": 0, "web_search_api_key": "k"})
 		with self.assertRaisesRegex(ws.WebToolError, "Unknown web search provider 'Bing'"):
 			ws.get_provider({"enable_web_search": 1, "web_search_provider": "Bing"})
-		p = ws.get_provider({"enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"})
+		p = ws.get_provider({"local_only": 0, "enable_web_search": 1, "web_search_provider": "Brave", "web_search_api_key": "k"})
 		self.assertIsInstance(p, ws.BraveSearch)
 		self.assertEqual(p.api_key, "k")
 		# the self-hosted provider is the default: it needs a URL, never a key
