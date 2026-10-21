@@ -1,0 +1,72 @@
+/* ============================================
+   31. COMPACT, LEFT-ALIGNED LAYOUT -- minimum margin / padding, content starts at the left edge
+   Frappe v16 centers forms and workspaces in a 900px column (--page-max-width, form.scss:88-97:
+   `margin:auto !important` + max-width) and spaces fields with Bootstrap's 1rem / 15px gutters.
+   Here the column is the full width (so margin:auto has nothing to center) and the gaps are the
+   theme's own small spacing tokens (02-tokens-semantic.css). The global --padding-* / --margin-*
+   tokens are NOT changed: buttons, dialogs and cards use them.
+   (The /desk app picker's centering lives in 50-shell-rail-desk.css, which loads later.)
+   ============================================ */
+
+:root,
+[data-theme="light"] {
+	--page-max-width: 100%;
+}
+
+/* -- Forms ----------------------------------------------------------------------------- */
+.form-section,
+.form-dashboard-section {
+	padding: 0 var(--zg-layout-pad-x);
+}
+
+.form-section .section-head {
+	padding: var(--zg-layout-pad-y) 0;
+}
+
+.form-section .section-body {
+	padding-top: var(--zg-space-1);
+}
+
+/* Frappe: .form-section > .section-body:first-child { padding-top: 12px } plus margin-top: 1rem */
+.form-section > .section-body:first-child {
+	margin-top: 0;
+	padding-top: var(--zg-space-1);
+}
+
+.form-layout .form-column {
+	padding-left: var(--zg-space-2);
+	padding-right: var(--zg-space-2);
+}
+
+.form-layout .form-group {
+	margin-bottom: var(--zg-layout-gap);
+}
+
+.form-tab-content {
+	margin-top: var(--zg-space-1);
+}
+
+/* Controls use the width of their column (Frappe caps them at 50% on wide screens) */
+.layout-main .form-column.col-sm-12 > form > .input-max-width {
+	max-width: 100%;
+	padding-right: 0;
+}
+
+/* -- Page chrome ----------------------------------------------------------------------- */
+.page-head .container {
+	padding-left: var(--zg-layout-pad-x);
+	padding-right: var(--zg-layout-pad-x);
+}
+
+.page-form {
+	padding: var(--zg-space-1) var(--zg-layout-pad-x);
+}
+
+/* -- Workspaces ------------------------------------------------------------------------ */
+[data-page-route="Workspaces"] .layout-main {
+	margin: 0;
+}
+
+[data-page-route="Workspaces"] .layout-main .layout-main-section {
+	padding: var(--zg-layout-pad-y) var(--zg-layout-pad-x);
+}

@@ -2,9 +2,9 @@
 
 APP = {
     "key": "chat_ai",
-    "label": "Chat AI",
+    "label": "ZatGo AI",
     "group": "bundled",
-    "icon": "chat",
+    "icon": "bot",
     "description": "ZatGo AI assistant, scheduled AI tasks and the Desk chat sidebar.",
     "switch_field": "enable_chat_ai",
     "module_def": "Chat AI",

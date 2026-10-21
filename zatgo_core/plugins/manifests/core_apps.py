@@ -28,15 +28,16 @@ APPS = (
     },
     {
         "key": "vansalex",
-        "label": "VanSaleX",
+        "label": "ZatGo VanSaleX",
         "group": "core",
         "icon": "truck",
         "description": "Mobile van sales: warehouses, Cash/Credit rules, modules and features per user.",
+        "workspaces": ("VanSaleX",),
         "settings": (("VanSaleX Settings", "VanSaleX Settings"),),
     },
     {
         "key": "saas_theme",
-        "label": "SaaS Desk theme",
+        "label": "ZatGo Desk Theme",
         "group": "ui",
         "icon": "color",
         "description": "Modern Desk theme and login page.",
@@ -44,7 +45,7 @@ APPS = (
     },
     {
         "key": "language_switcher",
-        "label": "Language switcher",
+        "label": "ZatGo Language Switcher",
         "group": "ui",
         "icon": "globe",
         "description": "English / Arabic switcher.",
@@ -52,7 +53,7 @@ APPS = (
     },
     {
         "key": "vansalex_web",
-        "label": "VanSaleX web app",
+        "label": "ZatGo VanSaleX Web",
         "group": "ui",
         "icon": "link",
         "description": "Serves the VanSaleX web build at /vansalex.",

@@ -78,13 +78,14 @@ def after_install() -> None:
     except Exception:
         logger.exception("Theme / language switcher setup failed")
     try:
-        ensure_core_desk()
-    except Exception:
-        logger.exception("ZatGo Desk entry failed")
-    try:
         sync_industries()
     except Exception:
         logger.exception("Industry sync failed")
+    try:
+        # After the industry sync: the sidebar lists the enabled industries' workspaces.
+        ensure_core_desk()
+    except Exception:
+        logger.exception("ZatGo Desk entry failed")
     logger.info("zatgo_core after_install completed")
 
 
@@ -135,13 +136,14 @@ def after_migrate() -> None:
     except Exception:
         logger.exception("Theme / language switcher setup failed")
     try:
-        ensure_core_desk()
-    except Exception:
-        logger.exception("ZatGo Desk entry failed")
-    try:
         sync_industries()
     except Exception:
         logger.exception("Industry sync failed")
+    try:
+        # After the industry sync: the sidebar lists the enabled industries' workspaces.
+        ensure_core_desk()
+    except Exception:
+        logger.exception("ZatGo Desk entry failed")
 
 
 def before_uninstall() -> None:

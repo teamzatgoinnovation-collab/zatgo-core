@@ -29,6 +29,7 @@ After deploying, restart the web worker: the asset hash is cached per process (`
 | `00-tokens` | Frappe variable overrides (light), brand palette, font stack |
 | `01-tokens-dark-sidebar` | dark token block, `--st-*` sidebar variables |
 | `02-tokens-semantic` | `--zg-*` scales (space, type, radius, motion, z, focus), status roles, **colour roles** (accent pairs, white-alpha ramp, rail surfaces) with light/dark swap |
+| `31-layout-compact` | compact, left-aligned Desk pages: `--page-max-width: 100%` (Frappe's 900px centered column), tight section/field/gutter spacing from `--zg-layout-*` tokens, workspaces and the page head. Does not touch the global `--padding-*`/`--margin-*` tokens. (The `/desk` app picker's left alignment is in `50`, which loads later.) |
 | `10-controls` … `70-views-dialogs-kanban` | original component layers (buttons, inputs, form sidebar, shell/sidebar, rail + desk picker, widgets/connections/child-row sheet, list/report/dialogs/kanban) |
 | `80-feedback-states` | toasts, inline alerts, empty states, `.zg-skeleton` |
 | `82-buttons` | one button system: variants (primary, neutral/secondary, ghost, outline, danger, success, link, icon), sizes xs/sm/default/lg, hover/active/focus-visible/disabled, a loading state driven by Frappe's `body[data-ajax-state]`, 40px targets on coarse pointers. Supersedes the old `.btn*` rules (deleted from 10/40/50/70). |

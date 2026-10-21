@@ -550,8 +550,8 @@ body.st-dual-sidebar .onb-panel {
 .desktop-wrapper .desktop-container {
 	min-height: calc(100vh - 56px);
 	background: var(--bg-color);
-	padding: 40px 24px 24px;
-	justify-content: center;
+	padding: var(--zg-layout-pad-x);
+	justify-content: flex-start; /* left-aligned like every other Desk page */
 }
 
 /* Icons container */
@@ -559,7 +559,7 @@ body.st-dual-sidebar .onb-panel {
 	margin-top: 0;
 	padding: 0;
 	width: 100%;
-	max-width: 1000px;
+	max-width: none;
 }
 
 /* Grid — 6 columns on desktop */

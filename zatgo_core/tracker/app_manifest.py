@@ -2,7 +2,7 @@
 
 APP = {
     "key": "tracker",
-    "label": "Tracker",
+    "label": "ZatGo Tracker",
     "group": "bundled",
     "icon": "project",
     "description": "Task management, org tree, time tracking and activity sessions.",

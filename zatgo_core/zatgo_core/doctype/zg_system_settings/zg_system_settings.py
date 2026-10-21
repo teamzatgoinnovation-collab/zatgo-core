@@ -54,6 +54,15 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
         if before is None or industries_changed(before, self):
             frappe.clear_document_cache(self.doctype, self.name)
             sync_industries()
+        # The ZatGo sidebar lists the enabled apps: refresh it after both syncs, so it sees the
+        # final state (a failure here must never block saving the settings).
+        try:
+            from zatgo_core.services.core_sidebar import sync_core_sidebar
+
+            if sync_core_sidebar():
+                frappe.clear_cache()
+        except Exception:
+            frappe.log_error(title="zatgo_core: ZatGo sidebar sync")
 
     def _validate_defaults(self) -> None:
         if self.default_warehouse and self.default_company:

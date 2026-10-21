@@ -13,12 +13,22 @@ from zatgo_core.services import ui_apps
 
 SETTINGS = "ZG System Settings"
 FIELDS = ("enable_saas_theme", "enable_language_switcher", "enable_vansalex_web")
+# The bundled modules add their own Desk JS/CSS: this class checks the three above, so it switches
+# them off for the duration (a site may have them on) and restores them.
+BUNDLED = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space")
+ALL = FIELDS + BUNDLED
+ALWAYS_ON_JS = "ifrs_toggle.js"  # reads the IFRS switch itself, on every site
+
+
+def _site_js(js):
+    """Desk JS that depends on the switches (the always-on script left out)."""
+    return [u for u in js if ALWAYS_ON_JS not in u]
 
 
 class TestUiApps(IntegrationTestCase):
     def setUp(self) -> None:
         frappe.set_user("Administrator")
-        self._before = {f: frappe.db.get_single_value(SETTINGS, f) for f in FIELDS}
+        self._before = {f: frappe.db.get_single_value(SETTINGS, f) for f in ALL}
 
     def tearDown(self) -> None:
         frappe.set_user("Administrator")
@@ -27,7 +37,7 @@ class TestUiApps(IntegrationTestCase):
         frappe.clear_document_cache(SETTINGS, SETTINGS)
 
     def _set(self, **values: int) -> None:
-        for f in FIELDS:
+        for f in ALL:
             frappe.db.set_single_value(SETTINGS, f, values.get(f, 0))
         frappe.clear_document_cache(SETTINGS, SETTINGS)
 
@@ -35,13 +45,16 @@ class TestUiApps(IntegrationTestCase):
 
     def test_desk_includes_follow_the_switches(self) -> None:
         self._set()
-        self.assertEqual(ui_apps.desk_includes(), ([], []))
+        css, js = ui_apps.desk_includes()
+        self.assertEqual((css, _site_js(js)), ([], []))
         self._set(enable_saas_theme=1)
         css, js = ui_apps.desk_includes()
+        js = _site_js(js)
         self.assertTrue(css[0].startswith("/assets/zatgo_core/saas_theme/css/saas_theme.css?v="))
         self.assertTrue(js[0].startswith("/assets/zatgo_core/saas_theme/js/saas_theme.js?v="))
         self._set(enable_language_switcher=1)
         css, js = ui_apps.desk_includes()
+        js = _site_js(js)
         self.assertEqual(len(css), 1)
         self.assertIn("language_switcher", js[0])
 
@@ -70,7 +83,7 @@ class TestUiApps(IntegrationTestCase):
         self.assertEqual(shared, ["/assets/x/site.css"], "the cached list must stay untouched")
         self.assertEqual(conf.app_include_css[0], "/assets/x/site.css")
         self.assertIn("saas_theme.css", conf.app_include_css[1])
-        self.assertIn("saas_theme.js", conf.app_include_js[0])
+        self.assertIn("saas_theme.js", _site_js(conf.app_include_js)[0])
 
     # -- Login page ------------------------------------------------------------
 

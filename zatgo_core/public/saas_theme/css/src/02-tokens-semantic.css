@@ -14,6 +14,11 @@
 	--zg-space-6: 24px;
 	--zg-space-8: 32px;
 
+	/* Page layout density (31-layout-compact.css): tight, left-aligned Desk pages */
+	--zg-layout-pad-x: var(--zg-space-3);  /* page / section gutter */
+	--zg-layout-pad-y: var(--zg-space-2);  /* section head, filter bar */
+	--zg-layout-gap: var(--zg-space-2);    /* between fields */
+
 	/* Type scale */
 	--zg-text-xs: 11px;
 	--zg-text-sm: 12px;

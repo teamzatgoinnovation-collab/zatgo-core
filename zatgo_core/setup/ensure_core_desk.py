@@ -1,29 +1,21 @@
 """The "ZatGo" entry in Desk (App screen + sidebar) on every site: one place
-for the platform's settings (system settings and industries, VanSaleX, company,
-security, ...). Its Workspace is a synced file (workspace/zatgo/zatgo.json);
-the Sidebar and Desktop Icon are made here because install purges every
-Desktop Icon of this app (install.purge_desk_ui_leftovers) before this runs."""
+for the platform's apps and settings. Its Workspace is a synced file
+(workspace/zatgo/zatgo.json); the Sidebar and Desktop Icon are made here because
+install purges every Desktop Icon of this app (install.purge_desk_ui_leftovers)
+before this runs. The sidebar's items -- the enabled apps, then the settings --
+come from services/core_sidebar.py and are re-synced on every migrate and when an
+app is switched on or off."""
 
 from __future__ import annotations
 
-import json
 import os
 
 import frappe
 
+from zatgo_core.services import core_sidebar
+
 NAME = "ZatGo"
 ICON = "setting"
-
-
-def _items() -> list[dict]:
-    path = os.path.join(frappe.get_app_path("zatgo_core"), "zatgo_core", "workspace", "zatgo", "zatgo.json")
-    with open(path, encoding="utf-8") as f:
-        shortcuts = json.load(f)["shortcuts"]
-    return [
-        {"label": s["label"], "link_type": "DocType", "link_to": s["link_to"], "type": "Link", "icon": "list"}
-        for s in shortcuts
-        if frappe.db.exists("DocType", s["link_to"])
-    ]
 
 
 def _ensure_workspace() -> None:
@@ -52,7 +44,7 @@ def ensure_core_desk() -> None:
                 "module": "ZatGo Core",
                 "app": "zatgo_core",
                 "standard": 0,
-                "items": _items(),
+                "items": core_sidebar.desired_items(),
             }
         )
         sb.flags.ignore_links = True
@@ -73,3 +65,5 @@ def ensure_core_desk() -> None:
         )
         icon.flags.ignore_links = True
         icon.insert(ignore_permissions=True)
+    # An existing sidebar is brought up to date too (it used to be frozen at first creation).
+    core_sidebar.sync_core_sidebar()
