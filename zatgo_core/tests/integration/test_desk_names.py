@@ -136,6 +136,83 @@ class TestRenameHelpers(IntegrationTestCase):
         self.assertTrue(frappe.db.exists("Workspace", self.old1))  # never delete the only one
 
 
+class TestLegacyRailEntry(IntegrationTestCase):
+    """A site made before the rename has a rail icon + sidebar named after the old workspace (and migrate's
+    orphan purge may already have deleted that workspace): they become the new name, links following."""
+
+    def setUp(self) -> None:
+        frappe.set_user("Administrator")
+        tag = random_string(6)
+        self.new, self.old = f"ZG New {tag}", f"ZG Old {tag}"
+        self.addCleanup(_drop, "Desktop Icon", self.old, self.new)
+        self.addCleanup(_drop, "Workspace Sidebar", self.old, self.new)
+        self.addCleanup(_drop, "Workspace", self.old, self.new)
+
+    def _sidebar(self, name: str, home: str) -> None:
+        doc = frappe.get_doc(
+            {
+                "doctype": "Workspace Sidebar", "title": name, "module": "ZatGo Core", "header_icon": "sell",
+                "items": [
+                    {"type": "Link", "label": "Home", "link_type": "Workspace", "link_to": home},
+                    {"type": "Link", "label": "To Dos", "link_type": "DocType", "link_to": "ToDo"},
+                ],
+            }
+        )
+        doc.flags.ignore_links = True
+        doc.insert(ignore_permissions=True)
+
+    def _icon(self, name: str, sidebar: str) -> None:
+        doc = frappe.get_doc(
+            {
+                "doctype": "Desktop Icon", "label": name, "icon_type": "Link", "link_type": "Workspace Sidebar",
+                "link_to": sidebar, "standard": 0, "hidden": 0,
+            }
+        )
+        doc.flags.ignore_links = True
+        doc.insert(ignore_permissions=True)
+
+    def _retire(self) -> None:
+        with mock.patch.dict(core_desk.LEGACY_WORKSPACES, {self.new: (self.old,)}, clear=False):
+            core_desk._retire_legacy_workspaces()
+
+    def test_the_legacy_sidebar_and_icon_are_renamed_and_repointed(self) -> None:
+        _make_workspace(self.new)  # the old Workspace is already gone, as after migrate's orphan purge
+        self._sidebar(self.old, home=self.old)
+        self._icon(self.old, self.old)
+        self._retire()
+        self.assertFalse(frappe.db.exists("Workspace Sidebar", self.old) or frappe.db.exists("Desktop Icon", self.old))
+        self.assertEqual(frappe.db.get_value("Workspace Sidebar", self.new, "title"), self.new)
+        home = frappe.db.get_value("Workspace Sidebar Item", {"parent": self.new, "label": "Home"}, "link_to")
+        self.assertEqual(home, self.new, "the sidebar's Home link must follow the workspace rename")
+        icon = frappe.db.get_value("Desktop Icon", self.new, ["label", "link_type", "link_to"], as_dict=True)
+        self.assertEqual((icon.label, icon.link_type, icon.link_to), (self.new, "Workspace Sidebar", self.new))
+
+    def test_an_existing_new_entry_wins_and_the_legacy_one_is_deleted(self) -> None:
+        _make_workspace(self.new)
+        self._sidebar(self.new, home=self.new)
+        self._icon(self.new, self.new)
+        self._sidebar(self.old, home=self.old)
+        self._icon(self.old, self.old)
+        self._retire()
+        self.assertFalse(frappe.db.exists("Workspace Sidebar", self.old) or frappe.db.exists("Desktop Icon", self.old))
+        self.assertTrue(frappe.db.exists("Workspace Sidebar", self.new) and frappe.db.exists("Desktop Icon", self.new))
+
+    def test_it_is_idempotent(self) -> None:
+        _make_workspace(self.new)
+        self._sidebar(self.old, home=self.old)
+        self._icon(self.old, self.old)
+        self._retire()
+        self._retire()
+        self.assertTrue(frappe.db.exists("Workspace Sidebar", self.new) and frappe.db.exists("Desktop Icon", self.new))
+
+    def test_nothing_is_renamed_while_the_new_workspace_is_missing(self) -> None:
+        self._sidebar(self.old, home=self.old)
+        self._icon(self.old, self.old)
+        self._retire()
+        self.assertTrue(frappe.db.exists("Workspace Sidebar", self.old) and frappe.db.exists("Desktop Icon", self.old))
+        self.assertFalse(frappe.db.exists("Workspace Sidebar", self.new))
+
+
 class TestRealRecordsAfterSync(IntegrationTestCase):
     """What a migrated site looks like (the test site must have been migrated with this code)."""
 

@@ -31,24 +31,51 @@ def _ensure_workspace() -> None:
 
 
 # The VanSaleX workspace is "ZatGo VanSaleX" now (its synced file was renamed). Migrate's orphan purge
-# normally deletes the old record; this makes sure of it where the purge didn't run.
+# normally deletes the old Workspace record; this makes sure of it where the purge didn't run, and gives
+# the rail entry that goes with it (Workspace Sidebar + Desktop Icon, made when the workspace was first
+# created, named after it) the new name too.
 LEGACY_WORKSPACES = {"ZatGo VanSaleX": ("VanSaleX",)}
 
 
 def _retire_legacy_workspaces() -> None:
     for new, legacy in LEGACY_WORKSPACES.items():
         if not frappe.db.exists("Workspace", new):
-            continue
+            continue  # never retire the only one
         for old in legacy:
+            # Rows pointing at the old workspace follow the rename whether or not the record is still there
+            # (migrate's orphan purge may have deleted it first).
+            frappe.db.sql(
+                "update `tabWorkspace Sidebar Item` set link_to = %s where link_type = 'Workspace' and link_to = %s",
+                (new, old),
+            )
             if frappe.db.exists("Workspace", old):
-                frappe.db.sql(
-                    "update `tabWorkspace Sidebar Item` set link_to = %s where link_type = 'Workspace' and link_to = %s",
-                    (new, old),
-                )
                 try:
                     frappe.delete_doc("Workspace", old, force=1, ignore_permissions=True)
                 except Exception:
                     frappe.log_error(title=f"zatgo_core: retire legacy workspace {old}")
+        _adopt_legacy_rail_entry(new, legacy)
+
+
+def _adopt_legacy_rail_entry(new: str, legacy: tuple[str, ...]) -> None:
+    """The rail icon + sidebar named after a retired workspace become [new]: renamed where [new] does not
+    exist yet (their items and links follow), deleted where it does. Frappe v16 shows an icon only when its
+    label equals its sidebar's name, so both get the new name."""
+    for old in legacy:
+        try:
+            if frappe.db.exists("Workspace Sidebar", old):
+                if frappe.db.exists("Workspace Sidebar", new):
+                    frappe.delete_doc("Workspace Sidebar", old, force=1, ignore_permissions=True)
+                else:
+                    frappe.rename_doc("Workspace Sidebar", old, new, force=True, show_alert=False)
+                    frappe.db.set_value("Workspace Sidebar", new, "title", new, update_modified=False)
+            if frappe.db.exists("Desktop Icon", old):
+                if frappe.db.exists("Desktop Icon", new):
+                    frappe.delete_doc("Desktop Icon", old, force=1, ignore_permissions=True)
+                elif frappe.db.exists("Workspace Sidebar", new):  # else: nothing to point a renamed icon at
+                    frappe.rename_doc("Desktop Icon", old, new, force=True, show_alert=False)
+                    frappe.db.set_value("Desktop Icon", new, {"label": new, "link_to": new}, update_modified=False)
+        except Exception:
+            frappe.log_error(title=f"zatgo_core: adopt legacy rail entry {old} -> {new}")
 
 
 def ensure_core_desk() -> None:
