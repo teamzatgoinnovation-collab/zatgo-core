@@ -188,7 +188,7 @@
    ============================================ */
 
 :root {
-	--font-sans: "ZG Digits", "Poppins", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
+	--font-sans: "ZG Digits", "Poppins", "Cairo", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
 		Roboto, "Helvetica Neue", Arial, sans-serif;
 	--font-stack: var(--font-sans);  /* Frappe's own font variable: inputs, buttons, tables and editors follow too */
 }
