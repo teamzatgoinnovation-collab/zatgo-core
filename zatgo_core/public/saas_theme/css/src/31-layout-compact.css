@@ -33,6 +33,7 @@
 	padding-top: var(--zg-space-1);
 }
 
+/* (the main form's columns are flattened below; this still sets the gutters of child-table row forms and dialogs) */
 .form-layout .form-column {
 	padding-left: var(--zg-space-2);
 	padding-right: var(--zg-space-2);
@@ -44,6 +45,53 @@
 
 .form-tab-content {
 	margin-top: var(--zg-space-1);
+}
+
+/* Fields keep a normal width (at least --zg-field-min, about 280-340px with the leftover shared out;
+   with a 1fr maximum the column COUNT is taken from the minimum, which a fixed maximum would not do) and fill the row: Frappe's 1/2/3 columns
+   are flattened (display: contents) into one grid, so a wide page holds 3-5 fields per row instead of
+   two stretched columns. Fields flow row by row in DocType order. Main document form only: the
+   child-table row form and dialogs keep Frappe's own columns.
+   S = .std-form-layout .form-section:not(.form-in-grid *) > .section-body */
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--zg-field-min)), 1fr));
+	column-gap: var(--zg-space-3);
+	align-items: start;
+}
+
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column,
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > form {
+	display: contents;
+}
+
+/* Wide content takes the whole row */
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > .form-column-description,
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > .column-label,
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > form > .frappe-control:where(
+	[data-fieldtype="Table"],
+	[data-fieldtype="Table MultiSelect"],
+	[data-fieldtype="Text Editor"],
+	[data-fieldtype="Markdown Editor"],
+	[data-fieldtype="HTML Editor"],
+	[data-fieldtype="Code"],
+	[data-fieldtype="JSON"],
+	[data-fieldtype="HTML"],
+	[data-fieldtype="Heading"],
+	[data-fieldtype="Geolocation"],
+	[data-fieldtype="Signature"]
+) {
+	grid-column: 1 / -1;
+}
+
+/* Multi-line text and checkboxes with an explanation get two cells */
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > form > .frappe-control:where(
+	[data-fieldtype="Text"],
+	[data-fieldtype="Small Text"],
+	[data-fieldtype="Long Text"]
+),
+.std-form-layout .form-section:not(.form-in-grid *) > .section-body > .form-column > form > .frappe-control[data-fieldtype="Check"]:has(.help-box) {
+	grid-column: span 2;
 }
 
 /* Controls use the width of their column (Frappe caps them at 50% on wide screens) */
