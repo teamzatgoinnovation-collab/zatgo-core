@@ -14,7 +14,7 @@ MANIFEST = {
     "roles": "System Manager,ZG Application Admin,ZG Company Admin,VanSale Admin",
     "depends_on": "",
     "description": "Van sales mobile app — cash/credit, warehouses, per-driver profiles",
-    "settings_route": "/app/vansalex",
+    "settings_route": "/desk/zatgo-vansalex",
     "sections": [
         {
             "section_key": "general",

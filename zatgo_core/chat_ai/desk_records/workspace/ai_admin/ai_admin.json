@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">AI Admin</span>\",\"col\":12}},{\"id\":\"spacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"card_monitor\",\"type\":\"card\",\"data\":{\"card_name\":\"Monitoring\",\"col\":4}},{\"id\":\"card_tools\",\"type\":\"card\",\"data\":{\"card_name\":\"Tools\",\"col\":4}}]",
+ "content": "[{\"id\":\"header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">ZatGo AI</span>\",\"col\":12}},{\"id\":\"spacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}},{\"id\":\"card_monitor\",\"type\":\"card\",\"data\":{\"card_name\":\"Monitoring\",\"col\":4}},{\"id\":\"card_tools\",\"type\":\"card\",\"data\":{\"card_name\":\"Tools\",\"col\":4}}]",
  "creation": "2026-07-20 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -10,7 +10,7 @@
  "icon": "solid-color",
  "idx": 0,
  "is_hidden": 0,
- "label": "AI Admin",
+ "label": "ZatGo AI",
  "links": [
   {
    "hidden": 0,
@@ -130,7 +130,7 @@
  "modified": "2026-07-20 04:30:00.000000",
  "modified_by": "Administrator",
  "module": "Chat AI",
- "name": "AI Admin",
+ "name": "ZatGo AI",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -154,5 +154,5 @@
    "type": "DocType"
   }
  ],
- "title": "AI Admin"
+ "title": "ZatGo AI"
 }

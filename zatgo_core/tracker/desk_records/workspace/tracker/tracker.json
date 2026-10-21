@@ -1,6 +1,6 @@
 {
  "app": "zatgo_core",
- "content": "[{\"id\":\"trk_hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Task Management</b></span>\",\"col\":12}},{\"id\":\"trk_card_work\",\"type\":\"card\",\"data\":{\"card_name\":\"Work\",\"col\":4}},{\"id\":\"trk_card_masters\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"trk_card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "content": "[{\"id\":\"trk_hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>ZatGo Tracker</b></span>\",\"col\":12}},{\"id\":\"trk_card_work\",\"type\":\"card\",\"data\":{\"card_name\":\"Work\",\"col\":4}},{\"id\":\"trk_card_masters\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"trk_card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
  "creation": "2026-07-19 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -10,7 +10,7 @@
  "icon": "project",
  "idx": 0,
  "is_hidden": 0,
- "label": "Task Management",
+ "label": "ZatGo Tracker",
  "links": [
   {
    "hidden": 0,
@@ -130,7 +130,7 @@
  "modified": "2026-07-19 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Tracker",
- "name": "Tracker",
+ "name": "ZatGo Tracker",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -168,5 +168,5 @@
    "type": "DocType"
   }
  ],
- "title": "Task Management"
+ "title": "ZatGo Tracker"
 }

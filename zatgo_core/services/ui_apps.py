@@ -34,6 +34,7 @@ THEME_JS = "saas_theme/js/saas_theme.js"
 SWITCHER_CSS = "language_switcher/css/language_switcher.css"
 SWITCHER_JS = "language_switcher/js/language_switcher.js"
 IFRS_TOGGLE_JS = "js/ifrs_toggle.js"  # always on: reads the IFRS switch itself
+ROUTE_REDIRECTS_JS = "js/zg_route_redirects.js"  # always on: old Desk routes of the apps renamed "ZatGo ..."
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 
@@ -81,6 +82,7 @@ def desk_includes() -> tuple[list[str], list[str]]:
     css: list[str] = []
     js: list[str] = []
     js.append(asset_url(IFRS_TOGGLE_JS))
+    js.append(asset_url(ROUTE_REDIRECTS_JS))
     if on["saas_theme"]:
         css.append(asset_url(THEME_CSS))
         js.append(asset_url(THEME_JS))

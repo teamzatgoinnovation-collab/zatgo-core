@@ -17,12 +17,12 @@ FIELDS = ("enable_saas_theme", "enable_language_switcher", "enable_vansalex_web"
 # them off for the duration (a site may have them on) and restores them.
 BUNDLED = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space")
 ALL = FIELDS + BUNDLED
-ALWAYS_ON_JS = "ifrs_toggle.js"  # reads the IFRS switch itself, on every site
+ALWAYS_ON_JS = ("ifrs_toggle.js", "zg_route_redirects.js")  # on every site, whatever the switches
 
 
 def _site_js(js):
-    """Desk JS that depends on the switches (the always-on script left out)."""
-    return [u for u in js if ALWAYS_ON_JS not in u]
+    """Desk JS that depends on the switches (the always-on scripts left out)."""
+    return [u for u in js if not any(name in u for name in ALWAYS_ON_JS)]
 
 
 class TestUiApps(IntegrationTestCase):

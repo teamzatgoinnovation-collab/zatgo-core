@@ -1,7 +1,7 @@
 {
  "app": "zatgo_core",
  "charts": [],
- "content": "[{\"id\": \"GDQCBbe9jy\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>VanSaleX</b></span>\", \"col\": 12}}, {\"id\": \"Bkwos91HKx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"muMUD1uODV\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Van Sale Profiles\", \"col\": 3}}, {\"id\": \"0mPqDAlxWh\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"7BRVwD8hUa\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Entry\", \"col\": 3}}, {\"id\": \"NXJEbxshuB\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ZI1Nif0xGM\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}, {\"id\": \"qXexUspGWX\", \"type\": \"card\", \"data\": {\"card_name\": \"Sales\", \"col\": 4}}, {\"id\": \"aj5UAUNfNc\", \"type\": \"card\", \"data\": {\"card_name\": \"Route\", \"col\": 4}}, {\"id\": \"YVJilelTlm\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}]",
+ "content": "[{\"id\": \"GDQCBbe9jy\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo VanSaleX</b></span>\", \"col\": 12}}, {\"id\": \"Bkwos91HKx\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"muMUD1uODV\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Van Sale Profiles\", \"col\": 3}}, {\"id\": \"0mPqDAlxWh\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"7BRVwD8hUa\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Entry\", \"col\": 3}}, {\"id\": \"NXJEbxshuB\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"ZI1Nif0xGM\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}, {\"id\": \"qXexUspGWX\", \"type\": \"card\", \"data\": {\"card_name\": \"Sales\", \"col\": 4}}, {\"id\": \"aj5UAUNfNc\", \"type\": \"card\", \"data\": {\"card_name\": \"Route\", \"col\": 4}}, {\"id\": \"YVJilelTlm\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 4}}]",
  "creation": "2026-09-30 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -11,7 +11,7 @@
  "icon": "sell",
  "idx": 0,
  "is_hidden": 0,
- "label": "VanSaleX",
+ "label": "ZatGo VanSaleX",
  "links": [
   {
    "hidden": 0,
@@ -214,7 +214,7 @@
  "modified": "2026-10-02 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
- "name": "VanSaleX",
+ "name": "ZatGo VanSaleX",
  "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
@@ -260,6 +260,6 @@
    "type": "DocType"
   }
  ],
- "title": "VanSaleX",
+ "title": "ZatGo VanSaleX",
  "type": "Workspace"
 }

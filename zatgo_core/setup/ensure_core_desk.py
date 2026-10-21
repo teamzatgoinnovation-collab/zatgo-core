@@ -30,7 +30,29 @@ def _ensure_workspace() -> None:
     import_file_by_path(path, force=True)
 
 
+# The VanSaleX workspace is "ZatGo VanSaleX" now (its synced file was renamed). Migrate's orphan purge
+# normally deletes the old record; this makes sure of it where the purge didn't run.
+LEGACY_WORKSPACES = {"ZatGo VanSaleX": ("VanSaleX",)}
+
+
+def _retire_legacy_workspaces() -> None:
+    for new, legacy in LEGACY_WORKSPACES.items():
+        if not frappe.db.exists("Workspace", new):
+            continue
+        for old in legacy:
+            if frappe.db.exists("Workspace", old):
+                frappe.db.sql(
+                    "update `tabWorkspace Sidebar Item` set link_to = %s where link_type = 'Workspace' and link_to = %s",
+                    (new, old),
+                )
+                try:
+                    frappe.delete_doc("Workspace", old, force=1, ignore_permissions=True)
+                except Exception:
+                    frappe.log_error(title=f"zatgo_core: retire legacy workspace {old}")
+
+
 def ensure_core_desk() -> None:
+    _retire_legacy_workspaces()
     _ensure_workspace()
     if not frappe.db.exists("Workspace", NAME):
         return  # nothing to point at

@@ -9,6 +9,34 @@ import frappe
 
 DESK_NAME = "ZatGo AI"  # what users see on Desk; Frappe v16 needs icon label == sidebar name
 SIDEBAR_NAMES = (DESK_NAME, "Chat AI", "AI Admin")  # newest first: the older names are renamed on migrate
+LEGACY_WORKSPACES = ("AI Admin", "Chat AI")  # the Workspace is "ZatGo AI" now; these are retired on the next sync
+
+
+def workspace_name() -> str | None:
+	"""The AI Workspace of this site: "ZatGo AI", or a legacy-named one not yet renamed."""
+	return next((n for n in (DESK_NAME, *LEGACY_WORKSPACES) if frappe.db.exists("Workspace", n)), None)
+
+
+def _adopt_workspace(new: str = DESK_NAME, legacy_names: tuple[str, ...] = LEGACY_WORKSPACES) -> None:
+	"""Make [new] ("ZatGo AI") THE workspace: rename a legacy "AI Admin" one (links follow), or, when the
+	shipped JSON already imported [new], point the sidebar rows at it and delete the legacy ones."""
+	legacy = [n for n in legacy_names if frappe.db.exists("Workspace", n)]
+	if not legacy:
+		return
+	if not frappe.db.exists("Workspace", new):
+		try:
+			frappe.rename_doc("Workspace", legacy[0], new, force=True, show_alert=False)
+			legacy = legacy[1:]
+		except Exception:
+			frappe.log_error(title=f"chat_ai: rename workspace to {new}")
+			return
+	for name in legacy_names:
+		frappe.db.sql(
+			"update `tabWorkspace Sidebar Item` set link_to = %s where link_type = 'Workspace' and link_to = %s",
+			(new, name),
+		)
+	for name in legacy:
+		frappe.delete_doc("Workspace", name, force=1, ignore_permissions=True)
 
 
 def has_app_permission():
@@ -214,6 +242,7 @@ def _ensure_desk_entry():
 	(common on frappe_docker until assets are linked). Prefer a Link icon with a lucide name.
 	"""
 	try:
+		_adopt_workspace()
 		_ensure_sidebar()
 		# Workspace Sidebar created from workspace sync — pin app name
 		if frappe.db.exists("Workspace Sidebar", "AI Admin"):
@@ -315,12 +344,13 @@ def _ensure_sidebar():
 	Frappe's create_workspace_sidebar_for_workspaces() does at app install --
 	which no longer runs for this module (it is switched on later, per site),
 	and which would also make sidebars for every other public workspace."""
-	if not frappe.db.exists("Workspace", "AI Admin"):
+	ws_name = workspace_name()
+	if not ws_name:
 		return
 	if any(frappe.db.exists("Workspace Sidebar", n) for n in SIDEBAR_NAMES):
 		return
-	workspace = frappe.get_doc("Workspace", "AI Admin")
-	items = [{"label": "Home", "link_to": "AI Admin", "link_type": "Workspace", "type": "Link", "idx": 0}]
+	workspace = frappe.get_doc("Workspace", ws_name)
+	items = [{"label": "Home", "link_to": ws_name, "link_type": "Workspace", "type": "Link", "idx": 0}]
 	for idx, s in enumerate(workspace.shortcuts or [], start=1):
 		items.append({"label": s.label, "link_to": s.link_to, "link_type": s.type, "type": "Link", "idx": idx})
 	sidebar = frappe.get_doc(

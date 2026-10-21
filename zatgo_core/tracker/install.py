@@ -89,7 +89,28 @@ def _sync_sidebar_items(sidebar) -> bool:
 	return True
 
 
-SIDEBAR_NAMES = ("Tracker", "Task Management")
+DESK_NAME = "ZatGo Tracker"  # Workspace, Workspace Sidebar and Desktop Icon all carry this name
+LEGACY_DESK_NAMES = ("Tracker", "Task Management")  # older names: renamed / retired on the next sync
+SIDEBAR_NAMES = (DESK_NAME, *LEGACY_DESK_NAMES)
+
+
+def _adopt_desk_name(doctype: str, new: str = DESK_NAME, legacy: tuple[str, ...] = LEGACY_DESK_NAMES) -> bool:
+	"""Make [new] THE record of this app: where only a legacy-named one exists it is renamed (links
+	follow), where [new] already exists (the shipped JSON imports it) the legacy ones are deleted.
+	True when [new] exists afterwards; on a failed rename the legacy name keeps working and the
+	next sync tries again."""
+	old = [n for n in legacy if frappe.db.exists(doctype, n)]
+	if not frappe.db.exists(doctype, new) and old:
+		try:
+			frappe.rename_doc(doctype, old[0], new, force=True, show_alert=False)
+			old = old[1:]
+		except Exception:
+			frappe.log_error(title=f"tracker: rename {doctype} {old[0]} -> {new}")
+			return False
+	for name in old:
+		frappe.delete_doc(doctype, name, force=1, ignore_permissions=True)
+	return bool(frappe.db.exists(doctype, new))
+
 
 
 def bootstrap() -> None:
@@ -179,12 +200,16 @@ def _ensure_desk_entry() -> None:
 			except Exception:
 				pass
 
-	# Sync may name the sidebar "Tracker" or "Task Management"
+	# The sidebar is "ZatGo Tracker" (the shipped JSON); a site that still has it as "Tracker" or
+	# "Task Management" gets it renamed.
 	sidebar_name = None
-	for candidate in ("Tracker", "Task Management"):
-		if frappe.db.exists("Workspace Sidebar", candidate):
-			sidebar_name = candidate
-			break
+	if _adopt_desk_name("Workspace Sidebar"):
+		sidebar_name = DESK_NAME
+	else:
+		for candidate in LEGACY_DESK_NAMES:
+			if frappe.db.exists("Workspace Sidebar", candidate):
+				sidebar_name = candidate
+				break
 
 	if frappe.db.exists("Module Def", "Tracker"):
 		if sidebar_name:
@@ -204,7 +229,7 @@ def _ensure_desk_entry() -> None:
 			if changed:
 				_save_ignore_links(sb)
 		else:
-			sidebar_name = "Tracker"
+			sidebar_name = DESK_NAME
 			sb = frappe.get_doc(
 				{
 					"doctype": "Workspace Sidebar",
@@ -223,7 +248,7 @@ def _ensure_desk_entry() -> None:
 	icons = _tracker_icons()
 	# Frappe v16 Desk permits Link icons only when Desktop Icon.label.lower()
 	# matches Workspace Sidebar name.lower() in bootinfo (see desktop_icon.get_desktop_icons).
-	desk_label = sidebar_name or "Tracker"
+	desk_label = sidebar_name or DESK_NAME
 	if not icons:
 		if sidebar_name and frappe.db.exists("Workspace Sidebar", sidebar_name):
 			icon = frappe.get_doc(
@@ -285,11 +310,12 @@ def _ensure_desk_entry() -> None:
 			if changed:
 				_save_ignore_links(doc)
 
-	# Workspace title/label for Desk (avoid full save — Workspace has mandatory fields)
-	if frappe.db.exists("Workspace", "Tracker"):
-		frappe.db.set_value("Workspace", "Tracker", "title", "Tracker", update_modified=False)
+	# The Workspace is "ZatGo Tracker" too (retiring a legacy "Tracker" one); title/label for Desk
+	# (avoid full save -- Workspace has mandatory fields)
+	if _adopt_desk_name("Workspace"):
+		frappe.db.set_value("Workspace", DESK_NAME, "title", DESK_NAME, update_modified=False)
 		if frappe.get_meta("Workspace").has_field("label"):
-			frappe.db.set_value("Workspace", "Tracker", "label", "Tracker", update_modified=False)
+			frappe.db.set_value("Workspace", DESK_NAME, "label", DESK_NAME, update_modified=False)
 
 	if sidebar_name and frappe.db.exists("Workspace Sidebar", sidebar_name):
 		sb = frappe.get_doc("Workspace Sidebar", sidebar_name)

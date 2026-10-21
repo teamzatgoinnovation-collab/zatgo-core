@@ -32,7 +32,7 @@ APPS = (
         "group": "core",
         "icon": "truck",
         "description": "Mobile van sales: warehouses, Cash/Credit rules, modules and features per user.",
-        "workspaces": ("VanSaleX",),
+        "workspaces": ("ZatGo VanSaleX", "VanSaleX"),
         "settings": (("VanSaleX Settings", "VanSaleX Settings"),),
     },
     {

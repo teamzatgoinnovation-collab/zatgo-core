@@ -8,6 +8,6 @@ APP = {
     "description": "ZatGo AI assistant, scheduled AI tasks and the Desk chat sidebar.",
     "switch_field": "enable_chat_ai",
     "module_def": "Chat AI",
-    "workspaces": ("AI Admin", "Chat AI", "ZatGo AI"),
+    "workspaces": ("ZatGo AI", "AI Admin", "Chat AI"),
     "settings": (("Chat AI Settings", "Chat AI Settings"),),
 }

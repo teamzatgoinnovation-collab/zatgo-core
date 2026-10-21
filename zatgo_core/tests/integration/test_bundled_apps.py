@@ -154,10 +154,10 @@ class TestBundledApps(IntegrationTestCase):
 
     def test_switched_off_module_has_no_desk_entries(self) -> None:
         bundled_apps.sync_bundled_apps()
-        for name in ("AI Admin", "Chat AI", "Tracker"):
+        for name in ("AI Admin", "Chat AI", "ZatGo AI", "Tracker", "ZatGo Tracker"):
             self.assertFalse(frappe.db.exists("Workspace", name), name)
         self.assertFalse(
-            frappe.get_all("Desktop Icon", filters={"link_to": ["in", ["AI Admin", "Chat AI", "Tracker"]]})
+            frappe.get_all("Desktop Icon", filters={"link_to": ["in", ["AI Admin", "Chat AI", "ZatGo AI", "Tracker", "ZatGo Tracker"]]})
         )
 
     def test_module_defs_belong_to_zatgo_core(self) -> None:

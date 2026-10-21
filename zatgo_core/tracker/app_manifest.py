@@ -8,6 +8,6 @@ APP = {
     "description": "Task management, org tree, time tracking and activity sessions.",
     "switch_field": "enable_tracker",
     "module_def": "Tracker",
-    "workspaces": ("Tracker", "Task Management"),
+    "workspaces": ("ZatGo Tracker", "Tracker", "Task Management"),
     "settings": (("Tracker Settings", "Tracker Settings"),),
 }
