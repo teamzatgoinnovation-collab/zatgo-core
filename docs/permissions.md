@@ -48,6 +48,20 @@ so nobody can read another user's push tokens or register a token under someone 
 The hub's own server code (`devices.register_token`, …) runs with `ignore_permissions` and checks ownership
 itself.
 
+## Row-level scope of API reads
+
+`services/row_scope.py`: list/report endpoints that cannot use `frappe.get_list` (ledger and trial-balance SQL) add
+the user's Company User Permission to their SQL; the rest read with `get_list`, so User Permissions and
+`permission_query_conditions` apply. A portal (Website User) session sees only the Sales Orders / Purchase Orders
+of its own Customer / Supplier (ERPNext Portal User links). Administrator and users without a Company User
+Permission see what they always saw.
+
+## Staff-only DocTypes
+
+`ZG Delivery Boy`, `ZG Delivery Stop`, `ZG Vehicle`, `ZG Service Ticket`, `ZG Order`, `ZG Table`, `ZG KDS Ticket`
+grant read/write/create to `Desk User` (every System User) -- not to `All`, which includes portal users. Which
+staff role may do what per product (cashier vs. kitchen vs. dispatcher) is a product decision still to be made.
+
 ## DocType permission query
 
 - `ZG Company Settings` → `company_permission_query` restricts by User Permission on Company.

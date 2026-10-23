@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Security (2026-10-24, audit H3/H4/H5)
+
+- **Chat AI tool calls are guarded** (`chat_ai/core/tool_sources/net.py`): REST tools, MCP servers, integration connectors and their health checks call out only over http(s), with a fixed host in the URL template, never to metadata / link-local addresses, pinned to the checked address, without following redirects, with a 1 MB response cap. The connector's "read" tool is GET/HEAD only -- POST/PUT/PATCH/DELETE is a separate tool the user confirms; an MCP tool needs confirmation unless its server marks it `readOnlyHint`. URLs are validated when saved.
+- **Reads respect User Permissions** (`services/row_scope.py`): the shared list helpers, the accounting dashboard and reports, and the Tracker task/project lists use `get_list`; SQL sums add the user's Company restriction; `profit_and_loss` accepts a `company`; a portal (Website User) session sees only its own Customer's / Supplier's orders. The dashboard reads each ledger once instead of four times.
+- The delivery, fleet, service-ticket and restaurant DocTypes grant `Desk User` (every System User) instead of `All` (every logged-in user, portal users included).
+
 ### Changed — app platform (audit 2026-10-23, `docs/audit_2026-10-23.md`)
 
 - **ZatGo VanSaleX is a real app switch**: ZG System Settings → "Enable ZatGo VanSaleX" (default on; a site with no
