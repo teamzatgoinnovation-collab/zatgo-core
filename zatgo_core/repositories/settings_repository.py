@@ -8,6 +8,7 @@ import frappe
 from frappe.model.document import Document
 
 from zatgo_core.constants.settings import DOCTYPES, SINGLE_SETTINGS
+from zatgo_core.services import app_catalog
 
 
 class SettingsRepository:
@@ -16,6 +17,10 @@ class SettingsRepository:
     @staticmethod
     def get_single(doctype: str) -> Document:
         if doctype not in SINGLE_SETTINGS:
+            # A settings Single an app lists in its manifest (VanSaleX Settings, Chat AI Settings, ...) is
+            # reachable too, but it is that app's own: never seeded or created from here.
+            if doctype in app_catalog.settings_doctypes() and frappe.get_meta(doctype).issingle:
+                return frappe.get_cached_doc(doctype, doctype)
             frappe.throw(frappe._("{0} is not a single settings DocType").format(doctype))
         if not frappe.db.exists(doctype, doctype):
             doc = frappe.get_doc({"doctype": doctype})

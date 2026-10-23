@@ -8,6 +8,7 @@ import frappe
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import parse_json_dict, require_str
+from zatgo_core.permissions.settings_visibility import can_manage_registry
 from zatgo_core.plugins.discover import discover_and_register_manifests
 from zatgo_core.services.config_loader_service import ConfigLoaderService
 from zatgo_core.services.plugin_registry_service import PluginRegistryService
@@ -46,7 +47,9 @@ def register_application(manifest: Any) -> dict[str, Any]:
 
 @frappe.whitelist()
 def seed_bundled_manifests() -> dict[str, Any]:
-    """Re-register POS / Delivery / Kitchen bundled manifests."""
+    """Re-register the bundled manifests and the app catalog (System Manager / Application Admin)."""
+    if not can_manage_registry():
+        frappe.throw(frappe._("Not permitted to register applications"), frappe.PermissionError)
     log_api("config.seed_bundled_manifests", user=frappe.session.user)
     return ok(discover_and_register_manifests())
 

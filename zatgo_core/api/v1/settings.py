@@ -98,10 +98,16 @@ def save_settings(
     name: str | None = None,
     category: str | None = None,
 ) -> dict[str, Any]:
-    """Persist settings for a DocType (single or named document)."""
+    """Persist settings for a ZatGo settings DocType (single or named document).
+
+    Only the DocTypes in `_DOCTYPE_CATEGORY` can be saved here, and the role category the write is checked
+    against comes from that table -- `category` is accepted for older clients and ignored: a caller must
+    not pick the rule that guards its own write. Frappe's DocType permissions still apply on top."""
     doctype = require_str(doctype, "doctype")
     payload = parse_json_dict(values, "values")
-    resolved_category = category or _DOCTYPE_CATEGORY.get(doctype, "system")
+    resolved_category = _DOCTYPE_CATEGORY.get(doctype)
+    if resolved_category is None:
+        frappe.throw(frappe._("{0} is not a ZatGo settings DocType").format(doctype), frappe.PermissionError)
     log_api(
         "save_settings",
         user=frappe.session.user,

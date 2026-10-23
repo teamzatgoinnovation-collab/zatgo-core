@@ -191,6 +191,8 @@ has_permission = {
     "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_has_permission",
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
+    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
+    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
     # Chat AI: owner scoping (managers bypass); True otherwise, never None.

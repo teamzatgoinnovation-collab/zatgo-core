@@ -9,7 +9,7 @@ import frappe
 
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
-from zatgo_core.permissions.guards import assert_can_write_settings
+from zatgo_core.permissions.guards import assert_can_read_settings, assert_can_write_settings
 from zatgo_core.permissions.settings_visibility import can_see_roles
 from zatgo_core.repositories.settings_repository import SettingsRepository
 from zatgo_core.services.plugin_registry_service import PluginRegistryService
@@ -124,6 +124,9 @@ class ConfigLoaderService:
 
     @classmethod
     def export_settings(cls, profile_name: str | None = None) -> dict[str, Any]:
+        assert_can_read_settings("apps")
+        if profile_name:
+            assert_can_write_settings("apps")  # saving a Config Profile is a write
         apps = PluginRegistryService.list_applications()
         payload: dict[str, Any] = {"applications": {}, "exported_by": frappe.session.user}
         for app in apps:
@@ -181,6 +184,7 @@ class ConfigLoaderService:
 
     @classmethod
     def get_dashboard(cls) -> dict[str, Any]:
+        assert_can_read_settings("apps")
         from zatgo_core.services.health_service import HealthService
 
         all_apps = []
@@ -243,6 +247,9 @@ class ConfigLoaderService:
                 return {"error": f"DocType {dt} missing"}
             meta = frappe.get_meta(dt)
             if meta.issingle:
+                # A section may name any Single (a section an app registers): the DocType's own read
+                # permission applies, not just the section's role list.
+                frappe.has_permission(dt, "read", throw=True)
                 return SettingsRepository.get_single(dt).as_dict()
             return {
                 "doctype": dt,
