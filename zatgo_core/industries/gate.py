@@ -94,9 +94,9 @@ def _prefixes() -> dict[str, tuple[str, ...]]:
 
 def gate_industry_api() -> None:
     """before_request: a whitelisted method of a switched-off industry -> 404."""
-    from zatgo_core.services.bundled_apps import _requested_method
+    from zatgo_core.services.app_gate import requested_method
 
-    method = _requested_method()
+    method = requested_method()
     if not method:
         return
     for key, prefixes in _prefixes().items():

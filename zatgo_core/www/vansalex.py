@@ -20,11 +20,12 @@ no_cache = 1
 
 
 def get_context(context):
-    from zatgo_core.services.ui_apps import switches
+    from zatgo_core.services.app_state import is_on
 
     # The build is compiled for one site's address (FRAPPE_BASE_URL): on a
-    # site it doesn't belong to it would talk to that other site.
-    if not switches()["vansalex_web"]:
+    # site it doesn't belong to it would talk to that other site. It is also
+    # the VanSaleX app's page: off with the app.
+    if not (is_on("vansalex_web") and is_on("vansalex")):
         # Don't let Frappe cache this 404 (website_404): it would outlive
         # switching the page on.
         frappe.local.no_cache = 1

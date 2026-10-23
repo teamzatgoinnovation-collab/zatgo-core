@@ -22,10 +22,35 @@ HISTORY_DT = DOCTYPES["CONFIG_HISTORY"]
 class PluginRegistryService:
     """Upsert manifests and expose permission-filtered application trees."""
 
+    # Fields an admin may edit on the registry row (hide an app, narrow its roles, re-order it, switch it
+    # off). A re-registration keeps the admin's value unless the manifest itself changed that field since
+    # the last registration -- so a migrate never undoes an admin's edit.
+    ADMIN_EDITABLE = ("visible", "roles", "menu_order", "enabled")
+    SYNCED_FIELDS = (
+        "title",
+        "version",
+        "icon",
+        "category",
+        "menu_order",
+        "enabled",
+        "visible",
+        "roles",
+        "depends_on",
+        "description",
+        "settings_route",
+        "manifest_json",
+    )
+
     @classmethod
     def register_application(
-        cls, manifest: dict[str, Any], *, ignore_permissions: bool = False
+        cls,
+        manifest: dict[str, Any],
+        *,
+        ignore_permissions: bool = False,
+        authoritative: tuple[str, ...] = (),
     ) -> dict[str, Any]:
+        """Upsert one manifest. `authoritative` names admin-editable fields the code always wins (the app
+        catalog's `enabled` mirrors the site's real switch)."""
         if not ignore_permissions and not can_manage_registry():
             frappe.throw(frappe._("Not permitted to register applications"), frappe.PermissionError)
 
@@ -41,36 +66,48 @@ class PluginRegistryService:
         payload["manifest_json"] = json.dumps(manifest, default=str)
 
         existing = frappe.db.exists(APP_DT, app_key)
+        changed = False
         if existing:
             doc = frappe.get_doc(APP_DT, existing)
-            for field in (
-                "title",
-                "version",
-                "icon",
-                "category",
-                "menu_order",
-                "enabled",
-                "visible",
-                "roles",
-                "depends_on",
-                "description",
-                "settings_route",
-                "manifest_json",
-            ):
-                if field in payload and payload[field] is not None:
-                    doc.set(field, payload[field])
-            doc.save(ignore_permissions=True)
+            previous = cls._previous_manifest(doc)
+            for field in cls.SYNCED_FIELDS:
+                if field not in payload or payload[field] is None:
+                    continue
+                new = payload[field]
+                if field in cls.ADMIN_EDITABLE and field not in authoritative and previous.get(field) == new:
+                    continue  # the code did not change it: the row's value is the admin's
+                if cls._differs(doc.get(field), new):
+                    doc.set(field, new)
+                    changed = True
+            if changed:
+                doc.save(ignore_permissions=True)
         else:
             doc = frappe.get_doc({"doctype": APP_DT, "app_key": app_key, **payload})
             doc.insert(ignore_permissions=True)
+            changed = True
 
-        cls._sync_sections(app_key, sections)
-        cls._history(app_key, None, "Register", None, manifest)
-        logger.info("Registered application %s sections=%s", app_key, len(sections))
-        return {"app_key": app_key, "sections": len(sections)}
+        changed = cls._sync_sections(app_key, sections) or changed
+        if changed:
+            cls._history(app_key, None, "Register", None, manifest)
+        logger.info("Registered application %s sections=%s changed=%s", app_key, len(sections), changed)
+        return {"app_key": app_key, "sections": len(sections), "changed": changed}
+
+    @staticmethod
+    def _differs(current: Any, new: Any) -> bool:
+        return str(current if current is not None else "") != str(new if new is not None else "")
+
+    @staticmethod
+    def _previous_manifest(doc) -> dict[str, Any]:
+        try:
+            data = json.loads(doc.get("manifest_json") or "{}")
+        except ValueError:
+            return {}
+        return data if isinstance(data, dict) else {}
 
     @classmethod
-    def _sync_sections(cls, app_key: str, sections: list[dict[str, Any]]) -> None:
+    def _sync_sections(cls, app_key: str, sections: list[dict[str, Any]]) -> bool:
+        """Upsert the manifest's sections; True when anything was added, changed or removed."""
+        changed = False
         keep_keys: set[str] = set()
         for idx, section in enumerate(sections):
             key = (section.get("section_key") or "").strip()
@@ -102,12 +139,15 @@ class PluginRegistryService:
             )
             if name:
                 doc = frappe.get_doc(SECTION_DT, name)
-                doc.update(values)
-                doc.save(ignore_permissions=True)
+                if any(cls._differs(doc.get(k), v) for k, v in values.items()):
+                    doc.update(values)
+                    doc.save(ignore_permissions=True)
+                    changed = True
             else:
                 frappe.get_doc({"doctype": SECTION_DT, **values}).insert(
                     ignore_permissions=True
                 )
+                changed = True
 
         # Remove sections no longer in manifest
         for row in frappe.get_all(
@@ -115,6 +155,8 @@ class PluginRegistryService:
         ):
             if row.section_key not in keep_keys:
                 frappe.delete_doc(SECTION_DT, row.name, ignore_permissions=True, force=1)
+                changed = True
+        return changed
 
     @classmethod
     def list_applications(cls) -> list[dict[str, Any]]:

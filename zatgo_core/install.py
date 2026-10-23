@@ -66,10 +66,6 @@ def after_install() -> None:
     except Exception:
         logger.exception("VanSaleX Modules & Features seed failed")
     try:
-        discover_and_register_manifests()
-    except Exception:
-        logger.exception("Plugin manifest registration failed")
-    try:
         purge_desk_ui_leftovers()
     except Exception:
         logger.exception("Desk UI leftover purge failed")
@@ -81,6 +77,11 @@ def after_install() -> None:
         sync_industries()
     except Exception:
         logger.exception("Industry sync failed")
+    try:
+        # After the switches are final (ensure_ui_apps): the registry carries each app's real enabled state.
+        discover_and_register_manifests()
+    except Exception:
+        logger.exception("Plugin manifest registration failed")
     try:
         # After the industry sync: the sidebar lists the enabled industries' workspaces.
         ensure_core_desk()
@@ -124,10 +125,6 @@ def after_migrate() -> None:
     except Exception:
         logger.exception("VanSaleX Modules & Features seed failed")
     try:
-        discover_and_register_manifests()
-    except Exception:
-        logger.exception("Plugin manifest registration failed")
-    try:
         purge_desk_ui_leftovers()
     except Exception:
         logger.exception("Desk UI leftover purge failed")
@@ -139,6 +136,11 @@ def after_migrate() -> None:
         sync_industries()
     except Exception:
         logger.exception("Industry sync failed")
+    try:
+        # After the switches are final (ensure_ui_apps): the registry carries each app's real enabled state.
+        discover_and_register_manifests()
+    except Exception:
+        logger.exception("Plugin manifest registration failed")
     try:
         # After the industry sync: the sidebar lists the enabled industries' workspaces.
         ensure_core_desk()
@@ -160,8 +162,8 @@ def before_uninstall() -> None:
 def purge_desk_ui_leftovers() -> None:
     """Delete legacy Desktop Icon / Workspace Sidebar / Page rows for Core.
 
-    ZatGo Core is API-only; Desk module UI was removed from the package.
-    Records may survive on the site after code deletion.
+    The old "ZatGo Core" / "Core Administration" Desk UI was removed from the package; its records may
+    survive on the site after code deletion. (The current "ZatGo" entry is rebuilt by ensure_core_desk.)
     """
     deleted = 0
 

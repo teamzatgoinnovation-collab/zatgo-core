@@ -29,11 +29,17 @@ APPS = (
     {
         "key": "vansalex",
         "label": "ZatGo VanSaleX",
-        "group": "core",
+        "group": "app",
         "icon": "truck",
         "description": "Mobile van sales: warehouses, Cash/Credit rules, modules and features per user.",
+        # On everywhere it was before it had a switch (a site with no stored value counts as on).
+        "switch_field": "enable_vansalex",
+        "default_on": True,
         "workspaces": ("ZatGo VanSaleX", "VanSaleX"),
         "settings": (("VanSaleX Settings", "VanSaleX Settings"),),
+        # Off: the VanSaleX app's own API answers 404. The shared accounting / warehouse endpoints other
+        # clients use are not VanSaleX's and stay up.
+        "api_prefixes": ("zatgo_core.api.v1.vansalex.",),
     },
     {
         "key": "saas_theme",
@@ -58,6 +64,7 @@ APPS = (
         "icon": "link",
         "description": "Serves the VanSaleX web build at /vansalex.",
         "switch_field": "enable_vansalex_web",
+        "requires": ("vansalex",),
     },
     {
         "key": "industries",

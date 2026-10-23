@@ -10,16 +10,25 @@ Pure filesystem + import: no database access, so it is safe at import time
 and in the middle of a migrate. Manifests are loaded by file path, not as
 packages, so a module's heavy `__init__` is never executed by the scan.
 
-APP keys:
+APP keys (only key, label and group are required):
   key            switch / registry key (unique)
   label, icon, description
-  group          "bundled" (module with DocTypes), "ui" (Desk appearance),
-                 "core" (always on), "industries"
-  switch_field   ZG System Settings Check field that turns it on (optional)
+  group          "bundled" (module folder with its own DocTypes), "app" (an app that lives in the
+                 core module, e.g. VanSaleX), "ui" (Desk appearance add-on), "core" (always-on
+                 core settings), "industries"
+  switch_field   ZG System Settings Check field that turns it on. A bundled app that names none
+                 gets `enable_<key>`; an app with no switch is always on.
+  default_on     True: a site that has no stored value yet counts the app as ON (an app that was
+                 always on before it got a switch -- VanSaleX); the field's JSON default must be 1
+                 and a patch stores 1 so the form shows what is enforced.
   module_def     bundled only: Module Def name
-  workspaces     bundled only: Workspace / Sidebar names it owns
+  workspaces     Workspace / Sidebar names it owns (the first that exists is its "Overview")
   settings       [(DocType, label), ...] its settings DocTypes
   roles          roles that may see it in the hub (default System Manager)
+  version        its version (default: zatgo_core's)
+  requires       keys of apps that must be on for this one to be switched on
+  api_prefixes   whitelisted-method prefixes (end with ".") answered 404 while it is off; a bundled
+                 app also gets `zatgo_core.<folder>.` and the old `<folder>.`
 """
 
 from __future__ import annotations
@@ -30,11 +39,13 @@ import os
 from functools import lru_cache
 from typing import Any
 
+from zatgo_core import __version__
+
 logger = logging.getLogger("zatgo_core.app_catalog")
 
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE_MANIFEST = os.path.join(PACKAGE_DIR, "plugins", "manifests", "core_apps.py")
-GROUPS = ("core", "ui", "bundled", "industries")
+GROUPS = ("core", "app", "ui", "bundled", "industries")
 
 
 def _load(path: str, name: str) -> Any:
@@ -42,6 +53,13 @@ def _load(path: str, name: str) -> Any:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _strings(app: dict[str, Any], key: str, source: str) -> tuple[str, ...]:
+    value = app.get(key) or ()
+    if isinstance(value, str) or not all(isinstance(v, str) and v for v in value):
+        raise ValueError(f"{source}: {key} must be a list of non-empty strings")
+    return tuple(value)
 
 
 def _normalise(app: dict[str, Any], source: str) -> dict[str, Any]:
@@ -55,10 +73,17 @@ def _normalise(app: dict[str, Any], source: str) -> dict[str, Any]:
     out = dict(app)
     out.setdefault("icon", "setting")
     out.setdefault("description", "")
-    out.setdefault("switch_field", None)
+    # A bundled module is always switchable: its switch is `enable_<key>` unless it names another.
+    out["switch_field"] = app.get("switch_field") or (f"enable_{app['key']}" if app["group"] == "bundled" else None)
+    out["default_on"] = bool(app.get("default_on"))
     out["workspaces"] = tuple(app.get("workspaces") or ())
     out["settings"] = tuple((dt, label) for dt, label in app.get("settings") or ())
     out.setdefault("roles", ("System Manager",))
+    out["version"] = str(app.get("version") or __version__)
+    out["requires"] = _strings(app, "requires", source)
+    out["api_prefixes"] = _strings(app, "api_prefixes", source)
+    if bad := [p for p in out["api_prefixes"] if not p.endswith(".")]:
+        raise ValueError(f"{source}: api_prefixes must end with '.' ({bad[0]!r})")
     out["source"] = source
     return out
 
@@ -131,6 +156,39 @@ def bundled() -> dict[str, tuple[str, str, tuple[str, ...]]]:
         for a in catalog()
         if a["group"] == "bundled"
     }
+
+
+def settings_doctypes() -> set[str]:
+    """Every settings DocType an app lists in its manifest (VanSaleX Settings, Chat AI Settings, ...)."""
+    return {dt for a in catalog() for dt, _label in a["settings"]}
+
+
+def api_prefixes() -> dict[str, tuple[str, ...]]:
+    """key -> whitelisted-method prefixes that answer 404 while the app is off: the manifest's own, plus a
+    bundled module's current path (`zatgo_core.<folder>.`) and its old app's (`<folder>.`), which old
+    clients still call (compat_methods.py)."""
+    out: dict[str, tuple[str, ...]] = {}
+    for a in catalog():
+        prefixes = list(a["api_prefixes"])
+        if a["group"] == "bundled":
+            prefixes += [f"zatgo_core.{a['folder']}.", f"{a['folder']}."]
+        if prefixes:
+            out[a["key"]] = tuple(dict.fromkeys(prefixes))
+    return out
+
+
+def dependency_problems(on: dict[str, bool]) -> list[str]:
+    """Problems with a switch state: an app that is on while an app it `requires` is off. `on` maps key ->
+    bool for every app with a switch; apps without a switch count as on."""
+    state = {a["key"]: (bool(on.get(a["key"])) if a["switch_field"] else True) for a in catalog()}
+    problems = []
+    for a in catalog():
+        if not state[a["key"]]:
+            continue
+        for need in a["requires"]:
+            if need in state and not state[need]:
+                problems.append(f"{a['label']} needs {get(need)['label']} to be on")
+    return problems
 
 
 def ensure_switch_fields() -> None:

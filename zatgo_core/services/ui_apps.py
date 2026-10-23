@@ -26,8 +26,7 @@ import frappe
 from frappe.website.page_renderers.template_page import TemplatePage
 
 from zatgo_core.services import app_catalog
-
-SETTINGS = "ZG System Settings"
+from zatgo_core.services.app_state import SETTINGS, switches  # noqa: F401 -- switches() moved to app_state; re-exported
 
 THEME_CSS = "saas_theme/css/saas_theme.css"
 THEME_JS = "saas_theme/js/saas_theme.js"
@@ -42,16 +41,6 @@ LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 # Derived from the app catalog (services/app_catalog.py): a module's own
 # app_manifest.py declares its switch -- nothing to add here for a new sub-app.
 SWITCH_FIELDS = app_catalog.switch_fields()
-
-
-def switches() -> dict[str, bool]:
-    """This site's switches; both off when the settings (or the fields, mid
-    migrate) aren't there yet."""
-    try:
-        doc = frappe.get_cached_doc(SETTINGS)
-    except Exception:
-        return dict.fromkeys(SWITCH_FIELDS, False)
-    return {key: bool(doc.get(field)) for key, field in SWITCH_FIELDS.items()}
 
 
 @lru_cache(maxsize=None)
@@ -167,9 +156,12 @@ def ensure_ui_apps() -> None:
         from zatgo_core.api.v1.language import enable_supported_languages
 
         enable_supported_languages()
+    from zatgo_core.services.app_desk import sync_app_desk
     from zatgo_core.services.bundled_apps import sync_bundled_apps
 
     sync_bundled_apps()
+    if sync_app_desk():  # in-core apps (VanSaleX): hidden while off -- a migrate re-syncs their workspace file
+        frappe.clear_cache()
 
 
 def _adopt_old_bundled_modules() -> None:

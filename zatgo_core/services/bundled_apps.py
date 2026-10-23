@@ -35,8 +35,7 @@ from functools import lru_cache
 
 import frappe
 
-from zatgo_core.services import app_catalog
-from zatgo_core.services.ui_apps import switches
+from zatgo_core.services import app_catalog, app_gate, app_state
 
 # switch key -> (module folder, Module Def, Workspace / Workspace Sidebar names it owns)
 # Derived from each module's app_manifest.py (services/app_catalog.py).
@@ -44,7 +43,7 @@ BUNDLED = app_catalog.bundled()
 
 
 def is_on(key: str) -> bool:
-    return bool(switches().get(key))
+    return app_state.is_on(key)
 
 
 # -- Chat AI hooks -------------------------------------------------------------
@@ -164,14 +163,6 @@ def tracker_activity_session_has_permission(doc, user=None, permission_type=None
 
 # -- Switched-off modules: their documents and API ------------------------------
 
-# Module Def -> switch key
-MODULE_KEYS = {module: key for key, (_f, module, _n) in BUNDLED.items()}
-# Whitelisted-method prefixes of each module: the current path and the old
-# app's (still mapped for old clients by override_whitelisted_methods).
-METHOD_PREFIXES = {
-    key: (f"zatgo_core.{folder}.", f"{folder}.") for key, (folder, _m, _n) in BUNDLED.items()
-}
-
 
 @lru_cache(maxsize=1)
 def _doctype_keys() -> dict[str, str]:
@@ -213,27 +204,10 @@ def module_query_conditions(user=None, doctype=None):
     return "1=0" if key is not None and not is_on(key) else ""
 
 
-def _requested_method() -> str | None:
-    request = getattr(frappe.local, "request", None)
-    path = (getattr(request, "path", "") or "").strip("/")
-    for prefix in ("api/method/", "api/v1/method/", "api/v2/method/"):
-        if path.startswith(prefix):
-            return path[len(prefix):]
-    form = getattr(frappe.local, "form_dict", None) or {}
-    return form.get("cmd") or None
-
-
 def gate_module_api() -> None:
-    """before_request: a whitelisted method of a switched-off module (by its
-    zatgo_core path or the old app's) answers 404 -- before the merge Frappe
-    refused them on these sites as methods of an uninstalled app; guests
-    included (ZatGo Space has allow_guest endpoints)."""
-    method = _requested_method()
-    if not method:
-        return
-    for key, prefixes in METHOD_PREFIXES.items():
-        if method.startswith(prefixes) and not is_on(key):
-            raise frappe.DoesNotExistError(f"{method} is not available on this site")
+    """before_request: kept under its old name for hooks.py history and tests -- the gate for every app,
+    bundled modules included, is services/app_gate.gate_api."""
+    app_gate.gate_api()
 
 
 # -- Desk assets ---------------------------------------------------------------

@@ -35,9 +35,7 @@ HUB_PAGE = "zg-app-hub"
 
 # Catalog groups that are apps. "ui" (ZatGo Desk Theme, Language Switcher, VanSaleX Web) has no
 # page of its own, only a per-site switch: listed while on, opening the App Settings Hub.
-APP_GROUPS = ("bundled", "ui")
-# Core catalog entries that are apps although they have no on/off switch.
-ALWAYS_ON_APPS = ("vansalex",)
+APP_GROUPS = ("app", "bundled", "ui")
 
 
 def _section(label: str) -> dict:
@@ -61,7 +59,7 @@ def _link(label: str, link_type: str, link_to: str, icon: str, child: int = 1) -
 
 
 def _is_app_on(app: dict, switches: dict[str, bool]) -> bool:
-    if app["group"] not in APP_GROUPS and app["key"] not in ALWAYS_ON_APPS:
+    if app["group"] not in APP_GROUPS:
         return False
     if app["switch_field"]:
         return bool(switches.get(app["key"]))
@@ -90,7 +88,7 @@ def _owned_settings() -> set[str]:
     return {
         doctype
         for app in app_catalog.catalog()
-        if app["group"] in APP_GROUPS or app["key"] in ALWAYS_ON_APPS
+        if app["group"] in APP_GROUPS
         for doctype, _label in app["settings"]
     }
 
@@ -109,7 +107,7 @@ def app_rows() -> list[dict]:
     """The single links first (a link right after a group would look like part of it), then a group per
     app that has a workspace and settings."""
     from zatgo_core.industries import gate, registry
-    from zatgo_core.services.ui_apps import switches
+    from zatgo_core.services.app_state import switches
 
     on = switches()
     links: list[dict] = []
@@ -142,7 +140,7 @@ def settings_links() -> list[dict]:
             links.append(_link(s["label"], kind, target, "list"))
     # The hub first, even if the workspace file doesn't list it.
     if not any(row["link_to"] == HUB_PAGE for row in links) and frappe.db.exists("Page", HUB_PAGE):
-        links.insert(0, _link("App Settings Hub", "Page", HUB_PAGE, "setting"))
+        links.insert(0, _link("ZatGo Apps", "Page", HUB_PAGE, "setting"))
     return links
 
 

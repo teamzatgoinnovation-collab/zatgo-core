@@ -31,8 +31,8 @@ boot_session = "zatgo_core.events.boot.boot_session"
 # (services/ui_apps.py) -- deliberately not app_include_css/js, which would
 # load them on every site.
 before_request = [
-    # Whitelisted methods of switched-off bundled modules -> 404.
-    "zatgo_core.services.bundled_apps.gate_module_api",
+    # Whitelisted methods of switched-off apps (bundled modules, VanSaleX) -> 404.
+    "zatgo_core.services.app_gate.gate_api",
     # Whitelisted methods of switched-off industries -> 404.
     "zatgo_core.industries.gate.gate_industry_api",
     "zatgo_core.services.ui_apps.add_desk_includes",

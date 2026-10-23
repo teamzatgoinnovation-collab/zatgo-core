@@ -37,6 +37,8 @@
     "column_break_appearance",
     "enable_language_switcher",
     "enable_vansalex_web",
+    "apps_section",
+    "enable_vansalex",
     "bundled_apps_section",
     "enable_chat_ai",
     "enable_tracker",
@@ -231,6 +233,19 @@
       "description": "Serve the VanSaleX web app at /vansalex on this site. The web build is compiled for one site's address, so switch it on only where that build belongs."
     },
     {
+      "fieldname": "apps_section",
+      "fieldtype": "Section Break",
+      "label": "Apps",
+      "description": "Switching an app off hides it and its API answers 404; nothing is deleted. Only a System Manager can change these."
+    },
+    {
+      "default": "1",
+      "fieldname": "enable_vansalex",
+      "fieldtype": "Check",
+      "label": "Enable ZatGo VanSaleX",
+      "description": "The VanSaleX van-sales app: its API, its Desk workspace and sidebar entry. On unless switched off."
+    },
+    {
       "fieldname": "bundled_apps_section",
       "fieldtype": "Section Break",
       "label": "Bundled Apps",
@@ -285,7 +300,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-08 13:00:00.000000",
+  "modified": "2026-10-23 12:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG System Settings",

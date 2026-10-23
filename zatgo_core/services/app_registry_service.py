@@ -15,6 +15,7 @@ from zatgo_core.constants.client_apps import DEFAULT_CLIENT_APPS
 from zatgo_core.constants.settings import CACHE_KEYS, DOCTYPES
 from zatgo_core.permissions.guards import assert_can_read_settings, assert_can_write_settings
 from zatgo_core.repositories.settings_repository import SettingsRepository
+from zatgo_core.services import app_catalog, app_state
 from zatgo_core.utils.logging import get_logger
 
 logger = get_logger("system")
@@ -50,6 +51,12 @@ class AppRegistryService:
 
     @classmethod
     def is_client_enabled(cls, app_key: str) -> bool:
+        """May this client product run against the site? Advisory for the client (the server-side gate,
+        services/app_gate.py, is what enforces an app being off) -- but it must not say yes for a product
+        whose ZatGo app the site has switched off."""
+        app = app_catalog.get(app_key)
+        if app and app["switch_field"] and not app_state.is_on(app_key):
+            return False
         settings = cls.get_application_settings()
         row = cls.get_client_app(app_key)
         if row:
