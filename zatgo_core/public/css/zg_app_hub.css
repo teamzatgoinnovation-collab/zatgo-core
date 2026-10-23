@@ -1,0 +1,235 @@
+/* ZatGo overview (Desk page zg-app-hub). Colours come from Frappe's CSS variables, so light and dark
+   follow the Desk theme. Mobile first: one column, a two-column grid from 576px, three from 992px. */
+.zg-app-hub {
+	padding-bottom: var(--padding-xl, 32px);
+}
+
+/* Frappe's page body has no side padding on a phone: give the cards some air. */
+@media (max-width: 575px) {
+	.zg-app-hub {
+		padding-inline: var(--padding-md, 12px);
+	}
+}
+
+.zg-summary {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--margin-md, 12px);
+	align-items: stretch;
+	margin: var(--margin-md, 12px) 0 var(--margin-lg, 20px);
+}
+.zg-stat {
+	background: var(--card-bg, #fff);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-md, 12px) var(--padding-lg, 16px);
+}
+.zg-stat__value {
+	font-size: 1.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--text-color, #1f272e);
+}
+.zg-stat__label {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-stat[data-tone="good"] .zg-stat__value {
+	color: var(--green-600, #16794c);
+}
+.zg-stat[data-tone="warn"] .zg-stat__value {
+	color: var(--orange-600, #b45309);
+}
+.zg-summary__version {
+	grid-column: 1 / -1;
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+
+.zg-section {
+	font-size: var(--text-lg, 1.125rem);
+	font-weight: 600;
+	margin: var(--margin-xl, 28px) 0 var(--margin-sm, 8px);
+}
+
+.zg-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--margin-md, 12px);
+}
+
+.zg-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--margin-sm, 8px);
+	background: var(--card-bg, #fff);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-md, 12px) var(--padding-lg, 16px);
+}
+.zg-card[data-state="off"] {
+	background: var(--control-bg, #f4f5f6);
+}
+.zg-card__head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: var(--margin-md, 12px);
+}
+.zg-card__title h3 {
+	margin: 0;
+	font-size: var(--text-md, 1rem);
+	font-weight: 600;
+}
+.zg-card__version {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-xs, 0.75rem);
+}
+.zg-card__body {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--margin-xs, 4px);
+}
+.zg-card__desc,
+.zg-card__meta {
+	margin: 0;
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-card__links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--margin-xs, 4px) var(--margin-sm, 8px);
+	margin-top: auto;
+	padding-top: var(--padding-sm, 8px);
+}
+
+/* Status is written out, the dot only backs it up. */
+.zg-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 10px;
+	border-radius: 999px;
+	font-size: var(--text-xs, 0.75rem);
+	font-weight: 600;
+	background: var(--bg-gray, #eceff1);
+	color: var(--text-on-gray, #3b4650);
+}
+.zg-pill::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: currentColor;
+}
+.zg-pill[data-state="on"],
+.zg-pill[data-state="always"] {
+	background: var(--bg-green, #e4f5e9);
+	color: var(--text-on-green, #16794c);
+}
+
+.zg-warnings {
+	margin: var(--margin-xs, 4px) 0 0;
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px) var(--padding-sm, 8px) var(--padding-xl, 28px);
+	border-radius: var(--border-radius, 6px);
+	background: var(--bg-orange, #fff1dd);
+	color: var(--text-on-orange, #8a4b08);
+	font-size: var(--text-sm, 0.875rem);
+	width: 100%;
+}
+
+.zg-banner {
+	margin: var(--margin-md, 12px) 0;
+	padding: var(--padding-md, 12px) var(--padding-lg, 16px);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-inline-start: 4px solid var(--orange-500, #e08a1e);
+	border-radius: var(--border-radius-md, 8px);
+	background: var(--card-bg, #fff);
+}
+.zg-banner ul {
+	margin: var(--margin-xs, 4px) 0 0;
+}
+.zg-empty {
+	color: var(--text-muted, #5f6b76);
+	padding: var(--padding-xl, 28px) 0;
+}
+
+/* Switch: a real button (role=switch), 44px-tall hit area for touch, visible focus ring. */
+.zg-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 0 4px;
+	border: 0;
+	background: transparent;
+	color: var(--text-color, #1f272e);
+	cursor: pointer;
+}
+.zg-switch:disabled {
+	cursor: progress;
+	opacity: 0.6;
+}
+.zg-switch:focus-visible {
+	outline: 2px solid var(--primary, #2490ef);
+	outline-offset: 2px;
+	border-radius: var(--border-radius, 6px);
+}
+.zg-switch__track {
+	position: relative;
+	width: 36px;
+	height: 20px;
+	border-radius: 999px;
+	background: var(--gray-400, #b6bec6);
+	transition: background-color 0.15s ease;
+}
+.zg-switch__thumb {
+	position: absolute;
+	top: 2px;
+	inset-inline-start: 2px;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: #fff;
+	transition: inset-inline-start 0.15s ease;
+}
+.zg-switch[aria-checked="true"] .zg-switch__track {
+	background: var(--green-600, #16794c);
+}
+.zg-switch[aria-checked="true"] .zg-switch__thumb {
+	inset-inline-start: 18px;
+}
+.zg-switch__text {
+	font-size: var(--text-sm, 0.875rem);
+	min-width: 1.8em;
+}
+
+@media (min-width: 576px) {
+	.zg-summary {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.zg-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (min-width: 992px) {
+	.zg-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.zg-switch__track,
+	.zg-switch__thumb {
+		transition: none;
+	}
+}
+@media (forced-colors: active) {
+	.zg-switch__track {
+		border: 1px solid ButtonText;
+	}
+	.zg-switch[aria-checked="true"] .zg-switch__track {
+		background: Highlight;
+	}
+}

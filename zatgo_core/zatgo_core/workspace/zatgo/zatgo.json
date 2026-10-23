@@ -1,7 +1,7 @@
 {
  "app": "zatgo_core",
  "charts": [],
- "content": "[{\"id\": \"zg_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo</b></span>\", \"col\": 12}}, {\"id\": \"zg_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"App Settings Hub\", \"col\": 3}}, {\"id\": \"zg_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"System Settings & Industries\", \"col\": 3}}, {\"id\": \"zg_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"zg_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Company Settings\", \"col\": 3}}, {\"id\": \"zg_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Branch Settings\", \"col\": 3}}, {\"id\": \"zg_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Invoice Naming\", \"col\": 3}}, {\"id\": \"zg_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Settings\", \"col\": 3}}, {\"id\": \"zg_s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Security\", \"col\": 3}}, {\"id\": \"zg_s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Applications\", \"col\": 3}}, {\"id\": \"zg_s8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Feature Flags\", \"col\": 3}}, {\"id\": \"zg_s9\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Audit Log\", \"col\": 3}}]",
+ "content": "[{\"id\": \"zg_hdr\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo</b></span>\", \"col\": 12}}, {\"id\": \"zg_hub\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"ZatGo Apps\", \"col\": 3}}, {\"id\": \"zg_s0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"System Settings & Industries\", \"col\": 3}}, {\"id\": \"zg_s1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"zg_s2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Company Settings\", \"col\": 3}}, {\"id\": \"zg_s3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Branch Settings\", \"col\": 3}}, {\"id\": \"zg_s4\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Invoice Naming\", \"col\": 3}}, {\"id\": \"zg_s5\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Payment Settings\", \"col\": 3}}, {\"id\": \"zg_s6\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Security\", \"col\": 3}}, {\"id\": \"zg_s7\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Applications\", \"col\": 3}}, {\"id\": \"zg_s8\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Feature Flags\", \"col\": 3}}, {\"id\": \"zg_s9\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Audit Log\", \"col\": 3}}]",
  "creation": "2026-10-15 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "idx": 0,
  "is_hidden": 0,
  "label": "ZatGo",
- "modified": "2026-10-15 00:00:00.000000",
+ "modified": "2026-10-23 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "ZatGo",
@@ -46,7 +46,7 @@
   {
    "color": "Blue",
    "doc_view": "",
-   "label": "App Settings Hub",
+   "label": "ZatGo Apps",
    "link_to": "zg-app-hub",
    "type": "Page"
   },

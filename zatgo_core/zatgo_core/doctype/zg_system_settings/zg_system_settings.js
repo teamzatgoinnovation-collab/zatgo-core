@@ -3,21 +3,23 @@
 
 frappe.ui.form.on("ZG System Settings", {
 	refresh(frm) {
-		frm.add_custom_button(__("Clear Core Cache"), () => {
-			zatgo.core.clearCache().then(() => {
+		frm.add_custom_button(__("Clear ZatGo Cache"), () => {
+			frappe.call({ method: "zatgo_core.api.v1.settings.clear_cache" }).then(() => {
 				frappe.show_alert({
-					message: __("ZatGo Core cache cleared"),
+					message: __("ZatGo cache cleared"),
 					indicator: "green",
 				});
 			});
 		});
-		frm.add_custom_button(__("Sync Apps"), () => {
-			zatgo.core.syncApps().then((r) => {
+		// Re-reads every app's manifest into the registry client apps use (the registry mirrors the
+		// switches above; it is refreshed on every switch change and on migrate as well).
+		frm.add_custom_button(__("Refresh App Registry"), () => {
+			frappe.call({ method: "zatgo_core.api.v1.config.seed_bundled_manifests" }).then((r) => {
 				const data = r.message && r.message.data;
 				frappe.msgprint(
-					__("Created {0}, updated {1}", [
-						(data && data.created) || 0,
-						(data && data.updated) || 0,
+					__("Registered {0} apps, {1} changed", [
+						(data && data.registered) || 0,
+						(data && data.changed) || 0,
 					])
 				);
 			});
