@@ -21,6 +21,8 @@
   "max_discount_percent",
   "collection_section",
   "restrict_collections_to_route",
+  "stock_section",
+  "max_adjust_qty",
   "access_section",
   "access_help",
   "access",
@@ -127,6 +129,18 @@
    "label": "Restrict Collections to Route",
    "default": "1",
    "description": "When on, drivers can only collect from customers on their route (ZG Trip) or that they invoiced themselves. Turn off to let drivers collect from any customer."
+  },
+  {
+   "fieldname": "stock_section",
+   "fieldtype": "Section Break",
+   "label": "Van Stock"
+  },
+  {
+   "fieldname": "max_adjust_qty",
+   "fieldtype": "Float",
+   "label": "Max Stock Write-off Qty (per line)",
+   "default": "0",
+   "description": "Most a driver may write off of one item in one go (Van Stock, needs the 'Write off van stock' feature). 0 = no cap. Admins are not limited."
   },
   {
    "fieldname": "access_section",

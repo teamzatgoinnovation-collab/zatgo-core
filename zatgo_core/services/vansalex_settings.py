@@ -57,6 +57,8 @@ _DEFAULTS: dict[str, Any] = {
     "allow_orders": 1,
     "max_discount_percent": 100,
     "restrict_collections_to_route": 1,
+    # Most a field user may write off of one item in one go; 0 = no cap.
+    "max_adjust_qty": 0,
 }
 
 

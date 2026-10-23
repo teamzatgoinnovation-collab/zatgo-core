@@ -14,6 +14,7 @@ from zatgo_core.services.erpnext_writes import _apply_return_qtys, _default_comp
 from zatgo_core.services.idempotency import find_by_client_id as _find_any_by_client_id
 from zatgo_core.services.idempotency import insert_idempotent as _insert_idempotent
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
+from zatgo_core.services.vansalex_access import mark_api_validated
 
 
 _STATUS_MAP = {
@@ -350,6 +351,9 @@ def _build_direct_invoice(
         doc.selling_price_list = pl
 
     _apply_sales_taxes(doc, company_name)
+    # Rate / discount / payment type / warehouse were checked above: the
+    # DocType backstop leaves those to this path (vansalex_access.mark_api_validated).
+    mark_api_validated(doc)
     return doc
 
 
@@ -617,6 +621,7 @@ def create_sales_order(
         doc.selling_price_list = pl
 
     _apply_sales_taxes(doc, company_name)
+    mark_api_validated(doc)
 
     doc, created = insert_idempotent(doc, doctype="Sales Order", client_id=cid)
     if not created:
@@ -720,6 +725,9 @@ def confirm_order(
     _apply_payment_type(doc, sale)
     _apply_payment_details(doc, payment_details)
     doc.zatgo_client_id = cid
+    # Payment type / warehouse checked by resolve_sale above; the lines come
+    # from the order, whose rates and discounts were checked when it was made.
+    mark_api_validated(doc)
 
     doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
     if not created:
@@ -1189,6 +1197,7 @@ def adjust_stock(
     delta: float | str,
     warehouse: str,
     company: str | None = None,
+    reason: str | None = None,
 ) -> dict[str, Any]:
     require_login()
     cid = require_str(client_id, "client_id")
@@ -1236,6 +1245,7 @@ def adjust_stock(
             "company": _default_company(company),
             "items": [row],
             "zatgo_client_id": cid,
+            "remarks": (reason or "").strip()[:500] or None,
         }
     )
     se, created = insert_idempotent(se, doctype="Stock Entry", client_id=cid)

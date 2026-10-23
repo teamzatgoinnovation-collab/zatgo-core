@@ -1,4 +1,4 @@
-"""Seed DocPerm for VanSale roles on ERPNext + ZG DocTypes."""
+"""Seed DocPerm for VanSale roles on ERPNext + ZG DocTypes (once per pair)."""
 
 from __future__ import annotations
 
@@ -70,8 +70,21 @@ _PERMS: list[tuple[str, str, dict]] = [
 ]
 
 
+def _seeded_key(doctype: str, role: str) -> str:
+    return f"zg_vansale_perm_{frappe.scrub(doctype)}_{frappe.scrub(role)}"
+
+
 def _ensure_perm(doctype: str, role: str, flags: dict) -> None:
+    """Seed one (DocType, role) grant -- once.
+
+    First time (no marker): create the Custom DocPerm, or top an existing
+    one up to [flags] (add-only: the flags here are all 1), then record that
+    it was seeded. After that the pair belongs to the site's admin: a row
+    they delete is not re-created and a flag they change is not reset."""
     if not frappe.db.exists("DocType", doctype):
+        return
+    marker = _seeded_key(doctype, role)
+    if frappe.db.get_global(marker):
         return
     existing = frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": role})
     if existing:
@@ -83,25 +96,25 @@ def _ensure_perm(doctype: str, role: str, flags: dict) -> None:
                 changed = True
         if changed:
             doc.save(ignore_permissions=True)
-        return
     # Also check standard DocPerm on the DocType itself
-    if frappe.db.exists("DocPerm", {"parent": doctype, "role": role}):
-        return
-    row = {
-        "doctype": "Custom DocPerm",
-        "parent": doctype,
-        "parenttype": "DocType",
-        "parentfield": "permissions",
-        "role": role,
-        "permlevel": 0,
-        **{k: 0 for k in ("read", "write", "create", "delete", "submit", "cancel", "amend", "report", "export", "import", "share", "print", "email")},
-        **flags,
-    }
-    frappe.get_doc(row).insert(ignore_permissions=True)
+    elif not frappe.db.exists("DocPerm", {"parent": doctype, "role": role}):
+        row = {
+            "doctype": "Custom DocPerm",
+            "parent": doctype,
+            "parenttype": "DocType",
+            "parentfield": "permissions",
+            "role": role,
+            "permlevel": 0,
+            **{k: 0 for k in ("read", "write", "create", "delete", "submit", "cancel", "amend", "report", "export", "import", "share", "print", "email")},
+            **flags,
+        }
+        frappe.get_doc(row).insert(ignore_permissions=True)
+    frappe.db.set_global(marker, 1)
 
 
 def ensure_vansale_perms() -> None:
-    """Grant least-privilege DocPerms for VanSale roles."""
+    """Grant least-privilege DocPerms for VanSale roles -- once per DocType/role
+    (see `_ensure_perm`): an admin's later removal or edit of a grant sticks."""
     for doctype, role, flags in _PERMS:
         try:
             _ensure_perm(doctype, role, flags)

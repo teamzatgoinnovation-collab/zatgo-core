@@ -72,21 +72,29 @@ class TestVansalexOrderToPayment(IntegrationTestCase):
                 "is_stock_item": 1,
             }
         ).insert(ignore_permissions=True)
-        frappe.get_doc(
-            {
-                "doctype": "Stock Entry",
-                "stock_entry_type": "Material Receipt",
-                "company": cls.company,
-                "items": [
-                    {
-                        "item_code": code,
-                        "qty": qty,
-                        "t_warehouse": warehouse,
-                        "basic_rate": 10,
-                    }
-                ],
-            }
-        ).insert(ignore_permissions=True).submit()
+        # Stock arrives by an admin: a field user's Material Receipt is refused
+        # (vansalex_stock_rules), and some tests stock a fresh item while
+        # logged in as the van user.
+        user = frappe.session.user
+        frappe.set_user("Administrator")
+        try:
+            frappe.get_doc(
+                {
+                    "doctype": "Stock Entry",
+                    "stock_entry_type": "Material Receipt",
+                    "company": cls.company,
+                    "items": [
+                        {
+                            "item_code": code,
+                            "qty": qty,
+                            "t_warehouse": warehouse,
+                            "basic_rate": 10,
+                        }
+                    ],
+                }
+            ).insert(ignore_permissions=True).submit()
+        finally:
+            frappe.set_user(user)
         return code
 
     @classmethod

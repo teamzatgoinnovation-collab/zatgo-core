@@ -12,7 +12,7 @@ VanSaleX app ──me.context──▶ zatgo_core (control plane) ──▶ ERPN
 
 Code: `zatgo_core/services/vansalex_access.py` (catalog, evaluation,
 enforcement), `setup/ensure_vansalex_access.py` (migration seeding).
-Tests: `zatgo_core/tests/integration/test_vansalex_module_access.py`.
+Tests: `zatgo_core/tests/integration/test_vansalex_module_access.py` (switches), `test_vansalex_stock_scope.py` (stock / money limits).
 App side: `flutter-vansalex` `lib/core/access/feature_registry.dart`.
 
 ## Keys
@@ -49,6 +49,8 @@ Stable machine identifiers (never page titles).
 | `sales_invoice.change_warehouse` | feature | **= Allow Changing Warehouse** (settings + profile override) |
 | `collections.card` | feature | Collect by a non-cash Mode of Payment (type ≠ Cash) |
 | `collections.multiple_payment_modes` | feature | Split a collection across methods |
+| `inventory.transfer` | feature | A **field user** moves stock between their van and a warehouse ticked *VanSaleX Transfer Point*. **Default off.** No screen in the app yet (API `stock.transfer`; Stock Entry in Desk). Admins aren't limited |
+| `inventory.adjust` | feature | A **field user** writes off (decreases) stock in their own van, up to *Max Stock Write-off Qty*. **Default off.** No screen yet (API `stock.adjust`). Admins aren't limited |
 
 Each row in VanSaleX Settings shows **Where in the app** it applies, and rows
 follow the app's order (every More-tab entry has its own row). Activities,
@@ -93,16 +95,65 @@ Hiding a screen in the app is not the control:
    paper feature (80mm format vs anything else = A4). Split payments, account
    choice and card collections are checked where the payment rows are parsed
    (`services/vansalex_service.py`).
-2. **DocType backstop** — `check_doc_access` in `doc_events`: Sales Invoice /
-   return, Sales Order, Payment Entry (Receive) `before_insert`, Customer /
-   Item `before_save`. Applies to **field users** (enabled ZG Van Sale
-   Profile, type Field User) on any entry point — `/api/resource`, the shared
-   `accounting.customers.*` / `warehouse.items.*` endpoints, Desk. A Cash
-   invoice's own auto Payment Entry is part of the sale and passes
-   (`flags.zatgo_auto_cash_payment`).
+2. **DocType backstop** — `check_doc_access` in `doc_events`, for **field
+   users** (enabled ZG Van Sale Profile, type Field User) on any entry point
+   — `/api/resource`, the shared `accounting.customers.*` /
+   `warehouse.items.*` endpoints, Desk:
+   - Sales Invoice / return, Sales Order, Purchase Invoice / Order, Payment
+     Entry (Receive) `before_insert`, Customer / Item `before_save`: the
+     module switch (a Cash invoice's own auto Payment Entry passes,
+     `flags.zatgo_auto_cash_payment`);
+   - **Stock Entry** (`validate`, `before_submit`): only a transfer or a
+     write-off that follows [Stock limits](#stock-limits-for-field-users);
+     Material Receipt and every other purpose are refused;
+   - **Payment Entry `Pay` / `Internal Transfer`**: refused, except the
+     purchase bill's own payment (same flag as above);
+   - **Sales Invoice / Order feature switches** the vansalex API enforces on
+     its own path: without `sales_invoice.edit_rate` a line must carry the
+     item's price (`check_item_rates`), a discount needs
+     `sales_invoice.discount` / `.line_discount` and stays within Max Discount
+     %, a credit sale (Payment Type Credit, or none and nothing paid on the
+     invoice) needs credit sales allowed, and every warehouse must be one the
+     user may sell from (`allowed_warehouse`: their own, or another only with
+     `change_warehouse`). Returns are exempt. Documents the vansalex API built
+     (create_order, confirm_order, create_sales_order) carry an in-process
+     flag (`mark_api_validated`) and are not re-checked: the API already did
+     it, and a REST caller can't set the flag.
+   Not covered yet (API-only): Bank payment type, Choose payment account and
+   Split payment on a directly posted invoice.
+   A VanSale Admin / System Manager is exempt from the Stock Entry, Payment
+   Entry Pay and sales-feature checks.
 
 Nothing is cached on the device, so there is nothing to tamper with; a
 modified app still hits both layers.
+
+## Stock limits for field users
+
+`services/vansalex_stock_rules.py` — one set of rules for the `stock.transfer`
+/ `stock.adjust` endpoints and the Stock Entry backstop. Admins (VanSale
+Admin, System Manager, Administrator) and users without a van profile are not
+limited by it (their ERPNext permissions still apply).
+
+| What | Rule |
+|---|---|
+| Transfer (`inventory.transfer`, default off) | one side is the user's own van, the other a leaf, enabled warehouse of the same company ticked **VanSaleX Transfer Point** (Warehouse form). Van ↔ van and any other warehouse are refused; with no Transfer Point ticked nothing can be transferred. A blank `from_warehouse` is the van. |
+| Write-off (`inventory.adjust`, default off) | own van only (a different `warehouse` is refused — it used to be swapped for the van), decrease only (a Material Issue; stock never appears from nowhere), at most **Max Stock Write-off Qty** per item line (VanSaleX Settings → Van Stock; 0 = no cap). The optional `reason` goes into the Stock Entry's remarks. |
+| Opening stock | an item op with `opening_quantity` / `opening_qty` (item bundle, `sync.batch`, `warehouse.items.create`) from a field user is refused (PermissionError) before anything is written. No shipped client sends it. |
+
+Stock comes into a van by a transfer from a Transfer Point, a purchase invoice
+(`purchase_invoice` module) or an admin.
+
+## ensure_vansale_perms seeds once
+
+`setup/ensure_vansale_perms.py` creates the Custom DocPerms VanSale roles need
+(Sales Invoice, Stock Entry, ...) — **once per DocType/role pair**, recorded
+as a global default `zg_vansale_perm_<doctype>_<role>`. After that the pair
+belongs to the site's admin: a row they delete is not re-created on migrate
+and a flag they change is not reset. The first run after upgrading tops
+existing rows up (add-only) so nothing the roles rely on is missing, and marks
+them; an admin removal made *before* that upgrade is re-granted that one
+time. To have a grant seeded again, delete its marker (Desk → Defaults, or
+`frappe.db.delete("DefaultValue", {"defkey": ...})`) and migrate.
 
 ## Migration of existing clients
 

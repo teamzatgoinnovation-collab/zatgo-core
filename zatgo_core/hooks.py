@@ -86,6 +86,8 @@ doc_events = {
         "validate": [
             "zatgo_core.events.print_fields.populate_print_fields",
             "zatgo_core.services.payment_allocation.validate_sales_invoice",
+            # Warehouses a field user may sell from, once ERPNext has filled them in.
+            "zatgo_core.services.vansalex_access.check_doc_access",
         ],
         "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
@@ -107,13 +109,24 @@ doc_events = {
             # A narration the user writes is kept (services/narration.py).
             "zatgo_core.services.narration.keep_user_narration",
         ],
-        "validate": "zatgo_core.services.payment_allocation.validate_payment_entry",
+        "validate": [
+            "zatgo_core.services.payment_allocation.validate_payment_entry",
+            # Pay / Internal Transfer are closed to field users (edits included).
+            "zatgo_core.services.vansalex_access.check_doc_access",
+        ],
     },
     # VanSaleX Modules & Features backstop for field users on any entry
     # point (services/vansalex_access.py); Sales Invoice / Payment Entry above.
     "Sales Order": {
         "before_insert": "zatgo_core.services.vansalex_access.check_doc_access",
         "before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse",
+        "validate": "zatgo_core.services.vansalex_access.check_doc_access",
+    },
+    # Field users: transfers / write-offs only, per services/vansalex_stock_rules.py
+    # (insert, save and submit -- also a draft someone else made).
+    "Stock Entry": {
+        "validate": "zatgo_core.services.vansalex_access.check_doc_access",
+        "before_submit": "zatgo_core.services.vansalex_access.check_doc_access",
     },
     "Delivery Note": {"before_validate": "zatgo_core.events.default_source_warehouse.set_source_warehouse"},
     # "Set Accepted Warehouse"; Rejected Warehouse is deliberately left empty.

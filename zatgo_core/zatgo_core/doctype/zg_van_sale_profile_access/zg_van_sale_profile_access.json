@@ -14,7 +14,7 @@
    "fieldname": "access_key",
    "fieldtype": "Select",
    "label": "Module / Feature",
-   "options": "dashboard\nsales_invoice\npurchase_invoice\npurchase_order\npurchase_return\nroute_plan\ncustomers\nsales_return\ncollections\nproducts\nreports\nactivities\ndocuments\nmy_performance\ninventory\nsales_invoice.print_a4\nsales_invoice.print_80mm\nsales_invoice.multiple_payment_modes\nsales_invoice.multiple_payment_accounts\nsales_invoice.discount\nsales_invoice.line_discount\nsales_invoice.edit_rate\ncollections.card\ncollections.multiple_payment_modes",
+   "options": "dashboard\nsales_invoice\npurchase_invoice\npurchase_order\npurchase_return\nroute_plan\ncustomers\nsales_return\ncollections\nproducts\nreports\nactivities\ndocuments\nmy_performance\ninventory\nsales_invoice.print_a4\nsales_invoice.print_80mm\nsales_invoice.multiple_payment_modes\nsales_invoice.multiple_payment_accounts\nsales_invoice.discount\nsales_invoice.line_discount\nsales_invoice.edit_rate\ncollections.card\ncollections.multiple_payment_modes\ninventory.transfer\ninventory.adjust",
    "reqd": 1,
    "in_list_view": 1,
    "columns": 6

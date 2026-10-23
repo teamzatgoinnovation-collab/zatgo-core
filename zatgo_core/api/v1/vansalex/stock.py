@@ -10,6 +10,7 @@ from zatgo_core.services.vansalex_access import require as require_access
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_settings import allowed_warehouse, selectable_warehouses
+from zatgo_core.services.vansalex_stock_rules import assert_transfer, assert_writeoff
 from zatgo_core.services.vansalex_service import adjust_stock, list_van_stock, transfer_stock
 from zatgo_core.services.van_sale_access import is_vansale_admin, require_own_warehouse
 
@@ -44,18 +45,27 @@ def adjust(
     delta: float | str,
     warehouse: str | None = None,
     company: str | None = None,
+    reason: str | None = None,
 ) -> dict[str, Any]:
+    """Stock reconciliation on a warehouse. Admins: any warehouse, either
+    direction. Field users (services/vansalex_stock_rules.py): their own van,
+    a decrease only, within the Max Write-off Qty, and only with the
+    `inventory.adjust` feature."""
     require_login()
     require_access("inventory")
     wh = (warehouse or "").strip()
     if not is_vansale_admin():
-        wh = require_own_warehouse(None)
+        # Blank = the van; another warehouse is refused (it used to be
+        # silently swapped for the van, booking the stock somewhere unasked).
+        wh = require_own_warehouse(wh)
+        assert_writeoff(wh, delta)
     return adjust_stock(
         client_id=client_id,
         item_code=item_code,
         delta=delta,
         warehouse=wh,
         company=company,
+        reason=reason,
     )
 
 
@@ -68,16 +78,19 @@ def transfer(
     to_warehouse: str | None = None,
     company: str | None = None,
 ) -> dict[str, Any]:
+    """Material Transfer between warehouses. Admins: any pair. Field users
+    (services/vansalex_stock_rules.py): between their own van and a warehouse
+    ticked "VanSaleX Transfer Point" (a blank from_warehouse is the van), and
+    only with the `inventory.transfer` feature."""
     require_login()
     require_access("inventory")
     from_wh = (from_warehouse or "").strip()
     to_wh = (to_warehouse or "").strip()
     if not is_vansale_admin():
         user_wh = require_own_warehouse(None)
-        if from_wh and from_wh != user_wh and to_wh != user_wh:
-            frappe.throw("Access denied: Transfer must involve your assigned warehouse.", frappe.PermissionError)
         if not from_wh:
             from_wh = user_wh
+        assert_transfer(from_wh, to_wh)
     return transfer_stock(
         client_id=client_id,
         item_code=item_code,

@@ -236,6 +236,11 @@ def sync_item_bundle(
     _assert_no_duplicates(payload)
 
     frappe.has_permission("Item", "create", throw=True)
+    if flt(payload.get("opening_quantity") or payload.get("opening_qty") or 0) > 0:
+        # Before any write: a field user's item is not created with stock in it.
+        from zatgo_core.services.vansalex_stock_rules import assert_opening_stock_allowed
+
+        assert_opening_stock_allowed()
 
     company = cstr(payload.get("company") or "").strip() or _default_company()
     stock_uom = cstr(payload.get("stock_uom") or "").strip() or _default_uom()
@@ -356,6 +361,7 @@ def sync_item_bundle(
             warehouse=default_warehouse,
             delta=opening_qty,
             company=company,
+            reason="Opening stock",
         )
 
     # Images after Item exists

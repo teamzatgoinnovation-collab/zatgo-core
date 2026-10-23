@@ -88,6 +88,14 @@ CATALOG: dict[str, tuple[str, str, str | None, int, str | None]] = {
     "collections.multiple_payment_modes": (
         FEATURE, "Split collection across methods", "collections", 1, None,
     ),
+    # Stock a field user moves or writes off themselves. New functionality
+    # (and a risk to the stock ledger): off until an admin turns it on. They
+    # restrict FIELD users only -- admins keep what `inventory` gives them.
+    # Rules: services/vansalex_stock_rules.py.
+    "inventory.transfer": (
+        FEATURE, "Transfer stock (van <-> transfer point)", "inventory", 0, None,
+    ),
+    "inventory.adjust": (FEATURE, "Write off van stock (decrease)", "inventory", 0, None),
 }
 
 # Where each key shows in the app — shown beside the switch in VanSaleX
@@ -122,6 +130,8 @@ APP_LOCATION: dict[str, str] = {
     "sales_invoice.edit_rate": "New Invoice / New Order → Rate on each line",
     "collections.card": "New Collection → Card",
     "collections.multiple_payment_modes": "New Collection → Split payment",
+    "inventory.transfer": "No screen yet (API stock.transfer; Stock Entry in Desk)",
+    "inventory.adjust": "No screen yet (API stock.adjust; Stock Entry in Desk)",
 }
 
 # Keys that also need a VanSaleX Settings value: on only while it is set
@@ -324,6 +334,16 @@ def check_collection_method(mode_of_payment: str | None) -> None:
 
 # -- DocType backstop (field users, any entry point) ------------------------------
 
+# Set (in process, so a REST / Desk caller can't) on a document the vansalex
+# API built after running its own checks (resolve_sale, check_item_rates,
+# discount caps, allowed_warehouse ...): the backstop then leaves the
+# sales-feature checks to the API instead of repeating them.
+API_VALIDATED_FLAG = "zatgo_vansalex_validated"
+
+
+def mark_api_validated(doc) -> None:
+    doc.flags[API_VALIDATED_FLAG] = True
+
 
 def _is_field_user(user: str) -> bool:
     profile = frappe.db.get_value(
@@ -332,29 +352,162 @@ def _is_field_user(user: str) -> bool:
     return bool(profile) and profile != "Admin"
 
 
+def is_field_user(user: str | None = None) -> bool:
+    """An enabled, non-Admin ZG Van Sale Profile that is not also a VanSale
+    Admin / System Manager: the users the stock and money limits bind."""
+    from zatgo_core.services.van_sale_access import is_vansale_admin
+
+    uid = user or frappe.session.user
+    return (
+        uid not in ("Administrator", "Guest")
+        and _is_field_user(uid)
+        and not is_vansale_admin(uid)
+    )
+
+
+def _line_discount_percent(row) -> float:
+    pct = flt(row.get("discount_percentage"))
+    if pct:
+        return pct
+    amount = flt(row.get("discount_amount"))
+    if amount > 0:
+        base = flt(row.get("price_list_rate")) or (flt(row.get("rate")) + amount)
+        return amount / base * 100 if base > 0 else 100.0
+    return 0.0
+
+
+def _check_sales_prices(doc, eff: dict[str, Any]) -> None:
+    """Item rate and discounts of a Sales Invoice / Order a field user posted
+    directly (the vansalex API checks the same things on its own path):
+    without `sales_invoice.edit_rate` a line must carry the item's price;
+    a discount needs `sales_invoice.discount` / `.line_discount` and may not
+    exceed VanSaleX Settings -> Max Discount %."""
+    rows = list(doc.get("items") or [])
+    # A line with a discount keeps the list price as its reference rate.
+    refs = [
+        {
+            "item_code": r.get("item_code"),
+            "rate": flt(r.get("price_list_rate"))
+            if _line_discount_percent(r) and flt(r.get("price_list_rate")) > 0
+            else flt(r.get("rate")),
+        }
+        for r in rows
+    ]
+    price_list = doc.get("selling_price_list") or frappe.db.get_value(
+        "Customer", doc.get("customer"), "default_price_list"
+    )
+    check_item_rates(refs, price_list)
+    for row, ref in zip(rows, refs):
+        # check_item_rates() fills a blank rate from the item's price.
+        if flt(row.get("rate")) <= 0 < flt(ref["rate"]):
+            row.rate = ref["rate"]
+
+    cap = flt(eff["max_discount_percent"])
+    net = sum(flt(r.get("qty")) * flt(ref["rate"]) for r, ref in zip(rows, refs))
+    doc_pct = flt(doc.get("additional_discount_percentage"))
+    if not doc_pct and flt(doc.get("discount_amount")) > 0:
+        doc_pct = flt(doc.get("discount_amount")) / net * 100 if net > 0 else 100.0
+    if doc_pct > 0:
+        require("sales_invoice.discount")
+        if doc_pct > cap + 0.0001:
+            frappe.throw(f"Discount can't exceed {cap:g}% for your account.", frappe.ValidationError)
+    for row in rows:
+        pct = _line_discount_percent(row)
+        if pct > 0:
+            require("sales_invoice.line_discount")
+            if pct > cap + 0.0001:
+                frappe.throw(
+                    f"Line discount can't exceed {cap:g}% for your account ({row.get('item_code')}).",
+                    frappe.ValidationError,
+                )
+
+
+def _check_sales_credit(doc, eff: dict[str, Any]) -> None:
+    """Credit = Payment Type Credit, or none and nothing paid on the invoice
+    itself (what a bare REST / Desk insert is)."""
+    ptype = (doc.get("custom_payment_type") or "").strip().title()
+    paid = sum(flt(p.get("amount")) for p in doc.get("payments") or [])
+    if (ptype == "Credit" or (not ptype and paid <= 0)) and not eff["allow_credit_sales"]:
+        frappe.throw("Credit sales are not allowed for your account.", frappe.PermissionError)
+
+
+def _check_sales_warehouses(doc, eff: dict[str, Any]) -> None:
+    """Every warehouse on the document must be one the user may sell from."""
+    from zatgo_core.services.vansalex_settings import allowed_warehouse
+
+    for warehouse in {doc.get("set_warehouse"), *(r.get("warehouse") for r in doc.get("items") or [])}:
+        if warehouse:
+            allowed_warehouse(warehouse, eff=eff, admin=False)
+
+
 def check_doc_access(doc, method=None) -> None:
     """before_insert on Sales Invoice / Sales Order / Purchase Invoice / Purchase
-    Order / Payment Entry, before_save
-    (create and edit) on Customer / Item. Only for field users (enabled ZG Van Sale Profile, not Admin):
-    covers the shared accounting/warehouse endpoints, /api/resource and Desk,
-    which the vansalex endpoint checks don't."""
+    Order / Payment Entry, before_save (create and edit) on Customer / Item,
+    validate + before_submit on Stock Entry, validate on Payment Entry / Sales
+    Invoice / Sales Order. Only for field users (enabled ZG Van Sale Profile,
+    not Admin): covers the shared accounting/warehouse endpoints,
+    /api/resource and Desk, which the vansalex endpoint checks don't.
+
+    Stock Entry and the Payment Entry Pay / Internal Transfer types, and the
+    sales feature switches (rate, discount, credit, warehouse), do not apply
+    to a VanSale Admin / System Manager (nor to documents the vansalex API
+    built after its own checks, see `mark_api_validated`)."""
+    from zatgo_core.services.van_sale_access import is_vansale_admin
+
     user = frappe.session.user
     if user in ("Administrator", "Guest") or not _is_field_user(user):
         return
     dt = doc.doctype
+    unrestricted = is_vansale_admin(user)
     if dt == "Sales Invoice":
-        require("sales_return" if cint(doc.get("is_return")) else "sales_invoice")
+        is_return = cint(doc.get("is_return"))
+        if method == "validate":
+            if not (is_return or unrestricted or doc.flags.get(API_VALIDATED_FLAG)):
+                from zatgo_core.services.vansalex_settings import resolve
+
+                _check_sales_warehouses(doc, resolve(user))
+            return
+        require("sales_return" if is_return else "sales_invoice")
+        if not (is_return or unrestricted or doc.flags.get(API_VALIDATED_FLAG)):
+            from zatgo_core.services.vansalex_settings import resolve
+
+            eff = resolve(user)
+            _check_sales_prices(doc, eff)
+            _check_sales_credit(doc, eff)
     elif dt == "Sales Order":
+        if method == "validate":
+            if not (unrestricted or doc.flags.get(API_VALIDATED_FLAG)):
+                from zatgo_core.services.vansalex_settings import resolve
+
+                _check_sales_warehouses(doc, resolve(user))
+            return
         require("sales_order")
+        if not (unrestricted or doc.flags.get(API_VALIDATED_FLAG)):
+            from zatgo_core.services.vansalex_settings import resolve
+
+            _check_sales_prices(doc, resolve(user))
     elif dt == "Purchase Invoice":
         require("purchase_return" if cint(doc.get("is_return")) else "purchase_invoice")
     elif dt == "Purchase Order":
         require("purchase_order")
     elif dt == "Payment Entry":
-        # The Cash invoice's own Payment Entry is part of the sale, not a
-        # collection (invoice_cash_payment_service sets this flag).
-        if doc.payment_type == "Receive" and not doc.flags.get("zatgo_auto_cash_payment"):
-            require("collections")
+        # The Cash invoice's own Payment Entry is part of the sale, and a
+        # purchase bill's is part of the purchase (invoice_cash_payment_service
+        # sets this flag on both): neither is a collection / a free payment.
+        auto = doc.flags.get("zatgo_auto_cash_payment")
+        if doc.payment_type == "Receive":
+            if method != "validate" and not auto:
+                require("collections")
+        elif doc.payment_type in ("Pay", "Internal Transfer") and not (auto or unrestricted):
+            frappe.throw(
+                f"Access denied: a {doc.payment_type} Payment Entry isn't available to VanSaleX field users.",
+                frappe.PermissionError,
+            )
+    elif dt == "Stock Entry":
+        if not unrestricted:
+            from zatgo_core.services.vansalex_stock_rules import assert_stock_entry
+
+            assert_stock_entry(doc)
     elif dt == "Customer":
         require("customers")
     elif dt == "Item":
