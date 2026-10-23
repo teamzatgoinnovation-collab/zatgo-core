@@ -92,7 +92,7 @@ Base path: `/api/method/<dotted.path>`
 | `zatgo_core.api.v1.config.validate_configuration` | `app_key` | Pending / missing checks |
 | `zatgo_core.api.v1.config.search_settings` | `query` | Cross-app section search |
 
-Config is API-only (no Desk page). Call the methods above from clients or `bench execute`.
+The registry is for clients: call the methods above from them or `bench execute`. In Desk, the same apps are managed on the **ZatGo Apps** page. Re-seeding, export and the dashboard need System Manager / Application Admin.
 
 ## Product clients (former zatgo_api)
 

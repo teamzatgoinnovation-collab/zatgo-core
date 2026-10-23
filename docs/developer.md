@@ -46,16 +46,24 @@ Edit **ZG Number Series Settings** child table, or seed in a patch under
 # from bench
 bench --site <site> run-tests --app zatgo_core
 
-# lightweight unit tests (no site) where mocked
-cd CustomApps/ZatGoCore && python -m pytest zatgo_core/tests/unit -q
+# one module
+bench --site <site> run-tests --app zatgo_core --module zatgo_core.tests.integration.test_app_switches
+
+# unit tests that need no site (naming standard, parts of the catalog): from the repo root
+python3 -m unittest zatgo_core.tests.unit.test_naming_standard
 ```
 
-## Regenerators
+`allow_tests` must be set on the site (`bench --site <site> set-config allow_tests true`). Many integration tests
+need a seeded company/warehouse and skip themselves on an empty site — run them on a seeded one.
 
-```bash
-python3 CustomApps/ZatGoCore/scripts/generate_doctypes.py
-python3 CustomApps/ZatGoCore/scripts/fix_controllers.py
-python3 CustomApps/ZatGoCore/scripts/generate_reports.py
-```
+## Regenerators — do not run
 
-Prefer hand-editing controllers after generation.
+`scripts/generate_doctypes.py`, `fix_controllers.py` and `generate_reports.py` were the first scaffold. Their
+templates are stale: running them **overwrites hand-edited controllers and DocType JSON** (for instance
+`zg_system_settings.py` would shrink to a stub). They now refuse to run without `--i-know-this-overwrites`.
+Edit DocType JSON and controllers directly.
+
+## Adding an app
+
+See `plugin_guide.md` (the app contract) and `naming.md`. In short: a manifest, a switch, a gate; every app
+and its settings then show up in **ZatGo Apps**, the sidebar and the registry without further edits.

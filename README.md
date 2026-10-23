@@ -1,12 +1,14 @@
 # ZatGo Core
 
-ERPNext / Frappe **API-only platform hub** (`zatgo_core`) for client apps
-(Flutter / Electron / Web):
+**ZatGo** for ERPNext / Frappe — the supporting app (`zatgo_core`) on top of ERPNext: the customisations ERPNext
+does not ship, and the platform that switches ZatGo's apps on and off per site.
 
+- **Apps**: VanSaleX, Tracker, ZatGo AI, ZatGo Space, industries and Desk add-ons, each switched per site in
+  **ZatGo Apps** (Desk → ZatGo); off hides the app and makes its API answer 404, data is never touched
 - Settings foundation (system / company / branch, flags, integrations, security)
-- Site Application Settings + application registry for clients
+- Application registry + client app settings for Flutter / Electron / Web clients
 - Product client RPC hub: `zatgo_core.api.v1.<product>.*`
-- Shared ZG DocTypes (delivery, KDS, fleet stubs, …) until each product owns a domain app under `CustomApps/erpnext/<Product>/`
+- Shared ZG DocTypes (delivery, KDS, fleet stubs, …)
 
 **Bundled modules (merged 2026-10-08):** Chat AI, Tracker and ZatGo Space (`zatgo_core/chat_ai`, `/tracker`,
 `/zatgo_space`), the SaaS Desk theme and the language switcher are modules of this app, each switched per site in
@@ -15,7 +17,8 @@ ZG System Settings (`services/bundled_apps.py`, `services/ui_apps.py`). Their ol
 **Industries:** optional industry modules (Restaurant, Jewellery, Gym, Textile ready; 13 more registered) are switched per site in
 ZG System Settings → Industries — see [`docs/industries.md`](docs/industries.md).
 
-**Desk UI:** core is API-first; Desk workspaces exist only for the VanSaleX settings and for bundled modules /
+**Desk UI:** the generated "ZatGo" sidebar lists the apps a site has switched on (Overview + settings for each) and
+the ZatGo Apps page is where they are switched; workspaces exist for VanSaleX and for bundled modules /
 industries a site has switched on.
 
 `zatgo_api` was merged into this app — do not install it separately.
@@ -23,6 +26,8 @@ industries a site has switched on.
 ## Docs
 
 - [Architecture](docs/architecture.md)
+- [Naming standard](docs/naming.md)
+- [Audit 2026-10-23](docs/audit_2026-10-23.md)
 - [Folder Structure](docs/folder_structure.md)
 - [DocTypes](docs/doctypes.md)
 - [API Reference](docs/api.md)
@@ -48,4 +53,5 @@ See [Plugin author guide](docs/plugin_guide.md) for registering client/plugin ma
 ## Naming note
 
 DocTypes use the `ZG` prefix (for example `ZG System Settings`) to avoid
-colliding with Frappe / ERPNext built-ins such as `System Settings`.
+colliding with Frappe / ERPNext built-ins such as `System Settings`; the Python package stays `zatgo_core`
+(see [`docs/naming.md`](docs/naming.md)).

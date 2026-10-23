@@ -16,6 +16,13 @@ bench --site <site> clear-cache
 - default number series (only if empty)
 - default feature flags (only if missing)
 
+## Notes by version
+
+- **0.4.7 (unreleased):** ZG System Settings gets `enable_vansalex` ("Enable ZatGo VanSaleX", default on). A site
+  with no stored value counts as ON, so nothing changes before or after migrate; patch `v0_4_7` stores the 1 so
+  the form shows what is enforced. Switching apps or industries is now System Manager only on every route.
+  After deploying, `bench --site <site> clear-cache` (the new permission hooks are cached with the hooks).
+
 ## Compatibility
 
 - App registry stores `minimum_version` / `maximum_version` per registered app.
@@ -23,7 +30,7 @@ bench --site <site> clear-cache
 
 ## Breaking-change policy
 
-1. Never rename DocTypes without a patch + ADR.
+1. Never rename DocTypes without a patch + ADR (`naming.md` lists the legacy names that are deliberately kept).
 2. Prefer additive fields.
 3. Password/secret fields must remain `Password` type.
 4. Document API removals in `docs/CHANGELOG.md`.

@@ -2,6 +2,44 @@
 
 ## Unreleased
 
+### Changed — app platform (audit 2026-10-23, `docs/audit_2026-10-23.md`)
+
+- **ZatGo VanSaleX is a real app switch**: ZG System Settings → "Enable ZatGo VanSaleX" (default on; a site with no
+  stored value counts as on; patch `v0_4_7` stores the 1). Off: the VanSaleX API (`zatgo_core.api.v1.vansalex.*`)
+  answers 404, it leaves the ZatGo sidebar, its workspace and rail icon are hidden; data untouched. The VanSaleX
+  Web page follows it (`enable_vansalex_web` now requires it).
+- **Switching apps or industries is System Manager only on every route** (was: also ZG Company Admin / ZG
+  Application Admin through the form or REST). Enforced in the ZG System Settings controller
+  (`services/app_authority.py`); an app cannot be on while one it `requires` is off.
+- Manifest v2 (all optional): `version`, `requires`, `api_prefixes`, `default_on`; new group `app`. New
+  `services/app_state.py` (is app X on), `services/app_gate.py` (API 404, `@app_api`, `require_app`),
+  `services/app_desk.py`. `services/ui_apps.switches` still works (re-exported).
+- **Plugin registry**: the catalog-derived rows were rejected by the `category` Select and never registered; they
+  now register with the real enabled state and version, a re-run changes nothing and writes no history, an
+  admin's edit of `visible`/`roles`/`menu_order` survives a migrate, and VanSaleX has one entry (title
+  "ZatGo VanSaleX").
+- **ZatGo Apps** page (`zg-app-hub`, was "App Settings Hub"): summary, version, requirements, warnings, skipped
+  manifests, accessible switches, responsive/dark-mode layout; routes `/desk/…`.
+- Config API: `seed_bundled_manifests`, `export_settings`, `get_dashboard` need a manager; `save_settings` only
+  accepts ZatGo settings DocTypes and derives its guard category itself (the `category` argument is ignored);
+  Singles listed by an app manifest (VanSaleX Settings, …) are reachable by the config API; a section's Single
+  needs its own read permission.
+- `ZG Device Token` and `ZG User Preferences` are limited to their owner on every route (REST, Desk).
+- Turning the language switcher on from the hub now enables Arabic at once; the two dead buttons on ZG System
+  Settings ("Clear ZatGo Cache", "Refresh App Registry") work.
+- `AppRegistryService.is_client_enabled` says no for a client product whose ZatGo app is switched off; Desk boot
+  carries `bootinfo.zatgo_core.apps` (the enabled apps) for Desk scripts.
+- Chat AI: its all-DocTypes re-index hook no longer indexes `AI Search Index` and log-like tables (a latent loop
+  once document events + vector search were both on). Indexes added on the columns Chat AI and VanSaleX trips
+  filter by (`AI Usage Daily` user/date, `AI Chat Message` session, `AI Chat Session` user, `AI Tool Log`,
+  `AI Attachment` session, `ZG Trip` sales user/status/planned at) -- built by the next migrate.
+- `ZG Delivery Boy` creation validated its vehicle against `ZG Vehicle` (nulling ERPNext `Vehicle` names).
+- Branding: Desk app title is "ZatGo"; admin messages no longer say "zatgo_core". `docs/naming.md` and
+  `tests/unit/test_naming_standard.py` (new DocTypes are `ZG <Name>`; 25 legacy names kept).
+- Docs: architecture, folder structure, DocTypes (all 68), permissions, plugin guide rewritten to match the code.
+  `scripts/generate_doctypes.py`, `fix_controllers.py`, `generate_reports.py` refuse to run (they overwrite
+  hand-edited files). `setup.py` version and `MANIFEST.in` fixed.
+
 - ZG System Settings → "Stock Summary: only warehouses with stock" (default on): off lists all warehouses.
 
 - Warehouse custom field `zg_vansalex_selectable` ("Selectable Warehouse"): warehouse dropdowns (sales/purchase forms, VanSaleX picker)

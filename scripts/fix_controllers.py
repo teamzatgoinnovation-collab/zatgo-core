@@ -298,4 +298,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    import sys
+
+    if "--i-know-this-overwrites" not in sys.argv:
+        sys.exit(
+            "Refusing to run: this script OVERWRITES DocType files that have since been edited by hand "
+            "(its templates are stale -- e.g. it would reduce zg_system_settings.py to a stub). "
+            "Edit the DocType JSON / controller directly; pass --i-know-this-overwrites only if you mean it."
+        )
     main()

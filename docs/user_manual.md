@@ -1,7 +1,21 @@
 # User Manual — ZatGo Core
 
-ZatGo Core is an **API / settings hub**, not a Desk application. Manage data via
-whitelisted methods from clients, or open DocTypes from AwesomeBar when needed.
+ZatGo is the supporting layer on top of ERPNext: its apps (VanSaleX, Tracker, ZatGo AI, ZatGo Space, industries),
+its settings and the API its client apps use. In Desk, open **ZatGo** in the app switcher.
+
+## Apps
+
+**ZatGo Apps** (ZatGo sidebar → Settings → *ZatGo Apps*, System Manager only) lists every app on this site with
+its version, whether it is on, what it needs, and what is not set up yet. The switch turns an app on or off for
+this site:
+
+- **Off** hides the app (its sidebar entry, its Desk workspace) and its API answers "not found". Nothing is
+  deleted — records, roles and settings stay, and switching it on again brings everything back.
+- An app that **needs** another cannot be on while that one is off (the page and the form say which).
+- Only a System Manager can switch apps or industries, from the page or from *ZG System Settings*.
+
+Each app's own settings (for example *VanSaleX Settings*) are linked from its card and from its group in the
+ZatGo sidebar.
 
 ## Settings DocTypes
 
@@ -26,5 +40,4 @@ whitelisted methods from clients, or open DocTypes from AwesomeBar when needed.
 5. Toggle product features in **ZG Feature Flag**
 6. Configure printers / payments / notifications as needed
 
-Product Desk UIs (Tracker, POS, etc.) live in their domain apps under
-`CustomApps/erpnext/<Product>/`, not in this hub.
+Developers: `plugin_guide.md` (adding an app), `naming.md`, `architecture.md`.

@@ -1,5 +1,6 @@
 recursive-include zatgo_core/templates *
 recursive-include zatgo_core/public *
-recursive-include zatgo_core/fixtures *
+recursive-include zatgo_core/translations *.csv
+recursive-include zatgo_core *.json
 include zatgo_core/modules.txt
 include zatgo_core/patches.txt

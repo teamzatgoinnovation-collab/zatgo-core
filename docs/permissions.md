@@ -12,6 +12,15 @@
 | Delivery | Delivery app login — linked `ZG Delivery Boy.user`; read/write own stops |
 | ZG Invoice Naming Manager | Edit `ZG Sales Invoice Naming Settings` (which series each user's invoices/returns get). System Manager and Accounts Manager can too; nobody else, including Sales/VanSale users, can read it |
 
+## Who can switch apps and industries
+
+**System Manager (and Administrator) only**, on every route. The switches are fields of `ZG System Settings`,
+which `ZG Company Admin` and `ZG Application Admin` can otherwise edit — so the DocType controller itself
+(`services/app_authority.py`, called from `validate`) refuses a save that changes an app switch or the
+Industries table unless the user is a System Manager. The Desk form, the REST API and the **ZatGo Apps** page
+are all bound by the same rule. Install, migrate and patches (system code) are exempt. Other settings on the
+same form stay editable by the roles below.
+
 ## Category matrix (service guards)
 
 | Category | System Manager | Company Admin | Branch Admin | Application Admin | Read Only |
@@ -26,6 +35,18 @@
 | audit | RW | R | R | R | R |
 
 \* DocType JSON also grants Read Only role read on most settings forms.
+
+The caller never chooses the category: `save_settings` derives it from the DocType and only accepts the ZatGo
+settings DocTypes; `seed_bundled_manifests`, `export_settings` and `get_dashboard` need System Manager /
+Application Admin (read-only roles can read the registry but not re-seed it).
+
+## Per-user DocTypes
+
+`ZG Device Token` and `ZG User Preferences` belong to their `user`: list, read, write and create are limited
+to the owner on every route (`permissions/owner_scope.py`, `permission_query_conditions` + `has_permission`),
+so nobody can read another user's push tokens or register a token under someone else. System Manager sees all.
+The hub's own server code (`devices.register_token`, …) runs with `ignore_permissions` and checks ownership
+itself.
 
 ## DocType permission query
 
