@@ -9,6 +9,7 @@ from frappe.utils import flt, getdate, nowdate
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_doc_permission, require_login
+from zatgo_core.services import row_scope
 from zatgo_core.services.erpnext_writes import _default_company
 
 
@@ -21,13 +22,23 @@ def _list_doctype(
     filters: dict[str, Any] | None = None,
     order_by: str = "modified desc",
     map_row: Any = None,
+    party_field: str | None = None,
 ) -> dict[str, Any]:
+    """One page of `doctype`. Reads with get_list, so User Permissions and permission_query_conditions apply
+    (get_all would return every company's rows to a user restricted to one); `party_field` ("customer" /
+    "supplier") also limits a portal (Website User) session to its own party's documents."""
     require_login()
     require_doc_permission(doctype, "read")
     page_i, size_i, start = parse_pagination(page, page_size)
-    filt = filters or {}
-    total = frappe.db.count(doctype, filt)
-    rows = frappe.get_all(
+    filt = dict(filters or {})
+    if party_field:
+        parties = row_scope.portal_parties(doctype, party_field)
+        if parties is not None:
+            if not parties:
+                return paginated([], page=page_i, page_size=size_i, total=0, sort=order_by)
+            filt[party_field] = ["in", parties]
+    total = row_scope.count(doctype, filt)
+    rows = frappe.get_list(
         doctype,
         filters=filt,
         fields=fields,
@@ -45,12 +56,16 @@ def _list_doctype(
     return payload
 
 
-def _get_doctype(doctype: str, name: str, *, map_doc: Any = None) -> dict[str, Any]:
+def _get_doctype(doctype: str, name: str, *, map_doc: Any = None, party_field: str | None = None) -> dict[str, Any]:
     require_login()
     require_doc_permission(doctype, "read", doc=name)
     if not frappe.db.exists(doctype, name):
         frappe.throw(f"{doctype} {name} not found", frappe.DoesNotExistError)
     doc = frappe.get_doc(doctype, name)
+    if party_field:
+        parties = row_scope.portal_parties(doctype, party_field)
+        if parties is not None and doc.get(party_field) not in parties:
+            raise frappe.PermissionError(frappe._("Not permitted"))
     data = map_doc(doc) if map_doc else doc.as_dict()
     return ok(data, meta={"stub": False, "source": doctype})
 
@@ -331,6 +346,7 @@ def list_sales_orders(page: int | str = 1, page_size: int | str = 20) -> dict[st
         fields=["name", "customer", "customer_name", "status", "grand_total", "transaction_date"],
         page=page,
         page_size=page_size,
+        party_field="customer",
         map_row=lambda r: {
             "id": r.name,
             "name": r.name,
@@ -346,6 +362,7 @@ def get_sales_order(name: str) -> dict[str, Any]:
     return _get_doctype(
         "Sales Order",
         name,
+        party_field="customer",
         map_doc=lambda d: {
             "id": d.name,
             "name": d.name,
@@ -363,6 +380,7 @@ def list_purchase_orders(page: int | str = 1, page_size: int | str = 20) -> dict
         fields=["name", "supplier", "supplier_name", "status", "grand_total", "transaction_date"],
         page=page,
         page_size=page_size,
+        party_field="supplier",
         map_row=lambda r: {
             "id": r.name,
             "name": r.name,
@@ -378,6 +396,7 @@ def get_purchase_order(name: str) -> dict[str, Any]:
     return _get_doctype(
         "Purchase Order",
         name,
+        party_field="supplier",
         map_doc=lambda d: {
             "id": d.name,
             "name": d.name,
@@ -425,8 +444,8 @@ def list_stock(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]
     require_login()
     require_doc_permission("Bin", "read")
     page_i, size_i, start = parse_pagination(page, page_size)
-    total = frappe.db.count("Bin", {"actual_qty": [">", 0]})
-    rows = frappe.get_all(
+    total = row_scope.count("Bin", {"actual_qty": [">", 0]})
+    rows = frappe.get_list(
         "Bin",
         filters={"actual_qty": [">", 0]},
         fields=["item_code", "warehouse", "actual_qty", "stock_uom", "valuation_rate"],
@@ -907,7 +926,7 @@ def list_accounts(company: str | None = None) -> dict[str, Any]:
     filters: dict[str, Any] = {"is_group": 0}
     if company:
         filters["company"] = company
-    rows = frappe.get_all(
+    rows = frappe.get_list(
         "Account",
         filters=filters,
         fields=["name", "account_name", "account_type", "root_type", "company"],
@@ -938,7 +957,7 @@ def list_chart_of_accounts(company: str | None = None) -> dict[str, Any]:
     require_login()
     require_doc_permission("Account", "read")
     filters: dict[str, Any] = {"company": _default_company(company)}
-    rows = frappe.get_all(
+    rows = frappe.get_list(
         "Account",
         filters=filters,
         fields=[

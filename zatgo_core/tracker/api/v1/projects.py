@@ -9,6 +9,7 @@ from zatgo_core.tracker.api.response import fail, ok, paginated
 from zatgo_core.tracker.permissions.capabilities import assert_can_manage_work, assert_is_top
 from zatgo_core.tracker.permissions.hierarchy import get_company_for_user
 from zatgo_core.tracker.services.assign import assign_project_member, parse_users
+from zatgo_core.services import row_scope
 from zatgo_core.tracker.services.audit import log_event
 
 
@@ -22,8 +23,8 @@ def list_projects(page: int = 1, page_size: int = 20, status: str | None = None)
 		filters["company"] = company
 	if status:
 		filters["status"] = status
-	total = frappe.db.count("Project", filters)
-	rows = frappe.get_all(
+	total = row_scope.count("Project", filters)
+	rows = frappe.get_list(
 		"Project",
 		filters=filters,
 		fields=["name", "project_name", "status", "company", "expected_start_date", "expected_end_date", "percent_complete", "modified"],

@@ -9,13 +9,15 @@ from frappe.utils import flt, getdate, today
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_doc_permission, require_login
+from zatgo_core.services import row_scope
 
 
 def _require_read(doctype: str) -> None:
     """Login plus read on the DocType a report is built from -- the same
-    gate ERPNext's own Desk reports apply. These read with get_all/SQL, which
-    skip permissions, so without it any logged-in user (a van driver, a
-    portal Website User) could pull the whole ledger."""
+    gate ERPNext's own Desk reports apply -- and then they read with get_list
+    (User Permissions and permission_query_conditions apply) or, for the sums
+    that have to be SQL, add the user's Company restriction (row_scope), so a
+    user restricted to one company never sees another's rows."""
     require_login()
     require_doc_permission(doctype, "read")
 
@@ -29,7 +31,7 @@ def _date_range(from_date: str | None, to_date: str | None) -> tuple[Any, Any]:
 @frappe.whitelist()
 def outstanding_receivable(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
     _require_read("Sales Invoice")
-    rows = frappe.get_all(
+    rows = frappe.get_list(
         "Sales Invoice",
         filters={"docstatus": 1, "outstanding_amount": [">", 0]},
         fields=[
@@ -46,7 +48,7 @@ def outstanding_receivable(page: int | str = 1, page_size: int | str = 50) -> di
         limit_page_length=min(int(page_size or 50), 100),
         limit_start=(max(int(page or 1), 1) - 1) * min(int(page_size or 50), 100),
     )
-    total = frappe.db.count("Sales Invoice", {"docstatus": 1, "outstanding_amount": [">", 0]})
+    total = row_scope.count("Sales Invoice", {"docstatus": 1, "outstanding_amount": [">", 0]})
     data = [
         {
             "id": r.name,
@@ -75,7 +77,7 @@ def outstanding_receivable(page: int | str = 1, page_size: int | str = 50) -> di
 @frappe.whitelist()
 def outstanding_payable(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
     _require_read("Purchase Invoice")
-    rows = frappe.get_all(
+    rows = frappe.get_list(
         "Purchase Invoice",
         filters={"docstatus": 1, "outstanding_amount": [">", 0]},
         fields=[
@@ -92,7 +94,7 @@ def outstanding_payable(page: int | str = 1, page_size: int | str = 50) -> dict[
         limit_page_length=min(int(page_size or 50), 100),
         limit_start=(max(int(page or 1), 1) - 1) * min(int(page_size or 50), 100),
     )
-    total = frappe.db.count("Purchase Invoice", {"docstatus": 1, "outstanding_amount": [">", 0]})
+    total = row_scope.count("Purchase Invoice", {"docstatus": 1, "outstanding_amount": [">", 0]})
     data = [
         {
             "id": r.name,
@@ -140,8 +142,8 @@ def general_ledger(
 
     size = min(max(int(page_size or 100), 1), 200)
     page_i = max(int(page or 1), 1)
-    total = frappe.db.count("GL Entry", filters)
-    rows = frappe.get_all(
+    total = row_scope.count("GL Entry", filters)
+    rows = frappe.get_list(
         "GL Entry",
         filters=filters,
         fields=[
@@ -215,17 +217,19 @@ def party_ledger(
     size = min(max(int(page_size or 100), 1), 200)
     page_i = max(int(page or 1), 1)
 
+    sql_params: dict[str, Any] = {"party_type": party_type, "party": party, "start": start}
     opening_balance = flt(
         frappe.db.sql(
             "SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) FROM `tabGL Entry` "
-            "WHERE party_type=%s AND party=%s AND posting_date < %s AND is_cancelled=0",
-            (party_type, party, start),
+            "WHERE party_type=%(party_type)s AND party=%(party)s AND posting_date < %(start)s AND is_cancelled=0"
+            + row_scope.company_clause("company", sql_params),
+            sql_params,
         )[0][0]
     )
 
     # Fetch the whole in-range window (bounded by page_size cap x a sane max) so the running
     # balance is correct for any page — a party ledger is not expected to have huge row counts.
-    all_rows = frappe.get_all(
+    all_rows = frappe.get_list(
         "GL Entry",
         filters=filters,
         fields=["name", "posting_date", "account", "debit", "credit", "voucher_type", "voucher_no", "remarks"],
@@ -293,17 +297,19 @@ def account_ledger(
     size = min(max(int(page_size or 100), 1), 200)
     page_i = max(int(page or 1), 1)
 
+    sql_params = {"account": account, "start": start}
     opening_balance = flt(
         frappe.db.sql(
             "SELECT COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) FROM `tabGL Entry` "
-            "WHERE account=%s AND posting_date < %s AND is_cancelled=0",
-            (account, start),
+            "WHERE account=%(account)s AND posting_date < %(start)s AND is_cancelled=0"
+            + row_scope.company_clause("company", sql_params),
+            sql_params,
         )[0][0]
     )
 
     # Fetch the whole in-range window so the running balance is correct for any page —
     # an account ledger is not expected to have huge row counts (mirrors party_ledger).
-    all_rows = frappe.get_all(
+    all_rows = frappe.get_list(
         "GL Entry",
         filters=filters,
         fields=[
@@ -367,10 +373,12 @@ def trial_balance(from_date: str | None = None, to_date: str | None = None, comp
     never netted or computed outside ERPNext's own ledger."""
     _require_read("GL Entry")
     start, end = _date_range(from_date, to_date)
+    row_scope.require_company(company)
     company_filter = "AND acc.company = %(company)s" if company else ""
     params: dict[str, Any] = {"start": start, "end": end}
     if company:
         params["company"] = company
+    company_filter += row_scope.company_clause("acc.company", params)
 
     opening_rows = frappe.db.sql(
         f"""
@@ -400,7 +408,9 @@ def trial_balance(from_date: str | None = None, to_date: str | None = None, comp
     accounts_seen = {r.account for r in period_rows}
     missing = [a for a in opening_by_account if a not in accounts_seen]
     if missing:
-        extra = frappe.get_all("Account", filters={"name": ["in", missing]}, fields=["name", "account_name", "root_type"])
+        extra = frappe.get_list(
+            "Account", filters={"name": ["in", missing]}, fields=["name", "account_name", "root_type"], limit_page_length=0
+        )
         period_rows = period_rows + [
             frappe._dict(account=e.name, account_name=e.account_name, root_type=e.root_type, debit=0, credit=0)
             for e in extra
@@ -456,11 +466,23 @@ def trial_balance(from_date: str | None = None, to_date: str | None = None, comp
 
 
 @frappe.whitelist()
-def profit_and_loss(from_date: str | None = None, to_date: str | None = None) -> dict[str, Any]:
+def profit_and_loss(
+    from_date: str | None = None, to_date: str | None = None, company: str | None = None
+) -> dict[str, Any]:
+    """Income and expense by account. `company` limits it to one company; without it a user restricted to
+    some companies gets exactly those, and an unrestricted user gets every company's accounts together
+    (name a company to avoid mixing them)."""
     _require_read("GL Entry")
     start, end = _date_range(from_date, to_date)
+    row_scope.require_company(company)
+    params: dict[str, Any] = {"start": start, "end": end}
+    company_filter = ""
+    if company:
+        company_filter = " and acc.company = %(company)s"
+        params["company"] = company
+    company_filter += row_scope.company_clause("acc.company", params)
     rows = frappe.db.sql(
-        """
+        f"""
         select
             gle.account,
             acc.account_name,
@@ -469,13 +491,13 @@ def profit_and_loss(from_date: str | None = None, to_date: str | None = None) ->
             sum(gle.credit) as credit
         from `tabGL Entry` gle
         inner join `tabAccount` acc on acc.name = gle.account
-        where gle.posting_date between %s and %s
+        where gle.posting_date between %(start)s and %(end)s
           and ifnull(gle.is_cancelled, 0) = 0
-          and acc.root_type in ('Income', 'Expense')
+          and acc.root_type in ('Income', 'Expense'){company_filter}
         group by gle.account, acc.account_name, acc.root_type
         order by acc.root_type, gle.account
         """,
-        (start, end),
+        params,
         as_dict=True,
     )
 

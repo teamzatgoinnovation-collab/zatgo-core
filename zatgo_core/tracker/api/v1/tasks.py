@@ -74,15 +74,17 @@ def list_tasks(
 		elif stage in ("Draft", "Assigned"):
 			filters["status"] = "Open"
 
+	# get_list, not get_all: Tracker's permission_query_conditions on Task (who sees which tasks) apply.
 	total = len(
-		frappe.get_all(
+		frappe.get_list(
 			"Task",
 			filters=filters,
 			or_filters=or_filters,
 			pluck="name",
+			limit_page_length=0,
 		)
 	)
-	rows = frappe.get_all(
+	rows = frappe.get_list(
 		"Task",
 		filters=filters,
 		or_filters=or_filters,
