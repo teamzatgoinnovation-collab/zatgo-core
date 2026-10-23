@@ -28,8 +28,31 @@ def on_cancel(doc, method=None):
 	_maybe_notify(doc, "cancelled")
 
 
+# Indexing writes AI Search Index rows, and this hook runs on every DocType's insert/update: indexing the
+# index (or Chat AI's own log-like tables, or Frappe's) would queue another job for each one it writes.
+NOT_INDEXED = frozenset(
+	{
+		"AI Search Index",
+		"AI Tool Log",
+		"AI Usage Daily",
+		"AI Provider Health Log",
+		"AI Chat Message",
+		"Error Log",
+		"Scheduled Job Log",
+		"Activity Log",
+		"Access Log",
+		"Version",
+		"Comment",
+	}
+)
+
+
+def indexable(doctype: str) -> bool:
+	return doctype not in NOT_INDEXED
+
+
 def _maybe_reindex(doc):
-	if not _enabled():
+	if not _enabled() or not indexable(doc.doctype):
 		return
 	try:
 		if not frappe.db.get_single_value("Chat AI Settings", "enable_vector_search"):

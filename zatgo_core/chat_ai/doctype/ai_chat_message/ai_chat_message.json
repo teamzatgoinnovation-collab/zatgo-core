@@ -22,6 +22,7 @@
  "fields": [
   {
    "fieldname": "session",
+   "search_index": 1,
    "fieldtype": "Link",
    "label": "Session",
    "options": "AI Chat Session",
@@ -104,7 +105,7 @@
  "issingle": 0,
  "istable": 0,
  "links": [],
- "modified": "2026-10-11 12:00:00.000000",
+ "modified": "2026-10-23 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Chat AI",
  "name": "AI Chat Message",
