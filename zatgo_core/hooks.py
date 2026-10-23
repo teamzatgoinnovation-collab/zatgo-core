@@ -161,6 +161,9 @@ scheduler_events = {
 
 permission_query_conditions = {
     "ZG Company Settings": "zatgo_core.permissions.company_scope.company_permission_query",
+    # Push tokens and preferences belong to their user (permissions/owner_scope.py).
+    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_query",
+    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_query",
     # Tracker (bundled module): no extra condition where it is switched off.
     "Project": "zatgo_core.services.bundled_apps.tracker_project_query",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_query",
@@ -188,11 +191,11 @@ permission_query_conditions = {
 # Tracker (bundled module): no objection (True) where it is switched off --
 # never None, which Frappe reads as a denial.
 has_permission = {
+    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
+    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
     "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_has_permission",
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
-    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
-    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
     "Timesheet": "zatgo_core.services.bundled_apps.tracker_timesheet_has_permission",
     "Tracker Activity Session": "zatgo_core.services.bundled_apps.tracker_activity_session_has_permission",
     # Chat AI: owner scoping (managers bypass); True otherwise, never None.
