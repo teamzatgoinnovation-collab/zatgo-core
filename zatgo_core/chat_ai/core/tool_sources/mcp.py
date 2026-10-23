@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.error
-import urllib.request
 from typing import Any
 
-from zatgo_core.chat_ai.core.tool_router.spec import ToolSpec
+from zatgo_core.chat_ai.core.tool_router.spec import CATEGORY_READ, CATEGORY_WRITE, ToolSpec
+from zatgo_core.chat_ai.core.tool_sources import net
 
 
 def _user_roles() -> set[str]:
@@ -38,15 +37,16 @@ def _jsonrpc(url: str, method: str, params: dict | None = None, timeout: int = 6
 		"method": method,
 		"params": params or {},
 	}
-	data = json.dumps(payload).encode("utf-8")
-	req = urllib.request.Request(
+	resp = net.request(
 		url,
-		data=data,
-		headers={"Content-Type": "application/json", "Accept": "application/json"},
 		method="POST",
+		headers={"Content-Type": "application/json", "Accept": "application/json"},
+		body=json.dumps(payload).encode("utf-8"),
+		timeout=timeout,
 	)
-	with urllib.request.urlopen(req, timeout=timeout) as resp:
-		raw = json.loads(resp.read().decode("utf-8"))
+	if resp.status >= 400:
+		raise RuntimeError(f"MCP server answered HTTP {resp.status}")
+	raw = json.loads(resp.text())
 	if isinstance(raw, dict) and raw.get("error"):
 		raise RuntimeError(str(raw["error"]))
 	return raw.get("result") if isinstance(raw, dict) else raw
@@ -73,14 +73,22 @@ def discover_mcp_tools(server_doc) -> list[dict]:
 	except Exception:
 		# Fallback: some gateways use /tools
 		try:
-			req = urllib.request.Request(url.rstrip("/") + "/tools", method="GET")
-			with urllib.request.urlopen(req, timeout=30) as resp:
-				data = json.loads(resp.read().decode("utf-8"))
+			resp = net.request(url.rstrip("/") + "/tools", timeout=30)
+			if resp.status >= 400:
+				raise RuntimeError(f"HTTP {resp.status}")
+			data = json.loads(resp.text())
 			if isinstance(data, dict):
 				return data.get("tools") or []
 			return data if isinstance(data, list) else []
 		except Exception:
 			return _parse_discovered(getattr(server_doc, "discovered_tools", None))
+
+
+def _read_only(tool: dict) -> bool:
+	"""An MCP tool is read-only only when its server says so (annotations.readOnlyHint); anything else may
+	change data on the other side, so the model has to ask the user first."""
+	annotations = tool.get("annotations") if isinstance(tool.get("annotations"), dict) else {}
+	return annotations.get("readOnlyHint") is True
 
 
 def _parse_discovered(raw) -> list[dict]:
@@ -166,7 +174,8 @@ def load_mcp_tools() -> list[ToolSpec]:
 						row["name"], tname, row.get("url") or "", row.get("transport") or "http"
 					),
 					source="mcp",
-					category="read",
+					category=CATEGORY_READ if _read_only(t) else CATEGORY_WRITE,
+					confirmation_required=not _read_only(t),
 					skill="integrations",
 					mcp_server=row["name"],
 					mcp_tool=tname,

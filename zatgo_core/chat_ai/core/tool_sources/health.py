@@ -80,15 +80,14 @@ def test_rest_tool(name: str, persist: bool = False) -> dict:
 	ok = False
 	err = ""
 	try:
-		import urllib.request
+		from zatgo_core.chat_ai.core.tool_sources import net
 
+		net.assert_fixed_host(doc.url_template or "")
 		url = (doc.url_template or "").split("{")[0].rstrip("/") or doc.url_template
 		if not url:
 			raise RuntimeError("No URL")
-		# HEAD/GET best-effort without substituting required path params
-		req = urllib.request.Request(url, method="GET")
-		with urllib.request.urlopen(req, timeout=15) as resp:
-			ok = 200 <= resp.status < 500
+		# GET best-effort without substituting required path params
+		ok = 200 <= net.request(url, timeout=15).status < 500
 	except Exception as exc:
 		err = str(exc)
 		ok = False
@@ -131,11 +130,9 @@ def test_integration(name: str, persist: bool = False) -> dict:
 			# Token present counts as configured for stubs
 			ok = bool(doc.get_password("api_token") if doc.get("api_token") else False) or True
 		else:
-			import urllib.request
+			from zatgo_core.chat_ai.core.tool_sources import net
 
-			req = urllib.request.Request(base, method="GET")
-			with urllib.request.urlopen(req, timeout=15) as resp:
-				ok = 200 <= resp.status < 500
+			ok = 200 <= net.request(base, timeout=15).status < 500
 	except Exception as exc:
 		err = str(exc)
 		ok = False

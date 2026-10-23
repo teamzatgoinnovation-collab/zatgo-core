@@ -5,12 +5,11 @@ from __future__ import annotations
 import base64
 import json
 import re
-import urllib.error
 import urllib.parse
-import urllib.request
 from typing import Any
 
 from zatgo_core.chat_ai.core.tool_router.spec import ToolSpec
+from zatgo_core.chat_ai.core.tool_sources import net
 
 
 def _user_roles() -> set[str]:
@@ -93,6 +92,7 @@ def _make_handler(row: dict):
 				token = frappe.get_doc("AI REST Tool", docname).get_password("auth_token") or ""
 			except Exception:
 				token = ""
+		net.assert_fixed_host(url_template)  # the model fills the path / query, never the host
 		url = _format_url(url_template, kwargs)
 		headers = _auth_headers(auth_type, token)
 		body = None
@@ -109,17 +109,14 @@ def _make_handler(row: dict):
 				if f"{{{k}}}" not in url_template:
 					q[k] = str(v)
 			url = urllib.parse.urlunparse(parsed._replace(query=urllib.parse.urlencode(q)))
-		req = urllib.request.Request(url, data=body, headers=headers, method=method)
+		resp = net.request(url, method=method, headers=headers, body=body)
+		raw = resp.text()
+		if resp.status >= 400:
+			raise RuntimeError(f"REST {resp.status}: {raw[:2000]}")
 		try:
-			with urllib.request.urlopen(req, timeout=60) as resp:
-				raw = resp.read().decode("utf-8", errors="replace")
-				try:
-					return {"status": resp.status, "data": json.loads(raw)}
-				except json.JSONDecodeError:
-					return {"status": resp.status, "data": raw[:8000]}
-		except urllib.error.HTTPError as exc:
-			err_body = exc.read().decode("utf-8", errors="replace")[:2000]
-			raise RuntimeError(f"REST {exc.code}: {err_body}") from exc
+			return {"status": resp.status, "data": json.loads(raw)}
+		except json.JSONDecodeError:
+			return {"status": resp.status, "data": raw[:8000]}
 
 	return handler
 

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import json
 import re
-import urllib.error
-import urllib.request
 from typing import Any
 
 from zatgo_core.chat_ai.core.tool_router.spec import CATEGORY_READ, CATEGORY_WRITE, ToolSpec
+from zatgo_core.chat_ai.core.tool_sources import net
 
 _STUB_SERVICES = {"WhatsApp", "Google Drive", "Jira", "GitLab", "Notion"}
 
@@ -47,17 +46,14 @@ def _http_json(url: str, *, method: str = "GET", headers: dict | None = None, bo
 	hdrs = {"Accept": "application/json", "Content-Type": "application/json"}
 	if headers:
 		hdrs.update(headers)
-	req = urllib.request.Request(url, data=data, headers=hdrs, method=method)
+	resp = net.request(url, method=method, headers=hdrs, body=data)
+	raw = resp.text()
+	if resp.status >= 400:
+		raise RuntimeError(f"HTTP {resp.status}: {raw[:2000]}")
 	try:
-		with urllib.request.urlopen(req, timeout=60) as resp:
-			raw = resp.read().decode("utf-8", errors="replace")
-			try:
-				return json.loads(raw)
-			except json.JSONDecodeError:
-				return {"raw": raw[:8000]}
-	except urllib.error.HTTPError as exc:
-		err = exc.read().decode("utf-8", errors="replace")[:2000]
-		raise RuntimeError(f"HTTP {exc.code}: {err}") from exc
+		return json.loads(raw)
+	except json.JSONDecodeError:
+		return {"raw": raw[:8000]}
 
 
 def _github_tools(row: dict) -> list[ToolSpec]:
@@ -161,7 +157,13 @@ def _slack_tools(row: dict) -> list[ToolSpec]:
 	]
 
 
+READ_METHODS = ("GET", "HEAD")
+WRITE_METHODS = ("POST", "PUT", "PATCH", "DELETE")
+
+
 def _custom_tools(row: dict) -> list[ToolSpec]:
+	"""Custom HTTP connector: one read-only tool (GET/HEAD) and one write tool (POST/PUT/PATCH/DELETE) that
+	the user has to confirm -- a model can no longer change data on the other side through the "read" tool."""
 	docname = row["name"]
 	label = row.get("label") or "Custom"
 	base = (row.get("base_url") or "").rstrip("/")
@@ -169,7 +171,10 @@ def _custom_tools(row: dict) -> list[ToolSpec]:
 	if not base:
 		return []
 
-	def request(path: str = "/", method: str = "GET", body: dict | None = None, **_):
+	def call(path: str, method: str, body: dict | None, allowed: tuple[str, ...]):
+		method = (method or allowed[0]).upper()
+		if method not in allowed:
+			raise ValueError(f"This tool only does {', '.join(allowed)}; use the other tool of the connector for {method}.")
 		token = _token(docname)
 		auth_type = (row.get("auth_type") or "Bearer").strip()
 		headers = {}
@@ -181,24 +186,44 @@ def _custom_tools(row: dict) -> list[ToolSpec]:
 			else:
 				headers["Authorization"] = f"Bearer {token}"
 		url = base + (path if path.startswith("/") else "/" + path)
-		return _http_json(url, method=method.upper(), headers=headers, body=body)
+		return _http_json(url, method=method, headers=headers, body=body)
+
+	def read_request(path: str = "/", method: str = "GET", **_):
+		return call(path, method, None, READ_METHODS)
+
+	def write_request(path: str = "/", method: str = "POST", body: dict | None = None, **_):
+		return call(path, method, body, WRITE_METHODS)
 
 	return [
 		ToolSpec(
 			name=f"{prefix}_request",
-			description=f"HTTP request via connector {label}",
+			description=f"Read-only HTTP request (GET/HEAD) via connector {label}",
+			parameters={
+				"type": "object",
+				"properties": {"path": {"type": "string"}, "method": {"type": "string", "enum": list(READ_METHODS)}},
+			},
+			handler=read_request,
+			source="plugin",
+			category=CATEGORY_READ,
+			skill="integrations",
+			endpoint_ref=docname,
+		),
+		ToolSpec(
+			name=f"{prefix}_write_request",
+			description=f"HTTP request that changes data (POST/PUT/PATCH/DELETE) via connector {label}; the user confirms it first",
 			parameters={
 				"type": "object",
 				"properties": {
 					"path": {"type": "string"},
-					"method": {"type": "string"},
+					"method": {"type": "string", "enum": list(WRITE_METHODS)},
 					"body": {"type": "object"},
 				},
 			},
-			handler=request,
+			handler=write_request,
 			source="plugin",
-			category=CATEGORY_READ,
+			category=CATEGORY_WRITE,
 			skill="integrations",
+			confirmation_required=True,
 			endpoint_ref=docname,
 		),
 	]
