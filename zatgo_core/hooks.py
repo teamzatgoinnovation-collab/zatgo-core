@@ -9,7 +9,7 @@ Keep invasive overrides rare.
 """
 
 app_name = "zatgo_core"
-app_title = "ZatGo Core"
+app_title = "ZatGo"
 app_publisher = "ZatGo Innovation"
 app_description = (
     "ZatGo Core — platform settings, feature flags, integrations, "

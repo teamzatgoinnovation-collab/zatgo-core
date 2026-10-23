@@ -13,7 +13,7 @@ from zatgo_core.api.validators import require_login
 
 def _require_boy_doctype() -> None:
     if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed — migrate zatgo_core")
+        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
 
 
 def _boy_for_session() -> str:

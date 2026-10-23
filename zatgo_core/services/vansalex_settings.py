@@ -447,7 +447,7 @@ def resolve_sale(
     if ptype == "Bank" and not eff["allow_bank_payment"] and not admin:
         frappe.throw("Bank payments are not allowed for your account.", frappe.PermissionError)
     if ptype == "Bank" and not frappe.get_meta("Sales Invoice").has_field("custom_bank_account"):
-        frappe.throw("Bank payments need zatgo_core's Bank Account field on Sales Invoice: run bench migrate.")
+        frappe.throw("Bank payments need ZatGo's Bank Account field on Sales Invoice: run bench migrate.")
 
     wh = allowed_warehouse(warehouse, eff=eff, admin=admin)
 

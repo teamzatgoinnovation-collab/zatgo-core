@@ -152,7 +152,7 @@ def _map(row: Any) -> dict[str, Any]:
 
 def _require_stop_doctype() -> None:
     if not frappe.db.exists("DocType", "ZG Delivery Stop"):
-        frappe.throw("ZG Delivery Stop DocType is not installed — migrate zatgo_core")
+        frappe.throw("ZG Delivery Stop DocType is not installed: run bench migrate")
 
 
 def _resolve_boy(delivery_boy: str | None) -> str | None:
@@ -160,7 +160,7 @@ def _resolve_boy(delivery_boy: str | None) -> str | None:
     if not boy:
         return None
     if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed — migrate zatgo_core")
+        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
     if not frappe.db.exists("ZG Delivery Boy", boy):
         by_code = frappe.db.exists("ZG Delivery Boy", {"code": boy})
         if by_code:

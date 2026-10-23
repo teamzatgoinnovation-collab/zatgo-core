@@ -46,7 +46,7 @@ def _map(row: Any) -> dict[str, Any]:
 
 def _require_doctype() -> None:
     if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed — migrate zatgo_core")
+        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
 
 
 def _next_code() -> str:
@@ -222,7 +222,8 @@ def create(
     if frappe.db.exists("ZG Delivery Boy", {"code": boy_code}):
         frappe.throw(f"Delivery boy code {boy_code} already exists")
 
-    if boy_vehicle and not frappe.db.exists("ZG Vehicle", boy_vehicle):
+    # ZG Delivery Boy.vehicle links to ERPNext's Vehicle (ZG Vehicle's rows were migrated there).
+    if boy_vehicle and not frappe.db.exists("Vehicle", boy_vehicle):
         boy_vehicle = None
 
     user_name = _create_delivery_user(
