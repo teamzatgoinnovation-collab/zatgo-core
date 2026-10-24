@@ -61,6 +61,14 @@ class TestHealth(unittest.TestCase):
     def test_rating_bands(self):
         self.assertEqual([health.rating(x) for x in (100, 80, 79, 60, 59, 0)], ["good", "good", "fair", "fair", "poor", "poor"])
 
+    def test_wording_agrees_with_the_count(self):
+        d = {f["key"]: f["detail"] for f in score(out_of_stock=1, low_stock=1, negative=1, stocked_items=1)["factors"]}
+        self.assertEqual(d["availability"], "1 of 1 stocked item is out of stock.")
+        self.assertEqual(d["low_stock"], "1 item is at or below the reorder level.")
+        self.assertEqual(d["negative_stock"], "1 item has a negative balance in some warehouse.")
+        d = {f["key"]: f["detail"] for f in score(out_of_stock=3, low_stock=2)["factors"]}
+        self.assertEqual(d["availability"], "3 of 100 stocked items are out of stock.")
+
     def test_every_factor_explains_itself(self):
         for f in score(out_of_stock=3, low_stock=2)["factors"]:
             self.assertTrue(f["detail"])

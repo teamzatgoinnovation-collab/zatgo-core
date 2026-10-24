@@ -16,6 +16,10 @@ def _ratio(part: float, whole: float) -> float:
     return 0.0 if not whole else min(1.0, max(0.0, part / whole))
 
 
+def _n(count: int, noun: str = "item") -> str:
+    return f"{count} {noun}{'' if count == 1 else 's'}"
+
+
 def rating(score: int) -> str:
     return "good" if score >= 80 else ("fair" if score >= 60 else "poor")
 
@@ -45,14 +49,14 @@ def score(
             "label": "Stock availability",
             "weight": WEIGHTS["availability"],
             "points": pts("availability", _ratio(out_of_stock, stocked_items)),
-            "detail": f"{out_of_stock} of {stocked_items} stocked items are out of stock.",
+            "detail": f"{out_of_stock} of {_n(stocked_items, 'stocked item')} {'is' if out_of_stock == 1 else 'are'} out of stock.",
         },
         {
             "key": "low_stock",
             "label": "Low stock",
             "weight": WEIGHTS["low_stock"],
             "points": pts("low_stock", _ratio(low_stock, stocked_items)),
-            "detail": f"{low_stock} items are at or below their reorder level.",
+            "detail": f"{_n(low_stock)} {'is' if low_stock == 1 else 'are'} at or below the reorder level.",
         },
         {
             "key": "negative_stock",
@@ -60,7 +64,7 @@ def score(
             "weight": WEIGHTS["negative_stock"],
             # a negative balance is a data-integrity problem, so each one weighs 5x an out-of-stock item
             "points": pts("negative_stock", _ratio(negative * 5, stocked_items)),
-            "detail": f"{negative} items have a negative balance in some warehouse.",
+            "detail": f"{_n(negative)} {'has' if negative == 1 else 'have'} a negative balance in some warehouse.",
         },
         {
             "key": "dead_stock",
