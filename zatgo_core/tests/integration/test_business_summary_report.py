@@ -146,6 +146,27 @@ class TestBusinessSummaryReport(IntegrationTestCase):
         after = self._cards(self.company)
         d = lambda k: round(after[k] - before[k], 2)  # noqa: E731
         self.assertEqual(d("Party Payment Total"), 165.0)
+        self.assertEqual(d("Purchases Total"), round(pi.base_grand_total, 2))
+
+    def test_purchases_net_of_return_and_reconcile_with_payments_and_payable(self):
+        from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+        before = self._cards(self.company)
+        pi = self._invoice("Purchase Invoice", 200)
+        ret = make_return_doc("Purchase Invoice", pi.name)
+        ret.items[0].qty = -1  # return one unit of one
+        ret.posting_date = nowdate()
+        ret.set_posting_time = 1
+        ret.insert(ignore_permissions=True)
+        ret.submit()
+        self._advance("Supplier", "Pay", 30)
+        after = self._cards(self.company)
+        d = lambda k: round(after[k] - before[k], 2)  # noqa: E731
+        self.assertEqual(d("Purchases Total"), round(pi.base_grand_total + ret.base_grand_total, 2))
+        # purchases - payable balance = payments (all of this run's cash is the 30 advance)
+        self.assertEqual(
+            round(d("Purchases Total") - d("Party Balance - Payable"), 2), d("Party Payment Total")
+        )
 
     def test_balances_come_from_ledger_and_net_advances(self):
         before = self._cards(self.company)

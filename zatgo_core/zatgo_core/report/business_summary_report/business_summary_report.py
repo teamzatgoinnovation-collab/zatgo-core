@@ -5,8 +5,11 @@ Every card is a General Ledger figure (what the Trial Balance / Profit and Loss
 / Balance Sheet show), one server-side aggregate each:
 
 * Sales Total -- Income accounts, net, for the range (same as the P&L).
-* Purchases Total -- Cost of Goods Sold for the range. Stock bought but not
-  yet sold is an asset, not a purchase expense.
+* Purchases Total -- purchase invoices net of purchase returns, as posted to
+  the Payable accounts in the range (tax included, stock and non-stock).
+  So Purchases - Payable balance = Party Payment when the range starts at
+  zero. Cost of Goods Sold (what was actually sold) is its own row; stock
+  bought but not yet sold is the difference.
 * Party Payment -- money paid out through the Payable accounts in the range:
   Payment Entries and Journal Entries, net of refunds back to us.
 * Party Receipt -- money received through the Receivable accounts in the
@@ -41,7 +44,7 @@ def execute(filters=None):
     sales_count = get_sales_invoice_count(company, from_date, to_date)
     pnl = get_profit_and_loss(company, from_date, to_date)
     sales_total = pnl["income"]
-    purchase_total = pnl["cogs"]
+    purchase_total = get_purchases_total(company, from_date, to_date)
     payments = get_party_cash_movement(company, from_date, to_date, "Payable")
     receipts = get_party_cash_movement(company, from_date, to_date, "Receivable")
     receivable = get_ledger_balance(company, to_date, "Receivable")
@@ -52,6 +55,7 @@ def execute(filters=None):
         {"transaction_type": _("Purchases"), "count": None, "total_amount": purchase_total},
         {"transaction_type": _("Party Payment"), "count": None, "total_amount": payments},
         {"transaction_type": _("Party Receipt"), "count": None, "total_amount": receipts},
+        {"transaction_type": _("Cost of Goods Sold (ledger)"), "count": None, "total_amount": pnl["cogs"]},
         {"transaction_type": _("Total Expense (ledger)"), "count": None, "total_amount": pnl["expense"]},
         {"transaction_type": _("Net Profit (ledger)"), "count": None, "total_amount": pnl["income"] - pnl["expense"]},
     ]
@@ -88,6 +92,24 @@ def get_sales_invoice_count(company, from_date, to_date):
         "Sales Invoice",
         {"docstatus": 1, "company": company, "posting_date": ["between", [from_date, to_date]]},
     )
+
+
+def get_purchases_total(company, from_date, to_date):
+    """Purchase invoices net of purchase returns: what the Payable accounts
+    were credited (debited for returns) by Purchase Invoices in the range."""
+    row = frappe.db.sql(
+        """
+        select sum(g.credit - g.debit) as net
+        from `tabGL Entry` g join `tabAccount` a on a.name = g.account
+        where g.company = %(company)s and g.is_cancelled = 0
+          and a.account_type = 'Payable' and a.root_type = 'Liability'
+          and g.voucher_type = 'Purchase Invoice'
+          and g.posting_date between %(from_date)s and %(to_date)s
+        """,
+        {"company": company, "from_date": from_date, "to_date": to_date},
+        as_dict=True,
+    )[0]
+    return flt(row.net)
 
 
 def get_party_cash_movement(company, from_date, to_date, account_type):
