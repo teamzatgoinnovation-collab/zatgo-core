@@ -30,6 +30,11 @@ Presets and the comparison period are defined once, in `services/mybis/period.py
 | `finance.party_invoices` | the open items behind one party's aging row (ERPNext's detailed Accounts Receivable / Payable report); invoices link to `*.invoice_detail` |
 | `parties.summary(kind=customer\|supplier)` | active, new (first-ever invoice in the period), returning, with a balance, total outstanding, overdue |
 | `parties.ranking(kind, order)` | customers by `revenue` / `profit` / `orders` / `outstanding`; suppliers by `revenue` (spend) / `orders` / `outstanding`; each row has outstanding + overdue. A party's own drill-down is `sales.breakdown_by` / `purchase.breakdown_by` with `filters={"customer": ...}` |
+| `forecast.project(subject, horizon, method)` | statistical forecast of `sales` / `revenue` / `purchases` / `cash_flow` / `customer` (+`party`) for `7d` / `30d` / `90d` / `12m`: history, forecast with likely range, summary (historical total vs forecast total and change), method, confidence, limitations; cash flow adds the projected balance and the invoices falling due |
+| `forecast.demand` | per stock item: 90-day sales, forecast demand, stock, on order, suggested reorder = max(0, demand - stock - on order), days of cover. Informational: no purchase order is created |
+| `forecast.methods` | the methods, horizons and subjects the app can offer |
+| `alerts.feed` | all alerts (risks) and insights (observations) for the period, most severe first, each with metric, values, source, calculation, underlying data and a `drill` target |
+| `alerts.summary` | counts by severity / type and the three most severe items |
 
 ## Figure definitions (company currency, `base_*` fields, submitted documents only)
 - **Total sales** = sum of `base_net_total` of non-return Sales Invoices (before tax). **Net sales** = total sales + returns (return invoices are negative). Discount, tax, invoice count, average order value are in `sales_detail`.
@@ -52,6 +57,22 @@ Presets and the comparison period are defined once, in `services/mybis/period.py
 - Aging buckets are ERPNext's `range0..range5` (ageing based on Due Date): *Not due* = `<0`, `0-30`, `31-60`, `61-90`, `90+` = `91-120` + `121-Above`. Their sum equals the party's outstanding.
 - Customers: *active* = distinct customers with a non-return invoice in the period; *new* = first-ever non-return invoice with this company falls in the period; *returning* = active - new.
 - A cash-flow figure is only as meaningful as the chart: ERPNext derives it from Cash / Bank accounts, so a site that posts no payments shows zeros there.
+
+## Forecasting methodology (`services/mybis/forecast.py`, `forecasting.py`)
+This is classical time-series arithmetic over ERPNext history, **not machine learning**, and every response and screen says so ("Forecast (statistical estimate, not AI)"). History, forecast and estimate are separate series; a forecast never appears without its method, range and confidence.
+- **Engines** (one `ForecastEngine` interface, so a learned model can be added later): moving average (last 7 days / 3 months), weighted moving average (newer points weigh more), simple exponential smoothing (alpha tuned on one-step error), Holt's linear trend (alpha, beta tuned). `method=auto` backtests all four on the last 30 points and takes the one with the lowest weighted absolute error.
+- **Seasonality**: multiplicative weekday indices (daily series) or month indices (monthly) are applied only with at least two full cycles of history and a non-negligible pattern; otherwise the response says none was applied.
+- **Likely range** (about 80%): the model's recent one-step error (RMSE) widened with the horizon by the standard exponential-smoothing variance formulas; sales-type subjects are floored at 0, cash movement is not.
+- **Confidence** (high / medium / low) from the amount of history and the backtest error; any series with fewer than 7 points (6 months for the 12-month view) returns `available: false` with the reason instead of a number.
+- **History window**: complete days / months only (today's partial figures are excluded); leading periods before the first activity are dropped and the response says so. Subjects: net sales and net purchases (invoices), revenue and cash movement (General Ledger, Cash/Bank accounts), a single customer's net sales, and per-item stock demand.
+- **Cash flow**: projected balance = cash + bank today + cumulative forecast net movement; open invoices falling due in the window are shown separately as known items, not added to the forecast.
+- **Limitations stated to the user**: it extrapolates the past and cannot anticipate promotions, price changes, new customers or holidays; fewer than 28 points, many empty periods, high volatility and long horizons each add an explicit warning.
+
+## Insights and alerts (`services/mybis/insights.py`)
+Rules over real figures, each producing: `id` (stable), `type` (alert = a risk that calls for action, insight = an observation), `severity` (critical / high / medium / low by the thresholds at the top of the module), the metric with current / previous value and change, `source`, a plain-text `calculation`, the underlying `data` rows and a `drill` target (`screen`, optional `tab` / `party` / `dimension` + `filters` / `kind`) that the app turns into navigation. A rule whose source the user cannot read is skipped (`skipped_rules`), never guessed.
+Rules: net sales decline / growth, net loss / profit decline, gross-margin change, expense growth, top and fast-moving categories and products, top-customer share and concentration, receivables growth / overdue share / most overdue customer, payables overdue, cash not covering payables due in 30 days, out-of-stock / low / negative / dead stock, poor inventory health, stock value up while sales are flat. Growth needs a non-zero previous value: nothing is said from a base of 0.
+**Like for like**: while the period has not ended (this month so far) the previous period is cut to the same number of days, and the response says so (`comparison_note`); a finished period is compared whole.
+**Notifications**: the engine is pure and transport-free. `fingerprint` (id + company + severity + period start) is stable while a condition persists, so a later scheduled job can diff two runs and push only new or escalated items; no push is sent today.
 
 ## Permissions and safety
 `@frappe.whitelist` methods require a login, read permission on each source DocType (a figure whose source is not readable is `available:false`), and refuse users who carry **record-level User Permissions other than Company** (raw SQL cannot apply them to totals -- `queries.guard`). Aggregates are SQL (no row downloads); cache key = user + company + request, TTL 300 s.
