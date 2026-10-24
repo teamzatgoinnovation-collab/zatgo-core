@@ -39,6 +39,7 @@
     "enable_vansalex_web",
     "apps_section",
     "enable_vansalex",
+    "enable_mybis",
     "bundled_apps_section",
     "enable_chat_ai",
     "enable_tracker",
@@ -244,6 +245,13 @@
       "fieldtype": "Check",
       "label": "Enable ZatGo VanSaleX",
       "description": "The VanSaleX van-sales app: its API, its Desk workspace and sidebar entry. On unless switched off."
+    },
+    {
+      "default": "0",
+      "fieldname": "enable_mybis",
+      "fieldtype": "Check",
+      "label": "Enable ZatGo MyBis",
+      "description": "The MyBis management / business-intelligence API (read-only). Off: its methods answer 404."
     },
     {
       "fieldname": "bundled_apps_section",
