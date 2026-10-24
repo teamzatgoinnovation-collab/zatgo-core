@@ -40,7 +40,7 @@ After deploying, restart the web worker: the asset hash is cached per process (`
 | `86-tabs-menus-dialogs` | form/page/settings tabs, dropdown + context menus, awesomebar, popovers/tooltips, modals/dialogs (bottom sheet on phones). |
 | `87-responsive` | breakpoints (576/768/992/1200), compact rail on tablet, off-canvas workspace drawer on phones (JS: `Mobile navigation drawer` block in `saas_theme.js`), single-column forms, touch targets, safe-area insets. |
 | `88-accents` | multi-hue accents on top of the blue primary: tinted rail/sidebar icons, hue-rotated module tiles on `/desk`, coloured KPI/shortcut card edges. Hue = position in an 8-step cycle. |
-| `91-frappe-ui-style` | the Frappe CRM look, token-first and loaded last: neutral gray palette, near-black primary buttons (brand blue stays for links), filled borderless inputs, gray neutral buttons, light sidebar with a white active pill, 16px dialogs. Light block is `:root:not([data-theme="dark"])` so it never ties with (and beats) the dark tokens; dark mode only gets the geometry. |
+| `91-frappe-ui-style` | the Frappe CRM look, token-first and loaded last: neutral gray palette, near-black primary buttons (brand blue stays for links), filled borderless inputs, gray neutral buttons, light sidebar with a white active pill, 16px dialogs, Inter (Cairo for Arabic), sentence-case rounded table headers, underline tabs, neutral menu fills, light primary button in dark mode. The login page (`login.css`) still uses Poppins. Light block is `:root:not([data-theme="dark"])` so it never ties with (and beats) the dark tokens; dark mode only gets the geometry. |
 | `90-a11y-motion` | zero-specificity `:focus-visible` ring, `prefers-reduced-motion`, `prefers-contrast` |
 
 ## Rules for changing it
