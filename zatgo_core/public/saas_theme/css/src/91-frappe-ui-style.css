@@ -1,0 +1,212 @@
+/* ============================================
+   91. FRAPPE-UI STYLE — the Frappe CRM look
+   Loads last. Token-first: re-points the palette and the component tokens defined in 00/01/02/40/82/83/86,
+   so the components themselves are untouched. What changes:
+     - neutral grays (the blue-tinted scale is gone), near-black primary actions, brand blue kept for links
+     - inputs: filled gray, no border, 8px radius; white + ring on focus
+     - neutral buttons: filled gray, no border
+     - sidebar: light gray surface, active item = white pill with a hairline shadow
+     - dialogs: 16px radius, soft shadow, roomier padding
+   Light mode only for palette swaps; dark keeps its own scale and only gets the geometry (radius, no-border fields).
+   ============================================ */
+
+/* --------------------------------------------
+   1. PALETTE (light) — :root:not(dark) so this later-loading block doesn't tie with, and beat, [data-theme="dark"]
+   -------------------------------------------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"] {
+	--gray-50:  #F8F8F8;
+	--gray-100: #F3F3F3;
+	--gray-200: #EDEDED;
+	--gray-300: #E2E2E2;
+	--gray-400: #C7C7C7;
+	--gray-500: #999999;
+	--gray-600: #7C7C7C;
+	--gray-700: #525252;
+	--gray-800: #383838;
+	--gray-900: #171717;
+
+	--heading-color: #171717;
+	--text-color: #383838;
+	--text-neutral: #383838;
+	--text-dark: #171717;
+	--text-muted: #7C7C7C;
+	--text-light: #999999;
+
+	--bg-color: #FFFFFF;
+	--subtle-accent: #F8F8F8;
+	--subtle-fg: #F3F3F3;
+	--fg-hover-color: #F3F3F3;
+	--control-bg: #F3F3F3;
+	--control-bg-on-gray: #EDEDED;
+	--disabled-control-bg: #F8F8F8;
+	--disabled-text-color: #999999;
+	--awesomplete-hover-bg: #F3F3F3;
+
+	--border-color: #EDEDED;
+	--dark-border-color: #E2E2E2;
+	--table-border-color: #EDEDED;
+	--divider-color: #EDEDED;
+	--sidebar-border-color: #EDEDED;
+	--btn-group-border-color: #E2E2E2;
+	--border-primary: #171717;
+
+	--btn-default-bg: #F3F3F3;
+	--btn-default-hover-bg: #EDEDED;
+	--btn-ghost-hover-bg: #F3F3F3;
+	--sidebar-select-color: #F3F3F3;
+	--sidebar-hover-color: #EDEDED;
+	--skeleton-bg: #F3F3F3;
+	--placeholder-color: #F8F8F8;
+	--scrollbar-thumb-color: #D4D4D4;
+	--scrollbar-track-color: #F3F3F3;
+	--switch-bg: #D4D4D4;
+
+	/* Checkbox / radio / switch / selected date follow the black primary action */
+	--checkbox-color: #171717;
+	--checkbox-focus-shadow: 0 0 0 2px rgba(23, 23, 23, 0.15);
+	--date-active-bg: #171717;
+	--progress-bar-bg: #171717;
+
+	/* Softer, wider-radius elevation */
+	--border-radius: 6px;
+	--border-radius-md: 8px;
+	--border-radius-lg: 10px;
+	--border-radius-xl: 12px;
+	--border-radius-2xl: 16px;
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+	--shadow-base: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.08);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.1);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.1);
+	--shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.12);
+
+	/* Fields */
+	--zg-field-bg: #F3F3F3;
+	--zg-field-bg-sunken: #F8F8F8;
+	--zg-field-border: transparent;
+	--zg-field-border-hover: transparent;
+	--zg-field-border-quiet: #E2E2E2;
+	--zg-field-radius: 8px;
+	--zg-field-height: 32px;
+	--zg-field-selected: #EDEDED;
+
+	/* Buttons: black primary, filled-gray neutral */
+	--zg-btn-primary-bg: #171717;
+	--zg-btn-primary-bg-hover: #383838;
+	--zg-btn-primary-bg-active: #525252;
+	--zg-btn-primary-fg: #FFFFFF;
+	--zg-btn-primary-shadow: none;
+	--zg-btn-primary-shadow-hover: none;
+	--zg-btn-neutral-bg: #F3F3F3;
+	--zg-btn-neutral-bg-hover: #EDEDED;
+	--zg-btn-neutral-bg-active: #E2E2E2;
+	--zg-btn-neutral-fg: #383838;
+	--zg-btn-neutral-border: transparent;
+	--zg-btn-neutral-border-hover: transparent;
+	--zg-btn-radius: 8px;
+	--zg-btn-link-fg: #171717;
+
+	/* Sidebar: light gray surface, white active pill */
+	--st-sidebar-bg: #F8F8F8;
+	--st-sidebar-border: #EDEDED;
+	--st-item-hover: #EDEDED;
+	--st-item-active-bg: #FFFFFF;
+	--st-item-active-text: #171717;
+	--st-text-primary: #171717;
+	--st-text-secondary: #383838;
+	--st-text-muted: #7C7C7C;
+	--st-section-color: #999999;
+	--st-kbd-bg: #EDEDED;
+	--st-kbd-color: #7C7C7C;
+	--st-search-bg: #FFFFFF;
+	--st-search-border: #E2E2E2;
+	--st-divider: #EDEDED;
+	--st-radius: 8px;
+
+	/* Dialogs */
+	--zg-dlg-radius: 16px;
+	--zg-dlg-shadow: var(--shadow-xl);
+	--zg-dlg-footer-bg: transparent;
+	--zg-dlg-scrim: #000000;
+	--zg-dlg-scrim-opacity: 0.3;
+}
+
+/* --------------------------------------------
+   2. DARK — geometry only (palette stays the theme's own)
+   -------------------------------------------- */
+[data-theme="dark"] {
+	--zg-field-border: transparent;
+	--zg-field-border-hover: transparent;
+	--zg-field-radius: 8px;
+	--zg-field-height: 32px;
+	--zg-btn-radius: 8px;
+	--zg-dlg-radius: 16px;
+	--st-radius: 8px;
+}
+
+/* --------------------------------------------
+   3. FIELDS — filled, borderless; white surface + ring on focus
+   -------------------------------------------- */
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)) {
+	box-shadow: none;
+}
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):hover:where(:not(:focus, :disabled, [readonly])) {
+	background-color: var(--zg-field-hover-bg, var(--gray-200));
+}
+.frappe-control .form-control:where(:not(.grid-body *, .datatable *)):focus {
+	background-color: var(--fg-color);
+	border-color: var(--gray-400);
+	box-shadow: 0 0 0 2px var(--gray-200);
+}
+[data-theme="dark"] .frappe-control .form-control:where(:not(.grid-body *, .datatable *)):hover:where(:not(:focus, :disabled, [readonly])) {
+	background-color: var(--gray-600);
+}
+[data-theme="dark"] .frappe-control .form-control:where(:not(.grid-body *, .datatable *)):focus {
+	background-color: var(--control-bg);
+	border-color: var(--gray-400);
+	box-shadow: 0 0 0 2px var(--gray-600);
+}
+.frappe-control .form-control::placeholder {
+	color: var(--gray-500);
+}
+
+/* Small grey labels above the control */
+.frappe-control .control-label,
+.frappe-control .label-area {
+	color: var(--text-muted);
+	font-size: var(--zg-text-sm);
+	font-weight: 400;
+	margin-bottom: 4px;
+}
+
+/* --------------------------------------------
+   4. SIDEBAR — white pill for the active item, hairline shadow
+   -------------------------------------------- */
+.body-sidebar .standard-sidebar-item.active-sidebar {
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] .body-sidebar .standard-sidebar-item.active-sidebar {
+	box-shadow: none;
+}
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-label {
+	font-weight: 500;
+}
+
+/* --------------------------------------------
+   5. DIALOGS — roomier header, 16px radius (token above)
+   -------------------------------------------- */
+.modal .modal-header {
+	padding: 20px 24px 8px;
+	border-bottom: 0;
+}
+.modal .modal-header .modal-title {
+	font-size: var(--zg-text-xl, 18px);
+	font-weight: 600;
+}
+.modal .modal-body {
+	padding: 12px 24px 20px;
+}
+.modal .modal-footer {
+	padding: 0 24px 20px;
+	border-top: 0;
+}
