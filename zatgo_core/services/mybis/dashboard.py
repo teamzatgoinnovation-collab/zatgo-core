@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
+from frappe.utils import getdate
 
 from zatgo_core.services.mybis import metrics, queries
 from zatgo_core.services.mybis.scope import Scope
@@ -107,9 +108,15 @@ def sales_trend(scope: Scope, group_by: str | None) -> dict[str, Any]:
     if bucket not in ("day", "week", "month"):
         frappe.throw(frappe._("group_by must be day, week or month"), frappe.ValidationError)
 
+    today = getdate(frappe.utils.today())
+
     def series(period):
-        rows = queries.net_sales_by_bucket(scope.company, period.from_date, period.to_date, bucket)
-        return metrics.fill_series(rows, period.from_date, period.to_date, bucket)
+        # Never plot the future: days after today are not "zero sales", they have not happened yet.
+        end = min(period.to_date, today)
+        if end < period.from_date:
+            return []
+        rows = queries.net_sales_by_bucket(scope.company, period.from_date, end, bucket)
+        return metrics.fill_series(rows, period.from_date, end, bucket)
 
     return {
         "currency": scope.currency,

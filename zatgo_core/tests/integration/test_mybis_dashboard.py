@@ -10,13 +10,13 @@ from frappe.utils import add_months, getdate, random_string, today
 from zatgo_core.api.v1.mybis import dashboard as api
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
-COMPANY = "ZatGo MyBis KPI Co"
+COMPANY = "ZatGo MyBis KPI Test Co"  # throwaway: the local demo data lives in "ZatGo MyBis KPI Co"
 
 
 def _company() -> str:
     if not frappe.db.exists("Company", COMPANY):
         frappe.get_doc(
-            {"doctype": "Company", "company_name": COMPANY, "abbr": "ZMK", "default_currency": "SAR", "country": "Saudi Arabia"}
+            {"doctype": "Company", "company_name": COMPANY, "abbr": "ZKT", "default_currency": "SAR", "country": "Saudi Arabia"}
         ).insert(ignore_permissions=True)
     return COMPANY
 
@@ -141,7 +141,8 @@ class TestMyBisDashboard(IntegrationTestCase):
         self.assertEqual(t["group_by"], "day")
         self.assertAlmostEqual(sum(p["value"] for p in t["current"]), 200.0)
         self.assertEqual(sum(p["value"] for p in t["previous"]), 100.0)
-        self.assertGreaterEqual(len(t["current"]), 28)
+        self.assertLessEqual(getdate(t["current"][-1]["date"]), getdate(today()))  # the future is not plotted
+        self.assertEqual(t["current"][0]["date"], str(self.this_day))
         with self.assertRaises(frappe.ValidationError):
             api.sales_trend(company=COMPANY, group_by="hour")
 

@@ -26,6 +26,12 @@ class TestMetric(unittest.TestCase):
         self.assertFalse(m["higher_is_better"])
         self.assertEqual(m["basis"], "gl")
 
+    def test_negated_zero_is_plain_zero(self):
+        m = metrics.metric(-0.0, -0.0)
+        self.assertEqual(str(m["value"]), "0.0")
+        self.assertEqual(str(m["previous_value"]), "0.0")
+        self.assertEqual(str(m["change"]), "0.0")
+
     def test_percent(self):
         self.assertEqual(metrics.percent(30, 120), 25.0)
         self.assertIsNone(metrics.percent(30, 0))

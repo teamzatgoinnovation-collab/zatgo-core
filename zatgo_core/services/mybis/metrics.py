@@ -8,18 +8,23 @@ from typing import Any
 from zatgo_core.services.mybis import period as periods
 
 
+def _clean(x: float) -> float:
+    """Rounded to 2 places, and never -0.0 (a negated zero balance would print as "-0.00")."""
+    return round(x, 2) or 0.0
+
+
 def metric(current: float | None, previous: float | None, *, higher_is_better: bool = True, **extra: Any) -> dict[str, Any]:
     """{value, previous_value, change, growth_percent, higher_is_better, ...}. `previous` None = not compared;
     growth_percent is None when there is nothing to compare with (previous is 0 or missing) -- never a made-up 0 or 100."""
     out: dict[str, Any] = {
-        "value": None if current is None else round(current, 2),
-        "previous_value": None if previous is None else round(previous, 2),
+        "value": None if current is None else _clean(current),
+        "previous_value": None if previous is None else _clean(previous),
         "change": None,
         "growth_percent": None,
         "higher_is_better": higher_is_better,
     }
     if current is not None and previous is not None:
-        out["change"] = round(current - previous, 2)
+        out["change"] = _clean(current - previous)
         out["growth_percent"] = periods.growth_percent(current, previous)
     out.update(extra)
     return out
