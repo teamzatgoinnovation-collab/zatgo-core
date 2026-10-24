@@ -51,7 +51,7 @@ def execute(filters=None):
     payments = get_party_payments(company, from_date, to_date, "Supplier")
     receipts = get_party_payments(company, from_date, to_date, "Customer")
     receivable = get_ledger_balance(company, to_date, "Receivable")
-    payable = -get_ledger_balance(company, to_date, "Payable")
+    payable = 0.0 - get_ledger_balance(company, to_date, "Payable")  # 0.0 - x: never "-0.00"
 
     data = [
         {"transaction_type": _("Sales Invoice"), "count": sales_count, "total_amount": sales_total},
