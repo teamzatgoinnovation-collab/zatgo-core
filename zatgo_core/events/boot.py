@@ -31,6 +31,79 @@ def _route_sidebar_entries(bootinfo: Any) -> None:
             item["route"] = routes[item["link_to"]]
 
 
+_TILE_COLORS = ("#06B58B", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#14B8A6", "#EC4899", "#6366F1")
+# A gear, drawn in a 54x54 tile, for "General Settings".
+_GEAR = (
+    "M27 17.5a2 2 0 0 1 2 2v1.3c.8.2 1.5.5 2.1.9l.9-.9a2 2 0 0 1 2.8 2.8l-.9.9c.4.6.7 1.3.9 2.1h1.3a2 2 0 0 1 "
+    "0 4h-1.3c-.2.8-.5 1.5-.9 2.1l.9.9a2 2 0 0 1-2.8 2.8l-.9-.9c-.6.4-1.3.7-2.1.9v1.3a2 2 0 0 1-4 0v-1.3c-.8-.2-1.5-.5-2.1-.9l-.9.9"
+    "a2 2 0 0 1-2.8-2.8l.9-.9c-.4-.6-.7-1.3-.9-2.1h-1.3a2 2 0 0 1 0-4h1.3c.2-.8.5-1.5.9-2.1l-.9-.9a2 2 0 0 1 2.8-2.8l.9.9"
+    "c.6-.4 1.3-.7 2.1-.9v-1.3a2 2 0 0 1 2-2zm0 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"
+)
+
+
+def _tile(label: str, general: bool = False) -> str:
+    """The icon of a popup entry: a coloured rounded tile with the app's initials (a gear for General Settings),
+    as a data URI -- no asset file per app, so a new app or industry needs nothing drawn. The colour comes from
+    the label, so an app keeps its colour on every site."""
+    from urllib.parse import quote
+
+    color = _TILE_COLORS[sum(ord(c) for c in label) % len(_TILE_COLORS)]
+    if general:
+        glyph = f'<path fill-rule="evenodd" d="{_GEAR}" fill="#fff"/>'
+    else:
+        words = [w for w in label.replace("ZatGo", "").split() if w] or [label]
+        text = "".join(w[0] for w in words[:2]).upper()
+        glyph = (
+            f'<text x="27" y="35.5" font-family="Poppins,Arial,sans-serif" font-size="22" font-weight="600" '
+            f'text-anchor="middle" fill="#fff">{text}</text>'
+        )
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="54" height="54" viewBox="0 0 54 54">'
+        f'<rect width="54" height="54" rx="15.4" fill="{color}"/>{glyph}</svg>'
+    )
+    return "data:image/svg+xml," + quote(svg)
+
+
+def _zatgo_folder_children(bootinfo: Any) -> None:
+    """Fill the "ZatGo" folder of the Apps screen (/desk): its popup lists every app this user can open plus
+    "General Settings", like the Frappe HR folder does.
+
+    The children are not Desktop Icon rows (an icon's name is its label, and an app's own rail icon already
+    has it); they are made here from the user's ZatGo sidebar, so exactly what the sidebar shows is what the
+    popup shows. The popup opens each child by its `link` (External icon = a plain URL)."""
+    sidebar = (bootinfo.get("workspace_sidebar_item") or {}).get(core_sidebar.NAME.lower())
+    folder = next((i for i in bootinfo.get("desktop_icons") or [] if i.get("label") == core_sidebar.NAME), None)
+    if not sidebar or not folder or folder.get("icon_type") != "Folder":
+        return
+    children, general_target, in_general = [], None, False
+    for item in sidebar.get("items", []):
+        if item.get("type") == "Section Break":
+            in_general = item.get("label") == core_sidebar.GENERAL_LABEL
+            continue
+        route = item.get("route")
+        if route:
+            children.append((item.get("label"), item.get("icon"), route))
+        elif in_general and item.get("link_type") in ("Page", "DocType"):
+            # The App Settings Hub where this site has it, else the first settings entry of the section.
+            target = "/desk/" + frappe.scrub(item["link_to"]).replace("_", "-")
+            if item["link_to"] == core_sidebar.HUB_PAGE or not general_target:
+                general_target = target
+    if general_target:
+        children.append((core_sidebar.GENERAL_LABEL, "setting", general_target))
+    by_label = {i.get("label"): i for i in bootinfo["desktop_icons"]}
+    for idx, (label, icon, route) in enumerate(children):
+        child = by_label.get(label)
+        if child is None:
+            child = frappe._dict(name=label, label=label, standard=0, bg_color=None, link_to=None, icon_image=None)
+            bootinfo["desktop_icons"].append(child)
+        # An app's own rail icon (same name, hidden) is reused for this user's boot only; the row is untouched.
+        child.update(
+            icon=icon or "list", icon_type="Link", link_type="External", link=route, parent_icon=folder["label"],
+            app="zatgo_core", idx=idx, hidden=0, restrict_removal=1, icon_image=None,
+            logo_url=_tile(label, general=label == core_sidebar.GENERAL_LABEL),
+        )
+
+
 def boot_session(bootinfo: Any) -> None:
     """Inject compact ZatGo Core boot payload for Desk / Vue clients."""
     try:
@@ -77,5 +150,6 @@ def boot_session(bootinfo: Any) -> None:
             "sales_invoice_naming": get_session_user_series(),
         }
         _route_sidebar_entries(bootinfo)
+        _zatgo_folder_children(bootinfo)
     except Exception:
         frappe.logger("zatgo_core").exception("boot_session enrichment failed")

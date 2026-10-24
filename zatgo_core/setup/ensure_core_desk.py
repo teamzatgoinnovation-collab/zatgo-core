@@ -105,9 +105,7 @@ def ensure_core_desk() -> None:
                 "doctype": "Desktop Icon",
                 "label": NAME,
                 "app": "zatgo_core",
-                "icon_type": "Link",
-                "link_type": "Workspace Sidebar",
-                "link_to": NAME,
+                "icon_type": "Folder",
                 "icon": ICON,
                 "standard": 0,
                 "hidden": 0,
@@ -115,6 +113,11 @@ def ensure_core_desk() -> None:
         )
         icon.flags.ignore_links = True
         icon.insert(ignore_permissions=True)
+    # ZatGo is a folder on the Apps screen: its popup lists the apps and General Settings (events/boot.py).
+    if frappe.db.get_value("Desktop Icon", NAME, "icon_type") != "Folder":
+        frappe.db.set_value(
+            "Desktop Icon", NAME, {"icon_type": "Folder", "link_type": "", "link_to": ""}, update_modified=False
+        )
     # An existing sidebar is brought up to date too (it used to be frozen at first creation).
     core_sidebar.sync_core_sidebar()
     # Apps open from ZatGo > Apps: their own rail icons (created by their install / industries sync, which
