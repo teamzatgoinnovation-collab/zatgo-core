@@ -36,6 +36,23 @@ def parse_json_dict(value: Any, field: str = "values") -> dict[str, Any]:
     frappe.throw(_("{0} must be a dict or JSON string").format(field))
 
 
+def parse_json_list(value: Any, field: str = "values") -> list[Any]:
+    if value is None or value == "":
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        import json
+
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            frappe.throw(_("Invalid JSON for {0}: {1}").format(field, exc))
+        if isinstance(parsed, list):
+            return parsed
+    frappe.throw(_("{0} must be a list or JSON array").format(field))
+
+
 def parse_pagination(
     page: int | str | None = 1,
     page_size: int | str | None = DEFAULT_PAGE_SIZE,

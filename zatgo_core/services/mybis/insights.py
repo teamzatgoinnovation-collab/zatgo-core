@@ -15,6 +15,7 @@ of the previous period, not with the whole previous period.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import replace
 from datetime import date, timedelta
 from typing import Any, Callable
@@ -438,6 +439,7 @@ def generate(scope: Scope, today: date | None = None) -> dict[str, Any]:
             skipped.append(name)
     for it in items:
         it["fingerprint"] = f"{it['id']}|{scope.company}|{it['severity']}|{used.current.from_date}"
+        it["sid"] = hashlib.sha1(it["fingerprint"].encode()).hexdigest()[:10]  # short form: what an app sends back as "seen"
     items.sort(key=lambda i: (RANK[i["severity"]], 0 if i["type"] == "alert" else 1, -abs(i["change_percent"] or 0), i["id"]))
     return {
         "currency": scope.currency,

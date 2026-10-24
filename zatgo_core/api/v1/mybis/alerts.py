@@ -7,7 +7,8 @@ from typing import Any
 import frappe
 
 from zatgo_core.api.v1.mybis import _common
-from zatgo_core.services.mybis import insights
+from zatgo_core.api.validators import parse_json_list
+from zatgo_core.services.mybis import insights, notifications
 
 
 def _feed(company, preset, from_date, to_date, refresh) -> dict[str, Any]:
@@ -17,10 +18,23 @@ def _feed(company, preset, from_date, to_date, refresh) -> dict[str, Any]:
 
 
 @frappe.whitelist(methods=["GET", "POST"])
-def feed(company: str | None = None, preset: str | None = "this_month", from_date: str | None = None, to_date: str | None = None, refresh: Any = 0) -> dict[str, Any]:
+def feed(
+    company: str | None = None,
+    preset: str | None = "this_month",
+    from_date: str | None = None,
+    to_date: str | None = None,
+    refresh: Any = 0,
+    seen: Any = None,
+    min_severity: str = "low",
+) -> dict[str, Any]:
     """All alerts and insights for the period, most severe first. Each item: id, type (alert | insight), severity
-    (critical | high | medium | low), title, description, metric, current / previous value, source, calculation, data rows, drill target."""
-    return _feed(company, preset, from_date, to_date, refresh)
+    (critical | high | medium | low), title, description, metric, current / previous value, source, calculation, data rows, drill target.
+    `seen` (JSON list of fingerprints the app already showed) adds `unread` -- the ids that are new or have escalated since."""
+    env = _feed(company, preset, from_date, to_date, refresh)
+    if seen is not None:
+        fingerprints = parse_json_list(seen)
+        env["data"]["unread"] = [i["id"] for i in notifications.unread(env["data"]["items"], fingerprints, min_severity)]
+    return env
 
 
 @frappe.whitelist(methods=["GET", "POST"])

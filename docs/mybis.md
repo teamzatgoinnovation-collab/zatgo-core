@@ -35,6 +35,11 @@ Presets and the comparison period are defined once, in `services/mybis/period.py
 | `forecast.methods` | the methods, horizons and subjects the app can offer |
 | `alerts.feed` | all alerts (risks) and insights (observations) for the period, most severe first, each with metric, values, source, calculation, underlying data and a `drill` target |
 | `alerts.summary` | counts by severity / type and the three most severe items |
+| `reports.catalog` | the 19 reports in four groups (Sales, Purchases, Inventory, Finance), whether each is ERPNext's own or a MyBis aggregate, its allowed filters and whether the caller may run it |
+| `reports.run(report, ..., filters, page, page_size)` | one report as typed columns (`text` / `date` / `currency` / `number` / `percent`) and a page of rows, plus `total_rows`, totals and notes; cached 5 minutes like the screens |
+| `reports.export(report, format=csv\|xlsx\|pdf, ...)` | the whole table generated on the server and returned base64-encoded with its file name; always computed fresh |
+| `search.query(q, types, limit, company)` | customers, suppliers, items, sales / purchase invoices, payment entries, employees, warehouses matching `q` (2+ characters), each with a `drill` target; ERPNext permissions apply, unreadable types are listed in `skipped` |
+| `search.record(type, name)` | key facts of a payment entry, employee or warehouse (the hits that have no screen of their own) |
 
 ## Figure definitions (company currency, `base_*` fields, submitted documents only)
 - **Total sales** = sum of `base_net_total` of non-return Sales Invoices (before tax). **Net sales** = total sales + returns (return invoices are negative). Discount, tax, invoice count, average order value are in `sales_detail`.
@@ -73,6 +78,23 @@ Rules over real figures, each producing: `id` (stable), `type` (alert = a risk t
 Rules: net sales decline / growth, net loss / profit decline, gross-margin change, expense growth, top and fast-moving categories and products, top-customer share and concentration, receivables growth / overdue share / most overdue customer, payables overdue, cash not covering payables due in 30 days, out-of-stock / low / negative / dead stock, poor inventory health, stock value up while sales are flat. Growth needs a non-zero previous value: nothing is said from a base of 0.
 **Like for like**: while the period has not ended (this month so far) the previous period is cut to the same number of days, and the response says so (`comparison_note`); a finished period is compared whole.
 **Notifications**: the engine is pure and transport-free. `fingerprint` (id + company + severity + period start) is stable while a condition persists, so a later scheduled job can diff two runs and push only new or escalated items; no push is sent today.
+
+## Reports and exports (`services/mybis/reports.py`)
+- **Sources.** Profit & Loss, Balance Sheet, Cash Flow, Accounts Receivable / Payable, General Ledger, Stock Summary (Stock Balance), Stock Movement (Stock Ledger) and Stock Aging run ERPNext's own `execute()`; the caller needs ERPNext permission on that Report (`Report.is_permitted`). Sales / purchase summaries and breakdowns, slow- and fast-moving stock are MyBis aggregates, so a report and its screen agree. Nothing is recomputed in the reshaping step: ERPNext columns are typed, hidden ones dropped, ERPNext's display quoting (`'Opening'`) removed.
+- **Limits.** A run or export carries at most 10,000 rows (the table says when it was cut); PDF at most 2,000; a file over 15 MB is refused. Filters are an allow-list per report (`account`, `party`, `party_type`, `voucher_no`, `item_code`, `warehouse`, `item_group`); anything else is a validation error.
+- **Formats.** CSV is UTF-8 with a BOM so Excel reads Arabic; XLSX comes from Frappe's openpyxl helper with numbers as numbers; PDF is wkhtmltopdf through Frappe (landscape above 6 columns). All three render the same table and include the report title, company, period, currency and the time it was generated.
+- **Spreadsheet formula injection.** Any text cell that starts with `=`, `+`, `-` or `@` is written with a leading apostrophe in CSV and XLSX, so a customer named `=HYPERLINK(...)` cannot run in the reader's spreadsheet.
+- **Fresh exports.** `reports.export` never reads the five-minute screen cache.
+- **Not in the report set.** Salesperson targets (ERPNext's Sales Person targets are not read), so "Salesperson Performance" shows net sales per salesperson only and says so in its notes.
+
+## Search (`services/mybis/search.py`)
+`frappe.get_list` per record type, so ERPNext and User Permissions apply to every hit; a type the caller may not read is skipped and reported. Hits are ranked exact > prefix > contains, limited per type, and a company filter applies to the types that carry one. The app debounces typing and opens a hit through the same drill router as an alert.
+
+## Notifications (`services/mybis/notifications.py`)
+The engine stays transport-free. `unread(items, seen)` returns items whose fingerprint (or short `sid`) the caller has not seen; a severity change is a new fingerprint, so "new or worse" is a set difference. `alerts.feed` accepts `seen` (JSON list of `sid`s) and `min_severity` and returns `unread`; the app keeps the seen list on the device and shows a badge. `NotificationChannel` / `dispatch` are the extension point for a future scheduled push or e-mail job; only the in-app channel exists today.
+
+## Offline behaviour (app side)
+Successful reads are copied to secure storage on the device (most recent 40, 400 KB each, per signed-in identity). When the server cannot be reached the saved copy is shown under an **Offline - showing data saved ...** banner with the age of the oldest figure; a server error, an expired session or an empty cache is never disguised as "offline". Exports, search and record summaries are never served from the copy ("This feature requires an internet connection"). The copy is removed on sign-out, when the session expires, from Settings, and when the setting is switched off. Trade-off: a copy of recent financial figures exists on the device until then.
 
 ## Permissions and safety
 `@frappe.whitelist` methods require a login, read permission on each source DocType (a figure whose source is not readable is `available:false`), and refuse users who carry **record-level User Permissions other than Company** (raw SQL cannot apply them to totals -- `queries.guard`). Aggregates are SQL (no row downloads); cache key = user + company + request, TTL 300 s.
