@@ -210,3 +210,107 @@
 	padding: 0 24px 20px;
 	border-top: 0;
 }
+
+/* --------------------------------------------
+   6. TYPE — Inter (Frappe ships it; the same file already feeds "ZG Digits"), Cairo for Arabic.
+   Poppins stays defined in 00-fonts for login.css and as a fallback, but no longer leads the stack.
+   -------------------------------------------- */
+@font-face {
+	font-family: "Inter";
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+	src: url("/assets/frappe/css/fonts/inter/InterVariable.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+:root {
+	--font-sans: "Inter", "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-stack: var(--font-sans);
+}
+body {
+	font-feature-settings: "cv11", "ss01";   /* Inter's single-storey a, as in Frappe CRM */
+}
+
+/* --------------------------------------------
+   7. LABELS — sentence case, muted; no all-caps headers, no letter-spacing
+   -------------------------------------------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"] {
+	--zg-table-head-bg: #F3F3F3;
+	--zg-table-head-fg: #7C7C7C;
+	--zg-table-line-strong: #EDEDED;
+}
+:root {
+	--zg-table-head-tracking: 0;
+}
+.datatable .dt-header .dt-cell--header .dt-cell__content,
+.list-row-container .list-row-head,
+.form-grid .grid-heading-row,
+.table:where(:not(.print-format *)) thead th,
+.dropdown-menu .dropdown-header,
+.section-break .sidebar-item-label,
+.form-links .form-link-title,
+.kanban-title {
+	text-transform: none;
+	letter-spacing: 0;
+}
+.datatable .dt-header .dt-cell--header .dt-cell__content,
+.list-row-container .list-row-head,
+.form-grid .grid-heading-row {
+	font-size: var(--zg-text-sm);
+	font-weight: 400;
+}
+.list-row-container .list-row-head {
+	border-bottom: 0;
+	border-radius: 8px;                       /* header reads as a rounded gray bar, as in CRM lists */
+}
+
+/* --------------------------------------------
+   8. TABS — heading-coloured text with a 1px underline, no tint
+   -------------------------------------------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"],
+[data-theme="dark"] {
+	--zg-tab-fg-active: var(--heading-color);
+	--zg-tab-fg-hover: var(--heading-color);
+	--zg-tab-bg-active: transparent;
+	--zg-tab-bg-hover: transparent;
+	--zg-tab-line-hover: var(--gray-300);
+}
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	border-bottom-width: 1px;
+}
+
+/* --------------------------------------------
+   9. MENUS — neutral hover / selected fills instead of brand-blue tints
+   -------------------------------------------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"] {
+	--zg-menu-radius: 10px;
+	--zg-menu-border: #EDEDED;
+	--zg-menu-bg-hover: #F3F3F3;
+	--zg-menu-bg-active: #F3F3F3;
+	--zg-menu-bg-press: #EDEDED;
+	--zg-menu-fg-active: #171717;
+	--zg-menu-shadow: var(--shadow-lg);
+}
+
+/* --------------------------------------------
+   10. DARK PRIMARY — light button with dark text, as CRM's dark theme
+   -------------------------------------------- */
+[data-theme="dark"] {
+	--zg-btn-primary-bg: #E6EDF3;
+	--zg-btn-primary-bg-hover: #C9D1D9;
+	--zg-btn-primary-bg-active: #8B949E;
+	--zg-btn-primary-fg: #0D1117;
+	--zg-btn-link-fg: #E6EDF3;
+	--zg-tab-fg-active: var(--heading-color);
+	--zg-menu-bg-active: var(--subtle-fg);
+	--zg-menu-fg-active: var(--heading-color);
+	--checkbox-color: #E6EDF3;
+	--date-active-bg: #E6EDF3;
+	--date-active-text: #0D1117;
+	--st-item-active-bg: #21262D;
+	--st-item-active-text: #E6EDF3;
+	--zg-field-selected: #30363D;
+}
