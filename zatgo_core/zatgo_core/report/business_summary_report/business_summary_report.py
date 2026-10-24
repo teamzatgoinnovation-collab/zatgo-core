@@ -1,27 +1,23 @@
 """Date-range business summary: sales, purchases, party payments/receipts,
 and current payable/receivable balances.
 
-Where each figure comes from (one server-side aggregate each, against ERPNext's
-own documents and ledger -- no duplicate accounting logic):
+Every card is a General Ledger figure (what the Trial Balance / Profit and Loss
+/ Balance Sheet show), one server-side aggregate each:
 
-* Sales Total -- `base_grand_total` of submitted Sales Invoices in the range
-  (company currency, tax included). Returns are stored negative by ERPNext,
-  so a plain SUM is already net of credit notes.
-* Purchases Total -- Cost of Goods Sold from the General Ledger (same figure
-  as the Profit and Loss Statement). Stock bought but not yet sold is an
-  asset, not a purchase expense.
-* Party Payment / Party Receipt -- Payment Entries to Suppliers / from
-  Customers, split into the part allocated to invoices and the unallocated
-  part (advances). A refund the other way (a supplier refunding us, us
-  refunding a customer) is netted off. Internal transfers and other party
-  types (employee, shareholder) are not party payments/receipts.
-* Party Balance (Payable / Receivable) -- point in time as of `to_date`,
-  read from the General Ledger Payable / Receivable accounts (same as the
-  Balance Sheet), so advances, journal entries and returns are netted. Summing
-  invoice `outstanding_amount` instead misses anything settled by journal or
-  left unallocated. A negative balance means the party owes the other way.
-* Income / Expense / Net Profit rows -- General Ledger, period-closing
-  entries excluded, tying to the Profit and Loss Statement.
+* Sales Total -- Income accounts, net, for the range (same as the P&L).
+* Purchases Total -- Cost of Goods Sold for the range. Stock bought but not
+  yet sold is an asset, not a purchase expense.
+* Party Payment -- money paid out through the Payable accounts in the range:
+  Payment Entries and Journal Entries, net of refunds back to us.
+* Party Receipt -- money received through the Receivable accounts in the
+  range: Payment Entries and Journal Entries, net of refunds to customers.
+  Receipts = sales - receivable balance when a customer started at zero.
+* Party Balance (Payable / Receivable) -- closing balance as of `to_date`.
+  A negative balance means the party owes the other way.
+* Total Expense / Net Profit rows -- P&L, period-closing entries excluded.
+
+Invoice documents are only used for the Sales Invoice count (returns count as
+one each).
 """
 
 from __future__ import annotations
@@ -29,9 +25,6 @@ from __future__ import annotations
 import frappe
 from frappe import _
 from frappe.utils import flt, getdate
-
-# party_type -> payment_type that is the "main" flow; the other one is a refund
-MAIN_FLOW = {"Supplier": "Pay", "Customer": "Receive"}
 
 
 def execute(filters=None):
@@ -45,22 +38,20 @@ def execute(filters=None):
 
     validate_filters(company, from_date, to_date)
 
-    sales_total, sales_count = get_sales_summary(company, from_date, to_date)
+    sales_count = get_sales_invoice_count(company, from_date, to_date)
     pnl = get_profit_and_loss(company, from_date, to_date)
+    sales_total = pnl["income"]
     purchase_total = pnl["cogs"]
-    payments = get_party_payments(company, from_date, to_date, "Supplier")
-    receipts = get_party_payments(company, from_date, to_date, "Customer")
+    payments = get_party_cash_movement(company, from_date, to_date, "Payable")
+    receipts = get_party_cash_movement(company, from_date, to_date, "Receivable")
     receivable = get_ledger_balance(company, to_date, "Receivable")
     payable = 0.0 - get_ledger_balance(company, to_date, "Payable")  # 0.0 - x: never "-0.00"
 
     data = [
-        {"transaction_type": _("Sales Invoice"), "count": sales_count, "total_amount": sales_total},
+        {"transaction_type": _("Sales"), "count": sales_count, "total_amount": sales_total},
         {"transaction_type": _("Purchases"), "count": None, "total_amount": purchase_total},
-        {"transaction_type": _("Party Payment"), "count": payments.count, "total_amount": payments.allocated},
-        {"transaction_type": _("Advance Payment (Unallocated)"), "count": None, "total_amount": payments.advance},
-        {"transaction_type": _("Party Receipt"), "count": receipts.count, "total_amount": receipts.allocated},
-        {"transaction_type": _("Advance Receipt (Unallocated)"), "count": None, "total_amount": receipts.advance},
-        {"transaction_type": _("Income (ledger)"), "count": None, "total_amount": pnl["income"]},
+        {"transaction_type": _("Party Payment"), "count": None, "total_amount": payments},
+        {"transaction_type": _("Party Receipt"), "count": None, "total_amount": receipts},
         {"transaction_type": _("Total Expense (ledger)"), "count": None, "total_amount": pnl["expense"]},
         {"transaction_type": _("Net Profit (ledger)"), "count": None, "total_amount": pnl["income"] - pnl["expense"]},
     ]
@@ -76,10 +67,8 @@ def execute(filters=None):
     report_summary = [
         card(_("Sales Total"), sales_total),
         card(_("Purchases Total"), purchase_total),
-        card(_("Party Payment Total"), payments.allocated),
-        card(_("Advance Payment (Unallocated)"), payments.advance),
-        card(_("Party Receipt Total"), receipts.allocated),
-        card(_("Advance Receipt (Unallocated)"), receipts.advance),
+        card(_("Party Payment Total"), payments),
+        card(_("Party Receipt Total"), receipts),
         card(_("Party Balance - Payable"), payable, "Red"),
         card(_("Party Balance - Receivable"), receivable, "Green"),
     ]
@@ -94,61 +83,33 @@ def validate_filters(company, from_date, to_date) -> None:
         frappe.throw(_("From Date cannot be greater than To Date"))
 
 
-def get_sales_summary(company, from_date, to_date):
-    # frappe.get_all() rejects raw SQL function strings in `fields` (Frappe
-    # v16 hardening) -- accounting.md sanctions frappe.db.sql for read-only
-    # aggregates like this. Company/dates are bound parameters.
+def get_sales_invoice_count(company, from_date, to_date):
+    return frappe.db.count(
+        "Sales Invoice",
+        {"docstatus": 1, "company": company, "posting_date": ["between", [from_date, to_date]]},
+    )
+
+
+def get_party_cash_movement(company, from_date, to_date, account_type):
+    """Cash moved through the company's Payable (paid out) or Receivable
+    (received) accounts in the range, from Payment and Journal Entries, net of
+    refunds the other way. Invoices and credit/debit notes are not cash."""
+    root_type = "Asset" if account_type == "Receivable" else "Liability"
     row = frappe.db.sql(
         """
-        select sum(base_grand_total) as total, count(name) as cnt
-        from `tabSales Invoice`
-        where docstatus = 1 and company = %(company)s
-          and posting_date between %(from_date)s and %(to_date)s
+        select sum(g.debit - g.credit) as net
+        from `tabGL Entry` g join `tabAccount` a on a.name = g.account
+        where g.company = %(company)s and g.is_cancelled = 0
+          and a.account_type = %(account_type)s and a.root_type = %(root_type)s
+          and g.voucher_type in ('Payment Entry', 'Journal Entry')
+          and g.posting_date between %(from_date)s and %(to_date)s
         """,
-        {"company": company, "from_date": from_date, "to_date": to_date},
+        {"company": company, "account_type": account_type, "root_type": root_type,
+         "from_date": from_date, "to_date": to_date},
         as_dict=True,
     )[0]
-    return flt(row.total), int(row.cnt or 0)
-
-
-def get_party_payments(company, from_date, to_date, party_type):
-    """Payments (Suppliers) or receipts (Customers) in company currency.
-
-    Returns `allocated` (settled against invoices), `advance` (unallocated
-    part) and `count` of main-flow entries. Refund entries (the opposite
-    payment type for the same party type) are subtracted from both amounts.
-    """
-    main_type = MAIN_FLOW[party_type]
-    rows = frappe.db.sql(
-        """
-        select payment_type,
-               count(name) as cnt,
-               sum(amount) as total,
-               sum(amount * advance_share) as advance
-        from (
-            select name, payment_type,
-                   if(payment_type = 'Pay', base_paid_amount, base_received_amount) as amount,
-                   if(unallocated_amount + total_allocated_amount = 0, 0,
-                      unallocated_amount / (unallocated_amount + total_allocated_amount)) as advance_share
-            from `tabPayment Entry`
-            where docstatus = 1 and company = %(company)s and party_type = %(party_type)s
-              and payment_type in ('Pay', 'Receive')
-              and posting_date between %(from_date)s and %(to_date)s
-        ) pe
-        group by payment_type
-        """,
-        {"company": company, "party_type": party_type, "from_date": from_date, "to_date": to_date},
-        as_dict=True,
-    )
-    out = frappe._dict(allocated=0.0, advance=0.0, count=0)
-    for r in rows:
-        sign = 1 if r.payment_type == main_type else -1
-        advance = flt(r.advance)
-        out.allocated += sign * (flt(r.total) - advance)
-        out.advance += sign * advance
-        if sign == 1:
-            out.count = int(r.cnt or 0)
-    return out
+    # Payable: paying = debit (positive). Receivable: receiving = credit.
+    return flt(row.net) if account_type == "Payable" else 0.0 - flt(row.net)
 
 
 def get_ledger_balance(company, to_date, account_type):

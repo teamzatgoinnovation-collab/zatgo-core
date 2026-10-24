@@ -126,19 +126,18 @@ class TestBusinessSummaryReport(IntegrationTestCase):
 
     # -- tests ------------------------------------------------------------
 
-    def test_receipts_split_allocated_and_advance_and_refund_netted(self):
+    def test_receipts_are_cash_received_net_of_refunds(self):
         before = self._cards(self.company)
         si = self._invoice("Sales Invoice", 100)
         self._allocated_payment(si, si.grand_total)
-        self._advance("Customer", "Receive", 40)
+        self._advance("Customer", "Receive", 40)  # advance: counts, it is cash received
         self._advance("Customer", "Pay", 10)  # refund to the customer
         after = self._cards(self.company)
         d = lambda k: round(after[k] - before[k], 2)  # noqa: E731
-        self.assertEqual(d("Sales Total"), round(si.base_grand_total, 2))
-        self.assertEqual(d("Party Receipt Total"), round(si.base_grand_total, 2))
-        self.assertEqual(d("Advance Receipt (Unallocated)"), 30.0)  # 40 advance - 10 refunded
+        self.assertEqual(d("Sales Total"), round(si.base_net_total, 2))
+        self.assertEqual(d("Party Receipt Total"), round(si.grand_total + 40 - 10, 2))
 
-    def test_payments_split_allocated_and_advance(self):
+    def test_payments_are_cash_paid_net_of_refunds(self):
         before = self._cards(self.company)
         pi = self._invoice("Purchase Invoice", 200)
         self._allocated_payment(pi, 120)
@@ -146,8 +145,7 @@ class TestBusinessSummaryReport(IntegrationTestCase):
         self._advance("Supplier", "Receive", 5)  # supplier refund
         after = self._cards(self.company)
         d = lambda k: round(after[k] - before[k], 2)  # noqa: E731
-        self.assertEqual(d("Party Payment Total"), 120.0)
-        self.assertEqual(d("Advance Payment (Unallocated)"), 45.0)
+        self.assertEqual(d("Party Payment Total"), 165.0)
 
     def test_balances_come_from_ledger_and_net_advances(self):
         before = self._cards(self.company)
