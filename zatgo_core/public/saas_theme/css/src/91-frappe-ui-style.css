@@ -336,3 +336,42 @@ body {
 	--st-item-active-text: #E6EDF3;
 	--zg-field-selected: #30363D;
 }
+
+/* --------------------------------------------
+   11. NEUTRAL ACCENTS — CRM icons are gray, not a per-position rainbow (88-accents, 20-form-sidebar).
+   File-type chips (.st-file-icon) and the /desk module picker keep their colours: those carry meaning / are Frappe's own artwork.
+   -------------------------------------------- */
+.body-sidebar .sidebar-item-container .standard-sidebar-item:not(.active-sidebar) .sidebar-item-icon :is(svg, .icon) {
+	color: var(--st-text-muted);
+	stroke: var(--st-text-muted);
+}
+.st-rail-top .st-rail-item:not(.active):not(:hover) .st-rail-icon :is(svg, .icon) {
+	color: #8B949E;
+	stroke: #8B949E;
+}
+.codex-editor__redactor > .ce-block .widget:is(.number-widget-box, .shortcut-widget-box)::before {
+	display: none;
+}
+.form-sidebar .form-assignments .form-sidebar-label .icon,
+.form-sidebar .form-attachments .form-sidebar-label .icon,
+.form-sidebar .form-tags .form-sidebar-label .icon,
+.form-sidebar .form-shared .form-sidebar-label .icon {
+	background: var(--subtle-fg);
+	color: var(--text-muted);
+}
+
+/* --------------------------------------------
+   12. LEFTOVER BLUE-GRAY TOKENS (calendar weekends, placeholders, code blocks, keyboard focus ring)
+   -------------------------------------------- */
+:root:not([data-theme="dark"]),
+[data-theme="light"] {
+	--highlight-color: #F8F8F8;
+	--highlight-shadow: 0 0 0 1px #E2E2E2;
+	--placeholder-color: #999999;
+	--code-block-bg: #171717;
+	--code-block-text: #C7C7C7;
+	--zg-focus-ring: #525252;
+}
+[data-theme="dark"] {
+	--zg-focus-ring: #8B949E;
+}
