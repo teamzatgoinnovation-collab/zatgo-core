@@ -10,12 +10,11 @@ flips the sign at submit time), so a plain SUM already reflects net sales/
 net purchases exactly as ERPNext's own reports do -- no extra "exclude
 returns" branch needed or wanted.
 
-Purchases are documents, not expense: stock bought sits in Stock In Hand
-(asset) and only reaches Profit and Loss as Cost of Goods Sold when sold. So
-"Purchases Total" excludes stock items (their own "Stock Purchases" card,
-each invoice's grand total apportioned by the stock items' share of its net
-total); it still differs from the P&L whenever services are bought; the ledger rows (income,
-COGS, expense, net profit) are the figures that tie to the P&L Statement.
+"Purchases Total" is the cost of the goods actually sold (ledger Cost of
+Goods Sold, same figure as the Profit and Loss Statement): stock bought but
+not yet sold is an asset, shown as the "Stock Balance" card (Stock accounts
+in the ledger as of `to_date`). Income / expense / net profit rows also come
+from the ledger and tie to the P&L.
 
 Party Balance (Payable/Receivable) is a point-in-time balance as of
 `to_date`, not a sum of range-local transactions -- summing only the
@@ -47,15 +46,9 @@ def execute(filters=None):
     # base_grand_total = company currency, so a foreign-currency invoice is
     # not summed at its transaction-currency face value.
     sales_total, sales_count = get_invoice_summary("Sales Invoice", "base_grand_total", company, from_date, to_date)
-    purchase_total, purchase_count = get_invoice_summary(
-        "Purchase Invoice", "base_grand_total", company, from_date, to_date
-    )
-    # Stock bought is an asset (Stock In Hand), not a purchase expense: split
-    # it out so "Purchases" covers only services / non-stock items.
-    stock_total, stock_count = get_stock_purchase_summary(company, from_date, to_date)
-    purchase_total -= stock_total
-    purchase_count = get_nonstock_purchase_count(company, from_date, to_date)
     gl = get_gl_result(company, from_date, to_date)
+    purchase_total = gl["cogs"]
+    stock_balance = get_stock_balance(company, to_date)
     payment_total, payment_count = get_payment_summary(company, from_date, to_date, "Pay", "paid_amount")
     receipt_total, receipt_count = get_payment_summary(company, from_date, to_date, "Receive", "received_amount")
     receivable, payable = get_party_balances(company, to_date)
@@ -63,15 +56,12 @@ def execute(filters=None):
     columns = get_columns()
     data = [
         {"transaction_type": _("Sales Invoice"), "count": sales_count, "total_amount": sales_total},
-        {"transaction_type": _("Purchase Invoice (excl. stock)"), "count": purchase_count, "total_amount": purchase_total},
-        {"transaction_type": _("Stock Purchase"), "count": stock_count, "total_amount": stock_total},
+        {"transaction_type": _("Purchases"), "count": None, "total_amount": purchase_total},
         {"transaction_type": _("Party Payment"), "count": payment_count, "total_amount": payment_total},
         {"transaction_type": _("Party Receipt"), "count": receipt_count, "total_amount": receipt_total},
+        {"transaction_type": _("Stock Balance"), "count": None, "total_amount": stock_balance},
         # Ledger view -- the same figures as the Profit and Loss Statement.
-        # Purchases above are documents (stock bought is an asset until sold);
-        # COGS is what the ledger has expensed for the goods actually sold.
         {"transaction_type": _("Income (ledger)"), "count": None, "total_amount": gl["income"]},
-        {"transaction_type": _("Cost of Goods Sold (ledger)"), "count": None, "total_amount": gl["cogs"]},
         {"transaction_type": _("Total Expense (ledger)"), "count": None, "total_amount": gl["expense"]},
         {"transaction_type": _("Net Profit (ledger)"), "count": None, "total_amount": gl["income"] - gl["expense"]},
     ]
@@ -79,14 +69,8 @@ def execute(filters=None):
     currency = frappe.get_cached_value("Company", company, "default_currency")
     report_summary = [
         {"value": sales_total, "label": _("Sales Total"), "datatype": "Currency", "currency": currency},
-        {
-            "value": purchase_total,
-            "label": _("Purchases Total (excl. stock)"),
-            "datatype": "Currency",
-            "currency": currency,
-        },
-        {"value": stock_total, "label": _("Stock Purchases"), "datatype": "Currency", "currency": currency},
-        {"value": gl["cogs"], "label": _("Cost of Goods Sold"), "datatype": "Currency", "currency": currency},
+        {"value": purchase_total, "label": _("Purchases Total"), "datatype": "Currency", "currency": currency},
+        {"value": stock_balance, "label": _("Stock Balance"), "datatype": "Currency", "currency": currency},
         {"value": payment_total, "label": _("Party Payment Total"), "datatype": "Currency", "currency": currency},
         {"value": receipt_total, "label": _("Party Receipt Total"), "datatype": "Currency", "currency": currency},
         {
@@ -146,49 +130,19 @@ def get_payment_summary(company, from_date, to_date, payment_type, amount_field)
     return flt(row.total), int(row.cnt or 0)
 
 
-_STOCK_ITEMS = """
-    from `tabPurchase Invoice` pi
-    join `tabPurchase Invoice Item` pii on pii.parent = pi.name
-    join `tabItem` it on it.name = pii.item_code
-    where pi.docstatus = 1 and pi.company = %(company)s and it.is_stock_item = 1
-      and pi.posting_date between %(from_date)s and %(to_date)s
-"""
-
-
-def get_stock_purchase_summary(company, from_date, to_date):
-    """Grand total of purchase invoices attributable to stock items (tax
-    apportioned by net share), and the number of invoices containing any."""
+def get_stock_balance(company, to_date):
+    """Value of stock still on hand: ledger balance of Stock-type accounts."""
     row = frappe.db.sql(
         """
-        select sum(x.share) as total, count(*) as cnt from (
-            select pi.name,
-                   case when pi.base_net_total = 0 then 0
-                        else sum(pii.base_net_amount) / pi.base_net_total * pi.base_grand_total end as share
-        """
-        + _STOCK_ITEMS
-        + " group by pi.name) x",
-        {"company": company, "from_date": from_date, "to_date": to_date},
+        select sum(g.debit - g.credit) as bal
+        from `tabGL Entry` g join `tabAccount` a on a.name = g.account
+        where g.company = %(company)s and g.is_cancelled = 0
+          and a.account_type = 'Stock' and g.posting_date <= %(to_date)s
+        """,
+        {"company": company, "to_date": to_date},
         as_dict=True,
     )[0]
-    return flt(row.total), int(row.cnt or 0)
-
-
-def get_nonstock_purchase_count(company, from_date, to_date):
-    return int(
-        frappe.db.sql(
-            """
-            select count(distinct pi.name)
-            from `tabPurchase Invoice` pi
-            join `tabPurchase Invoice Item` pii on pii.parent = pi.name
-            left join `tabItem` it on it.name = pii.item_code
-            where pi.docstatus = 1 and pi.company = %(company)s
-              and (it.is_stock_item is null or it.is_stock_item = 0)
-              and pi.posting_date between %(from_date)s and %(to_date)s
-            """,
-            {"company": company, "from_date": from_date, "to_date": to_date},
-        )[0][0]
-        or 0
-    )
+    return flt(row.bal)
 
 
 def get_gl_result(company, from_date, to_date):
