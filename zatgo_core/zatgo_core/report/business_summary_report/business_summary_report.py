@@ -16,13 +16,13 @@ not yet sold is an asset, shown as the "Stock Balance" card (Stock accounts
 in the ledger as of `to_date`). Income / expense / net profit rows also come
 from the ledger and tie to the P&L.
 
+Party Payment is the part of outgoing Payment Entries allocated to invoices;
+the unallocated part (advances) is its own card.
+
 Party Balance (Payable/Receivable) is a point-in-time balance as of
-`to_date`, not a sum of range-local transactions -- summing only the
-range's invoices would misrepresent what a party actually owes if they
-have older unpaid invoices outside the selected window. It's the sum of
-`outstanding_amount` (ERPNext's own maintained field, updated by ERPNext's
-own payment/reconciliation logic) on submitted invoices posted on or
-before `to_date`.
+`to_date`, read from the General Ledger Receivable/Payable accounts (same as
+the Balance Sheet), so advances, journals and returns are netted. A negative
+payable / receivable means the party owes the other way.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ def execute(filters=None):
     gl = get_gl_result(company, from_date, to_date)
     purchase_total = gl["cogs"]
     stock_balance = get_stock_balance(company, to_date)
-    payment_total, payment_count = get_payment_summary(company, from_date, to_date, "Pay", "paid_amount")
+    payment_total, payment_count, advance_total = get_supplier_payments(company, from_date, to_date)
     receipt_total, receipt_count = get_payment_summary(company, from_date, to_date, "Receive", "received_amount")
     receivable, payable = get_party_balances(company, to_date)
 
@@ -58,6 +58,7 @@ def execute(filters=None):
         {"transaction_type": _("Sales Invoice"), "count": sales_count, "total_amount": sales_total},
         {"transaction_type": _("Purchases"), "count": None, "total_amount": purchase_total},
         {"transaction_type": _("Party Payment"), "count": payment_count, "total_amount": payment_total},
+        {"transaction_type": _("Advance / Unallocated Payment"), "count": None, "total_amount": advance_total},
         {"transaction_type": _("Party Receipt"), "count": receipt_count, "total_amount": receipt_total},
         {"transaction_type": _("Stock Balance"), "count": None, "total_amount": stock_balance},
         # Ledger view -- the same figures as the Profit and Loss Statement.
@@ -72,6 +73,12 @@ def execute(filters=None):
         {"value": purchase_total, "label": _("Purchases Total"), "datatype": "Currency", "currency": currency},
         {"value": stock_balance, "label": _("Stock Balance"), "datatype": "Currency", "currency": currency},
         {"value": payment_total, "label": _("Party Payment Total"), "datatype": "Currency", "currency": currency},
+        {
+            "value": advance_total,
+            "label": _("Advance / Unallocated"),
+            "datatype": "Currency",
+            "currency": currency,
+        },
         {"value": receipt_total, "label": _("Party Receipt Total"), "datatype": "Currency", "currency": currency},
         {
             "value": payable,
@@ -172,26 +179,42 @@ def get_gl_result(company, from_date, to_date):
     return out
 
 
+def get_supplier_payments(company, from_date, to_date):
+    """Outgoing Payment Entries split into the part allocated to invoices and
+    the unallocated (advance) part, in company currency."""
+    row = frappe.db.sql(
+        """
+        select count(name) as cnt,
+               sum(base_paid_amount) as total,
+               sum(unallocated_amount * source_exchange_rate) as advance
+        from `tabPayment Entry`
+        where docstatus = 1 and company = %(company)s and payment_type = 'Pay'
+          and posting_date between %(from_date)s and %(to_date)s
+        """,
+        {"company": company, "from_date": from_date, "to_date": to_date},
+        as_dict=True,
+    )[0]
+    advance = flt(row.advance)
+    return flt(row.total) - advance, int(row.cnt or 0), advance
+
+
 def get_party_balances(company, to_date):
-    receivable_row = frappe.db.sql(
+    """Receivable / payable as of `to_date` from the General Ledger (the same
+    figures as the Balance Sheet): unlike summing invoice outstanding, this
+    nets unallocated payments/receipts, journal entries and returns."""
+    rows = frappe.db.sql(
         """
-        select sum(outstanding_amount) as total
-        from `tabSales Invoice`
-        where docstatus = 1 and company = %(company)s and posting_date <= %(to_date)s
+        select a.account_type, sum(g.debit - g.credit) as bal
+        from `tabGL Entry` g join `tabAccount` a on a.name = g.account
+        where g.company = %(company)s and g.is_cancelled = 0
+          and a.account_type in ('Receivable', 'Payable') and g.posting_date <= %(to_date)s
+        group by a.account_type
         """,
         {"company": company, "to_date": to_date},
         as_dict=True,
-    )[0]
-    payable_row = frappe.db.sql(
-        """
-        select sum(outstanding_amount) as total
-        from `tabPurchase Invoice`
-        where docstatus = 1 and company = %(company)s and posting_date <= %(to_date)s
-        """,
-        {"company": company, "to_date": to_date},
-        as_dict=True,
-    )[0]
-    return flt(receivable_row.total), flt(payable_row.total)
+    )
+    bal = {r.account_type: flt(r.bal) for r in rows}
+    return bal.get("Receivable", 0.0), -bal.get("Payable", 0.0)
 
 
 def get_columns():
