@@ -158,6 +158,28 @@
 	border-color: var(--gray-400);
 	box-shadow: 0 0 0 2px var(--gray-200);
 }
+/* 10-controls forces a brand-blue focus border and ring with !important; CRM uses a neutral one. Same specificity,
+   later, so these win; the error state keeps its own rule (10-controls .has-error). */
+:root {
+	--zg-field-ring: 0 0 0 3px var(--gray-200);
+	--zg-field-focus-border: #7C7C7C;
+}
+[data-theme="dark"] {
+	--zg-field-ring: 0 0 0 3px #30363D;
+	--zg-field-focus-border: #6E7681;
+}
+.form-control:focus,
+.form-control:focus-visible {
+	box-shadow: var(--zg-field-ring) !important;
+	border-color: var(--zg-field-focus-border) !important;
+}
+.frappe-control .ql-editor:focus {
+	box-shadow: var(--zg-field-ring) !important;
+}
+.frappe-control.has-error .form-control:focus {
+	box-shadow: var(--zg-field-ring-error) !important;
+	border-color: var(--zg-field-error) !important;
+}
 [data-theme="dark"] .frappe-control .form-control:where(:not(.grid-body *, .datatable *)):hover:where(:not(:focus, :disabled, [readonly])) {
 	background-color: var(--gray-600);
 }
