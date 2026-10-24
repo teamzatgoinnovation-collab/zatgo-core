@@ -6,8 +6,9 @@ Clients and future domain Desk UIs consume these via `zatgo_core.api.v1.config.*
 
 ## The app contract (apps shipped inside zatgo_core)
 
-An app is one manifest. It appears in **ZatGo Apps** (`/desk/zg-app-hub`), the generated ZatGo sidebar, the
-switch fields, the API gate and the registry with no other list to edit.
+An app is one manifest. It appears in **ZatGo Apps** (`/desk/zg-app-hub`), the generated ZatGo sidebar (section
+**Apps**, opening its page `/desk/zg-app/<route key>` with tabs; the route key is the slug of the label, e.g. `zatgo-vansalex`), the switch fields, the API gate and the registry with no
+other list to edit.
 
 ```python
 # <module>/app_manifest.py   (module folder)   or an entry in plugins/manifests/core_apps.py
@@ -19,13 +20,19 @@ APP = {
     "switch_field": "enable_my_app",     # default for bundled = enable_<key>; no switch = always on
     "default_on": False,                 # True only for an app that was always on before it got a switch
     "module_def": "My App",              # bundled only
-    "workspaces": ("ZatGo My App",),     # the first that exists is its "Overview" in the sidebar
+    "workspaces": ("ZatGo My App",),     # the first that exists is its sidebar entry and its Overview tab
     "settings": (("My App Settings", "My App Settings"),),
     "version": "1.0.0",                  # default: zatgo_core's
     "requires": ("vansalex",),           # these must be on to switch this one on
     "api_prefixes": ("zatgo_core.api.v1.my_app.",),   # end with "."; 404 while off
 }
 ```
+
+**The app's page and tabs.** The sidebar entry opens `/desk/zg-app/<route key>`: an *Overview* tab (the shortcuts and
+cards of the Workspace, filtered by what the user may open) followed by one tab per **Tab Break** of the settings
+DocType in `settings`. So: make the first field of the settings DocType a Tab Break (otherwise Frappe invents a
+"Details" tab) and put each topic under its own Tab Break -- nothing else to register. After editing a DocType
+JSON, bump its `modified`, or migrate skips it.
 
 New **bundled module** (own DocTypes):
 

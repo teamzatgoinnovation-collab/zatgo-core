@@ -18,7 +18,7 @@ import frappe
 from zatgo_core import __version__
 from zatgo_core.api.response import fail, ok
 from zatgo_core.api.validators import require_str
-from zatgo_core.services import app_authority, app_catalog, app_state
+from zatgo_core.services import app_authority, app_catalog, app_page, app_state
 from zatgo_core.services.ui_apps import SETTINGS, asset_url
 
 
@@ -36,23 +36,8 @@ def _settings_links(app: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _warnings(app: dict[str, Any], on: dict[str, bool], enabled: bool) -> list[str]:
-    """Why an app that is on is not (fully) set up -- only conditions that can be checked cheaply and
-    that are certainly wrong. Nothing is reported for an app that is off."""
-    if not enabled:
-        return []
-    out: list[str] = []
-    for need in app["requires"]:
-        other = app_catalog.get(need)
-        if other and other["switch_field"] and not on.get(need):
-            out.append(f"Needs {other['label']}, which is off")
-    for dt, label in app["settings"]:
-        if not frappe.db.exists("DocType", dt):
-            out.append(f"{label} is missing: run bench migrate")
-    if app["group"] == "bundled" and app["module_def"] and not frappe.db.exists("Module Def", app["module_def"]):
-        out.append(f"Module {app['module_def']} is missing: run bench migrate")
-    if app["workspaces"] and not any(frappe.db.exists("Workspace", w) for w in app["workspaces"]):
-        out.append("Desk workspace is not set up yet: save the switch again or run bench migrate")
-    return out
+    """Why an app that is on is not (fully) set up (the page of the app shows the same list)."""
+    return app_page.warnings(app, on, enabled)
 
 
 def _serialise(app: dict[str, Any], on: dict[str, bool]) -> dict[str, Any]:

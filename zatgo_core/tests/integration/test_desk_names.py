@@ -227,8 +227,8 @@ class TestRealRecordsAfterSync(IntegrationTestCase):
             "Workspace Sidebar Item", {"parent": "ZatGo", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"}, ["label", "child"], as_dict=True
         )
         self.assertIsNotNone(row, "the ZatGo sidebar should link the renamed VanSaleX workspace")
-        self.assertEqual((row.label, row.child), ("Overview", 1))  # inside the "ZatGo VanSaleX" group
-        self.assertTrue(frappe.db.exists("Workspace Sidebar Item", {"parent": "ZatGo", "type": "Section Break", "label": "ZatGo VanSaleX"}))
+        self.assertEqual((row.label, row.child), ("ZatGo VanSaleX", 1))  # one entry, inside the "Apps" section
+        self.assertTrue(frappe.db.exists("Workspace Sidebar Item", {"parent": "ZatGo", "type": "Section Break", "label": "Apps"}))
 
     def test_enabled_apps_have_one_consistent_desk_name(self) -> None:
         from zatgo_core.services import bundled_apps

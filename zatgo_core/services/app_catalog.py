@@ -22,7 +22,7 @@ APP keys (only key, label and group are required):
                  always on before it got a switch -- VanSaleX); the field's JSON default must be 1
                  and a patch stores 1 so the form shows what is enforced.
   module_def     bundled only: Module Def name
-  workspaces     Workspace / Sidebar names it owns (the first that exists is its "Overview")
+  workspaces     Workspace / Sidebar names it owns (the first that exists is its sidebar entry and Overview tab)
   settings       [(DocType, label), ...] its settings DocTypes
   roles          roles that may see it in the hub (default System Manager)
   version        its version (default: zatgo_core's)

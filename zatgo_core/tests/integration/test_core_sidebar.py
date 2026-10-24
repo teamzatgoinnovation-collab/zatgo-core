@@ -1,5 +1,5 @@
-"""The "ZatGo" Desk sidebar lists the apps this site has switched on, and follows the switches
-(services/core_sidebar.py)."""
+"""The "ZatGo" Desk sidebar has two sections -- Apps (the apps this site has switched on) and General Settings --
+and follows the switches (services/core_sidebar.py)."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from zatgo_core.setup.ensure_core_desk import ensure_core_desk
 
 SETTINGS = "ZG System Settings"
 FIELDS = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space", "enable_saas_theme", "enable_language_switcher", "enable_vansalex_web")
+APP_SETTINGS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings")
 
 
 def _sidebar() -> list[dict]:
@@ -24,38 +25,23 @@ def _sidebar() -> list[dict]:
     ]
 
 
-def _entries() -> list[dict]:
-    """What comes before the general Settings group, one dict per app: a group (its children) or a link."""
-    out: list[dict] = []
+def _section(label: str) -> list[dict]:
+    """The rows of one section, in order."""
+    out, inside = [], False
     for row in _sidebar():
         if row["type"] == "Section Break":
-            if row["label"] == core_sidebar.SETTINGS_LABEL:
-                break
-            out.append({**row, "children": []})
-        elif row["child"] and out and out[-1]["type"] == "Section Break":
-            out[-1]["children"].append(row)
-        else:
-            out.append({**row, "children": []})
-    return out
-
-
-def _apps() -> dict[str, dict]:
-    return {e["label"]: e for e in _entries()}
-
-
-def _settings() -> list[dict]:
-    out, in_settings = [], False
-    for row in _sidebar():
-        if row["type"] == "Section Break":
-            in_settings = row["label"] == core_sidebar.SETTINGS_LABEL
-        elif in_settings:
+            inside = row["label"] == label
+        elif inside:
             out.append(row)
     return out
 
 
-def _targets(entry: dict) -> list[tuple[str, str]]:
-    rows = entry["children"] or [entry]
-    return [(r["link_type"], r["link_to"]) for r in rows]
+def _apps() -> dict[str, dict]:
+    return {r["label"]: r for r in _section(core_sidebar.APPS_LABEL)}
+
+
+def _general() -> list[dict]:
+    return _section(core_sidebar.GENERAL_LABEL)
 
 
 class TestCoreSidebar(IntegrationTestCase):
@@ -78,44 +64,21 @@ class TestCoreSidebar(IntegrationTestCase):
         frappe.clear_document_cache(SETTINGS, SETTINGS)
         core_sidebar.sync_core_sidebar()
 
-    def test_apps_come_first_and_settings_is_the_last_group(self) -> None:
-        sections = [r["label"] for r in _sidebar() if r["type"] == "Section Break"]
-        self.assertEqual(sections[-1], core_sidebar.SETTINGS_LABEL)
-        self.assertNotIn("Apps", sections)  # one group per app, no catch-all caption
+    def test_two_sections_apps_then_general_settings_and_every_row_nests_under_one(self) -> None:
         rows = _sidebar()
-        last_group = max(i for i, r in enumerate(rows) if r["type"] == "Section Break")
-        self.assertTrue(all(r["child"] == 1 for r in rows[last_group + 1 :]))  # the settings links nest under it
+        sections = [r["label"] for r in rows if r["type"] == "Section Break"]
+        self.assertEqual(sections, [core_sidebar.APPS_LABEL, core_sidebar.GENERAL_LABEL])
+        self.assertEqual((core_sidebar.APPS_LABEL, core_sidebar.GENERAL_LABEL), ("Apps", "General Settings"))
+        self.assertEqual(rows[0]["type"], "Section Break")
+        # Nothing at top level besides the two captions: a link there would look like part of a section.
+        self.assertTrue(all(r["child"] == 1 for r in rows if r["type"] == "Link"))
 
-    def test_single_links_come_before_every_group(self) -> None:
-        """A link right after a group would look like one of its items."""
-        self._switch(enable_saas_theme=1, enable_zatgo_space=1)
-        rows = _sidebar()
-        first_group = next(i for i, r in enumerate(rows) if r["type"] == "Section Break")
-        self.assertTrue(first_group >= 2, "the single links should be above the first group")
-        self.assertTrue(all(r["type"] == "Link" and r["child"] == 0 for r in rows[:first_group]))
-        apps_part = [r for r in rows if r["type"] == "Section Break"][:-1]  # every group but Settings
-        self.assertTrue(apps_part)
-        after_groups = rows[first_group:]
-        self.assertTrue(all(r["type"] == "Section Break" or r["child"] == 1 for r in after_groups))
-
-    def test_vansalex_is_a_group_with_its_workspace_and_its_own_settings(self) -> None:
+    def test_vansalex_is_one_entry_that_opens_its_workspace(self) -> None:
         self._switch()
-        group = _apps()["ZatGo VanSaleX"]
-        self.assertEqual(group["type"], "Section Break")
-        self.assertTrue(all(c["child"] == 1 for c in group["children"]))
-        self.assertEqual(
-            [(c["label"], c["link_type"], c["link_to"]) for c in group["children"]],
-            [(core_sidebar.OVERVIEW_LABEL, "Workspace", "ZatGo VanSaleX"), ("VanSaleX Settings", "DocType", "VanSaleX Settings")],
-        )
-
-    def test_an_apps_own_settings_are_not_in_the_general_settings_group(self) -> None:
-        self._switch(enable_chat_ai=1, enable_tracker=1, enable_zatgo_space=1)
-        general = {r["link_to"] for r in _settings()}
-        for doctype in ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings"):
-            self.assertNotIn(doctype, general)
-        in_groups = {t for e in _entries() for _kind, t in _targets(e)}
-        for doctype in ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings"):
-            self.assertIn(doctype, in_groups, f"{doctype} should be in its app's entry")
+        row = _apps()["ZatGo VanSaleX"]
+        self.assertEqual((row["type"], row["child"], row["link_type"], row["link_to"]), ("Link", 1, "Workspace", "ZatGo VanSaleX"))
+        # No sub-group and no "Overview" row any more: the app's page holds them.
+        self.assertNotIn("Overview", {r["label"] for r in _sidebar()})
 
     def test_switched_off_apps_are_left_out(self) -> None:
         self._switch()
@@ -125,28 +88,30 @@ class TestCoreSidebar(IntegrationTestCase):
         self._switch()
         for field, label in (("enable_tracker", "ZatGo Tracker"), ("enable_chat_ai", "ZatGo AI"), ("enable_zatgo_space", "ZatGo Space")):
             self._switch(**{field: 1})
-            entry = _apps().get(label)
-            self.assertIsNotNone(entry, f"{label} missing after switching it on")
-            for link_type, link_to in _targets(entry):
-                self.assertTrue(frappe.db.exists(link_type, link_to), f"{label} -> {link_type} {link_to}")
+            row = _apps().get(label)
+            self.assertIsNotNone(row, f"{label} missing after switching it on")
+            self.assertEqual(row["child"], 1)
+            self.assertTrue(frappe.db.exists(row["link_type"], row["link_to"]), f"{label} -> {row['link_type']} {row['link_to']}")
             self._switch()
             self.assertNotIn(label, _apps(), f"{label} still listed after switching it off")
 
-    def test_tracker_and_ai_are_groups_and_space_is_a_single_link(self) -> None:
+    def test_apps_switched_on_through_the_hub_open_their_workspace(self) -> None:
         """Switched on through the hub (what creates an app's Workspace), as on a real site."""
         self._switch()
         for key in ("tracker", "chat_ai", "zatgo_space"):
             app_hub.set_switch(key, 1)
             self.addCleanup(app_hub.set_switch, key, 0)
         apps = _apps()
-        for label, settings in (("ZatGo Tracker", "Tracker Settings"), ("ZatGo AI", "Chat AI Settings")):
-            self.assertEqual(apps[label]["type"], "Section Break", label)
-            self.assertEqual(
-                [(c["label"], c["link_type"]) for c in apps[label]["children"]],
-                [(core_sidebar.OVERVIEW_LABEL, "Workspace"), (settings, "DocType")],
-            )
-        space = apps["ZatGo Space"]
-        self.assertEqual((space["type"], space["child"], space["link_type"], space["link_to"]), ("Link", 0, "DocType", "Space Settings"))
+        for label in ("ZatGo Tracker", "ZatGo AI", "ZatGo Space"):
+            self.assertEqual((apps[label]["link_type"], apps[label]["link_to"]), ("Workspace", label), label)
+            # The rail icon the module's own set-up just made stays hidden: apps open from ZatGo > Apps.
+            for hidden in frappe.get_all("Desktop Icon", filters={"link_to": label}, pluck="hidden"):
+                self.assertEqual(int(hidden or 0), 1, f"{label}: rail icon should be hidden")
+        # Their own settings are tabs of the app's page, not sidebar entries (an app *without* a Workspace
+        # falls back to its settings form, which is why this is checked with real Workspaces).
+        linked = {r["link_to"] for r in _sidebar()}
+        for doctype in APP_SETTINGS:
+            self.assertNotIn(doctype, linked, f"{doctype} should be a tab, not a sidebar entry")
 
     def test_flipping_the_switch_in_the_hub_updates_the_sidebar_at_once(self) -> None:
         """No explicit sync: ZG System Settings' own save (what the hub uses) refreshes it."""
@@ -156,23 +121,29 @@ class TestCoreSidebar(IntegrationTestCase):
         self.assertFalse(app_hub.set_switch("tracker", 0)["data"]["enabled"])
         self.assertNotIn("ZatGo Tracker", _apps())
 
-    def test_switch_only_apps_are_listed_while_on_and_open_the_hub(self) -> None:
-        """The theme, language switcher and VanSaleX web are apps too: no page of their own."""
+    def test_switch_only_apps_are_general_settings_that_open_the_hub(self) -> None:
+        """The theme, language switcher and VanSaleX web have no page of their own: listed while on, in General
+        Settings, ahead of the hub itself (Frappe highlights the last item whose path matches)."""
         self._switch()
-        self.assertFalse(set(_apps()) & {"ZatGo Desk Theme", "ZatGo Language Switcher", "ZatGo VanSaleX Web"})
+        names = {"ZatGo Desk Theme", "ZatGo Language Switcher", "ZatGo VanSaleX Web"}
+        self.assertFalse({r["label"] for r in _general()} & names)
         for field, label in (
             ("enable_saas_theme", "ZatGo Desk Theme"),
             ("enable_language_switcher", "ZatGo Language Switcher"),
             ("enable_vansalex_web", "ZatGo VanSaleX Web"),
         ):
             self._switch(**{field: 1})
-            row = _apps().get(label)
+            general = _general()
+            row = next((r for r in general if r["label"] == label), None)
             self.assertIsNotNone(row, label)
-            self.assertEqual((row["type"], row["child"], row["link_type"], row["link_to"]), ("Link", 0, "Page", core_sidebar.HUB_PAGE))
+            self.assertEqual((row["child"], row["link_type"], row["link_to"]), (1, "Page", core_sidebar.HUB_PAGE))
+            self.assertNotIn(label, _apps())
+            hub_at = max(i for i, r in enumerate(general) if r["link_to"] == core_sidebar.HUB_PAGE)
+            self.assertEqual(general[hub_at]["label"], core_sidebar.HUB_LABEL, "the hub must be the last entry that opens the hub")
 
-    def test_settings_group_has_the_hub_first_and_the_general_shortcuts(self) -> None:
-        rows = _settings()
-        self.assertEqual((rows[0]["link_type"], rows[0]["link_to"]), ("Page", core_sidebar.HUB_PAGE))
+    def test_general_settings_have_the_hub_and_the_platform_shortcuts(self) -> None:
+        rows = _general()
+        self.assertTrue(any(r["link_type"] == "Page" and r["link_to"] == core_sidebar.HUB_PAGE for r in rows))
         linked = {r["link_to"] for r in rows}
         for doctype in ("ZG System Settings", "ZG Company Settings", "ZG Security Settings", "ZG Audit Log"):
             self.assertIn(doctype, linked)
@@ -180,6 +151,12 @@ class TestCoreSidebar(IntegrationTestCase):
     def test_sync_is_idempotent(self) -> None:
         core_sidebar.sync_core_sidebar()
         self.assertFalse(core_sidebar.sync_core_sidebar())  # nothing drifted: nothing saved
+
+    def test_a_flag_only_change_is_drift(self) -> None:
+        """The fingerprint covers how a row renders, not only where it points."""
+        frappe.db.set_value("Workspace Sidebar Item", {"parent": core_sidebar.NAME, "type": "Link"}, "show_arrow", 1)
+        self.assertTrue(core_sidebar.sync_core_sidebar())
+        self.assertFalse(core_sidebar.sync_core_sidebar())
 
     def test_a_stale_sidebar_is_repaired(self) -> None:
         """The sidebar used to be frozen at first creation: a leftover old list must be replaced."""
@@ -198,20 +175,20 @@ class TestCoreSidebar(IntegrationTestCase):
             "workspaces": (), "settings": (("ToDo", "ToDo"),), "module_def": "Fake", "folder": "fake_app",
         }
         with mock.patch.object(app_catalog, "catalog", return_value=(*app_catalog.catalog(), fake)):
-            row = next(r for r in core_sidebar.app_rows() if r["label"] == "Fake App")
-        self.assertEqual((row["type"], row["child"], row["link_type"], row["link_to"]), ("Link", 0, "DocType", "ToDo"))
+            row = next(r for r in core_sidebar.app_links() if r["label"] == "Fake App")
+        # Without a Workspace the entry opens its first settings DocType.
+        self.assertEqual((row["type"], row["child"], row["link_type"], row["link_to"]), ("Link", 1, "DocType", "ToDo"))
 
-    def test_a_new_sub_app_with_a_workspace_and_settings_gets_a_group(self) -> None:
+    def test_a_new_sub_app_with_a_workspace_is_one_entry_to_it(self) -> None:
         fake = {
             "key": "fake_app", "label": "Fake App", "group": "bundled", "icon": "cloud", "switch_field": None,
             "workspaces": ("ZatGo",), "settings": (("ToDo", "My To Dos"),), "module_def": "Fake", "folder": "fake_app",
         }
         with mock.patch.object(app_catalog, "catalog", return_value=(*app_catalog.catalog(), fake)):
-            rows = core_sidebar.app_rows()
-        i = next(i for i, r in enumerate(rows) if r["label"] == "Fake App")
-        self.assertEqual(rows[i]["type"], "Section Break")
-        self.assertEqual([(r["label"], r["link_to"]) for r in rows[i + 1 : i + 3]], [("Overview", "ZatGo"), ("My To Dos", "ToDo")])
-        self.assertTrue(all(r["child"] == 1 for r in rows[i + 1 : i + 3]))
+            rows = core_sidebar.app_links()
+        fakes = [r for r in rows if r["label"] == "Fake App"]
+        self.assertEqual(len(fakes), 1)
+        self.assertEqual((fakes[0]["link_type"], fakes[0]["link_to"], fakes[0]["child"]), ("Workspace", "ZatGo", 1))
 
     def test_destination_must_exist(self) -> None:
         """A link to something missing would make Frappe hide or break the entry: it is dropped."""
@@ -221,7 +198,25 @@ class TestCoreSidebar(IntegrationTestCase):
             "folder": "ghost",
         }
         with mock.patch.object(app_catalog, "catalog", return_value=(*app_catalog.catalog(), fake)):
-            self.assertNotIn("Ghost", {r["label"] for r in core_sidebar.app_rows()})
+            self.assertNotIn("Ghost", {r["label"] for r in core_sidebar.app_links()})
+
+    def test_enabled_industries_are_apps_too(self) -> None:
+        from zatgo_core.industries import registry
+
+        industry = next(i for i in registry.INDUSTRIES.values() if i.implemented)
+        original = frappe.db.exists
+
+        def exists(doctype, name=None, *args, **kwargs):
+            if (doctype, name) == ("Workspace", industry.workspace):
+                return True  # the industry's Workspace is made when it is switched on
+            return original(doctype, name, *args, **kwargs)
+
+        with mock.patch("zatgo_core.industries.gate.enabled_keys", return_value={industry.key}), mock.patch.object(
+            frappe.db, "exists", exists
+        ):
+            rows = core_sidebar.app_links()
+        row = next(r for r in rows if r["label"] == industry.workspace)
+        self.assertEqual((row["link_type"], row["link_to"], row["child"]), ("Workspace", industry.workspace, 1))
 
     def test_name_matches_the_desktop_icon(self) -> None:
         """Frappe v16: an icon is shown only when its label equals the sidebar name."""

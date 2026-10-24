@@ -132,6 +132,9 @@ class TestVanSaleXSwitch(AppSwitchTestCase):
         self.assertEqual(frappe.db.get_value("Workspace", VANSALEX_WORKSPACE, "is_hidden"), 0)
         labels = [r.label for r in frappe.get_doc("Workspace Sidebar", core_sidebar.NAME).items]
         self.assertIn("ZatGo VanSaleX", labels)
+        # Apps open from ZatGo > Apps: switching the app on does not bring its own rail icon back.
+        for icon in frappe.get_all("Desktop Icon", filters={"link_to": VANSALEX_WORKSPACE}, pluck="hidden"):
+            self.assertEqual(int(icon), 1)
 
     def test_a_migrate_that_resyncs_the_workspace_is_followed_by_hiding_it_again(self) -> None:
         """Migrate re-imports the synced workspace file (visible); `ensure_ui_apps` then hides it again."""

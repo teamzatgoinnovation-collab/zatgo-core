@@ -5,6 +5,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "payments_tab",
   "payment_section",
   "default_payment_type",
   "allow_credit_sales",
@@ -13,6 +14,7 @@
   "payment_column",
   "default_cash_account",
   "default_bank_account",
+  "sales_warehouse_tab",
   "warehouse_section",
   "show_warehouse_on_invoice",
   "allow_warehouse_change",
@@ -23,12 +25,18 @@
   "restrict_collections_to_route",
   "stock_section",
   "max_adjust_qty",
+  "access_tab",
   "access_section",
   "access_help",
   "access",
   "config_version"
  ],
  "fields": [
+  {
+   "fieldname": "payments_tab",
+   "fieldtype": "Tab Break",
+   "label": "Payments"
+  },
   {
    "fieldname": "payment_section",
    "fieldtype": "Section Break",
@@ -81,6 +89,11 @@
    "options": "Account",
    "link_filters": "[[\"Account\", \"account_type\", \"=\", \"Bank\"], [\"Account\", \"is_group\", \"=\", 0]]",
    "description": "For drivers of this account's company, unless their VanSale Profile sets one. Empty = the company's Bank-type Mode of Payment default account, then the Company's Default Bank Account."
+  },
+  {
+   "fieldname": "sales_warehouse_tab",
+   "fieldtype": "Tab Break",
+   "label": "Sales & Warehouse"
   },
   {
    "fieldname": "warehouse_section",
@@ -143,6 +156,11 @@
    "description": "Most a driver may write off of one item in one go (Van Stock, needs the 'Write off van stock' feature). 0 = no cap. Admins are not limited."
   },
   {
+   "fieldname": "access_tab",
+   "fieldtype": "Tab Break",
+   "label": "Modules & Features"
+  },
+  {
    "fieldname": "access_section",
    "fieldtype": "Section Break",
    "label": "Modules & Features"
@@ -171,7 +189,7 @@
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-10-08 00:00:00.000000",
+ "modified": "2026-10-24 13:30:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "VanSaleX Settings",

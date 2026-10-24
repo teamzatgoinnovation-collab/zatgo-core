@@ -4,11 +4,17 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "settings_tab",
   "defaults_section",
   "default_company",
   "default_activity_type"
  ],
  "fields": [
+  {
+   "fieldname": "settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Settings"
+  },
   {
    "fieldname": "defaults_section",
    "fieldtype": "Section Break",
@@ -30,7 +36,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-07-19 00:00:00.000000",
+ "modified": "2026-10-24 13:30:00.000000",
  "modified_by": "Administrator",
  "module": "Tracker",
  "name": "Tracker Settings",

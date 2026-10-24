@@ -4,6 +4,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "provider_tab",
   "provider_section",
   "local_only",
   "provider",
@@ -20,12 +21,30 @@
   "embedding_model",
   "embedding_endpoint",
   "embedding_api_key",
+  "routing_section",
+  "enable_model_routing",
+  "model_fast",
+  "model_reasoning",
+  "model_vision",
+  "model_coding",
+  "column_break_rt",
+  "fallback_model",
+  "thinking_budget",
+  "context_window_tokens",
+  "quota_section",
+  "max_messages_per_minute",
+  "max_tokens_per_user_per_day",
+  "max_tokens_per_user_per_month",
+  "conversation_tab",
   "conversation_section",
   "default_language",
   "max_history_length",
   "memory_summarization_threshold",
   "conversation_retention_days",
   "prompt_bundle_version",
+  "assistants_section",
+  "default_assistant_mode",
+  "enabled_assistant_modes",
   "limits_section",
   "max_tool_calls",
   "max_tool_rounds",
@@ -36,6 +55,7 @@
   "tool_timeout_seconds",
   "max_tools_per_request",
   "max_messages_per_user_per_day",
+  "safety_tab",
   "safety_section",
   "allowed_tool_categories",
   "require_confirmation_for_writes",
@@ -44,6 +64,7 @@
   "confirm_submit",
   "confirm_workflow",
   "confirm_financial",
+  "features_tab",
   "features_section",
   "enable_streaming",
   "enable_tool_calling",
@@ -61,12 +82,6 @@
   "enable_voice_input",
   "enable_voice_output",
   "auto_speak_replies",
-  "tts_section",
-  "tts_engine",
-  "voicebox_url",
-  "voicebox_profile",
-  "voicebox_engine",
-  "voicebox_via_server",
   "platform_section",
   "enable_plugin_discovery",
   "enabled_plugins",
@@ -83,12 +98,13 @@
   "enable_metadata_search",
   "vector_top_k",
   "reindex_on_migrate",
-  "assistants_section",
-  "default_assistant_mode",
-  "enabled_assistant_modes",
-  "cost_section",
-  "token_price_input",
-  "token_price_output",
+  "voice_files_tab",
+  "tts_section",
+  "tts_engine",
+  "voicebox_url",
+  "voicebox_profile",
+  "voicebox_engine",
+  "voicebox_via_server",
   "workspace_section",
   "enable_file_upload",
   "enable_vision",
@@ -99,22 +115,17 @@
   "web_search_url",
   "web_search_api_key",
   "web_search_max_results",
-  "routing_section",
-  "enable_model_routing",
-  "model_fast",
-  "model_reasoning",
-  "model_vision",
-  "model_coding",
-  "column_break_rt",
-  "fallback_model",
-  "thinking_budget",
-  "context_window_tokens",
-  "quota_section",
-  "max_messages_per_minute",
-  "max_tokens_per_user_per_day",
-  "max_tokens_per_user_per_month"
+  "costs_tab",
+  "cost_section",
+  "token_price_input",
+  "token_price_output"
  ],
  "fields": [
+  {
+   "fieldname": "provider_tab",
+   "fieldtype": "Tab Break",
+   "label": "Provider"
+  },
   {
    "fieldname": "provider_section",
    "fieldtype": "Section Break",
@@ -195,9 +206,103 @@
    "label": "Embedding Model"
   },
   {
+   "fieldname": "embedding_endpoint",
+   "fieldtype": "Data",
+   "label": "Embedding Endpoint",
+   "description": "OpenAI-compatible base URL of the embedding server when it is not the chat endpoint (e.g. a second llama.cpp server)."
+  },
+  {
    "fieldname": "embedding_api_key",
    "fieldtype": "Password",
    "label": "Embedding API Key"
+  },
+  {
+   "fieldname": "routing_section",
+   "fieldtype": "Section Break",
+   "label": "Model Routing & Reasoning"
+  },
+  {
+   "fieldname": "enable_model_routing",
+   "fieldtype": "Check",
+   "label": "Enable Automatic Model Routing",
+   "default": "0",
+   "description": "Pick the model by task. Users who choose a model manually are never rerouted."
+  },
+  {
+   "fieldname": "model_fast",
+   "fieldtype": "Data",
+   "label": "Fast Model"
+  },
+  {
+   "fieldname": "model_reasoning",
+   "fieldtype": "Data",
+   "label": "Reasoning Model"
+  },
+  {
+   "fieldname": "model_vision",
+   "fieldtype": "Data",
+   "label": "Vision Model"
+  },
+  {
+   "fieldname": "model_coding",
+   "fieldtype": "Data",
+   "label": "Coding Model"
+  },
+  {
+   "fieldname": "column_break_rt",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "fallback_model",
+   "fieldtype": "Data",
+   "label": "Fallback Model",
+   "description": "Same provider and key. Used only when the user did not pick a model; the reply says it was used."
+  },
+  {
+   "fieldname": "thinking_budget",
+   "fieldtype": "Int",
+   "label": "Reasoning Budget (tokens)",
+   "default": "0",
+   "description": "Anthropic extended thinking; 0 = off, minimum 1024."
+  },
+  {
+   "fieldname": "context_window_tokens",
+   "fieldtype": "Int",
+   "label": "Context Window (tokens)",
+   "default": "100000",
+   "description": "Budget for prompt history; older turns are summarised to fit."
+  },
+  {
+   "fieldname": "quota_section",
+   "fieldtype": "Section Break",
+   "label": "Usage Limits"
+  },
+  {
+   "fieldname": "max_messages_per_minute",
+   "fieldtype": "Int",
+   "label": "Max Messages per User per Minute",
+   "default": "20",
+   "description": "0 = no burst limit."
+  },
+  {
+   "fieldname": "max_tokens_per_user_per_day",
+   "fieldtype": "Int",
+   "label": "Max Tokens per User per Day",
+   "default": "0",
+   "description": "0 = unlimited."
+  },
+  {
+   "fieldname": "max_tokens_per_user_per_month",
+   "fieldtype": "Int",
+   "label": "Max Tokens per User per Month",
+   "default": "0",
+   "description": "0 = unlimited."
+  },
+  {
+   "fieldname": "conversation_tab",
+   "fieldtype": "Tab Break",
+   "label": "Conversation"
   },
   {
    "fieldname": "conversation_section",
@@ -237,6 +342,24 @@
    "options": "v1\nv2\nv3\nv4",
    "default": "v4",
    "description": "v4: planning, memory-aware context, and tighter tool selection (default)"
+  },
+  {
+   "fieldname": "assistants_section",
+   "fieldtype": "Section Break",
+   "label": "Assistants"
+  },
+  {
+   "fieldname": "default_assistant_mode",
+   "fieldtype": "Select",
+   "label": "Default Assistant Mode",
+   "options": "Normal Chat\nERP Assistant\nDocument Assistant\nAnalytics Assistant\nDeveloper Assistant\nAdmin Assistant",
+   "default": "ERP Assistant"
+  },
+  {
+   "fieldname": "enabled_assistant_modes",
+   "fieldtype": "Small Text",
+   "label": "Enabled Assistant Modes",
+   "default": "Normal Chat\\nERP Assistant\\nDocument Assistant\\nAnalytics Assistant\\nDeveloper Assistant\\nAdmin Assistant"
   },
   {
    "fieldname": "limits_section",
@@ -296,6 +419,11 @@
    "default": "500"
   },
   {
+   "fieldname": "safety_tab",
+   "fieldtype": "Tab Break",
+   "label": "Safety & Tools"
+  },
+  {
    "fieldname": "safety_section",
    "fieldtype": "Section Break",
    "label": "Safety & Tools"
@@ -342,6 +470,11 @@
    "fieldtype": "Check",
    "label": "Confirm Financial",
    "default": "1"
+  },
+  {
+   "fieldname": "features_tab",
+   "fieldtype": "Tab Break",
+   "label": "Features"
   },
   {
    "fieldname": "features_section",
@@ -444,46 +577,6 @@
    "description": "When Voice Output (Speak) is on, read each assistant reply aloud automatically."
   },
   {
-   "fieldname": "tts_section",
-   "fieldtype": "Section Break",
-   "label": "Speech Engine (Voicebox)"
-  },
-  {
-   "fieldname": "tts_engine",
-   "fieldtype": "Select",
-   "label": "TTS Engine",
-   "options": "Voicebox\nBrowser TTS",
-   "default": "Voicebox",
-   "description": "Voicebox: https://github.com/jamiepine/voicebox — local AI voice studio (POST /speak)."
-  },
-  {
-   "fieldname": "voicebox_url",
-   "fieldtype": "Data",
-   "label": "Voicebox URL",
-   "default": "http://127.0.0.1:17493",
-   "description": "Running Voicebox API base URL (default port 17493)."
-  },
-  {
-   "fieldname": "voicebox_profile",
-   "fieldtype": "Data",
-   "label": "Voicebox Profile",
-   "description": "Optional voice profile name or id. Empty = Voicebox MCP/client default."
-  },
-  {
-   "fieldname": "voicebox_engine",
-   "fieldtype": "Select",
-   "label": "Voicebox Model Engine",
-   "options": "\nkokoro\nqwen\nqwen_custom_voice\nluxtts\nchatterbox\nchatterbox_turbo\ntada",
-   "description": "Optional engine override. Empty = profile / Voicebox default."
-  },
-  {
-   "fieldname": "voicebox_via_server",
-   "fieldtype": "Check",
-   "label": "Proxy Voicebox via ERP Server",
-   "default": "0",
-   "description": "On: Desk calls ERP, ERP calls Voicebox (Voicebox must be reachable from the server). Off: browser calls Voicebox URL directly (add Desk origin to VOICEBOX_CORS_ORIGINS)."
-  },
-  {
    "fieldname": "platform_section",
    "fieldtype": "Section Break",
    "label": "Platform (v0.2.5)"
@@ -576,39 +669,49 @@
    "default": "0"
   },
   {
-   "fieldname": "assistants_section",
-   "fieldtype": "Section Break",
-   "label": "Assistants"
+   "fieldname": "voice_files_tab",
+   "fieldtype": "Tab Break",
+   "label": "Voice & Files"
   },
   {
-   "fieldname": "default_assistant_mode",
+   "fieldname": "tts_section",
+   "fieldtype": "Section Break",
+   "label": "Speech Engine (Voicebox)"
+  },
+  {
+   "fieldname": "tts_engine",
    "fieldtype": "Select",
-   "label": "Default Assistant Mode",
-   "options": "Normal Chat\nERP Assistant\nDocument Assistant\nAnalytics Assistant\nDeveloper Assistant\nAdmin Assistant",
-   "default": "ERP Assistant"
+   "label": "TTS Engine",
+   "options": "Voicebox\nBrowser TTS",
+   "default": "Voicebox",
+   "description": "Voicebox: https://github.com/jamiepine/voicebox — local AI voice studio (POST /speak)."
   },
   {
-   "fieldname": "enabled_assistant_modes",
-   "fieldtype": "Small Text",
-   "label": "Enabled Assistant Modes",
-   "default": "Normal Chat\\nERP Assistant\\nDocument Assistant\\nAnalytics Assistant\\nDeveloper Assistant\\nAdmin Assistant"
+   "fieldname": "voicebox_url",
+   "fieldtype": "Data",
+   "label": "Voicebox URL",
+   "default": "http://127.0.0.1:17493",
+   "description": "Running Voicebox API base URL (default port 17493)."
   },
   {
-   "fieldname": "cost_section",
-   "fieldtype": "Section Break",
-   "label": "Cost Estimates"
+   "fieldname": "voicebox_profile",
+   "fieldtype": "Data",
+   "label": "Voicebox Profile",
+   "description": "Optional voice profile name or id. Empty = Voicebox MCP/client default."
   },
   {
-   "fieldname": "token_price_input",
-   "fieldtype": "Float",
-   "label": "Token Price Input (per 1M)",
-   "default": "0"
+   "fieldname": "voicebox_engine",
+   "fieldtype": "Select",
+   "label": "Voicebox Model Engine",
+   "options": "\nkokoro\nqwen\nqwen_custom_voice\nluxtts\nchatterbox\nchatterbox_turbo\ntada",
+   "description": "Optional engine override. Empty = profile / Voicebox default."
   },
   {
-   "fieldname": "token_price_output",
-   "fieldtype": "Float",
-   "label": "Token Price Output (per 1M)",
-   "default": "0"
+   "fieldname": "voicebox_via_server",
+   "fieldtype": "Check",
+   "label": "Proxy Voicebox via ERP Server",
+   "default": "0",
+   "description": "On: Desk calls ERP, ERP calls Voicebox (Voicebox must be reachable from the server). Off: browser calls Voicebox URL directly (add Desk origin to VOICEBOX_CORS_ORIGINS)."
   },
   {
    "fieldname": "workspace_section",
@@ -655,6 +758,13 @@
    "default": "SearXNG"
   },
   {
+   "fieldname": "web_search_url",
+   "fieldtype": "Data",
+   "label": "SearXNG URL",
+   "depends_on": "eval:doc.web_search_provider=='SearXNG'",
+   "description": "Base URL of your SearXNG instance, e.g. http://searxng:8080. The json format must be enabled in its settings."
+  },
+  {
    "fieldname": "web_search_api_key",
    "fieldtype": "Password",
    "label": "Web Search API Key",
@@ -668,106 +778,32 @@
    "default": "5"
   },
   {
-   "fieldname": "routing_section",
+   "fieldname": "costs_tab",
+   "fieldtype": "Tab Break",
+   "label": "Costs"
+  },
+  {
+   "fieldname": "cost_section",
    "fieldtype": "Section Break",
-   "label": "Model Routing & Reasoning"
+   "label": "Cost Estimates"
   },
   {
-   "fieldname": "enable_model_routing",
-   "fieldtype": "Check",
-   "label": "Enable Automatic Model Routing",
-   "default": "0",
-   "description": "Pick the model by task. Users who choose a model manually are never rerouted."
+   "fieldname": "token_price_input",
+   "fieldtype": "Float",
+   "label": "Token Price Input (per 1M)",
+   "default": "0"
   },
   {
-   "fieldname": "model_fast",
-   "fieldtype": "Data",
-   "label": "Fast Model"
-  },
-  {
-   "fieldname": "model_reasoning",
-   "fieldtype": "Data",
-   "label": "Reasoning Model"
-  },
-  {
-   "fieldname": "model_vision",
-   "fieldtype": "Data",
-   "label": "Vision Model"
-  },
-  {
-   "fieldname": "model_coding",
-   "fieldtype": "Data",
-   "label": "Coding Model"
-  },
-  {
-   "fieldname": "column_break_rt",
-   "fieldtype": "Column Break",
-   "label": ""
-  },
-  {
-   "fieldname": "fallback_model",
-   "fieldtype": "Data",
-   "label": "Fallback Model",
-   "description": "Same provider and key. Used only when the user did not pick a model; the reply says it was used."
-  },
-  {
-   "fieldname": "thinking_budget",
-   "fieldtype": "Int",
-   "label": "Reasoning Budget (tokens)",
-   "default": "0",
-   "description": "Anthropic extended thinking; 0 = off, minimum 1024."
-  },
-  {
-   "fieldname": "context_window_tokens",
-   "fieldtype": "Int",
-   "label": "Context Window (tokens)",
-   "default": "100000",
-   "description": "Budget for prompt history; older turns are summarised to fit."
-  },
-  {
-   "fieldname": "quota_section",
-   "fieldtype": "Section Break",
-   "label": "Usage Limits"
-  },
-  {
-   "fieldname": "max_messages_per_minute",
-   "fieldtype": "Int",
-   "label": "Max Messages per User per Minute",
-   "default": "20",
-   "description": "0 = no burst limit."
-  },
-  {
-   "fieldname": "max_tokens_per_user_per_day",
-   "fieldtype": "Int",
-   "label": "Max Tokens per User per Day",
-   "default": "0",
-   "description": "0 = unlimited."
-  },
-  {
-   "fieldname": "max_tokens_per_user_per_month",
-   "fieldtype": "Int",
-   "label": "Max Tokens per User per Month",
-   "default": "0",
-   "description": "0 = unlimited."
-  },
-  {
-   "fieldname": "web_search_url",
-   "fieldtype": "Data",
-   "label": "SearXNG URL",
-   "depends_on": "eval:doc.web_search_provider=='SearXNG'",
-   "description": "Base URL of your SearXNG instance, e.g. http://searxng:8080. The json format must be enabled in its settings."
-  },
-  {
-   "fieldname": "embedding_endpoint",
-   "fieldtype": "Data",
-   "label": "Embedding Endpoint",
-   "description": "OpenAI-compatible base URL of the embedding server when it is not the chat endpoint (e.g. a second llama.cpp server)."
+   "fieldname": "token_price_output",
+   "fieldtype": "Float",
+   "label": "Token Price Output (per 1M)",
+   "default": "0"
   }
  ],
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-07-20 00:00:00.000000",
+ "modified": "2026-10-24 13:30:00.000000",
  "modified_by": "Administrator",
  "module": "Chat AI",
  "name": "Chat AI Settings",

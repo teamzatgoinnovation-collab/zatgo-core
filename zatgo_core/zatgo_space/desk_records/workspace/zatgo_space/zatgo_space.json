@@ -1,0 +1,112 @@
+{
+ "app": "zatgo_core",
+ "charts": [],
+ "content": "[{\"id\":\"sp_hdr\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>ZatGo Space</b></span>\",\"col\":12}},{\"id\":\"sp_s_plan\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Space Plans\",\"col\":3}},{\"id\":\"sp_s_order\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Space Orders\",\"col\":3}},{\"id\":\"sp_s_set\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Space Settings\",\"col\":3}},{\"id\":\"sp_sp\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"sp_card_platform\",\"type\":\"card\",\"data\":{\"card_name\":\"Platform\",\"col\":4}},{\"id\":\"sp_card_setup\",\"type\":\"card\",\"data\":{\"card_name\":\"Setup\",\"col\":4}}]",
+ "creation": "2026-10-24 13:00:00.000000",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "cloud",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "ZatGo Space",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Platform",
+   "link_count": 3,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Space Plan",
+   "link_count": 0,
+   "link_to": "Space Plan",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Space Order",
+   "link_count": 0,
+   "link_to": "Space Order",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Space Job Log",
+   "link_count": 0,
+   "link_to": "Space Job Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Setup",
+   "link_count": 1,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Space Settings",
+   "link_count": 0,
+   "link_to": "Space Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-10-24 13:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Space",
+ "name": "ZatGo Space",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "restrict_to_domain": "",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Space Plans",
+   "link_to": "Space Plan",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Space Orders",
+   "link_to": "Space Order",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Space Settings",
+   "link_to": "Space Settings",
+   "type": "DocType"
+  }
+ ],
+ "title": "ZatGo Space"
+}

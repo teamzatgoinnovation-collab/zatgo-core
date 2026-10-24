@@ -35,6 +35,10 @@ class TestDeployCheck(IntegrationTestCase):
             "registry_bad_category": ["tracker"],
             "zatgo_sidebar_exists": False,
             "hub_page_exists": False,
+            "app_page_exists": False,
+            "sidebar_sections": ["Settings"],
+            "settings_not_tabbed": ["VanSaleX Settings"],
+            "app_rail_icons_visible": ["ZatGo VanSaleX"],
             "staff_only_doctypes_grant_all": ["ZG Order"],
         }
         for key, value in broken.items():

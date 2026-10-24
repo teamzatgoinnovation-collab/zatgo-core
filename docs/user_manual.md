@@ -5,7 +5,7 @@ its settings and the API its client apps use. In Desk, open **ZatGo** in the app
 
 ## Apps
 
-**ZatGo Apps** (ZatGo sidebar → Settings → *ZatGo Apps*, System Manager only) lists every app on this site with
+**ZatGo Apps** (ZatGo sidebar → General Settings → *ZatGo Apps*, System Manager only) lists every app on this site with
 its version, whether it is on, what it needs, and what is not set up yet. The switch turns an app on or off for
 this site:
 
@@ -14,8 +14,11 @@ this site:
 - An app that **needs** another cannot be on while that one is off (the page and the form say which).
 - Only a System Manager can switch apps or industries, from the page or from *ZG System Settings*.
 
-Each app's own settings (for example *VanSaleX Settings*) are linked from its card and from its group in the
-ZatGo sidebar.
+Each app has its own page: **ZatGo sidebar → Apps → the app**. Its **Overview** tab lists the app's screens (only
+those your role may open); the other tabs are its settings, one tab per topic (for example *VanSaleX → Payments /
+Sales & Warehouse / Modules & Features*). The ZatGo sidebar has two sections: **Apps** and **General Settings**
+(company, branch, payment, security settings and the app switches). An app's own rail icon is hidden: apps open
+from ZatGo → Apps.
 
 ## Settings DocTypes
 

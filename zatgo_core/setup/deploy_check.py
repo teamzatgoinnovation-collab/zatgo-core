@@ -31,6 +31,8 @@ INDEXED = (
     ("tabAI Tool Log", "session"),
     ("tabAI Attachment", "session"),
 )
+# Settings forms that must start with a Tab Break (the tabs of an app's page, services/app_page.py)
+TABBED_FORMS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings", "ZG System Settings")
 STAFF_ONLY = (
     "ZG Delivery Boy",
     "ZG Delivery Stop",
@@ -85,6 +87,24 @@ def collect() -> dict:
     checks["registry_bad_category"] = [r[0] for r in bad_category]
     checks["zatgo_sidebar_exists"] = bool(frappe.db.exists("Workspace Sidebar", "ZatGo"))
     checks["hub_page_exists"] = bool(frappe.db.exists("Page", "zg-app-hub"))
+    # -- the tabbed app pages (ZatGo > Apps) -----------------------------------------
+    checks["app_page_exists"] = bool(frappe.db.exists("Page", "zg-app"))
+    checks["sidebar_sections"] = [
+        r[0]
+        for r in frappe.db.sql(
+            "select label from `tabWorkspace Sidebar Item` where parent = 'ZatGo' and type = 'Section Break' order by idx"
+        )
+    ]
+    checks["settings_not_tabbed"] = [
+        dt
+        for dt in TABBED_FORMS
+        if frappe.db.exists("DocType", dt) and frappe.get_meta(dt).fields[0].fieldtype != "Tab Break"
+    ]
+    from zatgo_core.services import app_desk
+
+    checks["app_rail_icons_visible"] = frappe.get_all(
+        "Desktop Icon", filters={"link_to": ["in", app_desk.rail_icon_targets()], "hidden": 0}, pluck="name"
+    )
     # -- permissions as the DocType meta resolves them (a site's Custom DocPerm rows replace the shipped ones) --
     checks["staff_only_doctypes_grant_all"] = [
         dt for dt in STAFF_ONLY if any(p.role == "All" for p in frappe.get_meta(dt).permissions)
@@ -108,6 +128,10 @@ def verdict(checks: dict) -> bool:
         and not checks["registry_bad_category"]
         and bool(checks["zatgo_sidebar_exists"])
         and bool(checks["hub_page_exists"])
+        and bool(checks["app_page_exists"])
+        and checks["sidebar_sections"] == ["Apps", "General Settings"]
+        and not checks["settings_not_tabbed"]
+        and not checks["app_rail_icons_visible"]
         and not checks["staff_only_doctypes_grant_all"]
     )
 

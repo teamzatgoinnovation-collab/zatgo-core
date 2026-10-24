@@ -8,6 +8,6 @@ APP = {
     "description": "Space platform: plans, orders and site provisioning.",
     "switch_field": "enable_zatgo_space",
     "module_def": "ZatGo Space",
-    "workspaces": (),
+    "workspaces": ("ZatGo Space",),
     "settings": (("Space Settings", "Space Settings"),),
 }

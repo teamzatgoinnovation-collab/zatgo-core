@@ -2,9 +2,10 @@
 for the platform's apps and settings. Its Workspace is a synced file
 (workspace/zatgo/zatgo.json); the Sidebar and Desktop Icon are made here because
 install purges every Desktop Icon of this app (install.purge_desk_ui_leftovers)
-before this runs. The sidebar's items -- the enabled apps, then the settings --
-come from services/core_sidebar.py and are re-synced on every migrate and when an
-app is switched on or off."""
+before this runs. The sidebar's items -- the "Apps" section (the enabled apps), then
+"General Settings" -- come from services/core_sidebar.py and are re-synced on every
+migrate and when an app is switched on or off; the apps' own rail icons are kept
+hidden (services/app_desk.py)."""
 
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import os
 
 import frappe
 
-from zatgo_core.services import core_sidebar
+from zatgo_core.services import app_desk, core_sidebar
 
 NAME = "ZatGo"
 ICON = "setting"
@@ -116,3 +117,6 @@ def ensure_core_desk() -> None:
         icon.insert(ignore_permissions=True)
     # An existing sidebar is brought up to date too (it used to be frozen at first creation).
     core_sidebar.sync_core_sidebar()
+    # Apps open from ZatGo > Apps: their own rail icons (created by their install / industries sync, which
+    # ran before this) stay hidden.
+    app_desk.sync_rail_icons()

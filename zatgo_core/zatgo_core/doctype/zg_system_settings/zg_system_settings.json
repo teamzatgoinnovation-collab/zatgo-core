@@ -5,6 +5,7 @@
   "doctype": "DocType",
   "engine": "InnoDB",
   "field_order": [
+    "general_tab",
     "general_section",
     "brand_name",
     "company_logo",
@@ -23,6 +24,7 @@
     "fiscal_year",
     "rounding_method",
     "rounding_precision",
+    "erp_tab",
     "erp_section",
     "enable_multi_company",
     "enable_branch_mode",
@@ -32,6 +34,7 @@
     "autofill_source_warehouse",
     "autofill_payment_entry_account",
     "enable_ifrs_reports",
+    "apps_tab",
     "appearance_section",
     "enable_saas_theme",
     "column_break_appearance",
@@ -45,10 +48,16 @@
     "enable_tracker",
     "column_break_bundled",
     "enable_zatgo_space",
+    "industries_tab",
     "industries_section",
     "enabled_industries"
   ],
   "fields": [
+    {
+      "fieldname": "general_tab",
+      "fieldtype": "Tab Break",
+      "label": "General"
+    },
     {
       "fieldname": "general_section",
       "fieldtype": "Section Break",
@@ -153,6 +162,11 @@
       "default": 2
     },
     {
+      "fieldname": "erp_tab",
+      "fieldtype": "Tab Break",
+      "label": "ERP Behaviour"
+    },
+    {
       "fieldname": "erp_section",
       "fieldtype": "Section Break",
       "label": "ERP Behaviour"
@@ -202,6 +216,11 @@
       "fieldname": "autofill_payment_entry_account",
       "fieldtype": "Check",
       "label": "Auto-fill Account Paid To / Paid From on Payment Entry"
+    },
+    {
+      "fieldname": "apps_tab",
+      "fieldtype": "Tab Break",
+      "label": "Apps"
     },
     {
       "fieldname": "appearance_section",
@@ -283,6 +302,11 @@
       "label": "Enable ZatGo Space"
     },
     {
+      "fieldname": "industries_tab",
+      "fieldtype": "Tab Break",
+      "label": "Industries"
+    },
+    {
       "fieldname": "industries_section",
       "fieldtype": "Section Break",
       "label": "Industries",
@@ -308,7 +332,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-23 12:00:00.000000",
+  "modified": "2026-10-24 13:30:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG System Settings",

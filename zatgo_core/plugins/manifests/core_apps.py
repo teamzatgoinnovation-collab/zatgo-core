@@ -45,7 +45,7 @@ APPS = (
         "key": "saas_theme",
         "label": "ZatGo Desk Theme",
         "group": "ui",
-        "icon": "color",
+        "icon": "palette",
         "description": "Modern Desk theme and login page.",
         "switch_field": "enable_saas_theme",
     },
