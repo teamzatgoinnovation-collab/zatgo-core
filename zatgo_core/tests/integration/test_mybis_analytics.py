@@ -146,6 +146,47 @@ class TestMyBisSalesAnalytics(IntegrationTestCase):
         self.assertEqual(self._by("product", order="profit")["rows"][0]["code"], self.item_a)
         self.assertEqual(self._by("product", order="quantity")["rows"][0]["code"], self.item_a)
 
+    def _more_products(self):
+        """item_c: 30 -> 90 (+200%); item_d only last month (lost); item_e only this month (new)."""
+        cat = _group("MyBis Cat C")
+        c, d, e = _item(cat), _item(cat), _item(cat)
+        _invoice(self.cust, c, 3, 30, self.this_day)
+        _invoice(self.cust, c, 1, 30, self.last_day)
+        _invoice(self.cust, d, 1, 40, self.last_day)
+        _invoice(self.cust, e, 1, 25, self.this_day)
+        return c, d, e
+
+    def test_order_by_growth_puts_the_fastest_growing_first_and_skips_new_rows(self) -> None:
+        c, _d, e = self._more_products()
+        d = self._by("product", order="growth")
+        codes = [r["code"] for r in d["rows"]]
+        self.assertEqual(codes[:2], [c, self.item_a])  # +200% then +100%
+        self.assertNotIn(e, codes)  # no previous revenue: growth is unknown, not infinite
+        self.assertEqual([r["growth_percent"] for r in d["rows"][:2]], [200.0, 100.0])
+        self.assertEqual(d["order"], "growth")
+        self.assertGreaterEqual(d["ranked_among"], 3)
+
+    def test_order_by_growth_needs_the_comparison(self) -> None:
+        with self.assertRaises(frappe.ValidationError):
+            self._by("product", order="growth", compare=0)
+
+    def test_movers_lists_gains_declines_new_and_lost_and_adds_up(self) -> None:
+        c, d, e = self._more_products()
+        m = sales_api.movers(dimension="product", company=COMPANY, preset="this_month")["data"]
+        gains = {r["code"]: r for r in m["gains"]}
+        self.assertEqual([r["code"] for r in m["gains"]][:2], [self.item_a, c])  # +100 then +60
+        self.assertEqual(gains[e]["status"], "new")
+        self.assertIsNone(gains[e]["growth_percent"])
+        self.assertEqual([(r["code"], r["status"], r["change"]) for r in m["declines"]], [(d, "lost", -40.0)])
+        self.assertEqual((m["revenue"], m["previous_revenue"], m["net_change"]), (315.0, 170.0, 145.0))
+        self.assertEqual(m["growth_percent"], 85.29)  # 145 / 170
+        self.assertEqual(m["gains_total"] + m["declines_total"], m["net_change"])
+        self.assertEqual(len(sales_api.movers(dimension="product", company=COMPANY, preset="this_month", limit=1)["data"]["gains"]), 1)
+
+    def test_movers_refuse_a_bad_dimension(self) -> None:
+        with self.assertRaises(frappe.ValidationError):
+            sales_api.movers(dimension="color", company=COMPANY)
+
     def test_a_company_restricted_user_cannot_read_another_companys_invoice(self) -> None:
         mine = get_or_create_test_company()
         email = f"mybis.an.{random_string(8).lower()}@zatgo.test"
@@ -191,6 +232,16 @@ class TestMyBisPurchaseAnalytics(IntegrationTestCase):
         inv = pur_api.invoices(company=COMPANY, preset="this_month", filters={"supplier": self.sup})
         self.assertEqual([r["name"] for r in inv["data"]], [self.pi])
         self.assertEqual(pur_api.invoice_detail(self.pi)["data"]["party"], self.sup)
+
+    def test_movers(self) -> None:
+        other = _item(self.cat)
+        _purchase(self.sup, other, 1, 10, self.this_day)
+        m = pur_api.movers(dimension="product", company=COMPANY, preset="this_month")["data"]
+        self.assertEqual([r["code"] for r in m["gains"]], [self.item, other])  # +50 then a new 10
+        self.assertEqual((m["revenue"], m["previous_revenue"], m["net_change"], m["growth_percent"]), (110.0, 50.0, 60.0, 120.0))
+        self.assertEqual(m["declines"], [])
+        g = pur_api.breakdown_by(dimension="product", company=COMPANY, preset="this_month", order="growth")["data"]
+        self.assertEqual([r["code"] for r in g["rows"]], [self.item])
 
     def test_a_sales_only_filter_is_refused_on_purchases(self) -> None:
         with self.assertRaises(frappe.ValidationError):
@@ -274,6 +325,19 @@ class TestMyBisInventory(IntegrationTestCase):
         s = inv_api.summary(company=COMPANY, refresh=1)["data"]
         self.assertGreaterEqual(s["counts"]["overstock_items"], 1)
         self.assertEqual(next(b for b in s["idle_buckets"] if b["bucket"] == "0-30")["items"] >= 1, True)
+
+    def test_never_sold_means_no_outward_movement_at_all(self) -> None:
+        heavy = self._stock_item(receive=50)
+        self._entry("Material Issue", heavy, 1, source=self.wh)
+        never = inv_api.alerts(kind="never_sold", company=COMPANY)
+        codes = [r["item_code"] for r in never["data"]]
+        self.assertIn(self.fine, codes)  # received 10, nothing ever left
+        self.assertIn(self.low, codes)
+        self.assertNotIn(heavy, codes)  # something left, so it moves (even if slowly)
+        self.assertNotIn(self.gone, codes)  # nothing in stock
+        row = next(r for r in never["data"] if r["item_code"] == self.fine)
+        self.assertEqual((row["qty"], row["last_outward"], row["idle_days"]), (10.0, None, None))
+        self.assertEqual(never["meta"]["kind"], "never_sold")
 
     def test_pagination_and_bad_kind(self) -> None:
         p = inv_api.alerts(kind="slow_moving", company=COMPANY, page=1, page_size=1)

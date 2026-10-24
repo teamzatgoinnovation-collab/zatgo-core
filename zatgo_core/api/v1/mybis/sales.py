@@ -57,6 +57,29 @@ def breakdown_by(
 
 
 @frappe.whitelist(methods=["GET", "POST"])
+def movers(
+    dimension: str = "category",
+    company: str | None = None,
+    preset: str | None = "this_month",
+    from_date: str | None = None,
+    to_date: str | None = None,
+    limit: int | str = 5,
+    refresh: Any = 0,
+) -> dict[str, Any]:
+    """What changed against the previous period: the rows that gained and lost the most (new and lost rows included)."""
+    breakdown.check(SIDE, dimension, {})
+    args = {"company": company, "preset": preset, "from_date": from_date, "to_date": to_date, "compare": 1,
+            "dimension": dimension, "limit": limit}
+
+    def build(s: scope.Scope) -> dict[str, Any]:
+        cur = (s.current.from_date, s.current.to_date)
+        prev = (s.previous.from_date, s.previous.to_date)
+        return {"currency": s.currency, **breakdown.movers(SIDE, s.company, cur, prev, dimension, int(limit))}
+
+    return _common.run("sales_movers", args, ("sales",), build, refresh)
+
+
+@frappe.whitelist(methods=["GET", "POST"])
 def invoices(
     company: str | None = None,
     preset: str | None = "this_month",

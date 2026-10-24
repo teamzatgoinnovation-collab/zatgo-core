@@ -49,13 +49,17 @@ def week_start() -> int:
 
 
 def readable_companies() -> list[dict[str, Any]]:
-    """Companies the user may read, with their currency (User Permissions applied by get_list)."""
-    return frappe.get_list(
-        "Company",
-        fields=["name", "abbr", "default_currency", "country"],
-        order_by="name asc",
-        limit_page_length=0,
-    )
+    """Companies the user may read, with their currency (User Permissions applied by get_list).
+    A user with no right to read Company at all has none -- the app then says so instead of failing."""
+    try:
+        return frappe.get_list(
+            "Company",
+            fields=["name", "abbr", "default_currency", "country"],
+            order_by="name asc",
+            limit_page_length=0,
+        )
+    except frappe.PermissionError:
+        return []
 
 
 def resolve_company(company: str | None) -> tuple[str, str]:

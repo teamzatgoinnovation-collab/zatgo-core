@@ -50,6 +50,10 @@ ITEM_LEVEL = {
 ITEM_FILTERS = {"product": "i.item_code", "category": "i.item_group", "warehouse": _WAREHOUSE}
 
 
+GROWTH_POOL = 100
+MOVERS_SCAN = 5000
+
+
 def side(name: str) -> dict[str, Any]:
     if name not in SIDES:
         frappe.throw(_("Unknown side {0}").format(name), frappe.ValidationError)
@@ -193,7 +197,11 @@ def breakdown(
     order: str,
 ) -> dict[str, Any]:
     limit = max(1, min(int(limit or 20), 100))
-    ranked = rows(side_name, company, *current, dimension, filters, limit=limit, order=order)
+    growth = order == "growth"
+    if growth and previous is None:
+        frappe.throw(_("Ordering by growth needs the previous period: switch the comparison on."), frappe.ValidationError)
+    # "Fastest growing" is taken among the GROWTH_POOL biggest sellers: a tiny item going from 1 sale to 3 is not news.
+    ranked = rows(side_name, company, *current, dimension, filters, limit=GROWTH_POOL if growth else limit, order="revenue" if growth else order)
     total = total_revenue(side_name, company, *current, dimension, filters)
     before: dict[str, float] = {}
     if previous:
@@ -202,7 +210,59 @@ def breakdown(
         r["share_percent"] = metrics.percent(r["revenue"], total)
         r["previous_revenue"] = (before.get(r["code"], 0.0) if previous else None)
         r["growth_percent"] = None if r["previous_revenue"] is None else metrics.metric(r["revenue"], r["previous_revenue"])["growth_percent"]
-    return {"side": side_name, "dimension": dimension, "filters": filters, "order": order, "total_revenue": round(total, 2), "rows": ranked}
+    out: dict[str, Any] = {"side": side_name, "dimension": dimension, "filters": filters, "order": order, "total_revenue": round(total, 2)}
+    if growth:
+        pool = len(ranked)
+        ranked = sorted((r for r in ranked if r["growth_percent"] is not None), key=lambda r: r["growth_percent"], reverse=True)[:limit]
+        out["ranked_among"] = pool
+    out["rows"] = ranked
+    return out
+
+
+def movers(
+    side_name: str,
+    company: str,
+    current: tuple[date, date],
+    previous: tuple[date, date],
+    dimension: str,
+    limit: int,
+) -> dict[str, Any]:
+    """What changed between two periods: the rows that gained and lost the most, with new and lost rows included.
+    `net_change` is the whole difference, so the lists can be read against it."""
+    limit = max(1, min(int(limit or 5), 20))
+    cur = {r["code"]: r for r in rows(side_name, company, *current, dimension, {}, limit=MOVERS_SCAN, order="revenue")}
+    prev = {r["code"]: r for r in rows(side_name, company, *previous, dimension, {}, limit=MOVERS_SCAN, order="revenue")}
+    items = []
+    for code in cur.keys() | prev.keys():
+        c, p = cur.get(code), prev.get(code)
+        now, before = (c["revenue"] if c else 0.0), (p["revenue"] if p else 0.0)
+        items.append(
+            {
+                "code": code,
+                "name": (c or p)["name"],
+                "revenue": round(now, 2),
+                "previous_revenue": round(before, 2),
+                "change": round(now - before, 2),
+                "growth_percent": metrics.metric(now, before)["growth_percent"],
+                "status": "new" if not p else ("lost" if not c else "changed"),
+            }
+        )
+    gains = sorted((i for i in items if i["change"] > 0), key=lambda i: -i["change"])
+    declines = sorted((i for i in items if i["change"] < 0), key=lambda i: i["change"])
+    now_total, before_total = sum(i["revenue"] for i in items), sum(i["previous_revenue"] for i in items)
+    return {
+        "side": side_name,
+        "dimension": dimension,
+        "revenue": round(now_total, 2),
+        "previous_revenue": round(before_total, 2),
+        "net_change": round(now_total - before_total, 2),
+        "growth_percent": metrics.metric(now_total, before_total)["growth_percent"],
+        "gains_total": round(sum(i["change"] for i in gains), 2),
+        "declines_total": round(sum(i["change"] for i in declines), 2),
+        "gains": gains[:limit],
+        "declines": declines[:limit],
+        "scanned": len(items),
+    }
 
 
 def invoices(

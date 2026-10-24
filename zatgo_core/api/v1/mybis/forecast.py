@@ -8,6 +8,7 @@ import frappe
 from frappe.utils import getdate, today
 
 from zatgo_core.api.v1.mybis import _common
+from zatgo_core.api.validators import require_login
 from zatgo_core.services.mybis import forecast as fc
 from zatgo_core.services.mybis import forecasting
 
@@ -54,4 +55,5 @@ def methods() -> dict[str, Any]:
     """The available forecast methods and horizons (the app builds its pickers from this)."""
     from zatgo_core.api.response import ok
 
+    require_login()
     return ok({"methods": list(fc.METHODS), "horizons": list(forecasting.HORIZONS), "subjects": list(forecasting.SUBJECTS)})

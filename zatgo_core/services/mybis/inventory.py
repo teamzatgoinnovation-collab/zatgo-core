@@ -184,7 +184,7 @@ def summary(company: str, as_of: date) -> dict[str, Any]:
     }
 
 
-ALERT_KINDS = ("low_stock", "out_of_stock", "negative", "slow_moving", "overstock", "fast_moving")
+ALERT_KINDS = ("low_stock", "out_of_stock", "negative", "slow_moving", "never_sold", "overstock", "fast_moving")
 
 
 def alerts(company: str, as_of: date, kind: str, page: int, page_size: int) -> tuple[list[dict[str, Any]], int]:
@@ -218,6 +218,9 @@ def alerts(company: str, as_of: date, kind: str, page: int, page_size: int) -> t
             base, order = f"{join} WHERE t.qty = 0", "o.last_out DESC, t.item_code"
         elif kind == "slow_moving":
             base = f"{join} WHERE t.qty > 0 AND (o.last_out IS NULL OR o.last_out < %(dead_before)s)"
+            order = "t.value DESC, t.item_code"
+        elif kind == "never_sold":
+            base = f"{join} WHERE t.qty > 0 AND o.last_out IS NULL"
             order = "t.value DESC, t.item_code"
         elif kind == "overstock":
             base = f"{join} WHERE t.qty > 0 AND m.out_qty > 0 AND t.qty / (m.out_qty / {DEAD_DAYS}) > {OVERSTOCK_COVER_DAYS}"
