@@ -12,9 +12,8 @@ returns" branch needed or wanted.
 
 "Purchases Total" is the cost of the goods actually sold (ledger Cost of
 Goods Sold, same figure as the Profit and Loss Statement): stock bought but
-not yet sold is an asset, shown as the "Stock Balance" card (Stock accounts
-in the ledger as of `to_date`). Income / expense / net profit rows also come
-from the ledger and tie to the P&L.
+not yet sold is an asset and not part of it. Income / expense / net profit
+rows also come from the ledger and tie to the P&L.
 
 Party Payment is the part of outgoing Payment Entries allocated to invoices;
 the unallocated part (advances) is its own card.
@@ -48,7 +47,6 @@ def execute(filters=None):
     sales_total, sales_count = get_invoice_summary("Sales Invoice", "base_grand_total", company, from_date, to_date)
     gl = get_gl_result(company, from_date, to_date)
     purchase_total = gl["cogs"]
-    stock_balance = get_stock_balance(company, to_date)
     payment_total, payment_count, advance_total = get_supplier_payments(company, from_date, to_date)
     receipt_total, receipt_count = get_payment_summary(company, from_date, to_date, "Receive", "received_amount")
     receivable, payable = get_party_balances(company, to_date)
@@ -60,7 +58,6 @@ def execute(filters=None):
         {"transaction_type": _("Party Payment"), "count": payment_count, "total_amount": payment_total},
         {"transaction_type": _("Advance / Unallocated Payment"), "count": None, "total_amount": advance_total},
         {"transaction_type": _("Party Receipt"), "count": receipt_count, "total_amount": receipt_total},
-        {"transaction_type": _("Stock Balance"), "count": None, "total_amount": stock_balance},
         # Ledger view -- the same figures as the Profit and Loss Statement.
         {"transaction_type": _("Income (ledger)"), "count": None, "total_amount": gl["income"]},
         {"transaction_type": _("Total Expense (ledger)"), "count": None, "total_amount": gl["expense"]},
@@ -71,7 +68,6 @@ def execute(filters=None):
     report_summary = [
         {"value": sales_total, "label": _("Sales Total"), "datatype": "Currency", "currency": currency},
         {"value": purchase_total, "label": _("Purchases Total"), "datatype": "Currency", "currency": currency},
-        {"value": stock_balance, "label": _("Stock Balance"), "datatype": "Currency", "currency": currency},
         {"value": payment_total, "label": _("Party Payment Total"), "datatype": "Currency", "currency": currency},
         {
             "value": advance_total,
@@ -135,21 +131,6 @@ def get_payment_summary(company, from_date, to_date, payment_type, amount_field)
         as_dict=True,
     )[0]
     return flt(row.total), int(row.cnt or 0)
-
-
-def get_stock_balance(company, to_date):
-    """Value of stock still on hand: ledger balance of Stock-type accounts."""
-    row = frappe.db.sql(
-        """
-        select sum(g.debit - g.credit) as bal
-        from `tabGL Entry` g join `tabAccount` a on a.name = g.account
-        where g.company = %(company)s and g.is_cancelled = 0
-          and a.account_type = 'Stock' and g.posting_date <= %(to_date)s
-        """,
-        {"company": company, "to_date": to_date},
-        as_dict=True,
-    )[0]
-    return flt(row.bal)
 
 
 def get_gl_result(company, from_date, to_date):
