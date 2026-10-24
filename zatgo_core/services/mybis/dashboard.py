@@ -141,3 +141,74 @@ def top_rankings(scope: Scope, by: str, limit: int, order: str = "revenue") -> d
             None if r["previous_revenue"] is None else metrics.metric(r["revenue"], r["previous_revenue"])["growth_percent"]
         )
     return {"currency": scope.currency, "by": by, "order": order, "total_revenue": round(total, 2), "rows": rows}
+
+
+# -- sales / purchase analytics screens ------------------------------------------------------------------------------
+
+
+def sales_summary(scope: Scope) -> dict[str, Any]:
+    """The Sales screen's header figures (same definitions as the dashboard, plus paid / credit split)."""
+    cur, prev = scope.current, scope.previous
+
+    def pair(fn):
+        c = fn(scope.company, cur.from_date, cur.to_date)
+        p = fn(scope.company, prev.from_date, prev.to_date) if prev else None
+        return c, p
+
+    c, p = pair(queries.sales_totals)
+
+    def m(key: str, **kw):
+        return metrics.metric(c[key], None if p is None else p[key], **kw)
+
+    out: dict[str, Any] = {
+        "currency": scope.currency,
+        "gross_sales": m("sales"),
+        "net_sales": m("net_sales"),
+        "returns": m("returns", higher_is_better=False),
+        "discount": m("discount", higher_is_better=False),
+        "tax": m("tax"),
+        "invoices": m("invoices"),
+        "average_order_value": m("average_order_value"),
+        "paid_sales": m("paid_sales"),
+        "credit_sales": m("outstanding_sales", higher_is_better=False),
+    }
+    if _can("gl") or not frappe.get_cached_value("Company", scope.company, "enable_perpetual_inventory"):
+        gl_c = queries.gl_pnl(scope.company, cur.from_date, cur.to_date)["cogs"] if _can("gl") else 0.0
+        cogs_c, basis = queries.cogs(scope.company, cur.from_date, cur.to_date, gl_c)
+        gp_c = c["net_sales"] - cogs_c
+        gp_p = None
+        if p is not None:
+            gl_p = queries.gl_pnl(scope.company, prev.from_date, prev.to_date)["cogs"] if _can("gl") else 0.0
+            gp_p = p["net_sales"] - queries.cogs(scope.company, prev.from_date, prev.to_date, gl_p)[0]
+        out["gross_profit"] = metrics.metric(gp_c, gp_p, basis=basis, margin_percent=metrics.percent(gp_c, c["net_sales"]))
+    else:
+        out["gross_profit"] = dict(UNAVAILABLE)
+    return out
+
+
+def purchase_summary(scope: Scope) -> dict[str, Any]:
+    cur, prev = scope.current, scope.previous
+    c = queries.purchase_totals(scope.company, cur.from_date, cur.to_date)
+    p = queries.purchase_totals(scope.company, prev.from_date, prev.to_date) if prev else None
+
+    def m(key: str, **kw):
+        return metrics.metric(c[key], None if p is None else p[key], **kw)
+
+    out = {
+        "currency": scope.currency,
+        "total_purchases": m("purchases", higher_is_better=False),
+        "returns": m("returns"),
+        "net_purchases": m("net_purchases", higher_is_better=False),
+        "invoices": m("invoices"),
+        "suppliers": metrics.metric(
+            queries.supplier_count(scope.company, cur.from_date, cur.to_date),
+            queries.supplier_count(scope.company, prev.from_date, prev.to_date) if prev else None,
+        ),
+    }
+    if _can("gl"):
+        pay_c = -queries.balance_as_of(scope.company, "Payable", cur.to_date)
+        pay_p = -queries.balance_as_of(scope.company, "Payable", prev.to_date) if prev else None
+        out["outstanding_payables"] = metrics.metric(pay_c, pay_p, higher_is_better=False, as_of=cur.to_date.isoformat())
+    else:
+        out["outstanding_payables"] = dict(UNAVAILABLE)
+    return out

@@ -29,6 +29,7 @@ SOURCE_DOCTYPES = {
     "purchases": "Purchase Invoice",
     "gl": "GL Entry",
     "stock": "Stock Ledger Entry",
+    "bin": "Bin",
     "items": "Item",
 }
 
@@ -68,7 +69,8 @@ def sales_totals(company: str, start: date, end: date) -> dict[str, float]:
           COALESCE(SUM(CASE WHEN is_return = 0 THEN base_discount_amount END), 0) AS discount,
           COALESCE(SUM(base_total_taxes_and_charges), 0) AS tax,
           SUM(is_return = 0) AS invoices,
-          COALESCE(SUM(CASE WHEN is_return = 0 THEN base_grand_total - outstanding_amount * conversion_rate END), 0) AS paid
+          COALESCE(SUM(CASE WHEN is_return = 0 THEN base_grand_total END), 0) AS grand,
+          COALESCE(SUM(CASE WHEN is_return = 0 THEN outstanding_amount * conversion_rate END), 0) AS outstanding
         FROM `tabSales Invoice`
         WHERE docstatus = 1 AND company = %(company)s AND posting_date BETWEEN %(start)s AND %(end)s
         """,
@@ -84,6 +86,10 @@ def sales_totals(company: str, start: date, end: date) -> dict[str, float]:
         "tax": flt(row.get("tax")),
         "invoices": invoices,
         "average_order_value": (sales / invoices) if invoices else 0.0,
+        # incl. tax: what customers were invoiced, what they still owe on those invoices, and the rest (paid)
+        "invoiced_total": flt(row.get("grand")),
+        "outstanding_sales": flt(row.get("outstanding")),
+        "paid_sales": flt(row.get("grand")) - flt(row.get("outstanding")),
     }
 
 
@@ -101,6 +107,17 @@ def purchase_totals(company: str, start: date, end: date) -> dict[str, float]:
     )
     purchases, returns = flt(row.get("purchases")), flt(row.get("returns"))
     return {"purchases": purchases, "returns": returns, "net_purchases": purchases + returns, "invoices": int(row.get("invoices") or 0)}
+
+
+def supplier_count(company: str, start: date, end: date) -> int:
+    row = _one(
+        """
+        SELECT COUNT(DISTINCT supplier) AS n FROM `tabPurchase Invoice`
+        WHERE docstatus = 1 AND is_return = 0 AND company = %(company)s AND posting_date BETWEEN %(start)s AND %(end)s
+        """,
+        {"company": company, "start": start, "end": end},
+    )
+    return int(row.get("n") or 0)
 
 
 def net_sales_by_bucket(company: str, start: date, end: date, bucket: str) -> dict[date, float]:
@@ -153,8 +170,8 @@ def estimated_cogs(company: str, start: date, end: date) -> float:
         """
         SELECT COALESCE(SUM(sii.incoming_rate * sii.stock_qty), 0) AS cogs
         FROM `tabSales Invoice Item` sii JOIN `tabSales Invoice` si ON si.name = sii.parent
+        JOIN `tabItem` it ON it.name = sii.item_code AND it.is_stock_item = 1
         WHERE si.docstatus = 1 AND si.company = %(company)s AND si.posting_date BETWEEN %(start)s AND %(end)s
-          AND sii.is_stock_item = 1
         """,
         {"company": company, "start": start, "end": end},
     )
