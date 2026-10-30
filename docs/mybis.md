@@ -1,6 +1,6 @@
 # MyBis API (`zatgo_core.api.v1.mybis.*`)
 
-Read-only management dashboards for the MyBis Flutter app (`flutter/mybis`). Switch: ZG System Settings -> Apps -> *Enable ZatGo MyBis*
+Read-only management dashboards for the MyBis Flutter app (`mobile/mybis`). Switch: ZG System Settings -> Apps -> *Enable ZatGo MyBis*
 (`enable_mybis`, off by default; off = every method answers 404). ERPNext's ledgers stay the source of truth; nothing here writes.
 
 ## Request shape

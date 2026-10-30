@@ -20,7 +20,7 @@
 #
 # Example (local dev bench, app installed on site "vansale1"):
 #   scripts/deploy_web_build.sh \
-#     ~/ZatGoInnovation/flutter/flutter-vansalex \
+#     ~/ZatGoInnovation/mobile/flutter-vansalex \
 #     ~/ZatGoInnovation/erpnext/zatgo-core \
 #     http://vansale1:8000
 #
