@@ -67,6 +67,20 @@ APPS = (
         "requires": ("vansalex",),
     },
     {
+        "key": "zatgo_pos",
+        "label": "ZatGo POS",
+        "group": "app",
+        "icon": "retail",
+        "description": "Point of sale (desktop app): sale defaults, payments and receipts for this site's POS.",
+        # On everywhere it was before it had a switch (a site with no stored value counts as on).
+        "switch_field": "enable_zatgo_pos",
+        "default_on": True,
+        "workspaces": ("ZatGo POS",),
+        "settings": (("ZG POS Settings", "POS Settings"),),
+        # Off: the restaurant POS API answers 404. pos_profile / pos_settings stay outside that prefix.
+        "api_prefixes": ("zatgo_core.api.v1.resto_pos.",),
+    },
+    {
         "key": "industries",
         "label": "Industries",
         "group": "industries",

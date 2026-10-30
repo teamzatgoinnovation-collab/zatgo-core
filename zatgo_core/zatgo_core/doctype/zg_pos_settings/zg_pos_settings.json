@@ -1,0 +1,201 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-30 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "general_tab",
+    "defaults_section",
+    "default_warehouse",
+    "default_price_list",
+    "defaults_column",
+    "default_customer",
+    "discount_section",
+    "allow_discounts",
+    "max_discount_percent",
+    "payments_tab",
+    "payment_section",
+    "default_payment_mode",
+    "allow_split_payment",
+    "payment_help",
+    "receipt_tab",
+    "receipt_section",
+    "receipt_header",
+    "receipt_footer",
+    "receipt_column",
+    "show_tax_on_receipt",
+    "print_copies",
+    "printing_help"
+  ],
+  "fields": [
+    {
+      "fieldname": "general_tab",
+      "fieldtype": "Tab Break",
+      "label": "General"
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Sale defaults"
+    },
+    {
+      "fieldname": "default_warehouse",
+      "fieldtype": "Link",
+      "label": "Default Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "default_price_list",
+      "fieldtype": "Link",
+      "label": "Default Price List",
+      "options": "Price List"
+    },
+    {
+      "fieldname": "defaults_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "default_customer",
+      "fieldtype": "Link",
+      "label": "Default (Walk-in) Customer",
+      "options": "Customer"
+    },
+    {
+      "fieldname": "discount_section",
+      "fieldtype": "Section Break",
+      "label": "Discounts"
+    },
+    {
+      "fieldname": "allow_discounts",
+      "fieldtype": "Check",
+      "label": "Allow Discounts",
+      "default": "1"
+    },
+    {
+      "fieldname": "max_discount_percent",
+      "fieldtype": "Percent",
+      "label": "Max Discount %",
+      "default": "100",
+      "depends_on": "allow_discounts",
+      "description": "Highest discount a cashier may give on one sale (0-100)."
+    },
+    {
+      "fieldname": "payments_tab",
+      "fieldtype": "Tab Break",
+      "label": "Payments"
+    },
+    {
+      "fieldname": "payment_section",
+      "fieldtype": "Section Break",
+      "label": "Payment methods"
+    },
+    {
+      "fieldname": "default_payment_mode",
+      "fieldtype": "Link",
+      "label": "Default Mode of Payment",
+      "options": "Mode of Payment"
+    },
+    {
+      "fieldname": "allow_split_payment",
+      "fieldtype": "Check",
+      "label": "Allow Split Payment",
+      "default": "1",
+      "description": "Let one sale be paid with more than one mode of payment."
+    },
+    {
+      "fieldname": "payment_help",
+      "fieldtype": "HTML",
+      "options": "Accounts and gateways are set in <a href=\"/desk/zg-payment-settings\">ZG Payment Settings</a>; the modes themselves in <a href=\"/desk/mode-of-payment\">Mode of Payment</a>."
+    },
+    {
+      "fieldname": "receipt_tab",
+      "fieldtype": "Tab Break",
+      "label": "Receipt & Printing"
+    },
+    {
+      "fieldname": "receipt_section",
+      "fieldtype": "Section Break",
+      "label": "Receipt"
+    },
+    {
+      "fieldname": "receipt_header",
+      "fieldtype": "Small Text",
+      "label": "Receipt Header"
+    },
+    {
+      "fieldname": "receipt_footer",
+      "fieldtype": "Small Text",
+      "label": "Receipt Footer"
+    },
+    {
+      "fieldname": "receipt_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "show_tax_on_receipt",
+      "fieldtype": "Check",
+      "label": "Show Tax Breakdown on Receipt",
+      "default": "1"
+    },
+    {
+      "fieldname": "print_copies",
+      "fieldtype": "Int",
+      "label": "Receipt Copies",
+      "default": "1"
+    },
+    {
+      "fieldname": "printing_help",
+      "fieldtype": "HTML",
+      "options": "Printers are set in <a href=\"/desk/zg-printer-settings\">ZG Printer Settings</a>."
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-30 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG POS Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
