@@ -6,6 +6,8 @@
   "engine": "InnoDB",
   "field_order": [
     "general_tab",
+    "type_section",
+    "pos_type",
     "defaults_section",
     "default_warehouse",
     "default_price_list",
@@ -33,6 +35,18 @@
       "fieldname": "general_tab",
       "fieldtype": "Tab Break",
       "label": "General"
+    },
+    {
+      "fieldname": "type_section",
+      "fieldtype": "Section Break",
+      "label": "Type of POS"
+    },
+    {
+      "fieldname": "pos_type",
+      "fieldtype": "Select",
+      "label": "POS Type",
+      "options": "\nRestaurant\nSupermarket",
+      "description": "Restaurant: tables, orders and kitchen display. Supermarket: barcode counter selling, products and stock. Saving a different type switches the matching industry on (System Manager only). Left empty, the type follows the industries switched on."
     },
     {
       "fieldname": "defaults_section",
@@ -154,7 +168,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-30 12:00:00.000000",
+  "modified": "2026-10-31 12:30:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

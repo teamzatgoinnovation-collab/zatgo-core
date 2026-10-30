@@ -5,6 +5,8 @@ Runs against a real site; users are throwaway and removed afterwards."""
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
@@ -112,24 +114,36 @@ class TestAppPage(IntegrationTestCase):
         boot.boot_session(bootinfo)
         self.assertEqual(bootinfo.zatgo_core["app_routes"]["zg-app/zatgo-vansalex"], "zatgo-vansalex")
 
-    def test_the_folder_lists_an_app_only_for_a_user_whose_sidebar_has_it(self) -> None:
-        def folder(sidebars: dict) -> dict:
+    def test_the_folder_lists_every_app_and_sends_apps_without_a_sidebar_to_the_hub(self) -> None:
+        def folder(sidebars: dict, can_switch: bool = True) -> dict:
             info = frappe._dict(
                 workspace_sidebar_item=sidebars,
                 desktop_icons=[frappe._dict(label="ZatGo", icon_type="Folder")],
             )
-            boot._zatgo_folder_children(info)
+            with patch("zatgo_core.services.app_authority.can_switch", return_value=can_switch):
+                boot._zatgo_folder_children(info)
             return {i["label"]: i["link"] for i in info.desktop_icons if i.get("parent_icon") == "ZatGo"}
 
         mine = {
             "zatgo vansalex": {"items": [{"type": "Link", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"}]},
             "zatgo": {"items": [{"type": "Link", "link_type": "Page", "link_to": "zg-app-hub"}]},
         }
+        hub = "/desk/zg-app-hub"
+        admin = folder(mine)
+        self.assertEqual(admin["ZatGo VanSaleX"], "/desk/zatgo-vansalex")
+        self.assertEqual(admin["General Settings"], hub)
+        # Apps that have no sidebar to open (off, switch-only, no Desk pages) go to the hub.
+        for label in (
+            "ZatGo AI", "ZatGo Tracker", "ZatGo Space", "ZatGo MyBis", "ZatGo POS",
+            "ZatGo Desk Theme", "ZatGo Language Switcher", "ZatGo VanSaleX Web",
+        ):
+            self.assertEqual(admin.get(label), hub, label)
+        # A user who cannot switch apps sees only the apps whose sidebar they can open.
         self.assertEqual(
-            folder(mine),
-            {"ZatGo VanSaleX": "/desk/zatgo-vansalex", "General Settings": "/desk/zg-app-hub"},
+            folder(mine, can_switch=False),
+            {"ZatGo VanSaleX": "/desk/zatgo-vansalex", "General Settings": hub},
         )
-        self.assertEqual(folder({}), {})
+        self.assertEqual(folder({}, can_switch=False), {})
 
     # -- settings forms ----------------------------------------------------------------------------------
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — POS Type in ZG POS Settings
+
+- **POS Type** (Restaurant / Supermarket) on ZatGo POS -> POS Settings -> General: the choice the desktop POS app used to make in its own setup now lives in the backend. It decides the `pos_mode` the POS gets (`pos_settings.get` returns `pos_type` and `pos_mode`). Saving a type switches the matching industry on (never the other off); changing it is a System Manager's call, like any industry switch. Left empty (every existing site), the industries decide as before, Restaurant first. The ZatGo folder on the Apps screen now lists every app (AI, Tracker, Space, MyBis, Desk theme, language switcher, VanSaleX web too); one with no sidebar to open sends a System Manager to the App Settings Hub.
+
 ### Changed — ZatGo Desk layout (apps with tabs)
 
 - **Each app opens in its own sidebar** (like Banking in ERPNext) from the ZatGo folder on the Apps screen: Overview, Settings (one item per settings tab), then the app's own groups -- replaces the tabbed `/desk/zg-app/<app>` page (Page `zg-app`, its API and `zg_app_tabs.js` removed; old URLs redirect to the app's Workspace). The ZatGo sidebar is now General Settings only. `services/app_sidebar.py`.
