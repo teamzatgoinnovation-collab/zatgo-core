@@ -4,6 +4,7 @@
 
 ### Changed — ZatGo Desk layout (apps with tabs)
 
+- **Each app opens in its own sidebar** (like Banking in ERPNext) from the ZatGo folder on the Apps screen: Overview, Settings (one item per settings tab), then the app's own groups -- replaces the tabbed `/desk/zg-app/<app>` page (Page `zg-app`, its API and `zg_app_tabs.js` removed; old URLs redirect to the app's Workspace). The ZatGo sidebar is now General Settings only. `services/app_sidebar.py`.
 - **The ZatGo sidebar has two sections**: *Apps* (one entry per enabled app and industry) and *General Settings* (the app hub, the platform settings, the Desk theme / language switcher / VanSaleX web switches). An app's own settings are no longer sidebar entries.
 - **Each app opens a page with tabs** (`/desk/zg-app/zatgo-<app>`, new Page `zg-app`, `api/v1/app_page.py`): *Overview* (the app's shortcuts and cards, per-user filtered) and one tab per settings topic. Settings forms are split into Tab Breaks -- VanSaleX Settings (Payments / Sales & Warehouse / Modules & Features), Chat AI Settings (Provider / Conversation / Safety & Tools / Features / Voice & Files / Costs; sections reordered, fields unchanged), Tracker and Space Settings, and ZG System Settings (General / ERP Behaviour / Apps / Industries). Field names and stored values are untouched.
 - Every app's own rail icon is hidden (apps open from ZatGo → Apps); Workspaces are kept. Old `/desk/zatgo-ai`-style URLs redirect to the page. ZatGo Space gets a Workspace (it had none).

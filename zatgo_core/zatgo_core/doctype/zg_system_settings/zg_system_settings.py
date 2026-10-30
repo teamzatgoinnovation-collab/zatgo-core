@@ -64,10 +64,11 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
             self._refresh_app_views()
         try:
             from zatgo_core.services.app_desk import sync_rail_icons
+            from zatgo_core.services.app_sidebar import sync_app_sidebars
             from zatgo_core.services.core_sidebar import sync_core_sidebar
 
-            # `|`, not `or`: both must run (an app or industry switched on just made its rail icon).
-            if sync_core_sidebar() | sync_rail_icons():
+            # `|`, not `or`: all must run (an app or industry switched on just made its rail icon / sidebar).
+            if sync_core_sidebar() | sync_app_sidebars() | sync_rail_icons():
                 frappe.clear_cache()
         except Exception:
             frappe.log_error(title="ZatGo: sidebar sync")

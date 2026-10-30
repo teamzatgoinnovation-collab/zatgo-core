@@ -6,8 +6,7 @@ Clients and future domain Desk UIs consume these via `zatgo_core.api.v1.config.*
 
 ## The app contract (apps shipped inside zatgo_core)
 
-An app is one manifest. It appears in **ZatGo Apps** (`/desk/zg-app-hub`), the generated ZatGo sidebar (section
-**Apps**, opening its page `/desk/zg-app/<route key>` with tabs; the route key is the slug of the label, e.g. `zatgo-vansalex`), the switch fields, the API gate and the registry with no
+An app is one manifest. It appears in **ZatGo Apps** (`/desk/zg-app-hub`), the ZatGo folder of the Apps screen (the app opens in its own generated sidebar, `services/app_sidebar.py`), the switch fields, the API gate and the registry with no
 other list to edit.
 
 ```python
@@ -28,9 +27,9 @@ APP = {
 }
 ```
 
-**The app's page and tabs.** The sidebar entry opens `/desk/zg-app/<route key>`: an *Overview* tab (the shortcuts and
-cards of the Workspace, filtered by what the user may open) followed by one tab per **Tab Break** of the settings
-DocType in `settings`. So: make the first field of the settings DocType a Tab Break (otherwise Frappe invents a
+**The app's sidebar and tabs.** The app opens in its own sidebar (named after its Workspace): *Overview* (the Workspace),
+*Settings* with one item per **Tab Break** of the settings DocType in `settings`, then the Workspace's cards as groups.
+So: make the first field of the settings DocType a Tab Break (otherwise Frappe invents a
 "Details" tab) and put each topic under its own Tab Break -- nothing else to register. After editing a DocType
 JSON, bump its `modified`, or migrate skips it.
 

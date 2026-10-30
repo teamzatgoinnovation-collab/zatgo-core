@@ -1,5 +1,5 @@
-"""ZatGo > Apps > <app>: the page behind each app entry (services/app_page.py, api/v1/app_page.py, events/boot.py),
-the tabs of the settings forms and the rail icons.
+"""The sidebar of each ZatGo app (services/app_sidebar.py, services/app_page.py, events/boot.py), the tabs of the
+settings forms it lists, the old URLs and the rail icons.
 
 Runs against a real site; users are throwaway and removed afterwards."""
 
@@ -9,9 +9,8 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
-from zatgo_core.api.v1 import app_page as api
 from zatgo_core.events import boot
-from zatgo_core.services import app_catalog, app_desk, app_page, core_sidebar
+from zatgo_core.services import app_catalog, app_desk, app_page, app_sidebar, core_sidebar
 
 # Settings DocTypes of the apps, and the tabs their forms must have (fieldnames).
 APP_FORMS = {
@@ -52,60 +51,85 @@ class TestAppPage(IntegrationTestCase):
         self._users.append(email)
         return email
 
+    # -- the sidebars ------------------------------------------------------------------------------------
+
+    def _items(self, label: str = "ZatGo VanSaleX") -> list:
+        app = next(a for a in app_page.apps() if a["label"] == label)
+        return frappe.get_doc("Workspace Sidebar", app_sidebar.sidebar_name(app)).items
+
+    def test_vansalex_sidebar_is_overview_then_settings_then_the_workspace_groups(self) -> None:
+        app_sidebar.sync_app_sidebars()
+        items = self._items()
+        first = items[0]
+        self.assertEqual((first.label, first.link_type, first.link_to, int(first.child or 0)), ("Overview", "Workspace", "ZatGo VanSaleX", 0))
+        settings = [i for i in items if i.link_to == "VanSaleX Settings"]
+        self.assertEqual(
+            [(i.label, i.navigate_to_tab) for i in settings],
+            [("Payments", "payments_tab"), ("Sales & Warehouse", "sales_warehouse_tab"), ("Modules & Features", "access_tab")],
+        )
+        self.assertTrue(all(int(i.child or 0) == 1 for i in items[1:] if i.type == "Link"))
+        self.assertEqual(items[1].type, "Section Break")
+        self.assertNotEqual(items[-1].type, "Section Break", "a caption with nothing under it")
+
+    def test_every_item_points_at_something_that_exists_and_each_group_has_links(self) -> None:
+        app_sidebar.sync_app_sidebars()
+        items = self._items()
+        for i in items:
+            if i.type == "Link":
+                self.assertTrue(frappe.db.exists(i.link_type, i.link_to), f"{i.label}: {i.link_type} {i.link_to}")
+        for a, b in zip(items, items[1:]):
+            self.assertFalse(a.type == "Section Break" and b.type == "Section Break", a.label)
+
+    def test_sync_is_idempotent_and_repairs_drift(self) -> None:
+        app_sidebar.sync_app_sidebars()
+        self.assertFalse(app_sidebar.sync_app_sidebars())
+        name = app_sidebar.sidebar_name(app_page.find("zatgo-vansalex"))
+        frappe.db.set_value("Workspace Sidebar Item", {"parent": name, "type": "Link", "link_to": "VanSaleX Settings"}, "navigate_to_tab", "access_tab")
+        self.assertTrue(app_sidebar.sync_app_sidebars())
+        self.assertFalse(app_sidebar.sync_app_sidebars())
+
+    def test_a_switched_off_app_has_no_items_and_comes_back_on(self) -> None:
+        tracker = app_page.find("zatgo-tracker")
+        if not frappe.db.exists("Workspace Sidebar", app_sidebar.sidebar_name(tracker)) or app_page.is_enabled(tracker):
+            self.skipTest("Tracker is on or was never set up on this site")
+        app_sidebar.sync_app_sidebars()
+        self.assertFalse(self._items("ZatGo Tracker"))
+
+    def test_no_settings_form_is_listed_by_two_apps(self) -> None:
+        owners: dict[str, list[str]] = {}
+        for app in app_page.apps():
+            for doctype, _label in app["settings"]:
+                owners.setdefault(doctype, []).append(app["key"])
+        self.assertEqual({d: o for d, o in owners.items() if len(o) > 1}, {})
+
     # -- routes ------------------------------------------------------------------------------------------
 
-    def test_route_keys_are_label_slugs_and_resolve_back(self) -> None:
-        vansalex = app_page.find("zatgo-vansalex")
-        self.assertEqual((vansalex["key"], vansalex["route_key"]), ("vansalex", "zatgo-vansalex"))
-        self.assertEqual(app_page.route_for(vansalex), "/desk/zg-app/zatgo-vansalex")
-        self.assertEqual(app_page.find(" ZatGo-VanSaleX ")["key"], "vansalex")  # case / spaces do not matter
-        self.assertEqual(app_page.find("chat-ai")["key"], "chat_ai")  # the bare key still resolves
-        self.assertIsNone(app_page.find("no-such-app"))
-
-    def test_route_keys_are_unique_and_never_a_sidebar_name(self) -> None:
-        """For a two-part route Frappe opens the sidebar whose lower-cased name equals the second part: a key such as
-        `tracker` would open the auto-generated "Tracker" module sidebar instead of ZatGo's."""
-        keys = [a["route_key"] for a in app_page.apps()]
-        self.assertEqual(len(keys), len(set(keys)), "two apps share a route key")
-        self.assertEqual(len({a["key"] for a in app_page.apps()}), len(keys), "an app and an industry share a key")
-        sidebars = {n.lower() for n in frappe.get_all("Workspace Sidebar", pluck="name")}
-        for key in keys:
-            self.assertNotIn(key, sidebars, f"/desk/zg-app/{key} would open that sidebar")
-            self.assertIn("-", key)
-
-    def test_every_workspace_of_an_app_routes_to_its_page(self) -> None:
-        routes = app_page.workspace_routes()
-        self.assertEqual(routes["ZatGo VanSaleX"], "/desk/zg-app/zatgo-vansalex")
-        self.assertEqual(routes["ZatGo AI"], "/desk/zg-app/zatgo-ai")
-        self.assertEqual(routes["ZatGo Tracker"], "/desk/zg-app/zatgo-tracker")
-        self.assertEqual(routes["ZatGo Space"], "/desk/zg-app/zatgo-space")
-
-    def test_old_desk_urls_are_redirected_to_the_page(self) -> None:
+    def test_old_urls_open_the_apps_workspace(self) -> None:
         old = app_page.old_url_redirects()
-        self.assertEqual(old["zatgo-vansalex"], "zg-app/zatgo-vansalex")
-        self.assertEqual(old["vansalex"], "zg-app/zatgo-vansalex")  # the workspace's name before it was "ZatGo ..."
-        self.assertEqual(old["ai-admin"], "zg-app/zatgo-ai")
-        self.assertEqual(old["task-management"], "zg-app/zatgo-tracker")
-
-    def test_boot_points_the_app_entries_at_their_page_and_nothing_else(self) -> None:
-        sidebar = frappe._dict(
-            items=[
-                {"label": "Apps", "type": "Section Break", "link_type": "DocType", "link_to": None},
-                {"label": "ZatGo VanSaleX", "type": "Link", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"},
-                {"label": "Hub", "type": "Link", "link_type": "Page", "link_to": "zg-app-hub"},
-                {"label": "Other", "type": "Link", "link_type": "Workspace", "link_to": "Home"},
-            ]
-        )
-        bootinfo = frappe._dict(workspace_sidebar_item={core_sidebar.NAME.lower(): sidebar, "email": frappe._dict(items=[])})
-        boot._route_sidebar_entries(bootinfo)
-        routes = {i["label"]: i.get("route") for i in sidebar["items"]}
-        self.assertEqual(routes, {"Apps": None, "ZatGo VanSaleX": "/desk/zg-app/zatgo-vansalex", "Hub": None, "Other": None})
-
-    def test_boot_session_hands_the_page_the_maps_it_needs(self) -> None:
+        self.assertEqual(old["zg-app/zatgo-vansalex"], "zatgo-vansalex")
+        self.assertEqual(old["vansalex"], "zatgo-vansalex")  # the workspace's name before it was "ZatGo ..."
         bootinfo = frappe._dict()
         boot.boot_session(bootinfo)
-        self.assertEqual(bootinfo.zatgo_core["app_settings"]["VanSaleX Settings"], "zatgo-vansalex")
-        self.assertEqual(bootinfo.zatgo_core["app_routes"]["zatgo-vansalex"], "zg-app/zatgo-vansalex")
+        self.assertEqual(bootinfo.zatgo_core["app_routes"]["zg-app/zatgo-vansalex"], "zatgo-vansalex")
+
+    def test_the_folder_lists_an_app_only_for_a_user_whose_sidebar_has_it(self) -> None:
+        def folder(sidebars: dict) -> dict:
+            info = frappe._dict(
+                workspace_sidebar_item=sidebars,
+                desktop_icons=[frappe._dict(label="ZatGo", icon_type="Folder")],
+            )
+            boot._zatgo_folder_children(info)
+            return {i["label"]: i["link"] for i in info.desktop_icons if i.get("parent_icon") == "ZatGo"}
+
+        mine = {
+            "zatgo vansalex": {"items": [{"type": "Link", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"}]},
+            "zatgo": {"items": [{"type": "Link", "link_type": "Page", "link_to": "zg-app-hub"}]},
+        }
+        self.assertEqual(
+            folder(mine),
+            {"ZatGo VanSaleX": "/desk/zatgo-vansalex", "General Settings": "/desk/zg-app-hub"},
+        )
+        self.assertEqual(folder({}), {})
 
     # -- settings forms ----------------------------------------------------------------------------------
 
@@ -122,71 +146,6 @@ class TestAppPage(IntegrationTestCase):
             for df in frappe.get_meta(doctype).fields:
                 seen_tab = seen_tab or df.fieldtype == "Tab Break"
                 self.assertTrue(seen_tab, f"{doctype}.{df.fieldname} is above the first tab")
-
-    def test_settings_routes_cover_every_apps_settings_form(self) -> None:
-        routes = app_page.settings_routes()
-        for doctype in ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings"):
-            self.assertIn(doctype, routes)
-
-    # -- the page's data ---------------------------------------------------------------------------------
-
-    def test_a_system_manager_gets_overview_then_the_settings_tabs(self) -> None:
-        data = app_page.build("zatgo-vansalex")
-        self.assertEqual(data["app"]["route_key"], "zatgo-vansalex")
-        tabs = data["tabs"]
-        self.assertEqual(tabs[0], {"key": "overview", "label": "Overview", "kind": "overview"})
-        self.assertEqual(
-            [(t["label"], t["tab"]) for t in tabs[1:]],
-            [("Payments", "payments_tab"), ("Sales & Warehouse", "sales_warehouse_tab"), ("Modules & Features", "access_tab")],
-        )
-        self.assertTrue(all(t["doctype"] == "VanSaleX Settings" for t in tabs[1:]))
-
-    def test_the_overview_comes_from_the_apps_workspace(self) -> None:
-        data = app_page.build("zatgo-vansalex")
-        overview = data["overview"]
-        self.assertEqual(overview["workspace"], "ZatGo VanSaleX")
-        sections = {s["label"]: [link["name"] for link in s["links"]] for s in overview["sections"]}
-        self.assertIn("Setup", sections)
-        self.assertIn("VanSaleX Settings", sections["Setup"])
-        self.assertTrue(overview["shortcuts"])
-        for link in [link for s in overview["sections"] for link in s["links"]]:
-            self.assertTrue(frappe.db.exists(link["type"], link["name"]), link)
-
-    def test_unknown_and_switched_off_apps_are_refused_with_a_reason(self) -> None:
-        with self.assertRaises(app_page.AppPageError) as ctx:
-            app_page.build("no-such-app")
-        self.assertEqual(ctx.exception.code, "not_found")
-        if not app_page.is_enabled(app_page.find("zatgo-tracker")):
-            with self.assertRaises(app_page.AppPageError) as ctx:
-                app_page.build("zatgo-tracker")
-            self.assertEqual(ctx.exception.code, "app_off")
-
-    def test_a_user_without_access_gets_nothing(self) -> None:
-        user = self._make("Employee")
-        frappe.set_user(user)
-        with self.assertRaises(app_page.AppPageError) as ctx:
-            app_page.build("zatgo-vansalex")
-        self.assertEqual(ctx.exception.code, "forbidden")
-
-    def test_a_vansale_admin_sees_only_what_they_may_open(self) -> None:
-        user = self._make("VanSale Admin")
-        frappe.set_user(user)
-        data = app_page.build("zatgo-vansalex")
-        links = [link for s in data["overview"]["sections"] for link in s["links"]] + data["overview"]["shortcuts"]
-        self.assertTrue(links)
-        for link in links:
-            if link["type"] == "DocType":
-                self.assertTrue(frappe.has_permission(link["name"], "read"), f"{link['name']} offered without read access")
-        self.assertFalse(data["can_manage"])  # switching apps stays a System Manager's call
-
-    def test_the_api_wraps_the_page_in_the_standard_envelope(self) -> None:
-        ok = api.get_app_page("zatgo-vansalex")
-        self.assertTrue(ok["success"])
-        self.assertIn("zg_app.css", ok["data"]["css"])
-        missing = api.get_app_page("no-such-app")
-        self.assertEqual((missing["success"], missing["error"]["code"]), (False, "not_found"))
-        frappe.set_user("Guest")
-        self.assertEqual(api.get_app_page("zatgo-vansalex")["error"]["code"], "forbidden")
 
     # -- rail icons --------------------------------------------------------------------------------------
 

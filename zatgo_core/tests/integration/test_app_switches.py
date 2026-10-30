@@ -122,16 +122,16 @@ class TestVanSaleXSwitch(AppSwitchTestCase):
         self.assertEqual(frappe.db.get_value("Workspace", VANSALEX_WORKSPACE, "is_hidden"), 1)
         for icon in frappe.get_all("Desktop Icon", filters={"link_to": VANSALEX_WORKSPACE}, pluck="hidden"):
             self.assertEqual(int(icon), 1)
-        labels = [r.label for r in frappe.get_doc("Workspace Sidebar", core_sidebar.NAME).items]
-        self.assertNotIn("ZatGo VanSaleX", labels)
+        # Its own sidebar keeps no items while off (Frappe then leaves it out), and the ZatGo one never listed it.
+        self.assertFalse(frappe.get_doc("Workspace Sidebar", VANSALEX_WORKSPACE).items)
         after = frappe.get_single("VanSaleX Settings").as_dict()
         for key in ("default_payment_type", "allow_credit_sales", "max_discount_percent", "config_version"):
             self.assertEqual(after.get(key), settings_before.get(key), key)
 
         app_hub.set_switch("vansalex", 1)
         self.assertEqual(frappe.db.get_value("Workspace", VANSALEX_WORKSPACE, "is_hidden"), 0)
-        labels = [r.label for r in frappe.get_doc("Workspace Sidebar", core_sidebar.NAME).items]
-        self.assertIn("ZatGo VanSaleX", labels)
+        items = frappe.get_doc("Workspace Sidebar", VANSALEX_WORKSPACE).items
+        self.assertEqual(items[0].label, "Overview")
         # Apps open from ZatGo > Apps: switching the app on does not bring its own rail icon back.
         for icon in frappe.get_all("Desktop Icon", filters={"link_to": VANSALEX_WORKSPACE}, pluck="hidden"):
             self.assertEqual(int(icon), 1)

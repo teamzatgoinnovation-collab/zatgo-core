@@ -1,15 +1,10 @@
 """The "ZatGo" Desk sidebar, rebuilt from what this site has switched on.
 
-Two sections:
-
-- **Apps** -- one entry per enabled app: ZatGo VanSaleX, ZatGo AI, ZatGo Tracker, ZatGo Space and each enabled
-  industry (ZatGo Restaurant ...). An entry links to the app's Workspace, so what a user sees is exactly what the
-  Workspace's own roles allow; `events/boot.py` then points the link at the app's tabbed page
-  (`/desk/zg-app/<app>`, services/app_page.py). An app without a Workspace falls back to its first settings DocType.
-- **General Settings** -- the platform's settings: the switch-only apps (Desk theme, language switcher, VanSaleX
+Only **General Settings** -- the platform's settings. The apps are not here: each has its own sidebar
+(services/app_sidebar.py) and is opened from the ZatGo folder of the Apps screen (`events/boot.py`). General Settings: the switch-only apps (Desk theme, language switcher, VanSaleX
   web), which open the App Settings Hub where their switch lives, then the hub itself (after them: Frappe highlights
   the last item whose path matches the open page), then the shortcuts of workspace/zatgo/zatgo.json (minus any
-  app's own settings, which are tabs of that app's page).
+  app's own settings, which are in that app's sidebar).
 
 A new sub-app (its `<module>/app_manifest.py`, services/app_catalog.py) or industry shows up here with nothing
 else to edit. Apps switched off are left out; their data is untouched. Frappe's sidebar nests one level only:
@@ -31,7 +26,6 @@ from zatgo_core.services import app_catalog
 
 NAME = "ZatGo"
 ICON = "setting"
-APPS_LABEL = "Apps"
 GENERAL_LABEL = "General Settings"
 HUB_PAGE = "zg-app-hub"
 HUB_LABEL = "ZatGo Apps"
@@ -68,18 +62,6 @@ def _is_on(app: dict, switches: dict[str, bool]) -> bool:
     return True
 
 
-def landing(app: dict) -> tuple[str, str] | None:
-    """(link_type, link_to) an app's entry opens: its Workspace (the first of the manifest that exists), else
-    its first settings DocType that exists on this site, else nothing."""
-    for name in app["workspaces"]:
-        if frappe.db.exists("Workspace", name):
-            return "Workspace", name
-    for doctype, _label in app["settings"]:
-        if frappe.db.exists("DocType", doctype):
-            return "DocType", doctype
-    return None
-
-
 def _owned_settings() -> set[str]:
     """Settings DocTypes that belong to an app: they are tabs of its page, not General Settings entries."""
     return {
@@ -88,26 +70,6 @@ def _owned_settings() -> set[str]:
         if app["group"] in APP_GROUPS
         for doctype, _label in app["settings"]
     }
-
-
-def app_links() -> list[dict]:
-    """The enabled apps, then the enabled industries -- all `child=1` rows of the "Apps" section."""
-    from zatgo_core.industries import gate, registry
-    from zatgo_core.services.app_state import switches
-
-    on = switches()
-    links: list[dict] = []
-    for app in app_catalog.catalog():
-        if app["group"] not in APP_GROUPS or not _is_on(app, on):
-            continue
-        target = landing(app)
-        if target:
-            links.append(_link(app["label"], target[0], target[1], app["icon"]))
-    enabled = gate.enabled_keys()
-    for key, industry in registry.INDUSTRIES.items():
-        if key in enabled and frappe.db.exists("Workspace", industry.workspace):
-            links.append(_link(industry.workspace, "Workspace", industry.workspace, industry.icon))  # "ZatGo Restaurant"
-    return links
 
 
 def general_links() -> list[dict]:
@@ -145,9 +107,6 @@ def general_links() -> list[dict]:
 
 def desired_items() -> list[dict]:
     items: list[dict] = []
-    apps = app_links()
-    if apps:
-        items += [_section(APPS_LABEL), *apps]
     general = general_links()
     if general:
         items += [_section(GENERAL_LABEL), *general]

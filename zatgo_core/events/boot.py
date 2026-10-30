@@ -9,26 +9,21 @@ import frappe
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.industries.gate import enabled_keys
-from zatgo_core.services import app_page, app_state, core_sidebar
+from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
-def _route_sidebar_entries(bootinfo: Any) -> None:
-    """Point each app's entry in the ZatGo sidebar at its page (`/desk/zg-app/<app>`).
+def _desk_route(link_type: str, name: str) -> str:
+    """Where Desk opens a Workspace / DocType / Page of this name (frappe.router.slug)."""
+    return "/desk/" + app_page.workspace_slug(name)
 
-    The entry stays a Workspace link -- so whether a user sees it is still decided by that Workspace's roles --
-    and Frappe's sidebar navigates to an item's `route` when it has one (frappe/public/js/frappe/ui/sidebar/
-    sidebar_item.js, also used for the rail icon). Frappe never fills `route` itself; if a Frappe update stops
-    honouring it the entry simply opens the Workspace as before.
-    """
-    sidebars = bootinfo.get("workspace_sidebar_item") or {}
-    sidebar = sidebars.get(core_sidebar.NAME.lower())
-    if not sidebar:
-        return
-    routes = app_page.workspace_routes()
+
+def _app_entry_route(sidebar: dict) -> str | None:
+    """The first thing an app's sidebar opens for this user: its Overview, else its first link."""
     for item in sidebar.get("items", []):
-        if item.get("link_type") == "Workspace" and item.get("link_to") in routes:
-            item["route"] = routes[item["link_to"]]
+        if item.get("type") == "Link" and item.get("link_to") and item.get("link_type") in ("Workspace", "DocType", "Page"):
+            return _desk_route(item["link_type"], item["link_to"])
+    return None
 
 
 _TILE_COLORS = ("#06B58B", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444", "#14B8A6", "#EC4899", "#6366F1")
@@ -69,23 +64,27 @@ def _zatgo_folder_children(bootinfo: Any) -> None:
     "General Settings", like the Frappe HR folder does.
 
     The children are not Desktop Icon rows (an icon's name is its label, and an app's own rail icon already
-    has it); they are made here from the user's ZatGo sidebar, so exactly what the sidebar shows is what the
-    popup shows. The popup opens each child by its `link` (External icon = a plain URL)."""
-    sidebar = (bootinfo.get("workspace_sidebar_item") or {}).get(core_sidebar.NAME.lower())
+    has it); they are made here. An app is listed when its own sidebar (services/app_sidebar.py) has an item this
+    user may open -- Frappe leaves a sidebar out of the boot otherwise -- and opens that sidebar's first link
+    (Overview). The popup opens each child by its `link` (External icon = a plain URL)."""
+    sidebars = bootinfo.get("workspace_sidebar_item") or {}
     folder = next((i for i in bootinfo.get("desktop_icons") or [] if i.get("label") == core_sidebar.NAME), None)
-    if not sidebar or not folder or folder.get("icon_type") != "Folder":
+    if not folder or folder.get("icon_type") != "Folder":
         return
-    children, general_target, in_general = [], None, False
-    for item in sidebar.get("items", []):
-        if item.get("type") == "Section Break":
-            in_general = item.get("label") == core_sidebar.GENERAL_LABEL
+    children = []
+    for app in app_page.apps():
+        if not app_page.is_enabled(app):
             continue
-        route = item.get("route")
+        sidebar = sidebars.get(app_sidebar.sidebar_name(app).lower())
+        route = _app_entry_route(sidebar) if sidebar else None
         if route:
-            children.append((item.get("label"), item.get("icon"), route))
-        elif in_general and item.get("link_type") in ("Page", "DocType"):
+            children.append((app["label"], app["icon"], route))
+    general = sidebars.get(core_sidebar.NAME.lower())
+    general_target = None
+    for item in (general or {}).get("items", []):
+        if item.get("type") == "Link" and item.get("link_type") in ("Page", "DocType"):
             # The App Settings Hub where this site has it, else the first settings entry of the section.
-            target = "/desk/" + frappe.scrub(item["link_to"]).replace("_", "-")
+            target = _desk_route(item["link_type"], item["link_to"])
             if item["link_to"] == core_sidebar.HUB_PAGE or not general_target:
                 general_target = target
     if general_target:
@@ -135,10 +134,8 @@ def boot_session(bootinfo: Any) -> None:
             "system": system,
             "feature_flags": flags,
             "version": __version__,
-            # The ZatGo > Apps pages (services/app_page.py): old Desk URL of an app's Workspace -> its page,
-            # and settings DocType -> app route key (the settings form shows an "Overview" tab back to it).
+            # Old Desk URLs of the apps (/desk/zg-app/<app>, the names before "ZatGo ...") -> the app's Workspace.
             "app_routes": app_page.old_url_redirects(),
-            "app_settings": app_page.settings_routes(),
             # Apps with a switch that are on for this site (UI hint only; the server enforces,
             # services/app_gate.py).
             "apps": sorted(key for key, on in app_state.switches().items() if on),
@@ -149,7 +146,6 @@ def boot_session(bootinfo: Any) -> None:
             # Sales Invoice form (public/js/sales_invoice.js).
             "sales_invoice_naming": get_session_user_series(),
         }
-        _route_sidebar_entries(bootinfo)
         _zatgo_folder_children(bootinfo)
     except Exception:
         frappe.logger("zatgo_core").exception("boot_session enrichment failed")

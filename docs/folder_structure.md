@@ -17,7 +17,8 @@ zatgo-core/                          # git repo root (the bench clones it as app
     │   ├── app_gate.py              #   server-side gate: API 404, @app_api, require_app
     │   ├── app_authority.py         #   who may switch an app (System Manager)
     │   ├── app_desk.py              #   hide/show the Desk entries of in-core apps; keeps every app's rail icon hidden
-    │   ├── app_page.py              #   the tabbed page of each app (ZatGo > Apps): routes, tabs, Overview
+    │   ├── app_page.py              #   the apps list, old-URL redirects, setup warnings
+    │   ├── app_sidebar.py           #   each app's own Desk sidebar (Overview, Settings tabs, groups)
     │   ├── bundled_apps.py          #   gated hooks + set-up of the bundled modules
     │   ├── core_sidebar.py          #   the generated "ZatGo" sidebar
     │   └── ui_apps.py               #   SaaS theme, language switcher, VanSaleX web page
@@ -33,7 +34,6 @@ zatgo-core/                          # git repo root (the bench clones it as app
     └── zatgo_core/                  # the "ZatGo Core" module (modules.txt scrubs to zatgo_core)
         ├── doctype/                 # 45 DocTypes (ZG …, VanSaleX Settings/Access)
         ├── page/zg_app_hub/         # Desk page "ZatGo Apps"
-        ├── page/zg_app/             # Desk page behind each Apps entry: /desk/zg-app/<app> (tabs)
         ├── report/  workspace/      # workspaces: zatgo, zatgo_vansalex
 ```
 

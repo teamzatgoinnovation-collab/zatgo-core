@@ -31,7 +31,7 @@ INDEXED = (
     ("tabAI Tool Log", "session"),
     ("tabAI Attachment", "session"),
 )
-# Settings forms that must start with a Tab Break (the tabs of an app's page, services/app_page.py)
+# Settings forms that must start with a Tab Break (the Settings items of an app's sidebar, services/app_sidebar.py)
 TABBED_FORMS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings", "ZG System Settings")
 STAFF_ONLY = (
     "ZG Delivery Boy",
@@ -87,8 +87,16 @@ def collect() -> dict:
     checks["registry_bad_category"] = [r[0] for r in bad_category]
     checks["zatgo_sidebar_exists"] = bool(frappe.db.exists("Workspace Sidebar", "ZatGo"))
     checks["hub_page_exists"] = bool(frappe.db.exists("Page", "zg-app-hub"))
-    # -- the tabbed app pages (ZatGo > Apps) -----------------------------------------
-    checks["app_page_exists"] = bool(frappe.db.exists("Page", "zg-app"))
+    # -- the sidebars of the apps (ZatGo folder) -------------------------------------
+    from zatgo_core.services import app_page, app_sidebar
+
+    checks["enabled_apps_without_sidebar_items"] = [
+        app["label"]
+        for app in app_page.apps()
+        if app_page.is_enabled(app)
+        and app_sidebar.desired_items(app)  # an app with neither a Workspace nor settings (MyBis) has no sidebar
+        and not frappe.db.count("Workspace Sidebar Item", {"parent": app_sidebar.sidebar_name(app)})
+    ]
     checks["sidebar_sections"] = [
         r[0]
         for r in frappe.db.sql(
@@ -128,8 +136,8 @@ def verdict(checks: dict) -> bool:
         and not checks["registry_bad_category"]
         and bool(checks["zatgo_sidebar_exists"])
         and bool(checks["hub_page_exists"])
-        and bool(checks["app_page_exists"])
-        and checks["sidebar_sections"] == ["Apps", "General Settings"]
+        and not checks["enabled_apps_without_sidebar_items"]
+        and checks["sidebar_sections"] == ["General Settings"]
         and not checks["settings_not_tabbed"]
         and not checks["app_rail_icons_visible"]
         and not checks["staff_only_doctypes_grant_all"]

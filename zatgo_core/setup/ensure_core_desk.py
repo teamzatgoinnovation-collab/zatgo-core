@@ -13,7 +13,7 @@ import os
 
 import frappe
 
-from zatgo_core.services import app_desk, core_sidebar
+from zatgo_core.services import app_desk, app_sidebar, core_sidebar
 
 NAME = "ZatGo"
 ICON = "setting"
@@ -120,6 +120,8 @@ def ensure_core_desk() -> None:
         )
     # An existing sidebar is brought up to date too (it used to be frozen at first creation).
     core_sidebar.sync_core_sidebar()
+    # Each app has its own sidebar (Overview, Settings, the Workspace's groups): the one the folder entry opens.
+    app_sidebar.sync_app_sidebars()
     # Apps open from ZatGo > Apps: their own rail icons (created by their install / industries sync, which
     # ran before this) stay hidden.
     app_desk.sync_rail_icons()
