@@ -40,6 +40,16 @@ def _workspace_name(app: dict) -> str | None:
     return next((w for w in app["workspaces"] if frappe.db.exists("Workspace", w)), None)
 
 
+def settings_sidebars() -> dict[str, str]:
+    """Settings DocType -> the sidebar of the (enabled) app it belongs to."""
+    return {
+        doctype: sidebar_name(app)
+        for app in app_page.apps()
+        if app_page.is_enabled(app)
+        for doctype, _label in app["settings"]
+    }
+
+
 def _settings_links(app: dict) -> list[dict]:
     """One row per Tab Break of each settings DocType (a DocType without tabs: one row named after it)."""
     rows: list[dict] = []

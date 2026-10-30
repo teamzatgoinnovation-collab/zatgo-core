@@ -17,7 +17,7 @@ FIELDS = ("enable_saas_theme", "enable_language_switcher", "enable_vansalex_web"
 # them off for the duration (a site may have them on) and restores them.
 BUNDLED = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space")
 ALL = FIELDS + BUNDLED
-ALWAYS_ON_JS = ("ifrs_toggle.js", "zg_route_redirects.js")  # on every site, whatever the switches
+ALWAYS_ON_JS = ("ifrs_toggle.js", "zg_route_redirects.js", "zg_sidebar_tabs.js")  # on every site, whatever the switches
 
 
 def _site_js(js):

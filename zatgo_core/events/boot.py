@@ -136,6 +136,9 @@ def boot_session(bootinfo: Any) -> None:
             "version": __version__,
             # Old Desk URLs of the apps (/desk/zg-app/<app>, the names before "ZatGo ...") -> the app's Workspace.
             "app_routes": app_page.old_url_redirects(),
+            # Settings DocType -> the sidebar of its app: opened directly (reload, bookmark) Frappe would pick
+            # another sidebar listing the form (public/js/zg_sidebar_tabs.js).
+            "settings_sidebars": app_sidebar.settings_sidebars(),
             # Apps with a switch that are on for this site (UI hint only; the server enforces,
             # services/app_gate.py).
             "apps": sorted(key for key, on in app_state.switches().items() if on),
