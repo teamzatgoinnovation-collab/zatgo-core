@@ -20,5 +20,11 @@ def mark_billing(order_id: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
-def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
-    return svc.pay(order_id, method, client_id)
+def pay(
+    order_id: str,
+    method: str,
+    client_id: str,
+    discount_type: str | None = None,
+    discount_value: float | str | None = None,
+) -> dict[str, Any]:
+    return svc.pay(order_id, method, client_id, discount_type, discount_value)

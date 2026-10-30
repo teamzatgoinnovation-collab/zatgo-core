@@ -22,3 +22,34 @@ def list(
 def get(name: str) -> dict[str, Any]:
     """Get one Item by name/code."""
     return get_item(name)
+
+
+@frappe.whitelist(methods=["POST"])
+def upsert(
+    item_code: str | None = None,
+    item_name: str | None = None,
+    price: float | str | None = None,
+    item_group: str | None = None,
+    barcode: str | None = None,
+    uom: str | None = None,
+    enabled: int | str | None = None,
+) -> dict[str, Any]:
+    """Create or update a sellable Item."""
+    from zatgo_core.services import resto_pos_admin_service as svc
+
+    return svc.upsert_item(item_code, item_name, price, item_group, barcode, uom, enabled)
+
+
+@frappe.whitelist(methods=["POST"])
+def disable(item_code: str) -> dict[str, Any]:
+    """Take an Item off the menu (disabled, never deleted)."""
+    from zatgo_core.services import resto_pos_admin_service as svc
+
+    return svc.disable_item(item_code)
+
+
+@frappe.whitelist()
+def by_barcode(code: str) -> dict[str, Any]:
+    from zatgo_core.services import resto_pos_admin_service as svc
+
+    return svc.find_by_barcode(code)

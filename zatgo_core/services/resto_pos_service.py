@@ -576,7 +576,13 @@ def payment_modes() -> dict[str, Any]:
     return ok([r.name for r in rows], meta={"stub": False, "source": "Mode of Payment"})
 
 
-def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
+def pay(
+    order_id: str,
+    method: str,
+    client_id: str,
+    discount_type: str | None = None,
+    discount_value: float | str | None = None,
+) -> dict[str, Any]:
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
     from zatgo_core.services.vansalex_service import _apply_sales_taxes
 
@@ -639,6 +645,7 @@ def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
                 "zatgo_client_id": cid,
             }
         )
+        _apply_discount(si, doc, discount_type, discount_value)
         _apply_sales_taxes(si, comp)
         si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
         if int(si.docstatus or 0) != 1:
@@ -699,6 +706,27 @@ def pay(order_id: str, method: str, client_id: str) -> dict[str, Any]:
         },
         meta={"stub": False, "created": si_created, "source": "ZG Order"},
     )
+
+
+def _apply_discount(si: Any, order: Any, discount_type: str | None, discount_value: float | str | None) -> None:
+    """Cashier discount, posted on the invoice itself (ERPNext applies tax on the net).
+    `percent` or `fixed`; never more than the order's total."""
+    kind = (discount_type or "").strip().lower()
+    value = flt(discount_value)
+    if kind in ("", "none") or value <= 0:
+        return
+    subtotal = sum(flt(r.qty) * flt(r.rate) for r in order.items)
+    if kind == "percent":
+        if value > 100:
+            frappe.throw("A percent discount cannot exceed 100.")
+        si.additional_discount_percentage = value
+    elif kind == "fixed":
+        if value > subtotal:
+            frappe.throw("The discount cannot exceed the order total.")
+        si.discount_amount = value
+    else:
+        frappe.throw(f"Unknown discount type: {discount_type}")
+    si.apply_discount_on = "Net Total"
 
 
 def _reason(exc: Exception) -> str:
