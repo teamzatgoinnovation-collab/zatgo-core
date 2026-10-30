@@ -12,7 +12,7 @@ from frappe.utils import random_string
 from zatgo_core import __version__
 from zatgo_core.api.v1 import app_hub
 from zatgo_core.plugins.discover import discover_and_register_manifests
-from zatgo_core.services import app_catalog, app_gate, app_state, core_sidebar
+from zatgo_core.services import app_catalog, app_gate, app_sidebar, app_state, core_sidebar
 
 SETTINGS = "ZG System Settings"
 SWITCH_FIELDS = ("enable_vansalex", "enable_vansalex_web", "enable_tracker", "enable_language_switcher")
@@ -62,6 +62,7 @@ class AppSwitchTestCase(IntegrationTestCase):
 
         sync_app_desk()
         core_sidebar.sync_core_sidebar()
+        app_sidebar.sync_app_sidebars()
         frappe.db.commit()
 
     def _gate(self, path: str) -> None:
