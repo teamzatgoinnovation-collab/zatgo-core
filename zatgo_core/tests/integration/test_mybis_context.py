@@ -6,11 +6,12 @@ from __future__ import annotations
 
 import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
-from frappe.utils import random_string
+from frappe.utils import getdate, random_string
 
 from zatgo_core.api.v1.mybis import context
 from zatgo_core.services import app_catalog, app_gate, app_state
-from zatgo_core.services.mybis import cache, scope
+from zatgo_core.services.mybis import cache, dashboard, scope
+from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings
 
 from ._fixtures import get_or_create_test_company
 
@@ -156,3 +157,132 @@ class TestMyBisContext(IntegrationTestCase):
         self.assertFalse(meta_c["cached"])
         self.assertEqual(len(calls), 2)
         self.assertNotEqual(cache.make_key("t", "A", {}), cache.make_key("t", "B", {}))
+
+
+class TestMyBisSiteSettings(IntegrationTestCase):
+    """What `get_context` hands the app besides who and what: the site's own defaults, currency, decimals and the
+    administrator's limits (ZG MyBis Settings). Everything is rolled back."""
+
+    def setUp(self) -> None:
+        frappe.set_user("Administrator")
+        self.company = get_or_create_test_company()
+
+    def tearDown(self) -> None:
+        frappe.set_user("Administrator")
+        frappe.db.rollback()
+
+    def _settings(self, **values):
+        """Edit through the controller, so its validation runs as it does for an administrator."""
+        doc = frappe.get_doc("ZG MyBis Settings")
+        doc.update(values)
+        doc.save()
+        return doc
+
+    def _only_this_company(self) -> None:
+        user = _user("System Manager", "Accounts Manager")
+        frappe.get_doc({"doctype": "User Permission", "user": user, "allow": "Company", "for_value": self.company}).insert(
+            ignore_permissions=True
+        )
+        frappe.clear_cache(user=user)
+        frappe.set_user(user)
+
+    def test_currency_and_decimals_come_from_the_site(self) -> None:
+        self._only_this_company()
+        data = context.get_context()["data"]
+        self.assertEqual(data["currency"], "SAR")
+        self.assertIsInstance(data["currency_precision"], int)
+        self.assertGreaterEqual(data["currency_precision"], 0)
+        self.assertEqual(data["currency_precision"], context._precision(None))
+        for c in data["companies"]:
+            self.assertEqual(c["precision"], context._precision(c["currency"]))
+
+    def test_no_single_currency_when_companies_differ_and_none_is_default(self) -> None:
+        companies = [
+            {"name": "A", "default_currency": "SAR"},
+            {"name": "B", "default_currency": "INR"},
+        ]
+        self.assertIsNone(context._site_currency(companies, None))
+        self.assertEqual(context._site_currency(companies, "B"), "INR")
+        self.assertEqual(context._site_currency(companies[:1], None), "SAR")
+        self.assertIsNone(context._site_currency([], None))
+
+    def test_the_configured_currency_precision_wins(self) -> None:
+        from frappe.model.meta import get_precision_from_currency_format
+
+        try:
+            frappe.db.set_default("currency_precision", "")
+            self.assertEqual(context._precision("SAR"), get_precision_from_currency_format("SAR"))
+            frappe.db.set_default("currency_precision", "3")
+            self.assertEqual(context._precision("SAR"), 3)
+            self.assertEqual(context._precision(None), 3)
+        finally:
+            frappe.db.rollback()
+            frappe.clear_cache()  # the defaults cache must not keep a value the rollback removed
+
+    def test_default_period_follows_the_setting_and_falls_back(self) -> None:
+        self._settings(default_preset="last_quarter")
+        self.assertEqual(context.get_context()["data"]["default_preset"], "last_quarter")
+        frappe.db.set_single_value("ZG MyBis Settings", "default_preset", "custom")  # not a period a dashboard opens on
+        self.assertEqual(context.get_context()["data"]["default_preset"], "this_month")
+        frappe.db.set_single_value("ZG MyBis Settings", "default_preset", "bogus")
+        self.assertEqual(context.get_context()["data"]["default_preset"], "this_month")
+
+    def test_week_start_follows_the_system_setting(self) -> None:
+        for day, weekday in (("Sunday", 6), ("Saturday", 5), ("Monday", 0)):
+            frappe.db.set_single_value("System Settings", "first_day_of_the_week", day)
+            self.assertEqual(context.get_context()["data"]["week_start"], weekday, day)
+
+    def test_the_period_a_server_resolves_uses_that_week_start(self) -> None:
+        frappe.db.set_single_value("System Settings", "first_day_of_the_week", "Sunday")
+        week = context.resolve_period(self.company, "this_week")["data"]["period"]
+        self.assertEqual(getdate(week["from"]).weekday(), 6)
+
+    def test_policy_defaults_restrict_nothing(self) -> None:
+        self._settings(
+            min_refresh_minutes=0,
+            min_alert_severity="low",
+            disable_export_csv=0,
+            disable_export_xlsx=0,
+            disable_export_pdf=0,
+            disable_offline_copy=0,
+            **{f"hide_kpi_{k}": 0 for k in zg_mybis_settings.KPI_KEYS},
+        )
+        policy = context.get_context()["data"]["policy"]
+        self.assertEqual(policy["min_refresh_minutes"], 0)
+        self.assertEqual(policy["min_alert_severity"], "low")
+        self.assertEqual(policy["export_formats"], ["csv", "xlsx", "pdf"])
+        self.assertEqual(policy["kpis"], list(zg_mybis_settings.KPI_KEYS))
+        self.assertTrue(policy["offline_copy"])
+
+    def test_policy_carries_what_the_administrator_set(self) -> None:
+        self._settings(
+            min_refresh_minutes=15,
+            min_alert_severity="high",
+            disable_export_pdf=1,
+            hide_kpi_net_profit=1,
+            disable_offline_copy=1,
+        )
+        policy = context.get_context()["data"]["policy"]
+        self.assertEqual(policy["min_refresh_minutes"], 15)
+        self.assertEqual(policy["min_alert_severity"], "high")
+        self.assertEqual(policy["export_formats"], ["csv", "xlsx"])
+        self.assertNotIn("net_profit", policy["kpis"])
+        self.assertEqual(len(policy["kpis"]), len(zg_mybis_settings.KPI_KEYS) - 1)
+        self.assertFalse(policy["offline_copy"])
+
+    def test_the_form_refuses_a_limit_that_makes_no_sense(self) -> None:
+        for bad in (
+            {"min_refresh_minutes": -1},
+            {"min_refresh_minutes": zg_mybis_settings.MAX_REFRESH_MINUTES + 1},
+            {"min_alert_severity": "urgent"},
+            {f"hide_kpi_{k}": 1 for k in zg_mybis_settings.KPI_KEYS},
+        ):
+            with self.assertRaises(frappe.ValidationError, msg=str(bad)):
+                self._settings(**bad)
+            frappe.db.rollback()
+
+    def test_every_card_the_policy_can_hide_is_a_card_the_dashboard_returns(self) -> None:
+        """If the dashboard renames or drops a card, the policy would silently hide nothing: fail here instead."""
+        out = dashboard.kpis(scope.resolve_scope(self.company, "this_month"))
+        missing = [k for k in zg_mybis_settings.KPI_KEYS if k not in out]
+        self.assertEqual(missing, [])

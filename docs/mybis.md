@@ -7,12 +7,18 @@ Read-only management dashboards for the MyBis Flutter app (`mobile/mybis`). Swit
 Every endpoint takes `company`, `preset` (`today`..`last_year`, `custom`), `from_date`/`to_date` (custom only), `compare` (1/0), `refresh` (1 = bypass cache).
 `company` must be one the caller may read (Company User Permission); none given = the user's default, else their only company, else an error -- never "all companies".
 Responses use the standard envelope; `meta` carries `company`, `currency` (company currency), `period`, `previous_period`, `cached`, `cached_at`, `ttl`.
+### Site settings and limits (`get_context`)
+
+The app assumes none of these; it reads them. `default_preset` and `default_company` come from **ZG MyBis Settings**; `week_start` is System Settings' first day of the week (Python weekday, Monday = 0); `currency` is the default company's (or the one every readable company shares, else null); `currency_precision` / `companies[].precision` follow Frappe's rule for a Currency field (System Settings "Currency Precision", else the decimals of the number format, the currency's own when the site uses it).
+
+`policy` carries the administrator's limits, set in ZG MyBis Settings and applied by the app **inside** each user's own choices: `min_refresh_minutes` (shortest auto-refresh, 0 = none), `min_alert_severity` (alerts below it are hidden and never counted as new), `export_formats` (formats left on), `kpis` (dashboard cards that exist), `offline_copy` (may a device keep a copy). Every limit is stored as a *restriction* (`hide_kpi_*`, `disable_export_*`, `disable_offline_copy`) because a Check on a Single reads 0 until the form is saved: nothing stored means nothing restricted. `ZG MyBis Settings.validate` refuses an out-of-range refresh limit, an unknown severity and a dashboard with every card hidden; `policy()` falls back to "no restriction" on anything malformed. The limits are delivered to and honoured by the app; the server does not yet refuse an export in a switched-off format (`reports.export` accepts any of csv / xlsx / pdf) -- a follow-up.
+
 Presets and the comparison period are defined once, in `services/mybis/period.py` (`context.resolve_period` exposes them): this month compares with the previous calendar month, a custom range with the same number of days before it.
 
 ## Endpoints
 | Method | Returns |
 |---|---|
-| `context.get_context` | user, readable companies + currency, `areas` (which sections the user's ERPNext permissions open), presets, server date |
+| `context.get_context` | user, readable companies + currency + `precision`, `areas` (which sections the user's ERPNext permissions open), presets, `default_preset`, `week_start`, `currency` / `currency_precision` of the site, server date, `policy` (see below) |
 | `context.resolve_period` | concrete dates of a preset and of its comparison period |
 | `dashboard.kpis` | headline figures, each `{value, previous_value, change, growth_percent, higher_is_better}`; `{available:false}` when the caller may not read the source |
 | `dashboard.sales_trend` | net sales per day / week / month (auto by range; `group_by` overrides), previous period alongside; empty buckets are 0; the future is not plotted |

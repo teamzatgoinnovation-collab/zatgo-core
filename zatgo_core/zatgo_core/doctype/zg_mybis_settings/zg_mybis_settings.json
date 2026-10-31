@@ -9,6 +9,26 @@
     "defaults_section",
     "default_company",
     "default_preset",
+    "refresh_section",
+    "min_refresh_minutes",
+    "min_alert_severity",
+    "cards_section",
+    "hide_kpi_total_sales",
+    "hide_kpi_net_sales",
+    "hide_kpi_gross_profit",
+    "hide_kpi_net_profit",
+    "cards_column",
+    "hide_kpi_purchases",
+    "hide_kpi_expenses",
+    "hide_kpi_receivables",
+    "hide_kpi_payables",
+    "hide_kpi_stock_value",
+    "export_section",
+    "disable_export_csv",
+    "disable_export_xlsx",
+    "disable_export_pdf",
+    "device_section",
+    "disable_offline_copy",
     "mybis_help"
   ],
   "fields": [
@@ -35,7 +55,117 @@
       "label": "Default Period",
       "options": "today\nyesterday\nthis_week\nlast_week\nthis_month\nlast_month\nthis_quarter\nlast_quarter\nthis_year\nlast_year",
       "default": "this_month",
-      "description": "The period the MyBis dashboard opens on."
+      "description": "The period the MyBis dashboard opens on, for a user who has not chosen their own in the app."
+    },
+    {
+      "fieldname": "refresh_section",
+      "fieldtype": "Section Break",
+      "label": "Limits for users: refresh and alerts",
+      "description": "Each user still picks their own value in the app, inside these limits."
+    },
+    {
+      "fieldname": "min_refresh_minutes",
+      "fieldtype": "Int",
+      "label": "Shortest Auto-refresh (minutes)",
+      "default": "0",
+      "non_negative": 1,
+      "description": "A user who turns on automatic refresh cannot choose an interval shorter than this. 0 = no limit. \"Only when I refresh\" is always allowed."
+    },
+    {
+      "fieldname": "min_alert_severity",
+      "fieldtype": "Select",
+      "label": "Lowest Alert Severity Shown",
+      "options": "low\nmedium\nhigh\ncritical",
+      "default": "low",
+      "description": "Alerts and insights below this severity are hidden in the app and never counted as new."
+    },
+    {
+      "fieldname": "cards_section",
+      "fieldtype": "Section Break",
+      "label": "Limits for users: dashboard cards",
+      "description": "A ticked card is hidden for every user."
+    },
+    {
+      "fieldname": "hide_kpi_total_sales",
+      "fieldtype": "Check",
+      "label": "Hide Total Sales"
+    },
+    {
+      "fieldname": "hide_kpi_net_sales",
+      "fieldtype": "Check",
+      "label": "Hide Net Sales"
+    },
+    {
+      "fieldname": "hide_kpi_gross_profit",
+      "fieldtype": "Check",
+      "label": "Hide Gross Profit"
+    },
+    {
+      "fieldname": "hide_kpi_net_profit",
+      "fieldtype": "Check",
+      "label": "Hide Net Profit"
+    },
+    {
+      "fieldname": "cards_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "hide_kpi_purchases",
+      "fieldtype": "Check",
+      "label": "Hide Purchases"
+    },
+    {
+      "fieldname": "hide_kpi_expenses",
+      "fieldtype": "Check",
+      "label": "Hide Expenses"
+    },
+    {
+      "fieldname": "hide_kpi_receivables",
+      "fieldtype": "Check",
+      "label": "Hide Receivables"
+    },
+    {
+      "fieldname": "hide_kpi_payables",
+      "fieldtype": "Check",
+      "label": "Hide Payables"
+    },
+    {
+      "fieldname": "hide_kpi_stock_value",
+      "fieldtype": "Check",
+      "label": "Hide Stock Value"
+    },
+    {
+      "fieldname": "export_section",
+      "fieldtype": "Section Break",
+      "label": "Limits for users: report export",
+      "description": "A ticked format is switched off. With all three ticked the Reports screen can be read but not exported."
+    },
+    {
+      "fieldname": "disable_export_csv",
+      "fieldtype": "Check",
+      "label": "Disable CSV Export"
+    },
+    {
+      "fieldname": "disable_export_xlsx",
+      "fieldtype": "Check",
+      "label": "Disable Excel Export"
+    },
+    {
+      "fieldname": "disable_export_pdf",
+      "fieldtype": "Check",
+      "label": "Disable PDF Export"
+    },
+    {
+      "fieldname": "device_section",
+      "fieldtype": "Section Break",
+      "label": "Limits for users: saved data",
+      "description": "The app can keep a copy of the latest figures on the device to show without a connection."
+    },
+    {
+      "fieldname": "disable_offline_copy",
+      "fieldtype": "Check",
+      "label": "Do Not Allow an Offline Copy",
+      "description": "Devices then keep no copy of the figures, and a copy already saved is removed the next time the app opens."
     },
     {
       "fieldname": "mybis_help",
@@ -47,7 +177,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-31 15:00:00.000000",
+  "modified": "2026-10-31 20:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG MyBis Settings",
