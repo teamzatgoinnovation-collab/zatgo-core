@@ -140,6 +140,19 @@ Not fixed by this audit (each is its own change); ordered by value.
 6. **Audit trail:** only the core settings controllers use `AuditableMixin`; VanSaleX, POS, Theme, Language, MyBis, Chat AI, Tracker, Space, Naming and the Van Sale Profile rely on `track_changes` versions.
 7. **Branch scope:** resolve a user's branch on the server; `ZG Branch Settings` is advisory until then. `ZG Security` floors are not wired to Frappe's password / session policy.
 
+## 7a. Which default wins (company and warehouse)
+
+The same default lives in several places (see `docs/duplication_audit.md`); this is what the code actually reads, in order.
+
+| Question | Entry point | Order |
+|---|---|---|
+| Company | accounting and POS services (`services/erpnext_writes.py::_default_company`, also used by the restaurant and retail POS) | the company passed in -> the user's default Company -> Global Defaults.default_company -> the first Company on the site -> error |
+| Company | VanSaleX (`services/vansalex_settings.py::_user_company`) | the van warehouse's company -> the target user's default Company -> Global Defaults.default_company -> none. Deliberately **no** "first company" fallback |
+| Company | MyBis (`api/v1/mybis/context.py`) | the user's default Company -> ZG MyBis Settings.default_company -> Global Defaults.default_company (only a company the user may read) |
+| Company | Desk boot payload | ZG System Settings.default_company (informational; posting never reads it) |
+| Warehouse | VanSaleX (`vansalex_settings.default_warehouse`) | the driver's van warehouse -> ZG Company Settings.default_warehouse -> Stock Settings.default_warehouse (only if it belongs to the company) -> none |
+| Warehouse | restaurant and retail POS (`services/resto_pos_service.py::_resolve_pos_warehouse`) | ZG Company Settings.default_warehouse -> **the first enabled, non-group Warehouse of the company** -> error. `ZG POS Settings.default_warehouse` is not read |
+
 ## 8. Found while testing (2026-10-31)
 
 - `services/retail_pos_service.py::_set_paid_to` called `payment_entry.get_bank_cash_account(mop, company)` although that helper takes `(doc, bank_account)`: every Supermarket sale failed at the payment step with `AttributeError: 'str' object has no attribute 'company'` (7 of 20 `test_retail_pos` tests). Fixed by passing a document-like `frappe._dict(company=..., mode_of_payment=...)`, as `services/erpnext_writes.py` does.

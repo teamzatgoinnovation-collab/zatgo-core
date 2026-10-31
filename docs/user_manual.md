@@ -24,12 +24,12 @@ from ZatGo → Apps.
 
 | DocType | Purpose |
 |---------|---------|
-| ZG System Settings | Brand, defaults, maintenance |
+| ZG System Settings | App and industry switches, ERP behaviour flags, maintenance. Brand and theme: ZG Theme Settings. Company, timezone, currency, fiscal year: ERPNext Global Defaults / System Settings |
 | ZG Company Settings | Per-company rows |
 | ZG Branch Settings | Branches |
 | ZG Application Settings | Client app registry |
 | ZG Feature Flag | Product feature toggles |
-| ZG Security Settings | Password / session policy |
+| ZG Security Settings | Limits that are validated only; the password / session policy that applies is Frappe's System Settings |
 | ZG Integration / Printer / Payment / Notification / Storage | Cross-cutting config |
 | ZG Registered Application / ZG Setting Section | Plugin manifests |
 | ZG Audit Log | Audit history |

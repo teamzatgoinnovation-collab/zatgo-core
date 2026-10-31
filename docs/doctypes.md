@@ -6,15 +6,15 @@ Module: **ZatGo Core** (plus the bundled modules Chat AI, Tracker and ZatGo Spac
 
 | DocType | Purpose |
 |---------|---------|
-| ZG System Settings | Language, timezone, currency, branding, defaults, fiscal year, theme |
+| ZG System Settings | App switches, industries, ERP behaviour flags (IFRS, auto-fill, stock summary), maintenance. Its timezone / country / currency / date format / fiscal year / default company, warehouse and cost center fields repeat Frappe and ERPNext settings and are mostly unread; brand, logo, theme and language moved to ZG Theme / Language Settings |
 | ZG Integration Settings | WhatsApp, SMS, Email, Firebase, Maps, AI providers, OAuth/JWT, webhooks |
 | ZG Printer Settings | Receipt / kitchen / barcode / label / A4, margins, auto/silent print |
-| ZG Payment Settings | Cash/card/bank/wallet/gift card, split, tips, service charge, round-off |
+| ZG Payment Settings | Cash/card/bank/wallet/gift card, split, tips, service charge, round-off (stored; no code reads it yet, the modes of payment themselves are ERPNext's) |
 | ZG Notification Settings | Desktop, push, email, SMS, WhatsApp, Telegram, Slack, in-app |
 | ZG Storage Settings | Local/S3/R2/Drive/Dropbox/Azure + backup retention |
-| ZG Security Settings | Password policy, OTP/2FA, session, IP/devices, audit, API keys |
+| ZG Security Settings | Password policy, OTP/2FA, session, IP/devices, audit, API keys (validated only, not applied: Frappe's System Settings is what enforces them) |
 | ZG Sync Settings | Offline mode, interval, retry, conflict strategy, Redis queue |
-| ZG Number Series Settings | Child table of prefixes/sequences for all document types |
+| ZG Number Series Settings | Child table of prefixes/sequences for all document types (seeded and validated, **not applied**: numbering is Frappe's Series / Document Naming Settings, and ZG Sales Invoice Naming Settings for per-user invoice series) |
 | ZG Sales Invoice Naming Settings | User-wise Sales Invoice naming: (user, company) → invoice series + return series, and what happens to users without a rule. Enforced in the Sales Invoice `before_insert` hook by `services/sales_invoice_naming.py` for every entry point (desk, REST, VanSaleX API, Create Return) |
 
 ## List DocTypes
