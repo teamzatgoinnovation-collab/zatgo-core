@@ -374,8 +374,9 @@ class TestZatGoDeskEntry(IndustryTestBase):
         after_migrate()
         self.assertTrue(frappe.db.exists("Workspace", "ZatGo"))
         self.assertTrue(frappe.db.exists("Workspace Sidebar", "ZatGo"))
-        icon = frappe.db.get_value("Desktop Icon", "ZatGo", ["link_type", "link_to", "hidden"], as_dict=True)
-        self.assertEqual((icon.link_type, icon.link_to, icon.hidden), ("Workspace Sidebar", "ZatGo", 0))
+        # ZatGo is a Folder on the Apps screen (its popup is built in events/boot.py), not a link to a sidebar.
+        icon = frappe.db.get_value("Desktop Icon", "ZatGo", ["icon_type", "hidden"], as_dict=True)
+        self.assertEqual((icon.icon_type, icon.hidden), ("Folder", 0))
         items = frappe.get_doc("Workspace Sidebar", "ZatGo").items
         self.assertIn("ZG System Settings", [i.link_to for i in items])
 
