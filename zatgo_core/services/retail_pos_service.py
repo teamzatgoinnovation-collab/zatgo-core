@@ -145,6 +145,16 @@ def _check_replay(si: Any, rows: list[dict[str, Any]], company: str) -> None:
 # --- sale ------------------------------------------------------------------
 
 
+def _has_cost(item_code: str, warehouse: str) -> bool:
+    """True when ERPNext can value a stock sale of this item: a Bin rate here, or a rate on the Item itself."""
+    if flt(frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")):
+        return True
+    return bool(
+        flt(frappe.db.get_value("Item", item_code, "valuation_rate"))
+        or flt(frappe.db.get_value("Item", item_code, "last_purchase_rate"))
+    )
+
+
 def _build_invoice(rows, comp, cid, customer_id, customer_name, customer_phone, discount_type, discount_value):
     from zatgo_core.services.vansalex_service import _apply_sales_taxes
 
@@ -167,6 +177,9 @@ def _build_invoice(rows, comp, cid, customer_id, customer_name, customer_phone, 
                     "qty": r["qty"],
                     "rate": r["rate"],
                     "warehouse": warehouse,
+                    # An item never received with a cost has no valuation; ERPNext refuses the sale unless the line
+                    # allows it (cost of goods posts as 0 until the item gets a real cost).
+                    "allow_zero_valuation_rate": 0 if _has_cost(r["item_code"], warehouse) else 1,
                 }
                 for r in rows
             ],

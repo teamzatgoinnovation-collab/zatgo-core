@@ -158,6 +158,22 @@ class TestRetailPos(IndustryTestBase):
         self.assertEqual(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"), 0)
         self.assertEqual(si.zatgo_client_id + ":pay", pe.zatgo_client_id)
 
+    def test_sale_of_an_item_with_no_cost_yet(self) -> None:
+        """Stock received with no cost has no valuation: the sale posts (COGS 0) instead of ERPNext's zero-rate error."""
+        code = f"RETAIL-{random_string(6).upper()}"
+        admin.upsert_item(item_code=code, item_name=code, price=0, barcode=f"BC{code}")
+        admin.adjust_stock(code, 5, f"adj-{random_string(8)}", warehouse=self.warehouse, company=self.company)  # received at no cost
+        frappe.db.set_value("Item", code, "standard_rate", 10)
+        res = self._sale(code, qty=1)
+        self.assertTrue(res["success"], res.get("error"))
+        si = frappe.get_doc("Sales Invoice", res["data"]["invoice"]["id"])
+        self.assertEqual(si.docstatus, 1)
+        self.assertEqual(si.items[0].allow_zero_valuation_rate, 1)
+        # an item that does have a cost keeps ERPNext's guard
+        costed = self._item(qty=5)
+        si2 = frappe.get_doc("Sales Invoice", self._sale(costed, qty=1)["data"]["invoice"]["id"])
+        self.assertEqual(si2.items[0].allow_zero_valuation_rate, 0)
+
     def test_sale_uses_the_warehouse_chosen_in_pos_settings(self) -> None:
         other = _Base._make_warehouse("RetailPosSettingsWh")
         pos = "ZG POS Settings"
