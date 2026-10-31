@@ -35,6 +35,59 @@ def _warehouse(company: str) -> str:
 # --- profile -------------------------------------------------------------
 
 
+def _address_text(row: Any) -> str:
+    parts = [row.get(k) for k in ("address_line1", "address_line2", "city", "state", "pincode", "country")]
+    return ", ".join(str(p).strip() for p in parts if p and str(p).strip())
+
+
+def _seller_vat(company: str) -> str:
+    """The VAT number the ZATCA QR carries (ZG Company Settings first, then the Company), so the invoice and its QR agree."""
+    from zatgo_core.services.zatca_qr import _seller_vat as vat
+
+    return vat(company)
+
+
+def company_info(company: str | None) -> dict[str, Any]:
+    """What an invoice prints about the seller: legal name, VAT number, commercial registration, contact and address.
+    Blank when ERPNext has nothing stored; the POS leaves blank lines out."""
+    if not company:
+        return {}
+    row = frappe.db.get_value(
+        "Company",
+        company,
+        ["company_name", "tax_id", "phone_no", "email", "website", "registration_details"],
+        as_dict=True,
+    ) or {}
+    address = ""
+    link = frappe.db.get_value(
+        "Dynamic Link",
+        {"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
+        "parent",
+    )
+    if link:
+        address = _address_text(
+            frappe.db.get_value(
+                "Address", link, ["address_line1", "address_line2", "city", "state", "pincode", "country"], as_dict=True
+            )
+            or {}
+        )
+    name_ar = (
+        frappe.db.get_value("Company", company, "zatgo_company_name_ar")
+        if frappe.db.has_column("Company", "zatgo_company_name_ar")
+        else None
+    )
+    return {
+        "name": row.get("company_name") or company,
+        "name_ar": name_ar or "",
+        "vat_number": _seller_vat(company) or (row.get("tax_id") or "").strip(),
+        "cr_number": (row.get("registration_details") or "").strip(),
+        "phone": row.get("phone_no") or "",
+        "email": row.get("email") or "",
+        "website": row.get("website") or "",
+        "address": address,
+    }
+
+
 def _tax_version(tax: dict[str, Any]) -> str:
     import hashlib
 
@@ -86,6 +139,7 @@ def get_profile() -> dict[str, Any]:
             "pos_vertical": pos_settings.pos_vertical(set(enabled)),
             "features": list(restaurant.features) if restaurant and restaurant_on else [],
             "company": company,
+            "company_info": company_info(company),
             "currency": currency,
             "payment_modes": modes,
             "user": frappe.session.user,
@@ -352,6 +406,13 @@ def list_payments(
 # --- customers -------------------------------------------------------------
 
 
+def _customer_fields() -> list[str]:
+    fields = ["name", "customer_name", "mobile_no", "email_id", "disabled", "modified", "tax_id", "primary_address"]
+    if frappe.db.has_column("Customer", "zatgo_cr_number"):
+        fields.append("zatgo_cr_number")
+    return fields
+
+
 def _map_customer(row: Any) -> dict[str, Any]:
     return {
         "id": row.get("name"),
@@ -360,6 +421,9 @@ def _map_customer(row: Any) -> dict[str, Any]:
         "email": row.get("email_id") or "",
         "disabled": int(row.get("disabled") or 0),
         "modified": str(row.get("modified") or ""),
+        "vat_number": (row.get("tax_id") or "").strip(),
+        "cr_number": (row.get("zatgo_cr_number") or "").strip(),
+        "address": (row.get("primary_address") or "").replace("<br>", ", ").replace("\n", ", ").strip(", "),
     }
 
 
@@ -388,7 +452,7 @@ def list_customers(
         "Customer",
         filters=filters,
         or_filters=or_filters,
-        fields=["name", "customer_name", "mobile_no", "email_id", "disabled", "modified"],
+        fields=_customer_fields(),
         order_by="modified asc" if since else "customer_name asc",
         start=start,
         page_length=size_i,

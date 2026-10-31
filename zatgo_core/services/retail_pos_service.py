@@ -49,8 +49,20 @@ def _posted_at(si: Any) -> str:
         return str(si.creation or si.posting_date or "")
 
 
+def _qr_fields(si: Any) -> dict[str, str]:
+    """The invoice's stored ZATCA QR payloads (base64 TLV): Phase 1 from zatgo_core, Phase 2 once the ZATCA Integration app
+    stamped it. Empty strings when the site has neither field or nothing was written yet."""
+    out = {"zatcaQr": "", "zatcaQrP2": ""}
+    meta = frappe.get_meta("Sales Invoice")
+    for key, field in (("zatcaQr", "zatca_qr_base64"), ("zatcaQrP2", "zatca_p2_qr_base64")):
+        if meta.has_field(field):
+            out[key] = si.get(field) or frappe.db.get_value("Sales Invoice", si.name, field) or ""
+    return out
+
+
 def _map_invoice(si: Any) -> dict[str, Any]:
     return {
+        **_qr_fields(si),
         "id": si.name,
         "customer": si.customer_name or si.customer,
         "subtotal": flt(si.total),

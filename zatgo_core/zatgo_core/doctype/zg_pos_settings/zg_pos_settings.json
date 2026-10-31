@@ -16,6 +16,10 @@
     "discount_section",
     "allow_discounts",
     "max_discount_percent",
+    "counter_section",
+    "product_view",
+    "counter_column",
+    "allow_price_change",
     "payments_tab",
     "payment_section",
     "default_payment_mode",
@@ -28,6 +32,8 @@
     "receipt_column",
     "show_tax_on_receipt",
     "print_copies",
+    "paper_size",
+    "invoice_qr",
     "printing_help",
     "offline_tab",
     "offline_section",
@@ -104,6 +110,30 @@
       "description": "Highest discount a cashier may give on one sale (0-100)."
     },
     {
+      "fieldname": "counter_section",
+      "fieldtype": "Section Break",
+      "label": "Counter Screen"
+    },
+    {
+      "fieldname": "product_view",
+      "fieldtype": "Select",
+      "label": "Product List",
+      "options": "Grid\nRow",
+      "default": "Grid",
+      "description": "How the POS lists products. A cashier can switch it on the device."
+    },
+    {
+      "fieldname": "counter_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "allow_price_change",
+      "fieldtype": "Check",
+      "label": "Allow Cashier to Change Prices",
+      "default": "0",
+      "description": "A price below the item's list price is still refused unless the user has a price-override role."
+    },
+    {
       "fieldname": "payments_tab",
       "fieldtype": "Tab Break",
       "label": "Payments"
@@ -166,6 +196,22 @@
       "fieldtype": "Int",
       "label": "Receipt Copies",
       "default": "1"
+    },
+    {
+      "fieldname": "paper_size",
+      "fieldtype": "Select",
+      "label": "Invoice Paper",
+      "options": "80mm\nA4",
+      "default": "80mm",
+      "description": "80mm roll receipt or A4 tax invoice. A cashier can switch it when printing."
+    },
+    {
+      "fieldname": "invoice_qr",
+      "fieldtype": "Select",
+      "label": "ZATCA QR on Invoice",
+      "options": "Phase 1\nOff",
+      "default": "Phase 1",
+      "description": "Phase 1 is built on the device from seller, VAT number, time, total and VAT. A Phase 2 QR from the ZATCA Integration app replaces it once the invoice is stamped."
     },
     {
       "fieldname": "printing_help",
@@ -231,7 +277,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-31 16:00:00.000000",
+  "modified": "2026-11-01 09:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

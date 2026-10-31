@@ -63,6 +63,26 @@ class TestPOSSettings(IntegrationTestCase):
         self.assertEqual(got["data"]["max_discount_percent"], 15)
         self.assertEqual(got["data"]["print_copies"], 2)
 
+    def test_counter_defaults_and_values(self) -> None:
+        # nothing stored: the DocType defaults (80mm, grid, no price change, Phase 1 QR)
+        for field in ("paper_size", "product_view", "allow_price_change", "invoice_qr"):
+            frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+        self.assertEqual(
+            pos_settings.effective()["counter"],
+            {"paper_size": "80mm", "product_view": "grid", "allow_price_change": 0, "invoice_qr": "phase1"},
+        )
+        doc = frappe.get_doc(pos_settings.SETTINGS)
+        doc.paper_size, doc.product_view, doc.allow_price_change, doc.invoice_qr = "A4", "Row", 1, "Off"
+        doc.save()
+        self.assertEqual(
+            pos_settings.effective()["counter"],
+            {"paper_size": "A4", "product_view": "row", "allow_price_change": 1, "invoice_qr": "off"},
+        )
+        for field in ("paper_size", "product_view", "allow_price_change", "invoice_qr"):
+            frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+
     def test_no_discounts_means_a_zero_cap(self) -> None:
         doc = frappe.get_doc(pos_settings.SETTINGS)
         doc.allow_discounts, doc.max_discount_percent = 0, 40

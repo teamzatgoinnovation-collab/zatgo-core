@@ -123,6 +123,20 @@ def discount_policy(doc=None) -> tuple[int, float]:
     return allow, (cap if allow else 0.0)
 
 
+def counter_policy(doc=None) -> dict[str, Any]:
+    """Counter screen and invoice print defaults (ZG POS Settings), with the DocType defaults when never saved."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    paper = _stored(doc, "paper_size", "80mm")
+    view = _stored(doc, "product_view", "Grid")
+    qr = _stored(doc, "invoice_qr", "Phase 1")
+    return {
+        "paper_size": paper if paper in ("80mm", "A4") else "80mm",
+        "product_view": "row" if view == "Row" else "grid",
+        "allow_price_change": cint(_stored(doc, "allow_price_change", 0)),
+        "invoice_qr": "off" if qr == "Off" else "phase1",
+    }
+
+
 def effective() -> dict[str, Any]:
     doc = frappe.get_cached_doc(SETTINGS)
     allow_discounts, max_discount_percent = discount_policy(doc)
@@ -142,4 +156,5 @@ def effective() -> dict[str, Any]:
         "show_tax_on_receipt": cint(_stored(doc, "show_tax_on_receipt", 1)),
         "print_copies": max(cint(doc.print_copies), 1),
         "offline": offline_policy(doc),
+        "counter": counter_policy(doc),
     }

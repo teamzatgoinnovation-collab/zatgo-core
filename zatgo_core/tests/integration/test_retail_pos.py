@@ -87,6 +87,40 @@ class TestRetailPos(IndustryTestBase):
         data = admin.get_profile()["data"]
         self.assertIsNone(data["pos_mode"])
 
+    def test_profile_carries_the_sellers_invoice_details(self) -> None:
+        company = admin.get_profile()["data"]["company"]  # the company the POS sells for (the site's default)
+        fields = ["tax_id", "registration_details", "phone_no"]
+        before = frappe.db.get_value("Company", company, fields, as_dict=True)
+        self.addCleanup(frappe.db.set_value, "Company", company, dict(before))
+        frappe.db.set_value("Company", company, {"tax_id": "300000000000003", "registration_details": "CR 1010000000", "phone_no": "0112345678"})
+        info = admin.get_profile()["data"]["company_info"]
+        self.assertEqual(info["vat_number"], "300000000000003")
+        self.assertEqual(info["cr_number"], "CR 1010000000")
+        self.assertEqual(info["phone"], "0112345678")
+        self.assertTrue(info["name"])
+        for key in ("name_ar", "email", "website", "address"):
+            self.assertIn(key, info)
+
+    def test_customers_carry_vat_cr_and_address(self) -> None:
+        name = f"Invoice Customer {random_string(5)}"
+        res = admin.upsert_customer(customer_name=name, client_id=f"cu-{random_string(8)}")
+        cid = res["data"]["id"]
+        frappe.db.set_value("Customer", cid, "tax_id", "310000000000003")
+        if frappe.db.has_column("Customer", "zatgo_cr_number"):
+            frappe.db.set_value("Customer", cid, "zatgo_cr_number", "CR 2050000000")
+        rows = admin.list_customers(search=name)["data"]
+        row = next(r for r in rows if r["id"] == cid)
+        self.assertEqual(row["vat_number"], "310000000000003")
+        self.assertIn("cr_number", row)
+        self.assertIn("address", row)
+
+    def test_sale_response_carries_the_stored_qr_fields(self) -> None:
+        code = self._item()
+        res = self._sale(code)
+        inv = res["data"]["invoice"]
+        self.assertIn("zatcaQr", inv)
+        self.assertIn("zatcaQrP2", inv)
+
     def test_api_gate(self) -> None:
         self.assertFalse(self._gate_404("zatgo_core.api.v1.retail_pos.sale.create"))
         self.assertTrue(self._gate_404("zatgo_core.api.v1.resto_pos.tables.list"))  # Restaurant OFF
