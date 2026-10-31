@@ -29,6 +29,13 @@ APP keys (only key, label and group are required):
   requires       keys of apps that must be on for this one to be switched on
   api_prefixes   whitelisted-method prefixes (end with ".") answered 404 while it is off; a bundled
                  app also gets `zatgo_core.<folder>.` and the old `<folder>.`
+  color          "#RRGGBB" accent of the app: Settings Map, popup tile (default slate). White text on it must
+                 reach 4.5:1 (tests/unit/test_settings_map.py checks every app)
+  scoped         scopes beyond Site its settings can be narrowed to (SCOPES: company, branch, user, role, device,
+                 warehouse), shown as scope pills in the Settings Map
+  clients        client apps that read its settings (display names)
+  device         {client: ((setting, note), ...)} what each client keeps on the device (read-only in the map);
+                 every client named here must be in `clients`
 """
 
 from __future__ import annotations
@@ -40,12 +47,14 @@ from functools import lru_cache
 from typing import Any
 
 from zatgo_core import __version__
+from zatgo_core.services import settings_palette
 
 logger = logging.getLogger("zatgo_core.app_catalog")
 
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CORE_MANIFEST = os.path.join(PACKAGE_DIR, "plugins", "manifests", "core_apps.py")
 GROUPS = ("core", "app", "ui", "bundled", "industries")
+SCOPES = ("site", "company", "branch", "user", "role", "device", "warehouse")
 
 
 def _load(path: str, name: str) -> Any:
@@ -84,6 +93,24 @@ def _normalise(app: dict[str, Any], source: str) -> dict[str, Any]:
     out["api_prefixes"] = _strings(app, "api_prefixes", source)
     if bad := [p for p in out["api_prefixes"] if not p.endswith(".")]:
         raise ValueError(f"{source}: api_prefixes must end with '.' ({bad[0]!r})")
+    out["color"] = app.get("color") or settings_palette.DEFAULT_COLOR
+    if not settings_palette.is_hex(out["color"]):
+        raise ValueError(f"{source}: color must be #RRGGBB ({out['color']!r})")
+    if settings_palette.contrast(out["color"], settings_palette.WHITE) < settings_palette.MIN_CONTRAST:
+        raise ValueError(f"{source}: color {out['color']} is too light for white text (needs 4.5:1)")
+    out["scoped"] = _strings(app, "scoped", source)
+    if bad := [s for s in out["scoped"] if s not in SCOPES or s == "site"]:
+        raise ValueError(f"{source}: scoped must be from {SCOPES[1:]} ({bad[0]!r})")
+    out["clients"] = _strings(app, "clients", source)
+    device = app.get("device") or {}
+    if not isinstance(device, dict):
+        raise ValueError(f"{source}: device must be {{client: ((setting, note), ...)}}")
+    for client, items in device.items():
+        if client not in out["clients"]:
+            raise ValueError(f"{source}: device client {client!r} is not in clients")
+        if not all(isinstance(i, (tuple, list)) and len(i) == 2 and all(isinstance(t, str) and t for t in i) for i in items):
+            raise ValueError(f"{source}: device[{client!r}] must be pairs of non-empty strings")
+    out["device"] = {c: tuple(tuple(i) for i in items) for c, items in device.items()}
     out["source"] = source
     return out
 

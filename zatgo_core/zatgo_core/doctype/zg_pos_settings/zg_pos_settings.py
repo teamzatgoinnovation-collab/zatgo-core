@@ -8,10 +8,11 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
+from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.services import app_authority, pos_settings
 
 
-class ZGPOSSettings(Document):
+class ZGPOSSettings(AuditableMixin, Document):
     def onload(self) -> None:
         # A site that never chose a type shows the one its industries imply, not a blank.
         if not self.pos_type:
@@ -38,5 +39,6 @@ class ZGPOSSettings(Document):
             frappe.throw("Only a System Manager can change the POS Type.", frappe.PermissionError)
 
     def on_update(self) -> None:
+        super().on_update()  # the audit trail (mixin) first
         if self.flags.pos_type_changed:
             pos_settings.switch_industry_on(self.pos_type)

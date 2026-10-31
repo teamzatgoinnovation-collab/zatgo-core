@@ -48,7 +48,10 @@ class AuditableMixin:
             fieldname = df.fieldname
             if not self.has_value_changed(fieldname):
                 continue
-            old_value = self.get_db_value(fieldname) if not self.is_new() else None
+            # on_update runs after the write: the database already holds the new value, so the old one comes from
+            # the copy Frappe loaded before validate.
+            before = self.get_doc_before_save()
+            old_value = before.get(fieldname) if before is not None and not self.is_new() else None
             new_value = self.get(fieldname)
             if df.fieldtype == "Password":
                 old_value = "***" if old_value else None

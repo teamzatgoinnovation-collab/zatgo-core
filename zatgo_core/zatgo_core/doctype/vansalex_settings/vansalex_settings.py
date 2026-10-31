@@ -9,8 +9,10 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import cint, flt
 
+from zatgo_core.mixins.auditable import AuditableMixin
 
-class VanSaleXSettings(Document):
+
+class VanSaleXSettings(AuditableMixin, Document):
     def validate(self) -> None:
         if not 0 <= flt(self.max_discount_percent) <= 100:
             frappe.throw("Max Discount % must be between 0 and 100.")

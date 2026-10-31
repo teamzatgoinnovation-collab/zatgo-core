@@ -9,7 +9,7 @@ import frappe
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.industries.gate import enabled_keys
-from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, ui_settings
+from zatgo_core.services import app_catalog, app_page, app_sidebar, app_state, core_sidebar, settings_palette, ui_settings
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
@@ -36,13 +36,14 @@ _GEAR = (
 )
 
 
-def _tile(label: str, general: bool = False) -> str:
+def _tile(label: str, general: bool = False, color: str | None = None) -> str:
     """The icon of a popup entry: a coloured rounded tile with the app's initials (a gear for General Settings),
-    as a data URI -- no asset file per app, so a new app or industry needs nothing drawn. The colour comes from
-    the label, so an app keeps its colour on every site."""
+    as a data URI -- no asset file per app, so a new app or industry needs nothing drawn. The colour is the app's
+    accent (manifest `color`, the same one the Settings Map uses); an entry without one falls back to a hash of
+    its label, so it keeps its colour on every site."""
     from urllib.parse import quote
 
-    color = _TILE_COLORS[sum(ord(c) for c in label) % len(_TILE_COLORS)]
+    color = color if settings_palette.is_hex(color) else _TILE_COLORS[sum(ord(c) for c in label) % len(_TILE_COLORS)]
     if general:
         glyph = f'<path fill-rule="evenodd" d="{_GEAR}" fill="#fff"/>'
     else:
@@ -57,6 +58,11 @@ def _tile(label: str, general: bool = False) -> str:
         f'<rect width="54" height="54" rx="15.4" fill="{color}"/>{glyph}</svg>'
     )
     return "data:image/svg+xml," + quote(svg)
+
+
+def _accent(app: dict) -> str | None:
+    """An app's accent; an industry (no manifest of its own) takes the Industries entry's."""
+    return app.get("color") or (app_catalog.get("industries") or {}).get("color")
 
 
 def _zatgo_folder_children(bootinfo: Any) -> None:
@@ -78,7 +84,7 @@ def _zatgo_folder_children(bootinfo: Any) -> None:
         sidebar = sidebars.get(app_sidebar.sidebar_name(app).lower())
         route = _app_entry_route(sidebar) if sidebar else None
         if route:
-            children.append((app["label"], app["icon"], route))
+            children.append((app["label"], app["icon"], route, _accent(app)))
     general = sidebars.get(core_sidebar.NAME.lower())
     general_target = None
     for item in (general or {}).get("items", []):
@@ -88,9 +94,9 @@ def _zatgo_folder_children(bootinfo: Any) -> None:
             if item["link_to"] == core_sidebar.HUB_PAGE or not general_target:
                 general_target = target
     if general_target:
-        children.append((core_sidebar.GENERAL_LABEL, "setting", general_target))
+        children.append((core_sidebar.GENERAL_LABEL, "setting", general_target, (app_catalog.get("core_settings") or {}).get("color")))
     by_label = {i.get("label"): i for i in bootinfo["desktop_icons"]}
-    for idx, (label, icon, route) in enumerate(children):
+    for idx, (label, icon, route, color) in enumerate(children):
         child = by_label.get(label)
         if child is None:
             child = frappe._dict(name=label, label=label, standard=0, bg_color=None, link_to=None, icon_image=None)
@@ -99,7 +105,7 @@ def _zatgo_folder_children(bootinfo: Any) -> None:
         child.update(
             icon=icon or "list", icon_type="Link", link_type="External", link=route, parent_icon=folder["label"],
             app="zatgo_core", idx=idx, hidden=0, restrict_removal=1, icon_image=None,
-            logo_url=_tile(label, general=label == core_sidebar.GENERAL_LABEL),
+            logo_url=_tile(label, general=label == core_sidebar.GENERAL_LABEL, color=color),
         )
 
 

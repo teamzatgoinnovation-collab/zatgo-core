@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added — Settings Map (Desk page `zg-settings-map`)
+
+- Every app's settings with real controls, editable in place: a switch for each Check, a choose-one group for a short Select (a dropdown for longer ones), number / link / text inputs, a set / not-set badge for secrets, a summary + "Open form" for tables and attachments. Each row carries a **scope** pill (Site, Company, Branch, User, Role, Device, Warehouse) and a **status** pill (Enforced, Read by client, Informational, Not wired yet); each app has a read-only "On the device" list per client app. Colourful per app (own `--zgs-*` tokens, dark mode, phone width first, reduced motion respected).
+- `services/settings_map.py` (`describe`, `save_field`), `services/settings_notes.py` (status / scope / who enforces it, from `docs/settings_scope.md`), `services/settings_palette.py` (accent -> tint / ink / dark tokens, contrast >= 4.5:1), `api/v1/settings_map.py` (`get_map`, `save_field`). `save_field` accepts only DocTypes listed in an app manifest, needs write permission on the DocType, refuses hidden / read-only / Password / Table / Attach fields and the app switches (those go through `app_hub.set_switch`), and saves through `doc.save()` so controller validation and the audit trail run.
+- New manifest keys `color`, `scoped`, `clients`, `device` (validated in `services/app_catalog.py`). The ZatGo popup tiles use each app's accent instead of a label hash. The apps hub cards got a **Configure** link.
+- `AuditableMixin` on VanSaleX, POS, Theme, Language and MyBis settings.
+- Fixed: the *Apps (on / off)* tile was missing from the ZatGo workspace page (its content block named the shortcut "ZatGo Apps"). Added the *Settings Map* shortcut.
+- MyBis files touched (`mybis/app_manifest.py`, `ZG MyBis Settings`) are not on the Hetzner server: keep them out of any delta.
+
 ### Added — Supermarket industry: the retail POS engine
 
 - **Supermarket** is an implemented industry: `api/v1/retail_pos/` (catalog, stock, customers, payments, dashboard, one-step `sale.create`) over `services/retail_pos_service.py`. A sale posts ONE submitted Sales Invoice (`update_stock=1`, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment (idempotent on `client_id` and `client_id:pay`); a card / wallet / bank mode lands in its own account with the invoice number and date as the bank reference. The API answers 404 while the industry or the ZatGo POS app is off.

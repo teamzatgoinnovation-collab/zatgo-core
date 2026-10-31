@@ -12,6 +12,17 @@ APPS = (
         "group": "core",
         "icon": "setting",
         "description": "System, company, branch, payment, security and numbering settings.",
+        "color": "#475569",
+        "scoped": ("company", "branch", "user"),
+        "clients": ("ZatGo Accounting (desktop)", "ZatGo Accounting (web)"),
+        "device": {
+            "ZatGo Accounting (desktop)": (
+                ("Theme", "Light or dark, kept on this computer."),
+            ),
+            "ZatGo Accounting (web)": (
+                ("Theme", "Light or dark, kept in the browser."),
+            ),
+        },
         "settings": (
             ("ZG System Settings", "System Settings"),
             ("ZG Application Settings", "Application Settings"),
@@ -32,6 +43,16 @@ APPS = (
         "group": "app",
         "icon": "truck",
         "description": "Mobile van sales: warehouses, Cash/Credit rules, modules and features per user.",
+        "color": "#2F5FEA",
+        "scoped": ("user", "role", "warehouse"),
+        "clients": ("VanSaleX app (Flutter)", "VanSaleX Web (/vansalex)", "VanSaleX native shell"),
+        "device": {
+            "VanSaleX app (Flutter)": (
+                ("Language", "English or Arabic, chosen in the app."),
+                ("Printers", "Name, paper size, copies (1-5) and default printer; ZG Printer Settings is not read."),
+                ("Site URL", "The server the app talks to."),
+            ),
+        },
         # On everywhere it was before it had a switch (a site with no stored value counts as on).
         "switch_field": "enable_vansalex",
         "default_on": True,
@@ -47,6 +68,8 @@ APPS = (
         "group": "ui",
         "icon": "palette",
         "description": "Modern Desk theme and login page.",
+        "color": "#C2255C",
+        "clients": ("ZatGo Desk",),
         "switch_field": "enable_saas_theme",
         "workspaces": ("ZatGo Desk Theme",),
         "settings": (("ZG Theme Settings", "Theme Settings"),),
@@ -57,6 +80,8 @@ APPS = (
         "group": "ui",
         "icon": "globe",
         "description": "English / Arabic switcher.",
+        "color": "#0E7490",
+        "clients": ("ZatGo Desk",),
         "switch_field": "enable_language_switcher",
         "workspaces": ("ZatGo Language Switcher",),
         "settings": (("ZG Language Settings", "Language Settings"),),
@@ -67,6 +92,8 @@ APPS = (
         "group": "ui",
         "icon": "link",
         "description": "Serves the VanSaleX web build at /vansalex.",
+        "color": "#0369A1",
+        "clients": ("VanSaleX Web (/vansalex)",),
         "switch_field": "enable_vansalex_web",
         "requires": ("vansalex",),
         "workspaces": ("ZatGo VanSaleX Web",),
@@ -77,6 +104,17 @@ APPS = (
         "group": "app",
         "icon": "retail",
         "description": "Point of sale (desktop app): sale defaults, payments and receipts for this site's POS.",
+        "color": "#308639",
+        "clients": ("ZatGo POS (desktop)",),
+        "device": {
+            "ZatGo POS (desktop)": (
+                ("Tables, orders, kitchen screen", "Toggles that can only narrow what the site allows."),
+                ("Receipt printer", "Chosen per terminal."),
+                ("Auto-print, silent print, open drawer", "Per terminal."),
+                ("Site URL", "The server the app talks to."),
+                ("Theme", "Light or dark."),
+            ),
+        },
         # On everywhere it was before it had a switch (a site with no stored value counts as on).
         "switch_field": "enable_zatgo_pos",
         "default_on": True,
@@ -91,6 +129,7 @@ APPS = (
         "group": "industries",
         "icon": "organization",
         "description": "Per-site industry packs (restaurant, gym, jewellery, textile ...). Switch them in System Settings -> Industries.",
+        "color": "#B45309",
         "settings": (("ZG System Settings", "Industries (System Settings)"),),
     },
 )

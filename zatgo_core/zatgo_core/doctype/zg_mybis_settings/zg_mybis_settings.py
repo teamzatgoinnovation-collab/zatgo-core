@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from frappe.model.document import Document
 
+from zatgo_core.mixins.auditable import AuditableMixin
 
-class ZGMyBisSettings(Document):
+
+class ZGMyBisSettings(AuditableMixin, Document):
     pass

@@ -134,6 +134,9 @@ frappe.pages["zg-app-hub"].on_page_load = function (wrapper) {
 		const links = h(
 			"div",
 			{ class: "zg-card__links" },
+			app.settings.length
+				? h("a", { class: "btn btn-primary btn-xs", href: `/desk/zg-settings-map?app=${encodeURIComponent(app.key)}` }, __("Configure"))
+				: null,
 			app.settings.map((s) => h("a", { class: "btn btn-default btn-xs", href: s.route }, s.label))
 		);
 		return h("section", { class: "zg-card", "data-state": state, "aria-labelledby": titleId }, head, body, app.settings.length ? links : null);
