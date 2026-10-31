@@ -124,6 +124,25 @@ class TestRetailPos(IndustryTestBase):
         self.assertEqual(frappe.db.get_value("Sales Invoice", si.name, "outstanding_amount"), 0)
         self.assertEqual(si.zatgo_client_id + ":pay", pe.zatgo_client_id)
 
+    def test_sale_uses_the_warehouse_chosen_in_pos_settings(self) -> None:
+        other = _Base._make_warehouse("RetailPosSettingsWh")
+        pos = "ZG POS Settings"
+        stored = frappe.db.sql("select value from tabSingles where doctype = %s and field = 'default_warehouse'", (pos,))
+        try:
+            frappe.db.set_single_value(pos, "default_warehouse", other)
+            code = f"RETAIL-{random_string(6).upper()}"
+            admin.upsert_item(item_code=code, item_name=code, price=10, barcode=f"BC{code}")
+            frappe.db.set_value("Item", code, "valuation_rate", 5)
+            admin.adjust_stock(code, 5, f"adj-{random_string(8)}", warehouse=other, company=self.company)
+            res = self._sale(code, 2)
+            self.assertEqual(frappe.db.get_value("Sales Invoice Item", {"parent": res["data"]["invoice"]["id"]}, "warehouse"), other)
+        finally:
+            if stored:
+                frappe.db.set_single_value(pos, "default_warehouse", stored[0][0])
+            else:
+                frappe.db.sql("delete from tabSingles where doctype = %s and field = 'default_warehouse'", (pos,))
+            frappe.db.commit()
+
     def test_sale_discount(self) -> None:
         code = self._item(qty=10)
         res = self._sale(code, qty=2, discount_type="percent", discount_value=10)

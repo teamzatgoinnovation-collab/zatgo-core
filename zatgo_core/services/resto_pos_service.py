@@ -108,6 +108,14 @@ def _map_table_doc(doc: Any) -> dict[str, Any]:
 
 
 def _resolve_pos_warehouse(company: str) -> str:
+    # ZG POS Settings -> Sale defaults -> Default Warehouse wins: it is what the cashier's own settings screen shows.
+    configured = frappe.db.get_single_value("ZG POS Settings", "default_warehouse") if frappe.db.exists("DocType", "ZG POS Settings") else None
+    if configured and frappe.db.get_value("Warehouse", configured, ["company", "disabled", "is_group"], as_dict=True) == {
+        "company": company,
+        "disabled": 0,
+        "is_group": 0,
+    }:
+        return configured
     if frappe.db.exists("DocType", "ZG Company Settings"):
         wh = frappe.db.get_value("ZG Company Settings", {"company": company}, "default_warehouse")
         if wh and frappe.db.exists("Warehouse", wh):
