@@ -22,7 +22,10 @@ def gate_keys() -> set[str]:
 class TestPOSSettings(IntegrationTestCase):
     def setUp(self) -> None:
         frappe.set_user("Administrator")
-        self.switch_before = frappe.db.get_single_value(SETTINGS, "enable_zatgo_pos")
+        # A Check on a Single reads 0 when nothing is stored: remember "nothing stored" so tearDown does not store a 0 (= app off).
+        self.switch_before = frappe.db.sql(
+            "select value from tabSingles where doctype = %s and field = 'enable_zatgo_pos'", (SETTINGS,)
+        )
         # A never-saved Single reads 0 for these; restore "nothing stored" as nothing stored, not as 0.
         self.settings_before = {
             f: frappe.db.sql("select value from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, f))
@@ -30,7 +33,10 @@ class TestPOSSettings(IntegrationTestCase):
         }
 
     def tearDown(self) -> None:
-        frappe.db.set_single_value(SETTINGS, "enable_zatgo_pos", self.switch_before)
+        if self.switch_before:
+            frappe.db.set_single_value(SETTINGS, "enable_zatgo_pos", self.switch_before[0][0])
+        else:
+            frappe.db.sql("delete from tabSingles where doctype = %s and field = 'enable_zatgo_pos'", (SETTINGS,))
         for field, rows in self.settings_before.items():
             if rows:
                 frappe.db.set_single_value(pos_settings.SETTINGS, field, rows[0][0])

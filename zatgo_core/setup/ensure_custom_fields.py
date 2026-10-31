@@ -56,6 +56,7 @@ def ensure_custom_fields() -> None:
     _run("hide duplicate customer arabic name", _ensure_duplicate_customer_arabic_name_hidden)
     _run("warehouse selectable field", _ensure_warehouse_selectable_field)
     _run("warehouse transfer point field", _ensure_warehouse_transfer_point_field)
+    _run("offline receipt field", _ensure_offline_receipt_field)
 
 
 def _run(label: str, fn) -> None:
@@ -133,6 +134,12 @@ def _ensure_warehouse_selectable_field() -> None:
 
 def _ensure_warehouse_transfer_point_field() -> None:
     from zatgo_core.patches.v0_4_8.add_warehouse_transfer_point_field import execute
+
+    execute()
+
+
+def _ensure_offline_receipt_field() -> None:
+    from zatgo_core.patches.v0_4_11.add_offline_receipt_field import execute
 
     execute()
 

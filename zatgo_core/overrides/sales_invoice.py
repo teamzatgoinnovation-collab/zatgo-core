@@ -33,3 +33,12 @@ class ZatGoSalesInvoice:
                 default_account(payment.mode_of_payment, self.company)
                 or get_bank_cash_account(payment.mode_of_payment, self.company).get("account")
             )
+
+    def make_sl_entries(self, sl_entries, allow_negative_stock=False, via_landed_cost_voucher=False):
+        """A counter sale the POS made offline and posts late (services/offline_sale.py): the goods have left, so the stock may
+        go below zero for THIS invoice -- listed for review -- while the site-wide Stock Settings stay as they are."""
+        if getattr(self.flags, "zg_offline_sale", False):
+            allow_negative_stock = True
+        return super().make_sl_entries(
+            sl_entries, allow_negative_stock=allow_negative_stock, via_landed_cost_voucher=via_landed_cost_voucher
+        )

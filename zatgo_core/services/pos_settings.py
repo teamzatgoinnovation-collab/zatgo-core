@@ -91,9 +91,41 @@ def switch_industry_on(chosen: str) -> bool:
     return True
 
 
+OFFLINE_DEFAULTS = {"max_offline_hours": 72, "max_pending_sales": 500, "snapshot_refresh_minutes": 15}
+
+
+def offline_policy(doc=None) -> dict[str, Any]:
+    """What the POS may do without a connection (ZG POS Settings -> Offline). Off unless the site switched it on."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    return {
+        "enabled": cint(doc.get("offline_enabled")),
+        "max_offline_hours": cint(doc.get("max_offline_hours")) or OFFLINE_DEFAULTS["max_offline_hours"],
+        "max_pending_sales": cint(doc.get("max_pending_sales")) or OFFLINE_DEFAULTS["max_pending_sales"],
+        "snapshot_refresh_minutes": cint(doc.get("snapshot_refresh_minutes")) or OFFLINE_DEFAULTS["snapshot_refresh_minutes"],
+        "allow_card_offline": cint(doc.get("allow_card_offline")),
+    }
+
+
+def _stored(doc, field: str, default):
+    """The value the form shows. A Single nobody saved yet stores nothing and the document reads blank / 0, which is not the
+    DocType's default (discounts on, 100%, split payment on ...): read tabSingles to tell 'never stored' from 'stored 0'."""
+    if frappe.db.sql("select 1 from tabSingles where doctype = %s and field = %s", (SETTINGS, field)):
+        return doc.get(field)
+    return default
+
+
+def discount_policy(doc=None) -> tuple[int, float]:
+    """(allow_discounts, max_discount_percent) as ZG POS Settings stores them, with the DocType defaults when never saved."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    allow = cint(_stored(doc, "allow_discounts", 1))
+    cap = flt(_stored(doc, "max_discount_percent", 100))
+    # No discounting means a 0 cap, whatever the stored percent says.
+    return allow, (cap if allow else 0.0)
+
+
 def effective() -> dict[str, Any]:
     doc = frappe.get_cached_doc(SETTINGS)
-    allow_discounts = cint(doc.allow_discounts)
+    allow_discounts, max_discount_percent = discount_policy(doc)
     return {
         "pos_type": pos_type(),
         "pos_mode": pos_mode(),
@@ -102,12 +134,12 @@ def effective() -> dict[str, Any]:
         "default_price_list": doc.default_price_list or None,
         "default_customer": doc.default_customer or None,
         "allow_discounts": allow_discounts,
-        # No discounting means a 0 cap, whatever the stored percent says.
-        "max_discount_percent": flt(doc.max_discount_percent) if allow_discounts else 0.0,
+        "max_discount_percent": max_discount_percent,
         "default_payment_mode": doc.default_payment_mode or None,
-        "allow_split_payment": cint(doc.allow_split_payment),
+        "allow_split_payment": cint(_stored(doc, "allow_split_payment", 1)),
         "receipt_header": doc.receipt_header or "",
         "receipt_footer": doc.receipt_footer or "",
-        "show_tax_on_receipt": cint(doc.show_tax_on_receipt),
+        "show_tax_on_receipt": cint(_stored(doc, "show_tax_on_receipt", 1)),
         "print_copies": max(cint(doc.print_copies), 1),
+        "offline": offline_policy(doc),
     }

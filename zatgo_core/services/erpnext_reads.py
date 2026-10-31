@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
-from frappe.utils import flt, getdate, nowdate
+from frappe.utils import cint, flt, getdate, nowdate
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_doc_permission, require_login
@@ -129,7 +129,15 @@ def map_item_row(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
+def list_items(
+    page: int | str = 1,
+    page_size: int | str = 20,
+    modified_since: str | None = None,
+    include_disabled: Any = None,
+) -> dict[str, Any]:
+    """One page of enabled Items. `modified_since` (a timestamp) makes it a delta feed, oldest change first so a client can
+    page through it and resume; with `include_disabled` the Items that were switched off since are listed too (flagged
+    `disabled`) so a device that keeps a copy of the catalog (the offline POS) can drop them."""
     fields = [
         "name",
         "item_name",
@@ -144,14 +152,21 @@ def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]
     ]
     if frappe.db.has_column("Item", "sku"):
         fields.append("sku")
+    filters: dict[str, Any] = {} if cint(include_disabled) else {"disabled": 0}
+    order_by = "modified desc"
+    if (modified_since or "").strip():
+        filters["modified"] = [">", str(modified_since).strip()]
+        order_by = "modified asc"
     payload = _list_doctype(
         "Item",
         fields=fields,
         page=page,
         page_size=page_size,
-        filters={"disabled": 0},
+        filters=filters,
+        order_by=order_by,
         map_row=map_item_row,
     )
+    _fill_barcodes(payload["data"])
     # Items with no Standard Selling Rate still have an ERPNext selling price
     # (Item Price): show that instead of 0.00.
     missing = [r["item_code"] for r in payload["data"] if not r["standard_rate"]]
@@ -160,6 +175,20 @@ def list_items(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]
         if not r["standard_rate"] and r["item_code"] in prices:
             r["standard_rate"] = r["price"] = r["rate"] = prices[r["item_code"]]
     return payload
+
+
+def _fill_barcodes(rows: list[dict[str, Any]]) -> None:
+    """The first Item Barcode of each listed Item (the list query does not carry the child table): a scanner, and an offline
+    copy of the catalog, find an Item by it."""
+    codes = [r["item_code"] for r in rows if r.get("item_code") and not r.get("barcode")]
+    if not codes:
+        return
+    first: dict[str, str] = {}
+    for b in frappe.get_all("Item Barcode", filters={"parent": ["in", codes]}, fields=["parent", "barcode"], order_by="idx asc"):
+        first.setdefault(b.parent, b.barcode)
+    for r in rows:
+        if not r.get("barcode"):
+            r["barcode"] = first.get(r.get("item_code"), "")
 
 
 def get_item(name: str) -> dict[str, Any]:

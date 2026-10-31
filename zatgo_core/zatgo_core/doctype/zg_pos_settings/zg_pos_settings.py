@@ -23,6 +23,14 @@ class ZGPOSSettings(Document):
             frappe.throw("Max Discount % must be between 0 and 100.")
         if cint(self.print_copies) < 1:
             frappe.throw("Receipt Copies must be at least 1.")
+        for field, label, low, high in (
+            ("max_offline_hours", "Longest Offline Period", 1, 720),
+            ("max_pending_sales", "Most Sales Waiting on a Device", 1, 5000),
+            ("snapshot_refresh_minutes", "Refresh Items and Prices Every", 1, 1440),
+        ):
+            value = cint(self.get(field))
+            if value and not low <= value <= high:
+                frappe.throw(f"{label} must be between {low} and {high}.")
         if self.default_payment_mode and not frappe.db.get_value("Mode of Payment", self.default_payment_mode, "enabled"):
             frappe.throw("Default Mode of Payment must be an enabled Mode of Payment.")
 

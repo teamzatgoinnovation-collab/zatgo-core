@@ -10,8 +10,14 @@ from zatgo_core.services.erpnext_reads import get_item, list_items
 
 
 @frappe.whitelist()
-def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
-    return list_items(page=page, page_size=page_size)
+def list(
+    page: int | str = 1,
+    page_size: int | str = 20,
+    modified_since: str | None = None,
+    include_disabled: Any = None,
+) -> dict[str, Any]:
+    """Enabled Items; `modified_since` (+ `include_disabled`) is the delta feed of the offline POS."""
+    return list_items(page=page, page_size=page_size, modified_since=modified_since, include_disabled=include_disabled)
 
 
 @frappe.whitelist()

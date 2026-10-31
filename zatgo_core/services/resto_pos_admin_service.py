@@ -35,6 +35,13 @@ def _warehouse(company: str) -> str:
 # --- profile -------------------------------------------------------------
 
 
+def _tax_version(tax: dict[str, Any]) -> str:
+    import hashlib
+
+    raw = f"{tax.get('tax_template')}|{tax.get('tax_rate')}|{tax.get('tax_inclusive')}"
+    return hashlib.sha1(raw.encode()).hexdigest()[:12]
+
+
 def get_profile() -> dict[str, Any]:
     """What this site offers the POS: enabled industries, restaurant features,
     company / currency and payment modes. Not industry-gated, so the POS can
@@ -69,6 +76,8 @@ def get_profile() -> dict[str, Any]:
             "tax_template": tax["tax_template"],
             "tax_rate": tax["tax_rate"],
             "tax_inclusive": tax["tax_inclusive"],
+            # Changes whenever the tax a sale would carry changes: an offline POS compares it with the copy it sells from.
+            "tax_version": _tax_version(tax),
             "industries": enabled,
             "restaurant": restaurant_on,
             "retail": retail_on,
@@ -349,14 +358,27 @@ def _map_customer(row: Any) -> dict[str, Any]:
         "name": row.get("customer_name") or row.get("name"),
         "phone": row.get("mobile_no") or "",
         "email": row.get("email_id") or "",
+        "disabled": int(row.get("disabled") or 0),
+        "modified": str(row.get("modified") or ""),
     }
 
 
-def list_customers(search: str | None = None, page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
+def list_customers(
+    search: str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 50,
+    modified_since: str | None = None,
+    include_disabled: Any = None,
+) -> dict[str, Any]:
+    """Enabled Customers. `modified_since` makes it a delta feed (oldest change first); `include_disabled` also lists those
+    switched off since (flagged `disabled`), so an offline copy can drop them."""
     require_login()
     frappe.has_permission("Customer", "read", throw=True)
     page_i, size_i, start = parse_pagination(page, page_size)
-    filters: list[Any] = [["disabled", "=", 0]]
+    filters: list[Any] = [] if cint(include_disabled) else [["disabled", "=", 0]]
+    since = (modified_since or "").strip()
+    if since:
+        filters.append(["modified", ">", since])
     q = (search or "").strip()
     or_filters = (
         [["customer_name", "like", f"%{q}%"], ["mobile_no", "like", f"%{q}%"]] if q else None
@@ -366,8 +388,8 @@ def list_customers(search: str | None = None, page: int | str = 1, page_size: in
         "Customer",
         filters=filters,
         or_filters=or_filters,
-        fields=["name", "customer_name", "mobile_no", "email_id"],
-        order_by="customer_name asc",
+        fields=["name", "customer_name", "mobile_no", "email_id", "disabled", "modified"],
+        order_by="modified asc" if since else "customer_name asc",
         start=start,
         page_length=size_i,
     )
@@ -376,7 +398,7 @@ def list_customers(search: str | None = None, page: int | str = 1, page_size: in
         page=page_i,
         page_size=size_i,
         total=total,
-        sort="customer_name asc",
+        sort="modified asc" if since else "customer_name asc",
     )
 
 

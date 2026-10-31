@@ -28,7 +28,16 @@
     "receipt_column",
     "show_tax_on_receipt",
     "print_copies",
-    "printing_help"
+    "printing_help",
+    "offline_tab",
+    "offline_section",
+    "offline_enabled",
+    "max_offline_hours",
+    "max_pending_sales",
+    "offline_column",
+    "snapshot_refresh_minutes",
+    "allow_card_offline",
+    "offline_help"
   ],
   "fields": [
     {
@@ -162,13 +171,67 @@
       "fieldname": "printing_help",
       "fieldtype": "HTML",
       "options": "Printers are set in <a href=\"/desk/zg-printer-settings\">ZG Printer Settings</a>."
+    },
+    {
+      "fieldname": "offline_tab",
+      "fieldtype": "Tab Break",
+      "label": "Offline"
+    },
+    {
+      "fieldname": "offline_section",
+      "fieldtype": "Section Break",
+      "label": "Selling without a connection"
+    },
+    {
+      "fieldname": "offline_enabled",
+      "fieldtype": "Check",
+      "label": "Allow Offline Counter Sales",
+      "default": "0",
+      "description": "The POS keeps selling at the counter (Supermarket, General Retail and the Counter channel of Restaurant and Cafe) when the connection drops, keeps the sales on the device and posts them when it is back. Tables, kitchen tickets and delivery always need the connection."
+    },
+    {
+      "fieldname": "max_offline_hours",
+      "fieldtype": "Int",
+      "label": "Longest Offline Period (hours)",
+      "default": "72",
+      "description": "A sale older than this when it reaches the server is not posted; it waits for a manager. The POS also stops selling offline after this long."
+    },
+    {
+      "fieldname": "max_pending_sales",
+      "fieldtype": "Int",
+      "label": "Most Sales Waiting on a Device",
+      "default": "500",
+      "description": "The POS stops taking offline sales when this many are waiting to be posted."
+    },
+    {
+      "fieldname": "offline_column",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "snapshot_refresh_minutes",
+      "fieldtype": "Int",
+      "label": "Refresh Items and Prices Every (minutes)",
+      "default": "15",
+      "description": "How often a connected POS refreshes the copy of the catalog, customers and settings it sells from when offline."
+    },
+    {
+      "fieldname": "allow_card_offline",
+      "fieldtype": "Check",
+      "label": "Allow Card and Wallet Sales Offline",
+      "default": "0",
+      "description": "Off: only cash is taken offline. The POS cannot check a card payment without a connection."
+    },
+    {
+      "fieldname": "offline_help",
+      "fieldtype": "HTML",
+      "options": "A sale made offline is posted with its original date and time. If prices, tax or stock changed meanwhile it is still posted, at the server's figures, and listed under <a href=\"/desk/zg-offline-sale-issue\">Offline Sale Issues</a> for a manager to review."
     }
   ],
   "index_web_pages_for_search": 0,
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-31 14:00:00.000000",
+  "modified": "2026-10-31 16:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

@@ -1,0 +1,209 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "format:OSI-{#####}",
+  "creation": "2026-10-31 16:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "client_id",
+    "sales_invoice",
+    "status",
+    "issue_kinds",
+    "column_break_a",
+    "sale_time",
+    "synced_at",
+    "cashier",
+    "device_id",
+    "offline_ref",
+    "figures_section",
+    "expected_total",
+    "column_break_b",
+    "posted_total",
+    "detail_section",
+    "detail",
+    "review_section",
+    "review_note",
+    "reviewed_by",
+    "reviewed_on"
+  ],
+  "fields": [
+    {
+      "fieldname": "client_id",
+      "fieldtype": "Data",
+      "label": "Client ID",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "sales_invoice",
+      "fieldtype": "Link",
+      "label": "Sales Invoice",
+      "options": "Sales Invoice",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nReviewed",
+      "default": "Open",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "issue_kinds",
+      "fieldtype": "Data",
+      "label": "What Differs",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "column_break_a",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "sale_time",
+      "fieldtype": "Datetime",
+      "label": "Sale Time",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "synced_at",
+      "fieldtype": "Datetime",
+      "label": "Posted At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "cashier",
+      "fieldtype": "Link",
+      "label": "Cashier",
+      "options": "User",
+      "read_only": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "device_id",
+      "fieldtype": "Data",
+      "label": "Device",
+      "read_only": 1
+    },
+    {
+      "fieldname": "offline_ref",
+      "fieldtype": "Data",
+      "label": "Receipt Number Printed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "figures_section",
+      "fieldtype": "Section Break",
+      "label": "Figures"
+    },
+    {
+      "fieldname": "expected_total",
+      "fieldtype": "Currency",
+      "label": "Receipt Total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_b",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "posted_total",
+      "fieldtype": "Currency",
+      "label": "Invoice Total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "detail_section",
+      "fieldtype": "Section Break",
+      "label": "Details"
+    },
+    {
+      "fieldname": "detail",
+      "fieldtype": "Small Text",
+      "label": "Details",
+      "read_only": 1
+    },
+    {
+      "fieldname": "review_section",
+      "fieldtype": "Section Break",
+      "label": "Review"
+    },
+    {
+      "fieldname": "review_note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    },
+    {
+      "fieldname": "reviewed_by",
+      "fieldtype": "Link",
+      "label": "Reviewed By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reviewed_on",
+      "fieldtype": "Datetime",
+      "label": "Reviewed On",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-31 16:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Offline Sale Issue",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0,
+      "report": 1
+    },
+    {
+      "role": "Accounts Manager",
+      "read": 1,
+      "write": 1,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0,
+      "report": 1
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 0,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0,
+      "report": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "offline_ref",
+  "track_changes": 1
+}

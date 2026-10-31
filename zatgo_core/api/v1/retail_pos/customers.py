@@ -10,8 +10,14 @@ from zatgo_core.services import resto_pos_admin_service as svc
 
 
 @frappe.whitelist()
-def list(search: str | None = None, page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    return svc.list_customers(search, page, page_size)
+def list(
+    search: str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 50,
+    modified_since: str | None = None,
+    include_disabled: Any = None,
+) -> dict[str, Any]:
+    return svc.list_customers(search, page, page_size, modified_since, include_disabled)
 
 
 @frappe.whitelist(methods=["POST"])

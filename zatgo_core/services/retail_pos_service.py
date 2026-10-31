@@ -21,6 +21,8 @@ from frappe.utils import flt, get_datetime, today
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
+from zatgo_core.services import offline_sale
+from zatgo_core.services.offline_sale import PaymentPendingError
 from zatgo_core.services.resto_pos_admin_service import _MODE_TO_KEY, _company, _stock_rows
 from zatgo_core.services.resto_pos_service import (
     _MODE_OF_PAYMENT_MAP,
@@ -81,15 +83,17 @@ def _zero_payment(si: Any, method_key: str) -> dict[str, Any]:
     return {"id": si.name, "method": method_key, "amount": 0.0, "paidAt": str(si.posting_date or "")}
 
 
-def _validate_rates(rows: list[dict[str, Any]]) -> None:
+def _validate_rates(rows: list[dict[str, Any]], *, enforce_floor: bool = True) -> None:
     """Server-side price check: never negative; below the Item's list price (or free)
-    only for a price-override role. Cashier discounts go through `discount_*`."""
+    only for a price-override role. Cashier discounts go through `discount_*`.
+    A sale made offline (`enforce_floor=False`) was priced from a copy of the catalog that may be days old and the customer
+    has paid: a differing price is posted and listed for review instead (services/offline_sale.py)."""
     can_override = bool(_PRICE_OVERRIDE_ROLES & set(frappe.get_roles()))
     for r in rows:
         rate = flt(r["rate"])
         if rate < 0:
             frappe.throw(f"Invalid price for {r['item_code']}: it cannot be negative.")
-        if can_override:
+        if can_override or not enforce_floor:
             continue
         list_price = flt(frappe.db.get_value("Item", r["item_code"], "standard_rate"))
         if rate <= 0 and list_price > 0:
@@ -120,8 +124,8 @@ def _check_replay(si: Any, rows: list[dict[str, Any]], company: str) -> None:
         frappe.throw("This client_id belongs to a different document; use a new one.")
     if si.owner != frappe.session.user and "System Manager" not in frappe.get_roles():
         frappe.throw("This client_id was used by another user; use a new one.", frappe.PermissionError)
-    sent = sorted((r["item_code"], flt(r["qty"])) for r in rows)
-    posted = sorted((i.item_code, flt(i.qty)) for i in si.items)
+    sent = sorted((r["item_code"], flt(r["qty"]), round(flt(r["rate"]), 4)) for r in rows)
+    posted = sorted((i.item_code, flt(i.qty), round(flt(i.rate), 4)) for i in si.items)
     if sent != posted:
         frappe.throw("This client_id was already used for a different basket; use a new one.")
 
@@ -177,8 +181,18 @@ def create_sale(
     discount_type: str | None = None,
     discount_value: float | str | None = None,
     company: str | None = None,
+    offline: Any = None,
+    sale_datetime: str | None = None,
+    offline_ref: str | None = None,
+    device_id: str | None = None,
+    expected_total: Any = None,
+    expected_tax: Any = None,
 ) -> dict[str, Any]:
-    """Post a counter sale: Sales Invoice (stock out) + Payment Entry. Idempotent on `client_id`."""
+    """Post a counter sale: Sales Invoice (stock out) + Payment Entry. Idempotent on `client_id`.
+
+    `offline=1` (with `sale_datetime`, `offline_ref`, `device_id`, `expected_*`): a sale the POS made without a connection
+    and sends late. It keeps its own date and time, is posted even where stock, price, tax or the discount cap no longer fit,
+    and those cases open a review entry (services/offline_sale.py); `meta.offline` lists them."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
@@ -195,7 +209,13 @@ def create_sale(
 
     frappe.has_permission("Sales Invoice", "create", throw=True)
     frappe.has_permission("Payment Entry", "create", throw=True)
-    _validate_rates(rows)
+    sale = offline_sale.parse(offline, sale_datetime, offline_ref, device_id, expected_total, expected_tax)
+    if sale:
+        offline_sale.check_method(sale, method_key)
+    _validate_rates(rows, enforce_floor=sale is None)
+    discount_message = offline_sale.discount_problem(rows, discount_type, discount_value)
+    if discount_message and sale is None:
+        frappe.throw(discount_message)
 
     comp = _company(company)
     si_created = False
@@ -205,11 +225,15 @@ def create_sale(
         si = frappe.get_doc("Sales Invoice", existing)
         _check_replay(si, rows, comp)
     else:
+        if sale:
+            offline_sale.refuse_disabled(rows)
         for attempt in range(3):
             try:
                 si = _build_invoice(
                     rows, comp, cid, customer_id, customer_name, customer_phone, discount_type, discount_value
                 )
+                if sale:
+                    offline_sale.apply_to_invoice(si, sale)
                 si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
                 break
             except Exception as exc:
@@ -222,7 +246,10 @@ def create_sale(
         if not si_created:
             _check_replay(si, rows, comp)
 
-    if int(si.docstatus or 0) == 0:
+    posted_now = int(si.docstatus or 0) == 0
+    if posted_now:
+        if sale:
+            si.flags.zg_offline_sale = True  # may take stock below zero (overrides/sales_invoice.py)
         # The insert above is not committed either: the rollback removes the draft too.
         submit_or_rollback(
             si,
@@ -231,12 +258,24 @@ def create_sale(
         )
     elif int(si.docstatus or 0) == 2:
         frappe.throw(f"Sales Invoice {si.name} for this sale was cancelled.")
+    if sale and posted_now:
+        # The invoice is committed: its review entry is too, before the payment step can fail.
+        issues = offline_sale.collect_issues(
+            sale,
+            si,
+            rows,
+            discount_message=discount_message,
+            price_notes=offline_sale.price_differences(rows),
+        )
+        offline_sale.record_issues(sale, si, cid, issues)
+        frappe.db.commit()
+    meta_extra = {"offline": offline_sale.issues_of(cid)} if sale else {}
 
     if flt(si.outstanding_amount) <= 0 and not find_by_client_id("Payment Entry", f"{cid}:pay"):
         # Fully discounted (zero total): nothing to collect, so no Payment Entry.
         return ok(
             {"invoice": _map_invoice(si), "payment": _zero_payment(si, method_key)},
-            meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE},
+            meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE, **meta_extra},
         )
 
     pay_cid = f"{cid}:pay"
@@ -245,6 +284,8 @@ def create_sale(
         pe = frappe.get_doc("Payment Entry", existing_pe)
     else:
         pe = get_payment_entry("Sales Invoice", si.name)
+        if sale:
+            pe.posting_date = si.posting_date  # the money was taken on the day of the sale
         pe.mode_of_payment = mop
         _set_paid_to(pe, mop, comp)
         _set_bank_reference(pe, si)
@@ -259,12 +300,13 @@ def create_sale(
             frappe.db.rollback()
             frappe.log_error(title="Retail POS Payment Entry submit failed", message=frappe.get_traceback())
             frappe.throw(
-                f"The invoice {si.name} posted, but recording the payment failed: {_reason(exc)} Retry the payment."
+                f"The invoice {si.name} posted, but recording the payment failed: {_reason(exc)} Retry the payment.",
+                PaymentPendingError,
             )
     frappe.db.commit()
     return ok(
         _result(si, pe),
-        meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE},
+        meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE, **meta_extra},
     )
 
 

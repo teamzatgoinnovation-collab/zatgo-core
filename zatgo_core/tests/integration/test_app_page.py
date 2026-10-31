@@ -24,7 +24,7 @@ APP_FORMS = {
     "ZG Theme Settings": ["brand_tab", "appearance_tab"],
     "ZG Language Settings": ["general_tab"],
     "ZG MyBis Settings": ["general_tab"],
-    "ZG POS Settings": ["general_tab", "payments_tab", "receipt_tab"],
+    "ZG POS Settings": ["general_tab", "payments_tab", "receipt_tab", "offline_tab"],
 }
 
 
