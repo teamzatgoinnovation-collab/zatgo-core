@@ -24,6 +24,21 @@ def find_by_client_id(doctype: str, client_id: str) -> str | None:
     return frappe.db.get_value(doctype, {"zatgo_client_id": client_id}, "name")
 
 
+def submit_or_rollback(doc, *, log_title: str, failure, ignore_permissions: bool = False) -> None:
+    """Submit `doc` and commit. On any error: roll back (an insert that is still uncommitted goes with it, so no
+    half-posted document is left), log the real traceback under `log_title`, and raise a ValidationError.
+    `failure` is the message, or a callable that gets the exception and returns it (to include the reason)."""
+    try:
+        if ignore_permissions:
+            doc.flags.ignore_permissions = True
+        doc.submit()
+        frappe.db.commit()
+    except Exception as exc:
+        frappe.db.rollback()
+        frappe.log_error(title=log_title, message=frappe.get_traceback())
+        frappe.throw(failure(exc) if callable(failure) else failure, frappe.ValidationError)
+
+
 def insert_idempotent(doc, *, doctype: str, client_id: str):
     """Insert `doc`, recovering cleanly from a concurrent duplicate client_id.
 

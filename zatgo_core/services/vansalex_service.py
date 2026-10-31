@@ -13,6 +13,7 @@ from zatgo_core.services.erpnext_reads import map_payment_entry_doc, map_sales_i
 from zatgo_core.services.erpnext_writes import _apply_return_qtys, _default_company, _parse_items
 from zatgo_core.services.idempotency import find_by_client_id as _find_any_by_client_id
 from zatgo_core.services.idempotency import insert_idempotent as _insert_idempotent
+from zatgo_core.services.idempotency import submit_or_rollback
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 from zatgo_core.services.vansalex_access import mark_api_validated
 
@@ -455,15 +456,11 @@ def create_order(
         payload["data"]["trip_id"] = (trip_id or "").strip() or None
         return payload
 
-    try:
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.throw(
-            "Could not create and submit Sales Invoice. Fix stock/accounts, then retry sync.",
-            frappe.ValidationError,
-        )
+    submit_or_rollback(
+        doc,
+        log_title="VanSale Sales Invoice submit failed",
+        failure="Could not create and submit Sales Invoice. Fix stock/accounts, then retry sync.",
+    )
 
     try:
         generate_and_store_zatca_qr(doc)
@@ -742,15 +739,11 @@ def confirm_order(
         payload["data"]["trip_id"] = (trip_id or "").strip() or None
         return payload
 
-    try:
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.throw(
-            "Could not confirm Sales Order into Sales Invoice. Fix stock/accounts, then retry sync.",
-            frappe.ValidationError,
-        )
+    submit_or_rollback(
+        doc,
+        log_title="VanSale Sales Order confirm failed",
+        failure="Could not confirm Sales Order into Sales Invoice. Fix stock/accounts, then retry sync.",
+    )
 
     try:
         generate_and_store_zatca_qr(doc)
@@ -942,15 +935,11 @@ def create_sales_return(
             frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
         return _ack_sales_invoice(doc, cid, idempotent=True, created=False)
 
-    try:
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.throw(
-            "Could not create and submit Sales Return. Fix stock/accounts, then retry sync.",
-            frappe.ValidationError,
-        )
+    submit_or_rollback(
+        doc,
+        log_title="VanSale Sales Return submit failed",
+        failure="Could not create and submit Sales Return. Fix stock/accounts, then retry sync.",
+    )
 
     try:
         generate_and_store_zatca_qr(doc)

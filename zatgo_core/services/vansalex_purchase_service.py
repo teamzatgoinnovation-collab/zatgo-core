@@ -36,6 +36,7 @@ from zatgo_core.services.van_sale_access import (
     is_vansale_user,
     require_own_warehouse,
 )
+from zatgo_core.services.idempotency import submit_or_rollback
 from zatgo_core.services.vansalex_service import _find_by_client_id, insert_idempotent
 
 INVOICE = "Purchase Invoice"
@@ -140,14 +141,7 @@ def _apply_payment(doc: Any, sale: dict[str, Any]) -> None:
 
 
 def _submit(doc: Any, failure: str) -> None:
-    try:
-        doc.flags.ignore_permissions = True
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.log_error(title="VanSaleX purchase submit failed", message=frappe.get_traceback())
-        frappe.throw(failure, frappe.ValidationError)
+    submit_or_rollback(doc, log_title="VanSaleX purchase submit failed", failure=failure, ignore_permissions=True)
 
 
 def map_purchase(doc: Any) -> dict[str, Any]:

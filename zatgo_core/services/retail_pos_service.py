@@ -181,7 +181,7 @@ def create_sale(
     """Post a counter sale: Sales Invoice (stock out) + Payment Entry. Idempotent on `client_id`."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     require_login()
     cid = require_str(client_id, "client_id")
     method_key = str(method or "").lower()
@@ -223,14 +223,12 @@ def create_sale(
             _check_replay(si, rows, comp)
 
     if int(si.docstatus or 0) == 0:
-        try:
-            si.submit()
-            frappe.db.commit()
-        except Exception as exc:
-            # The insert above is not committed either: the rollback removes the draft too.
-            frappe.db.rollback()
-            frappe.log_error(title="Retail POS Sales Invoice submit failed", message=frappe.get_traceback())
-            frappe.throw(f"Could not post the sale: {_reason(exc)} Nothing was recorded -- fix this and retry.")
+        # The insert above is not committed either: the rollback removes the draft too.
+        submit_or_rollback(
+            si,
+            log_title="Retail POS Sales Invoice submit failed",
+            failure=lambda exc: f"Could not post the sale: {_reason(exc)} Nothing was recorded -- fix this and retry.",
+        )
     elif int(si.docstatus or 0) == 2:
         frappe.throw(f"Sales Invoice {si.name} for this sale was cancelled.")
 

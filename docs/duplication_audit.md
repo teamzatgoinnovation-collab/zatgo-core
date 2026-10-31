@@ -271,3 +271,15 @@ Do not re-report these.
 ## 7. Not covered
 
 `not_covered` is empty. All 72 DocTypes in scope received a verdict. The scope covers only the groups listed above. Other DocTypes in zatgo-core outside those groups were not part of this audit.
+## 8. Cleanup status
+
+Done on 2026-10-31 (documentation and code-only, no schema or data change):
+
+- Step 1: `docs/doctypes.md`, `installation.md` and `user_manual.md` no longer describe ZG Number Series, ZG Security Settings, ZG Payment Settings and the ZG System Settings defaults as working controls; `docs/settings_scope.md` section 7a lists which default company / warehouse wins for each entry point.
+- code-duplication-5: `create_receive_payment` and `create_pay_payment` are thin wrappers of one `_create_invoice_payment` (same public names, arguments and messages).
+- chat-ops-1: the three connector health loops are one `_check_connectors` (same log titles). The differing missing-status defaults ("Enabled" for REST tools, "Draft" for MCP and integrations) were left alone: aligning them changes which tools load.
+- code-duplication-1, partly: the submit, commit, roll back, log and raise step of six invoice-posting blocks is one `services/idempotency.py::submit_or_rollback` (VanSaleX sales / order confirmation / sales return, accounting sales and purchase returns, VanSaleX purchases, restaurant and retail POS). Messages are unchanged; VanSaleX and the accounting returns now also log the real traceback, which they dropped before.
+
+Deliberately not done (each needs its own decision and test round): the MariaDB 1020 naming-race retry for VanSaleX and the other engines (only retail has it), the shared POS checkout service (code-duplication-3), the return-quantity helper (code-duplication-4), one definition of a valid payment account (code-duplication-8) and the `zatgo_client_id` field template (custom-fields-2), plus everything in steps 3 to 6 of section 6.
+
+Checked after the change: unit tests of the helpers, `test_idempotency`, the VanSaleX order / return / purchase / collection tests, restaurant and retail POS, POS type effect, narration, multi-payment and invoice cash payment. The accounting API returns in `services/erpnext_writes.py` (`create_sales_return`, `create_purchase_return`) have no end-to-end test; their change is the same mechanical replacement and is covered by the helper's unit tests.

@@ -15,49 +15,32 @@ def check_all_connectors():
 	_check_integrations()
 
 
-def _check_rest():
-	if not frappe.db.exists("DocType", "AI REST Tool"):
+def _check_connectors(doctype: str, tester, label: str):
+	"""Ping every enabled connector of one DocType and persist the result (one failing connector never stops the rest)."""
+	if not frappe.db.exists("DocType", doctype):
 		return
 	rows = frappe.get_all(
-		"AI REST Tool",
+		doctype,
 		filters={"enabled": 1, "lifecycle_status": ("in", ["Enabled", "Testing"])},
 		pluck="name",
 	)
 	for name in rows:
 		try:
-			test_rest_tool(name, persist=True)
+			tester(name, persist=True)
 		except Exception:
-			frappe.log_error(title=f"chat_ai rest health {name}")
+			frappe.log_error(title=f"chat_ai {label} health {name}")
+
+
+def _check_rest():
+	_check_connectors("AI REST Tool", test_rest_tool, "rest")
 
 
 def _check_mcp():
-	if not frappe.db.exists("DocType", "AI MCP Server"):
-		return
-	rows = frappe.get_all(
-		"AI MCP Server",
-		filters={"enabled": 1, "lifecycle_status": ("in", ["Enabled", "Testing"])},
-		pluck="name",
-	)
-	for name in rows:
-		try:
-			test_mcp_server(name, persist=True)
-		except Exception:
-			frappe.log_error(title=f"chat_ai mcp health {name}")
+	_check_connectors("AI MCP Server", test_mcp_server, "mcp")
 
 
 def _check_integrations():
-	if not frappe.db.exists("DocType", "AI Integration Connector"):
-		return
-	rows = frappe.get_all(
-		"AI Integration Connector",
-		filters={"enabled": 1, "lifecycle_status": ("in", ["Enabled", "Testing"])},
-		pluck="name",
-	)
-	for name in rows:
-		try:
-			test_integration(name, persist=True)
-		except Exception:
-			frappe.log_error(title=f"chat_ai integration health {name}")
+	_check_connectors("AI Integration Connector", test_integration, "integration")
 
 
 def _write_health(doctype: str, name: str, ok: bool, latency_ms: int, error: str = ""):

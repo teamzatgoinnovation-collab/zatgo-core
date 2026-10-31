@@ -583,7 +583,7 @@ def pay(
     discount_type: str | None = None,
     discount_value: float | str | None = None,
 ) -> dict[str, Any]:
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     from zatgo_core.services.vansalex_service import _apply_sales_taxes
 
     require_login()
@@ -649,19 +649,15 @@ def pay(
         _apply_sales_taxes(si, comp)
         si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
         if int(si.docstatus or 0) != 1:
-            try:
-                si.submit()
-                frappe.db.commit()
-            except Exception as exc:
-                # The insert above isn't committed either: the rollback
-                # removes the invoice too (it used to reload it -> "not found",
-                # hiding the real reason, and claimed a draft was kept).
-                frappe.db.rollback()
-                frappe.log_error(title="Resto POS Sales Invoice submit failed", message=frappe.get_traceback())
-                frappe.throw(
+            # The insert above isn't committed either: the rollback removes the invoice too.
+            submit_or_rollback(
+                si,
+                log_title="Resto POS Sales Invoice submit failed",
+                failure=lambda exc: (
                     f"Could not post the invoice for order {doc.order_number}: {_reason(exc)} "
                     "Nothing was recorded -- fix this and retry."
-                )
+                ),
+            )
         doc.sales_invoice = si.name
 
     # COD delivery: dispatch the invoice, don't record money that hasn't

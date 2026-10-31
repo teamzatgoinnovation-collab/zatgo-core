@@ -981,7 +981,7 @@ def create_sales_return(
     from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
 
     require_login()
     cid = (client_id or "").strip() or None
@@ -1049,15 +1049,7 @@ def create_sales_return(
             )
     else:
         doc.insert()
-    try:
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.throw(
-            "Could not create and submit Sales Return. Fix stock/accounts, then retry.",
-            frappe.ValidationError,
-        )
+    submit_or_rollback(doc, log_title="Sales Return submit failed", failure="Could not create and submit Sales Return. Fix stock/accounts, then retry.")
     doc.reload()
     return ok(map_sales_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Sales Invoice"})
 
@@ -1178,7 +1170,7 @@ def create_purchase_return(
     from erpnext.controllers.sales_and_purchase_return import make_return_doc
 
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
 
     require_login()
     cid = (client_id or "").strip() or None
@@ -1243,30 +1235,28 @@ def create_purchase_return(
             )
     else:
         doc.insert()
-    try:
-        doc.submit()
-        frappe.db.commit()
-    except Exception:
-        frappe.db.rollback()
-        frappe.throw(
-            "Could not create and submit Purchase Return. Fix stock/accounts, then retry.",
-            frappe.ValidationError,
-        )
+    submit_or_rollback(doc, log_title="Purchase Return submit failed", failure="Could not create and submit Purchase Return. Fix stock/accounts, then retry.")
     doc.reload()
     return ok(map_purchase_invoice_doc(doc), meta={"stub": False, "created": True, "source": "Purchase Invoice"})
 
 
-def create_receive_payment(
-    sales_invoice: str,
-    amount: float | str | None = None,
-    mode_of_payment: str | None = None,
-    posting_date: str | None = None,
-    reference_no: str | None = None,
-    cost_center: str | None = None,
-    project: str | None = None,
-    client_id: str | None = None,
-    remarks: str | None = None,
+def _create_invoice_payment(
+    invoice_doctype: str,
+    invoice_arg: str,
+    invoice: str,
+    unsubmitted_message: str,
+    amount: float | str | None,
+    mode_of_payment: str | None,
+    posting_date: str | None,
+    reference_no: str | None,
+    cost_center: str | None,
+    project: str | None,
+    client_id: str | None,
+    remarks: str | None,
 ) -> dict[str, Any]:
+    """One Payment Entry against a submitted Sales Invoice (receive) or Purchase Invoice (pay). ERPNext's
+    `get_payment_entry` derives the direction from the invoice doctype; the two public functions below only
+    differ in the doctype and the wording of their errors."""
     from zatgo_core.services.erpnext_reads import map_payment_entry_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
 
@@ -1288,19 +1278,19 @@ def create_receive_payment(
                 },
             )
     frappe.has_permission("Payment Entry", "create", throw=True)
-    si_name = require_str(sales_invoice, "sales_invoice")
-    if not frappe.db.exists("Sales Invoice", si_name):
-        frappe.throw(f"Sales Invoice {si_name} not found")
-    si = frappe.get_doc("Sales Invoice", si_name)
-    if int(si.docstatus or 0) != 1:
-        frappe.throw("Sales Invoice must be submitted before receiving payment")
-    paid = flt(amount) if amount is not None else flt(si.outstanding_amount)
+    inv_name = require_str(invoice, invoice_arg)
+    if not frappe.db.exists(invoice_doctype, inv_name):
+        frappe.throw(f"{invoice_doctype} {inv_name} not found")
+    inv = frappe.get_doc(invoice_doctype, inv_name)
+    if int(inv.docstatus or 0) != 1:
+        frappe.throw(unsubmitted_message)
+    paid = flt(amount) if amount is not None else flt(inv.outstanding_amount)
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
 
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
-    pe = get_payment_entry("Sales Invoice", si_name, party_amount=paid)
+    pe = get_payment_entry(invoice_doctype, inv_name, party_amount=paid)
     pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
     if mode_of_payment:
         pe.mode_of_payment = mode_of_payment
@@ -1335,6 +1325,26 @@ def create_receive_payment(
     )
 
 
+def create_receive_payment(
+    sales_invoice: str,
+    amount: float | str | None = None,
+    mode_of_payment: str | None = None,
+    posting_date: str | None = None,
+    reference_no: str | None = None,
+    cost_center: str | None = None,
+    project: str | None = None,
+    client_id: str | None = None,
+    remarks: str | None = None,
+) -> dict[str, Any]:
+    return _create_invoice_payment(
+        "Sales Invoice",
+        "sales_invoice",
+        sales_invoice,
+        "Sales Invoice must be submitted before receiving payment",
+        amount, mode_of_payment, posting_date, reference_no, cost_center, project, client_id, remarks,
+    )
+
+
 def create_pay_payment(
     purchase_invoice: str,
     amount: float | str | None = None,
@@ -1346,71 +1356,12 @@ def create_pay_payment(
     client_id: str | None = None,
     remarks: str | None = None,
 ) -> dict[str, Any]:
-    from zatgo_core.services.erpnext_reads import map_payment_entry_doc
-    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
-
-    require_login()
-    cid = (client_id or "").strip() or None
-    if cid:
-        existing = find_by_client_id("Payment Entry", cid)
-        if existing:
-            existing_doc = frappe.get_doc("Payment Entry", existing)
-            submitted, submit_error = _try_auto_submit(existing_doc)
-            return ok(
-                map_payment_entry_doc(existing_doc),
-                meta={
-                    "stub": False,
-                    "idempotent": True,
-                    "submitted": submitted,
-                    "submit_error": submit_error,
-                    "source": "Payment Entry",
-                },
-            )
-    frappe.has_permission("Payment Entry", "create", throw=True)
-    pi_name = require_str(purchase_invoice, "purchase_invoice")
-    if not frappe.db.exists("Purchase Invoice", pi_name):
-        frappe.throw(f"Purchase Invoice {pi_name} not found")
-    pi = frappe.get_doc("Purchase Invoice", pi_name)
-    if int(pi.docstatus or 0) != 1:
-        frappe.throw("Purchase Invoice must be submitted before paying")
-    paid = flt(amount) if amount is not None else flt(pi.outstanding_amount)
-    if paid <= 0:
-        frappe.throw("Payment amount must be greater than zero")
-
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
-    pe = get_payment_entry("Purchase Invoice", pi_name, party_amount=paid)
-    pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
-    if mode_of_payment:
-        pe.mode_of_payment = mode_of_payment
-    if reference_no:
-        pe.reference_no = reference_no
-        pe.reference_date = pe.posting_date
-    if cost_center:
-        pe.cost_center = cost_center
-    if project:
-        pe.project = project
-    set_narration(pe, remarks)
-    pe.zatgo_client_id = cid
-    if cid:
-        pe, created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
-    else:
-        pe.insert()
-        created = True
-    frappe.db.commit()
-
-    submitted, submit_error = _try_auto_submit(pe)
-
-    return ok(
-        map_payment_entry_doc(pe),
-        meta={
-            "stub": False,
-            "created": created,
-            "idempotent": not created,
-            "submitted": submitted,
-            "submit_error": submit_error,
-            "source": "Payment Entry",
-        },
+    return _create_invoice_payment(
+        "Purchase Invoice",
+        "purchase_invoice",
+        purchase_invoice,
+        "Purchase Invoice must be submitted before paying",
+        amount, mode_of_payment, posting_date, reference_no, cost_center, project, client_id, remarks,
     )
 
 
