@@ -40,11 +40,15 @@ def get_profile() -> dict[str, Any]:
     company / currency and payment modes. Not industry-gated, so the POS can
     still learn that Restaurant is switched off."""
     from zatgo_core.industries import gate, registry
+    from zatgo_core.services import pos_settings
 
     require_login()
     enabled = sorted(gate.enabled_keys())
     restaurant = registry.get("restaurant")
     restaurant_on = "restaurant" in enabled
+    retail_on = "supermarket" in enabled
+    # The POS Type of ZG POS Settings decides; with none chosen the industries do (Restaurant wins when both are on).
+    pos_mode = pos_settings.pos_mode(set(enabled))
     try:
         company = _company()
     except Exception:
@@ -67,6 +71,10 @@ def get_profile() -> dict[str, Any]:
             "tax_inclusive": tax["tax_inclusive"],
             "industries": enabled,
             "restaurant": restaurant_on,
+            "retail": retail_on,
+            "pos_mode": pos_mode,
+            "pos_type": pos_settings.pos_type(set(enabled)),
+            "pos_vertical": pos_settings.pos_vertical(set(enabled)),
             "features": list(restaurant.features) if restaurant and restaurant_on else [],
             "company": company,
             "currency": currency,

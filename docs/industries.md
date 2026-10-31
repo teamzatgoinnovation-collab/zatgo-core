@@ -49,7 +49,15 @@ Effective access = **Frappe role permission AND industry enabled** (a user permi
 | Jewellery | Ready — Item fields (metal, purity, gross / stone / net weight, making charge, wastage, hallmark), `ZG Metal Rate`, price API. Barcodes, sale, purchase and return use the standard Item barcodes and invoices. |
 | Gym | Ready — `ZG Gym Plan`, `ZG Gym Membership` (members are Customers; end date, renewal, billing through Sales Invoice with an idempotent `zatgo_client_id`), `ZG Gym Attendance`. |
 | Textile | Ready — Item fields (fabric, pattern, design no., GSM, sold-by-roll, roll length in m, width in cm), shown only while on. Brand, colour and size use ERPNext's Item Brand and variant attributes (Color / Size), so variants, barcodes, purchase, sale and stock are standard. No API or DocTypes of its own. |
-| Supermarket, Salon, Electrical, Retail, Wholesale, Distribution, Pharmacy, Electronics, Hardware, Mobile, Automobile, Service, Manufacturing | Registered, **not implemented** ("Coming soon"); cannot be switched on. |
+| Supermarket | Ready - the **retail POS mode** of ZatGo POS (`api/v1/retail_pos`, service `services/retail_pos_service.py`). No DocTypes of its own and it never touches the restaurant ones (ZG Order / ZG Table / ZG KDS Ticket). `catalog`, `stock` and `customers` reuse `resto_pos_admin_service` (Item, Bin / Stock Entry, Customer); `sale.create` posts ONE submitted Sales Invoice (`update_stock=1`, company warehouse, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment, idempotent on `client_id` (invoice) and `client_id:pay` (payment); `payments.list` and `dashboard.counts` are built from Sales Invoices / Payment Entries. API 404 while the industry (or the ZatGo POS app) is off. |
+| Salon, Electrical, Retail, Wholesale, Distribution, Pharmacy, Electronics, Hardware, Mobile, Automobile, Service, Manufacturing | Registered, **not implemented** ("Coming soon"); cannot be switched on. |
+
+### POS mode (`pos_profile.get`)
+
+`pos_profile.get` (outside both POS prefixes, so it answers while an industry is off) returns `pos_mode`:
+`"restaurant"` when Restaurant is on, else `"retail"` when Supermarket is on, else `null` (Restaurant wins when both are
+on), plus the booleans `restaurant` and `retail`. The desktop POS (`desktop/zatgo-pos`) configures itself from it: restaurant
+mode uses `resto_pos.*` (tables, orders, KDS), retail mode uses `retail_pos.*` (products, barcode, counter sale).
 
 ## Add a new industry — example: Pharmacy
 

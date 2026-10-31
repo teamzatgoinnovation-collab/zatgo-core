@@ -82,8 +82,8 @@ APPS = (
         "default_on": True,
         "workspaces": ("ZatGo POS",),
         "settings": (("ZG POS Settings", "POS Settings"),),
-        # Off: the restaurant POS API answers 404. pos_profile / pos_settings stay outside that prefix.
-        "api_prefixes": ("zatgo_core.api.v1.resto_pos.",),
+        # Off: the restaurant and retail POS APIs answer 404. pos_profile / pos_settings stay outside that prefix.
+        "api_prefixes": ("zatgo_core.api.v1.resto_pos.", "zatgo_core.api.v1.retail_pos."),
     },
     {
         "key": "industries",

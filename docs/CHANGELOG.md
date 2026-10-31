@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — Supermarket industry: the retail POS engine
+
+- **Supermarket** is an implemented industry: `api/v1/retail_pos/` (catalog, stock, customers, payments, dashboard, one-step `sale.create`) over `services/retail_pos_service.py`. A sale posts ONE submitted Sales Invoice (`update_stock=1`, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment (idempotent on `client_id` and `client_id:pay`); a card / wallet / bank mode lands in its own account with the invoice number and date as the bank reference. The API answers 404 while the industry or the ZatGo POS app is off.
+- `pos_profile.get` now returns `pos_mode`, `pos_type`, `pos_vertical`, `retail` next to `restaurant`; the POS Type of ZG POS Settings decides, else the industries (Restaurant first).
+- Tests: `test_retail_pos` (20) and `test_pos_type_effect` (every POS type runs a real sale through its engine, switching never switches the other industry off). Not on production until deployed: there the Supermarket and General Retail POS types are refused ("not available yet").
+
 ### Added — settings scope audit
 
 - **`docs/settings_scope.md`**: where every app is configured, at which scope (site / company / branch / user / role / device), who edits it, whether the server enforces it, what the client apps keep on the device, the shared-SDK coverage (334 backend methods; 57 in neither SDK) and the gaps, ordered. Found while testing the POS types: ZG POS Settings other than `pos_type` is served but read by no client and enforced by no server code.
