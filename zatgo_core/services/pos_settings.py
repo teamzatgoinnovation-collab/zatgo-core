@@ -12,11 +12,18 @@ from frappe.utils import cint, flt
 
 SETTINGS = "ZG POS Settings"
 
-# POS Type -> (pos_mode the POS app gets, industry that must be on for it). The industry gate stays the access rule.
+# POS Type -> (pos_mode the POS app gets, industry that must be on for it, vertical the POS app labels itself with).
+# The industry gate stays the access rule. Cafe and General Retail are variants that run on the Restaurant and
+# Supermarket engines; the types in COMING_SOON have no backend yet and cannot be chosen.
 POS_TYPES = {
-    "Restaurant": ("restaurant", "restaurant"),
-    "Supermarket": ("retail", "supermarket"),
+    "Restaurant": ("restaurant", "restaurant", "restaurant"),
+    "Cafe": ("restaurant", "restaurant", "cafe"),
+    "Supermarket": ("retail", "supermarket", "supermarket"),
+    "General Retail": ("retail", "supermarket", "general"),
 }
+COMING_SOON = ("Pharmacy (coming soon)", "Electrical (coming soon)")
+# The type that stands for an industry when nothing was chosen (Restaurant first: it wins when both are on).
+DEFAULT_TYPE = {"restaurant": "Restaurant", "supermarket": "Supermarket"}
 
 
 def _chosen_type() -> str | None:
@@ -34,7 +41,7 @@ def derived_type(enabled: set[str] | None = None) -> str | None:
         from zatgo_core.industries import gate
 
         enabled = gate.enabled_keys()
-    for pos_type, (_mode, industry) in POS_TYPES.items():
+    for industry, pos_type in DEFAULT_TYPE.items():
         if industry in enabled:
             return pos_type
     return None
@@ -53,10 +60,16 @@ def pos_mode(enabled: set[str] | None = None) -> str | None:
         enabled = gate.enabled_keys()
     chosen = _chosen_type()
     if chosen:
-        mode, industry = POS_TYPES[chosen]
+        mode, industry, _vertical = POS_TYPES[chosen]
         return mode if industry in enabled else None
     derived = derived_type(enabled)
     return POS_TYPES[derived][0] if derived else None
+
+
+def pos_vertical(enabled: set[str] | None = None) -> str | None:
+    """What the POS app calls its business: restaurant | cafe | supermarket | general (None: nothing to do)."""
+    chosen = pos_type(enabled)
+    return POS_TYPES[chosen][2] if chosen and pos_mode(enabled) else None
 
 
 def switch_industry_on(chosen: str) -> bool:
@@ -84,6 +97,7 @@ def effective() -> dict[str, Any]:
     return {
         "pos_type": pos_type(),
         "pos_mode": pos_mode(),
+        "pos_vertical": pos_vertical(),
         "default_warehouse": doc.default_warehouse or None,
         "default_price_list": doc.default_price_list or None,
         "default_customer": doc.default_customer or None,

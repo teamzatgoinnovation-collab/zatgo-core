@@ -45,6 +45,7 @@ def get_context() -> dict[str, Any]:
                 for c in companies
             ],
             "default_company": _default_company([c["name"] for c in companies]),
+            "default_preset": _default_preset(),
             "areas": areas,
             "has_access": bool(companies) and any(areas.values()),
             "presets": list(period.PRESETS),
@@ -54,8 +55,24 @@ def get_context() -> dict[str, Any]:
     )
 
 
+def _mybis_setting(field: str) -> str | None:
+    try:
+        return frappe.db.get_single_value("ZG MyBis Settings", field) or None
+    except Exception:  # not migrated yet: no settings table
+        return None
+
+
+def _default_preset() -> str:
+    preset = _mybis_setting("default_preset")
+    return preset if preset in period.PRESETS else "this_month"
+
+
 def _default_company(allowed: list[str]) -> str | None:
-    default = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    default = (
+        frappe.defaults.get_user_default("Company")
+        or _mybis_setting("default_company")
+        or frappe.db.get_single_value("Global Defaults", "default_company")
+    )
     if default in allowed:
         return default
     return allowed[0] if len(allowed) == 1 else None

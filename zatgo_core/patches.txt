@@ -44,3 +44,4 @@ zatgo_core.patches.v0_4_6.autofill_payment_entry_account_on
 zatgo_core.patches.v0_4_7.enable_vansalex_default_on
 zatgo_core.patches.v0_4_8.add_warehouse_transfer_point_field
 zatgo_core.patches.v0_4_9.enable_zatgo_pos_default_on
+zatgo_core.patches.v0_4_10.move_brand_theme_language_to_apps

@@ -9,7 +9,7 @@ import frappe
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.industries.gate import enabled_keys
-from zatgo_core.services import app_authority, app_catalog, app_page, app_sidebar, app_state, core_sidebar
+from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, ui_settings
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
@@ -59,41 +59,25 @@ def _tile(label: str, general: bool = False) -> str:
     return "data:image/svg+xml," + quote(svg)
 
 
-def _folder_apps() -> list[dict]:
-    """Every app of the popup, switched on or not: the catalog's apps (VanSaleX, POS, AI, Tracker, Space, MyBis),
-    the switch-only ones (Desk theme, language switcher, VanSaleX web), then the industries that are on."""
-    rows = app_page.apps()
-    catalog = [a for a in rows if a["kind"] == "app"]
-    switch_only = [
-        {**a, "kind": "app", "workspaces": (), "settings": ()}
-        for a in app_catalog.catalog()
-        if a["group"] in core_sidebar.SWITCH_GROUPS
-    ]
-    return catalog + switch_only + [a for a in rows if a["kind"] == "industry"]
-
-
 def _zatgo_folder_children(bootinfo: Any) -> None:
-    """Fill the "ZatGo" folder of the Apps screen (/desk): its popup lists every ZatGo app plus "General Settings",
-    like the Frappe HR folder does.
+    """Fill the "ZatGo" folder of the Apps screen (/desk): its popup lists every ZatGo app that is switched on, plus
+    "General Settings" (where apps are switched on and off), like the Frappe HR folder does.
 
     The children are not Desktop Icon rows (an icon's name is its label, and an app's own rail icon already
-    has it); they are made here. An app whose own sidebar (services/app_sidebar.py) has an item this user may open
-    -- Frappe leaves a sidebar out of the boot otherwise -- opens that sidebar's first link (Overview). An app
-    with no sidebar to open (switched off, switch-only, no Desk pages) is listed for a System Manager and opens the
-    App Settings Hub, where it is switched on and set up; other users do not see it.
-    The popup opens each child by its `link` (External icon = a plain URL)."""
+    has it); they are made here. An app is listed when its own sidebar (services/app_sidebar.py) has an item this
+    user may open -- Frappe leaves a sidebar out of the boot otherwise -- and opens that sidebar's first link
+    (Overview). The popup opens each child by its `link` (External icon = a plain URL)."""
     sidebars = bootinfo.get("workspace_sidebar_item") or {}
     folder = next((i for i in bootinfo.get("desktop_icons") or [] if i.get("label") == core_sidebar.NAME), None)
     if not folder or folder.get("icon_type") != "Folder":
         return
     children = []
-    hub = _desk_route("Page", core_sidebar.HUB_PAGE) if frappe.db.exists("Page", core_sidebar.HUB_PAGE) else None
-    # Only a System Manager can switch an app on or open the hub, so only they are sent there.
-    hub_for_user = hub if app_authority.can_switch() else None
-    for app in _folder_apps():
+    for app in app_page.apps():
+        if not app_page.is_enabled(app):
+            continue
         sidebar = sidebars.get(app_sidebar.sidebar_name(app).lower())
-        route = (_app_entry_route(sidebar) if sidebar else None) or hub_for_user
-        if route and (app["kind"] != "industry" or app_page.is_enabled(app)):
+        route = _app_entry_route(sidebar) if sidebar else None
+        if route:
             children.append((app["label"], app["icon"], route))
     general = sidebars.get(core_sidebar.NAME.lower())
     general_target = None
@@ -128,9 +112,10 @@ def boot_session(bootinfo: Any) -> None:
                 doc = frappe.get_cached_doc(
                     DOCTYPES["SYSTEM_SETTINGS"], DOCTYPES["SYSTEM_SETTINGS"]
                 )
+                brand = ui_settings.values()
                 system = {
-                    "brand_name": doc.get("brand_name"),
-                    "theme": doc.get("theme"),
+                    "brand_name": brand["brand_name"],
+                    "theme": brand["theme"],
                     "default_company": doc.get("default_company"),
                     "maintenance_mode": doc.get("maintenance_mode"),
                     "autofill_payment_accounts": doc.get("autofill_payment_accounts"),

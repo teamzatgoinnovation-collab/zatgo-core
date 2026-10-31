@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Changed — every app owns its settings; the ZatGo popup lists the apps that are on
+
+- **The ZatGo folder lists only apps switched on** (plus General Settings); each opens its own sidebar. **General Settings** starts with *Apps (on / off)* (the hub), where every app is switched on or off. Desk Theme, Language Switcher, VanSaleX Web and MyBis are apps like the rest now, with a Workspace and a sidebar of their own.
+- **New settings forms**: `ZG Theme Settings` (brand name, logo, theme), `ZG Language Settings` (default language), `ZG MyBis Settings` (default company and period of the dashboards). `brand_name`, `company_logo`, `theme` and `language` leave ZG System Settings (hidden there; `patches/v0_4_10` copies the stored values; `services/ui_settings.py` is what readers use, same API keys as before). On/off switches stay in ZG System Settings.
+- **POS Type** also offers Cafe (restaurant engine) and General Retail (supermarket engine); Pharmacy and Electrical are listed as coming soon and cannot be saved. `pos_settings.get` returns `pos_vertical` (restaurant | cafe | supermarket | general); the desktop POS follows it.
+- Needs `bench migrate` on each site.
+
 ### Added — POS Type in ZG POS Settings
 
 - **POS Type** (Restaurant / Supermarket) on ZatGo POS -> POS Settings -> General: the choice the desktop POS app used to make in its own setup now lives in the backend. It decides the `pos_mode` the POS gets (`pos_settings.get` returns `pos_type` and `pos_mode`). Saving a type switches the matching industry on (never the other off); changing it is a System Manager's call, like any industry switch. Left empty (every existing site), the industries decide as before, Restaurant first. The ZatGo folder on the Apps screen now lists every app (AI, Tracker, Space, MyBis, Desk theme, language switcher, VanSaleX web too); one with no sidebar to open sends a System Manager to the App Settings Hub.

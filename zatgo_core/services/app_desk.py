@@ -60,7 +60,7 @@ def sync_app_desk() -> bool:
     on = app_state.switches()
     changed = False
     for app in app_catalog.catalog():
-        if app["group"] != "app" or not app["switch_field"] or not app["workspaces"]:
+        if app["group"] not in ("app", "ui") or not app["switch_field"] or not app["workspaces"]:
             continue
         changed = _set_hidden(app, 0 if on.get(app["key"]) else 1) or changed
     return sync_rail_icons() or changed

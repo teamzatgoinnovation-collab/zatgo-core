@@ -75,24 +75,16 @@ class TestCoreSidebar(IntegrationTestCase):
         for doctype in APP_SETTINGS:
             self.assertNotIn(doctype, linked, f"{doctype} belongs to its app's sidebar")
 
-    def test_switch_only_apps_are_general_settings_that_open_the_hub(self) -> None:
-        """The theme, language switcher and VanSaleX web have no page of their own: listed while on, in General
-        Settings, ahead of the hub itself (Frappe highlights the last item whose path matches)."""
-        self._switch()
+    def test_apps_are_not_general_settings_entries_the_hub_is_first(self) -> None:
+        """Desk theme, language switcher and VanSaleX web are apps with their own sidebar now; General Settings
+        holds only the hub (where every app is switched on or off) and the platform shortcuts."""
         names = {"ZatGo Desk Theme", "ZatGo Language Switcher", "ZatGo VanSaleX Web"}
-        self.assertFalse({r["label"] for r in _general()} & names)
-        for field, label in (
-            ("enable_saas_theme", "ZatGo Desk Theme"),
-            ("enable_language_switcher", "ZatGo Language Switcher"),
-            ("enable_vansalex_web", "ZatGo VanSaleX Web"),
-        ):
+        for field in ("enable_saas_theme", "enable_language_switcher", "enable_vansalex_web"):
             self._switch(**{field: 1})
             general = _general()
-            row = next((r for r in general if r["label"] == label), None)
-            self.assertIsNotNone(row, label)
-            self.assertEqual((row["child"], row["link_type"], row["link_to"]), (1, "Page", core_sidebar.HUB_PAGE))
-            hub_at = max(i for i, r in enumerate(general) if r["link_to"] == core_sidebar.HUB_PAGE)
-            self.assertEqual(general[hub_at]["label"], core_sidebar.HUB_LABEL, "the hub must be the last entry that opens the hub")
+            self.assertFalse({r["label"] for r in general} & names)
+            self.assertEqual(general[0]["link_to"], core_sidebar.HUB_PAGE)
+            self.assertEqual(general[0]["label"], core_sidebar.HUB_LABEL)
 
     def test_general_settings_have_the_hub_and_the_platform_shortcuts(self) -> None:
         rows = _general()

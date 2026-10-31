@@ -1,10 +1,9 @@
 """The "ZatGo" Desk sidebar, rebuilt from what this site has switched on.
 
 Only **General Settings** -- the platform's settings. The apps are not here: each has its own sidebar
-(services/app_sidebar.py) and is opened from the ZatGo folder of the Apps screen (`events/boot.py`). General Settings: the switch-only apps (Desk theme, language switcher, VanSaleX
-  web), which open the App Settings Hub where their switch lives, then the hub itself (after them: Frappe highlights
-  the last item whose path matches the open page), then the shortcuts of workspace/zatgo/zatgo.json (minus any
-  app's own settings, which are in that app's sidebar).
+(services/app_sidebar.py) and is opened from the ZatGo folder of the Apps screen (`events/boot.py`). General Settings:
+the App Settings Hub first (where every app is switched on or off), then the shortcuts of workspace/zatgo/zatgo.json
+(minus any app's own settings, which are in that app's sidebar).
 
 A new sub-app (its `<module>/app_manifest.py`, services/app_catalog.py) or industry shows up here with nothing
 else to edit. Apps switched off are left out; their data is untouched. Frappe's sidebar nests one level only:
@@ -28,12 +27,11 @@ NAME = "ZatGo"
 ICON = "setting"
 GENERAL_LABEL = "General Settings"
 HUB_PAGE = "zg-app-hub"
-HUB_LABEL = "ZatGo Apps"
+HUB_LABEL = "Apps (on / off)"
 
-# Catalog groups that are apps (an entry under "Apps"). "ui" (ZatGo Desk Theme, Language Switcher, VanSaleX Web)
-# has no page of its own, only a per-site switch: listed under General Settings while on, opening the hub.
-APP_GROUPS = ("app", "bundled")
-SWITCH_GROUPS = ("ui",)
+# Catalog groups that are apps: each opens in the ZatGo popup while it is on, with its own sidebar. "ui" (Desk Theme,
+# Language Switcher, VanSaleX Web) are apps too; only their on/off switch lives in General Settings (the hub).
+APP_GROUPS = ("app", "bundled", "ui")
 
 
 def _section(label: str) -> dict:
@@ -56,12 +54,6 @@ def _link(label: str, link_type: str, link_to: str, icon: str, child: int = 1) -
     }
 
 
-def _is_on(app: dict, switches: dict[str, bool]) -> bool:
-    if app["switch_field"]:
-        return bool(switches.get(app["key"]))
-    return True
-
-
 def _owned_settings() -> set[str]:
     """Settings DocTypes that belong to an app: they are tabs of its page, not General Settings entries."""
     return {
@@ -74,7 +66,7 @@ def _owned_settings() -> set[str]:
 
 def general_links() -> list[dict]:
     """The App Settings Hub, the shortcuts of workspace/zatgo/zatgo.json (kind-aware: a Page shortcut stays a
-    Page link) minus any app's own settings, then the switch-only apps that are on."""
+    Page link) minus any app's own settings. The hub comes first: it is where an app is switched on or off."""
     from zatgo_core.services.app_state import switches
 
     owned = _owned_settings()
@@ -92,17 +84,7 @@ def general_links() -> list[dict]:
     if not hub and frappe.db.exists("Page", HUB_PAGE):  # even if the workspace file doesn't list it
         hub = [_link(HUB_LABEL, "Page", HUB_PAGE, "setting")]
     rest = [row for row in links if row["link_to"] != HUB_PAGE]
-    # The switch-only apps open the hub too. Frappe highlights the LAST sidebar item whose path matches the
-    # open page, so the hub entry must come after them or the hub would show "ZatGo Desk Theme" as active.
-    switch_only: list[dict] = []
-    if hub:
-        on = switches()
-        switch_only = [
-            _link(app["label"], "Page", HUB_PAGE, app["icon"])
-            for app in app_catalog.catalog()
-            if app["group"] in SWITCH_GROUPS and _is_on(app, on)
-        ]
-    return switch_only + hub + rest
+    return hub + rest
 
 
 def desired_items() -> list[dict]:

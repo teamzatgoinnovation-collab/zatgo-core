@@ -165,3 +165,33 @@ class TestPOSType(IndustryTestBase):
     def test_an_unavailable_industry_refuses_the_type(self) -> None:
         with patch("zatgo_core.industries.gate.validate_selection", side_effect=frappe.ValidationError("no stock module")):
             self.assertRaises(frappe.ValidationError, self._choose, "Supermarket")
+
+    def test_cafe_and_general_retail_run_on_the_two_engines_with_their_own_vertical(self) -> None:
+        _set_industries("restaurant", "supermarket")
+        for chosen, mode, vertical in (
+            ("Restaurant", "restaurant", "restaurant"),
+            ("Cafe", "restaurant", "cafe"),
+            ("Supermarket", "retail", "supermarket"),
+            ("General Retail", "retail", "general"),
+        ):
+            self._store_type(chosen)
+            self.assertEqual((pos_settings.pos_mode(), pos_settings.pos_vertical()), (mode, vertical), chosen)
+            self.assertEqual(pos_settings.effective()["pos_vertical"], vertical)
+
+    def test_choosing_cafe_switches_the_restaurant_industry_on(self) -> None:
+        self._choose("Cafe")
+        self.assertIn("restaurant", gate_keys())
+        self.assertEqual(pos_settings.pos_vertical(), "cafe")
+
+    def test_pharmacy_and_electrical_are_listed_but_cannot_be_chosen(self) -> None:
+        options = frappe.get_meta(pos_settings.SETTINGS).get_field("pos_type").options.split("\n")
+        for coming in pos_settings.COMING_SOON:
+            self.assertIn(coming, options)
+            self.assertRaises(frappe.ValidationError, self._choose, coming)
+        self.assertIsNone(pos_settings._chosen_type())
+
+    def test_with_no_choice_the_vertical_follows_the_industries(self) -> None:
+        _set_industries("supermarket")
+        self.assertEqual(pos_settings.pos_vertical(), "supermarket")
+        _set_industries()
+        self.assertIsNone(pos_settings.pos_vertical())

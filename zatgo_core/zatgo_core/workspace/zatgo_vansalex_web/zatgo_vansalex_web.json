@@ -1,0 +1,80 @@
+{
+  "app": "zatgo_core",
+  "charts": [],
+  "content": "[{\"id\": \"hzatgo_va\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo VanSaleX Web</b></span>\", \"col\": 12}}, {\"id\": \"s0zatgo_\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"VanSaleX Settings\", \"col\": 3}}, {\"id\": \"spzatgo_\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"c0zatgo_\", \"type\": \"card\", \"data\": {\"card_name\": \"Web app\", \"col\": 4}}]",
+  "creation": "2026-10-31 00:00:00.000000",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": "",
+  "hide_custom": 0,
+  "icon": "link",
+  "idx": 0,
+  "is_hidden": 0,
+  "label": "ZatGo VanSaleX Web",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Web app",
+      "link_count": 2,
+      "onboard": 0,
+      "type": "Card Break"
+    },
+    {
+      "dependencies": "",
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "VanSaleX Settings",
+      "link_count": 0,
+      "link_to": "VanSaleX Settings",
+      "link_type": "DocType",
+      "onboard": 0,
+      "type": "Link"
+    },
+    {
+      "dependencies": "",
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "ZatGo Apps",
+      "link_count": 0,
+      "link_to": "zg-app-hub",
+      "link_type": "Page",
+      "onboard": 0,
+      "type": "Link"
+    }
+  ],
+  "modified": "2026-10-31 15:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZatGo VanSaleX Web",
+  "number_cards": [],
+  "owner": "Administrator",
+  "parent_page": "",
+  "public": 1,
+  "quick_lists": [],
+  "restrict_to_domain": "",
+  "roles": [
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "ZG Application Admin"
+    },
+    {
+      "role": "ZG Company Admin"
+    }
+  ],
+  "sequence_id": 35.0,
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "",
+      "label": "VanSaleX Settings",
+      "link_to": "VanSaleX Settings",
+      "type": "DocType"
+    }
+  ],
+  "title": "ZatGo VanSaleX Web",
+  "type": "Workspace"
+}

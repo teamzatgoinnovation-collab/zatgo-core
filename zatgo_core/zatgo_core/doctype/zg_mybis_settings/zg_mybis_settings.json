@@ -1,0 +1,94 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-31 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "general_tab",
+    "defaults_section",
+    "default_company",
+    "default_preset",
+    "mybis_help"
+  ],
+  "fields": [
+    {
+      "fieldname": "general_tab",
+      "fieldtype": "Tab Break",
+      "label": "General"
+    },
+    {
+      "fieldname": "defaults_section",
+      "fieldtype": "Section Break",
+      "label": "Dashboard defaults"
+    },
+    {
+      "fieldname": "default_company",
+      "fieldtype": "Link",
+      "label": "Default Company",
+      "options": "Company",
+      "description": "The company the MyBis app opens on, when the user has no company of their own."
+    },
+    {
+      "fieldname": "default_preset",
+      "fieldtype": "Select",
+      "label": "Default Period",
+      "options": "today\nyesterday\nthis_week\nlast_week\nthis_month\nlast_month\nthis_quarter\nlast_quarter\nthis_year\nlast_year",
+      "default": "this_month",
+      "description": "The period the MyBis dashboard opens on."
+    },
+    {
+      "fieldname": "mybis_help",
+      "fieldtype": "HTML",
+      "options": "MyBis is read-only: it never changes accounting or stock data. It is switched on or off in <a href=\"/desk/zg-app-hub\">ZatGo Apps</a>."
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-31 15:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG MyBis Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

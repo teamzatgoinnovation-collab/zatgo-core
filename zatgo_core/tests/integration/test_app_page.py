@@ -21,6 +21,10 @@ APP_FORMS = {
     "Tracker Settings": ["settings_tab"],
     "Space Settings": ["settings_tab"],
     "ZG System Settings": ["general_tab", "erp_tab", "apps_tab", "industries_tab"],
+    "ZG Theme Settings": ["brand_tab", "appearance_tab"],
+    "ZG Language Settings": ["general_tab"],
+    "ZG MyBis Settings": ["general_tab"],
+    "ZG POS Settings": ["general_tab", "payments_tab", "receipt_tab"],
 }
 
 
@@ -114,36 +118,52 @@ class TestAppPage(IntegrationTestCase):
         boot.boot_session(bootinfo)
         self.assertEqual(bootinfo.zatgo_core["app_routes"]["zg-app/zatgo-vansalex"], "zatgo-vansalex")
 
-    def test_the_folder_lists_every_app_and_sends_apps_without_a_sidebar_to_the_hub(self) -> None:
-        def folder(sidebars: dict, can_switch: bool = True) -> dict:
+    def test_the_folder_lists_only_apps_that_are_on_and_open_to_the_user(self) -> None:
+        def folder(sidebars: dict, on: set[str]) -> dict:
             info = frappe._dict(
                 workspace_sidebar_item=sidebars,
                 desktop_icons=[frappe._dict(label="ZatGo", icon_type="Folder")],
             )
-            with patch("zatgo_core.services.app_authority.can_switch", return_value=can_switch):
+            with patch.object(app_page, "is_enabled", side_effect=lambda app: app["key"] in on):
                 boot._zatgo_folder_children(info)
             return {i["label"]: i["link"] for i in info.desktop_icons if i.get("parent_icon") == "ZatGo"}
 
-        mine = {
-            "zatgo vansalex": {"items": [{"type": "Link", "link_type": "Workspace", "link_to": "ZatGo VanSaleX"}]},
+        def link(name: str) -> dict:
+            return {"items": [{"type": "Link", "link_type": "Workspace", "link_to": name}]}
+
+        sidebars = {
+            "zatgo vansalex": link("ZatGo VanSaleX"),
+            "zatgo desk theme": link("ZatGo Desk Theme"),
+            "zatgo tracker": link("ZatGo Tracker"),
             "zatgo": {"items": [{"type": "Link", "link_type": "Page", "link_to": "zg-app-hub"}]},
         }
-        hub = "/desk/zg-app-hub"
-        admin = folder(mine)
-        self.assertEqual(admin["ZatGo VanSaleX"], "/desk/zatgo-vansalex")
-        self.assertEqual(admin["General Settings"], hub)
-        # Apps that have no sidebar to open (off, switch-only, no Desk pages) go to the hub.
-        for label in (
-            "ZatGo AI", "ZatGo Tracker", "ZatGo Space", "ZatGo MyBis", "ZatGo POS",
-            "ZatGo Desk Theme", "ZatGo Language Switcher", "ZatGo VanSaleX Web",
-        ):
-            self.assertEqual(admin.get(label), hub, label)
-        # A user who cannot switch apps sees only the apps whose sidebar they can open.
         self.assertEqual(
-            folder(mine, can_switch=False),
-            {"ZatGo VanSaleX": "/desk/zatgo-vansalex", "General Settings": hub},
+            folder(sidebars, {"vansalex", "saas_theme"}),
+            {
+                "ZatGo VanSaleX": "/desk/zatgo-vansalex",
+                "ZatGo Desk Theme": "/desk/zatgo-desk-theme",
+                "General Settings": "/desk/zg-app-hub",
+            },
         )
-        self.assertEqual(folder({}, can_switch=False), {})
+        # Tracker has a sidebar but is off: not listed. An app that is on with no sidebar for this user: not listed.
+        self.assertEqual(folder({"zatgo vansalex": sidebars["zatgo vansalex"]}, {"vansalex", "chat_ai"}), {"ZatGo VanSaleX": "/desk/zatgo-vansalex"})
+        self.assertEqual(folder({}, set()), {})
+
+    def test_every_switchable_app_gets_a_sidebar_with_its_settings_once_on(self) -> None:
+        """Desk theme, language switcher, MyBis and VanSaleX web are apps like the rest: Overview + their settings."""
+        wanted = {
+            "ZatGo Desk Theme": "ZG Theme Settings",
+            "ZatGo Language Switcher": "ZG Language Settings",
+            "ZatGo MyBis": "ZG MyBis Settings",
+            "ZatGo VanSaleX Web": None,
+        }
+        for label, settings in wanted.items():
+            app = next(a for a in app_page.apps() if a["label"] == label)
+            items = app_sidebar.desired_items(app)
+            self.assertEqual(items[0]["label"], "Overview", label)
+            self.assertEqual(items[0]["link_to"], label, label)
+            if settings:
+                self.assertIn(settings, {i.get("link_to") for i in items}, label)
 
     # -- settings forms ----------------------------------------------------------------------------------
 

@@ -1,0 +1,110 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-31 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "brand_tab",
+    "brand_section",
+    "brand_name",
+    "company_logo",
+    "appearance_tab",
+    "appearance_section",
+    "theme",
+    "theme_help"
+  ],
+  "fields": [
+    {
+      "fieldname": "brand_tab",
+      "fieldtype": "Tab Break",
+      "label": "Brand"
+    },
+    {
+      "fieldname": "brand_section",
+      "fieldtype": "Section Break",
+      "label": "Brand"
+    },
+    {
+      "fieldname": "brand_name",
+      "fieldtype": "Data",
+      "label": "Brand Name",
+      "default": "ZatGo"
+    },
+    {
+      "fieldname": "company_logo",
+      "fieldtype": "Attach Image",
+      "label": "Company Logo"
+    },
+    {
+      "fieldname": "appearance_tab",
+      "fieldtype": "Tab Break",
+      "label": "Appearance"
+    },
+    {
+      "fieldname": "appearance_section",
+      "fieldtype": "Section Break",
+      "label": "Appearance"
+    },
+    {
+      "fieldname": "theme",
+      "fieldtype": "Select",
+      "label": "Theme",
+      "options": "Light\nDark\nSystem",
+      "default": "System"
+    },
+    {
+      "fieldname": "theme_help",
+      "fieldtype": "HTML",
+      "options": "The Desk theme and login page are switched on or off in <a href=\"/desk/zg-app-hub\">ZatGo Apps</a>."
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-31 15:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Theme Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

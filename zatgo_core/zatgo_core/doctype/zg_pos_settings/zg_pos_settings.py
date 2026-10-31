@@ -27,6 +27,8 @@ class ZGPOSSettings(Document):
             frappe.throw("Default Mode of Payment must be an enabled Mode of Payment.")
 
     def _validate_pos_type(self) -> None:
+        if self.pos_type in pos_settings.COMING_SOON:
+            frappe.throw(f"{self.pos_type.split(' (')[0]} is not available yet.")
         # No choice stays "no choice" (the industries keep deciding); only a picked type is stored.
         before = self.get_doc_before_save()
         was = (before.pos_type if before else None) or pos_settings.derived_type()

@@ -11,6 +11,7 @@ from zatgo_core.cache.manager import cache_manager
 from zatgo_core.constants.settings import CACHE_KEYS, DOCTYPES, SINGLE_SETTINGS
 from zatgo_core.permissions.guards import assert_can_write_settings, assert_can_read_settings
 from zatgo_core.repositories.settings_repository import SettingsRepository
+from zatgo_core.services import ui_settings
 from zatgo_core.utils.logging import get_logger
 
 logger = get_logger("system")
@@ -22,10 +23,12 @@ class SettingsService:
     @staticmethod
     def get_system_settings() -> dict[str, Any]:
         assert_can_read_settings("system")
-        return cache_manager.get_or_set(
+        data = cache_manager.get_or_set(
             CACHE_KEYS["SYSTEM"],
             lambda: SettingsRepository.get_single(DOCTYPES["SYSTEM_SETTINGS"]).as_dict(),
         )
+        # Brand, theme and language belong to the Desk Theme / Language Switcher apps now (same keys as before).
+        return {**data, **ui_settings.values()}
 
     @staticmethod
     def get_company_settings(company: str) -> dict[str, Any] | None:

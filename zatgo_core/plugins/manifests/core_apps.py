@@ -48,6 +48,8 @@ APPS = (
         "icon": "palette",
         "description": "Modern Desk theme and login page.",
         "switch_field": "enable_saas_theme",
+        "workspaces": ("ZatGo Desk Theme",),
+        "settings": (("ZG Theme Settings", "Theme Settings"),),
     },
     {
         "key": "language_switcher",
@@ -56,6 +58,8 @@ APPS = (
         "icon": "globe",
         "description": "English / Arabic switcher.",
         "switch_field": "enable_language_switcher",
+        "workspaces": ("ZatGo Language Switcher",),
+        "settings": (("ZG Language Settings", "Language Settings"),),
     },
     {
         "key": "vansalex_web",
@@ -65,6 +69,7 @@ APPS = (
         "description": "Serves the VanSaleX web build at /vansalex.",
         "switch_field": "enable_vansalex_web",
         "requires": ("vansalex",),
+        "workspaces": ("ZatGo VanSaleX Web",),
     },
     {
         "key": "zatgo_pos",

@@ -1,0 +1,85 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "creation": "2026-10-31 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "general_tab",
+    "language_section",
+    "language",
+    "language_help"
+  ],
+  "fields": [
+    {
+      "fieldname": "general_tab",
+      "fieldtype": "Tab Break",
+      "label": "General"
+    },
+    {
+      "fieldname": "language_section",
+      "fieldtype": "Section Break",
+      "label": "Language"
+    },
+    {
+      "fieldname": "language",
+      "fieldtype": "Link",
+      "label": "Default Language",
+      "options": "Language",
+      "description": "The site's default language (formerly on ZG System Settings)."
+    },
+    {
+      "fieldname": "language_help",
+      "fieldtype": "HTML",
+      "options": "The switcher offers English and Arabic; each user's choice is stored on their own User. It is switched on or off in <a href=\"/desk/zg-app-hub\">ZatGo Apps</a>."
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "issingle": 1,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-10-31 15:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZG Language Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Application Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    },
+    {
+      "role": "ZG Company Admin",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 0,
+      "print": 1,
+      "email": 0,
+      "export": 1,
+      "share": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

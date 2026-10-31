@@ -1,0 +1,69 @@
+{
+  "app": "zatgo_core",
+  "charts": [],
+  "content": "[{\"id\": \"hzatgo_de\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>ZatGo Desk Theme</b></span>\", \"col\": 12}}, {\"id\": \"s0zatgo_\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Theme Settings\", \"col\": 3}}, {\"id\": \"spzatgo_\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"c0zatgo_\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 4}}]",
+  "creation": "2026-10-31 00:00:00.000000",
+  "custom_blocks": [],
+  "docstatus": 0,
+  "doctype": "Workspace",
+  "for_user": "",
+  "hide_custom": 0,
+  "icon": "palette",
+  "idx": 0,
+  "is_hidden": 0,
+  "label": "ZatGo Desk Theme",
+  "links": [
+    {
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Setup",
+      "link_count": 1,
+      "onboard": 0,
+      "type": "Card Break"
+    },
+    {
+      "dependencies": "",
+      "hidden": 0,
+      "is_query_report": 0,
+      "label": "Theme Settings",
+      "link_count": 0,
+      "link_to": "ZG Theme Settings",
+      "link_type": "DocType",
+      "onboard": 0,
+      "type": "Link"
+    }
+  ],
+  "modified": "2026-10-31 15:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "ZatGo Core",
+  "name": "ZatGo Desk Theme",
+  "number_cards": [],
+  "owner": "Administrator",
+  "parent_page": "",
+  "public": 1,
+  "quick_lists": [],
+  "restrict_to_domain": "",
+  "roles": [
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "ZG Application Admin"
+    },
+    {
+      "role": "ZG Company Admin"
+    }
+  ],
+  "sequence_id": 32.0,
+  "shortcuts": [
+    {
+      "color": "Blue",
+      "doc_view": "",
+      "label": "Theme Settings",
+      "link_to": "ZG Theme Settings",
+      "type": "DocType"
+    }
+  ],
+  "title": "ZatGo Desk Theme",
+  "type": "Workspace"
+}

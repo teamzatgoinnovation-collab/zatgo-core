@@ -1,7 +1,7 @@
 """The apps behind the ZatGo folder of the Apps screen, and how Desk URLs map to them.
 
-An app is what the folder lists: a catalog app of group "app" / "bundled" (VanSaleX, POS, ZatGo AI, Tracker, Space) or
-an industry (Restaurant, Gym ...). This module knows the list (`apps()`), whether one is on, what is wrong with its
+An app is what the folder lists: a catalog app of group "app" / "bundled" / "ui" (VanSaleX, POS, ZatGo AI, Tracker,
+Space, MyBis, Desk Theme, Language Switcher, VanSaleX Web) or an industry (Restaurant, Gym ...). This module knows the list (`apps()`), whether one is on, what is wrong with its
 setup (`warnings`), the Tab Breaks of its settings forms (`tab_breaks`, the Settings items of its sidebar,
 services/app_sidebar.py) and the old Desk URLs that now open its Workspace (`old_url_redirects`).
 """

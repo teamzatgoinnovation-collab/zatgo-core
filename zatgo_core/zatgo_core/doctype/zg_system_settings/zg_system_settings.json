@@ -68,19 +68,25 @@
       "fieldname": "brand_name",
       "fieldtype": "Data",
       "label": "Brand Name",
-      "default": "ZatGo"
+      "default": "ZatGo",
+      "hidden": 1,
+      "description": "Moved: now set in the app's own settings (ZG Theme Settings / ZG Language Settings)."
     },
     {
       "fieldname": "company_logo",
       "fieldtype": "Attach Image",
-      "label": "Company Logo"
+      "label": "Company Logo",
+      "hidden": 1,
+      "description": "Moved: now set in the app's own settings (ZG Theme Settings / ZG Language Settings)."
     },
     {
       "fieldname": "theme",
       "fieldtype": "Select",
       "label": "Theme",
       "options": "Light\nDark\nSystem",
-      "default": "System"
+      "default": "System",
+      "hidden": 1,
+      "description": "Moved: now set in the app's own settings (ZG Theme Settings / ZG Language Settings)."
     },
     {
       "fieldname": "column_break_1",
@@ -90,7 +96,9 @@
       "fieldname": "language",
       "fieldtype": "Link",
       "label": "Language",
-      "options": "Language"
+      "options": "Language",
+      "hidden": 1,
+      "description": "Moved: now set in the app's own settings (ZG Theme Settings / ZG Language Settings)."
     },
     {
       "fieldname": "timezone",
@@ -340,7 +348,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-30 12:00:00.000000",
+  "modified": "2026-10-31 15:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG System Settings",
