@@ -3,7 +3,7 @@
 ```text
 zatgo-core/                          # git repo root (the bench clones it as apps/zatgo_core)
 ├── README.md  CLAUDE.md  pyproject.toml  setup.py  MANIFEST.in
-├── docs/                            # this folder; audit_2026-10-23.md is the 2026-10-23 audit
+├── docs/                            # this folder; audit_2026-10-23.md is the 2026-10-23 audit, settings_scope.md the settings scope audit (2026-10-31)
 ├── scripts/                         # build_saas_theme.py, deploy_web_build.sh, self_hosted_ai/
 │                                    # generate_*.py / fix_controllers.py: DESTRUCTIVE, guarded (see developer.md)
 └── zatgo_core/                      # the Python package / Frappe app

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added — settings scope audit
+
+- **`docs/settings_scope.md`**: where every app is configured, at which scope (site / company / branch / user / role / device), who edits it, whether the server enforces it, what the client apps keep on the device, the shared-SDK coverage (334 backend methods; 57 in neither SDK) and the gaps, ordered. Found while testing the POS types: ZG POS Settings other than `pos_type` is served but read by no client and enforced by no server code.
+
 ### Changed — every app owns its settings; the ZatGo popup lists the apps that are on
 
 - **The ZatGo folder lists only apps switched on** (plus General Settings); each opens its own sidebar. **General Settings** starts with *Apps (on / off)* (the hub), where every app is switched on or off. Desk Theme, Language Switcher, VanSaleX Web and MyBis are apps like the rest now, with a Workspace and a sidebar of their own.
