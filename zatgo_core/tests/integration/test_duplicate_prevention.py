@@ -89,11 +89,15 @@ class TestMatching(DuplicateTestCase):
         with self.assertRaises(DuplicateRecordError):
             self.supplier(vat=vat).insert()
 
-    def test_same_item_name_different_code_is_possible(self):  # 2
+    def test_same_item_name_different_code_is_refused(self):  # 2
         name = f"Steel Pipe {_tag()}"
         first = self.item(name=name).insert()
-        second = self.item(name=name)
+        second = self.item(name=name.lower())
         self.assertEqual(self.levels("Item", second.as_dict()).get(first.name), "possible")
+        with self.assertRaises(DuplicateRecordError):  # Item rule: possible matches block (still a possible match, not strong)
+            second.insert()
+        second.flags.zg_duplicate_override = True  # an authorized user can still save it, with a reason
+        second.flags.zg_duplicate_override_reason = "Different supplier grade"
         second.insert()
 
     def test_same_barcode_twice_is_refused(self):  # 1

@@ -19,7 +19,8 @@ def _f(fieldname, kind, role, source=D, child_table="", group=""):
 
 
 DEFAULT_RULES: dict[str, dict] = {
-    "Item": {"display": "item_code,item_group,stock_uom", "fields": [
+    # Same item name = refused too (two "test item"s with different groups were being saved): possible matches block.
+    "Item": {"display": "item_code,item_group,stock_uom", "possible": "Block", "fields": [
         _f("item_code", "Code", U), _f("item_name", "Name", N), _f("barcode", "Code", U, C, "barcodes"),
         _f("supplier_part_no", "Code", S, C, "supplier_items"), _f("default_manufacturer_part_no", "Code", S)]},
     "Customer": {"display": "customer_group,territory,tax_id,mobile_no,email_id", "fields": [
