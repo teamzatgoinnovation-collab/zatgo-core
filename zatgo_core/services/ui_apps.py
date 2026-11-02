@@ -34,6 +34,8 @@ SWITCHER_CSS = "language_switcher/css/language_switcher.css"
 SWITCHER_JS = "language_switcher/js/language_switcher.js"
 IFRS_TOGGLE_JS = "js/ifrs_toggle.js"  # always on: reads the IFRS switch itself
 SIDEBAR_TABS_JS = "js/zg_sidebar_tabs.js"  # always on: lights the sidebar item of the open settings tab
+DUPLICATE_JS = "js/zg_duplicate_lookup.js"  # on with the Duplicate Prevention switch
+DUPLICATE_CSS = "css/zg_duplicate_lookup.css"
 ROUTE_REDIRECTS_JS = "js/zg_route_redirects.js"  # always on: old Desk routes of the apps -> their ZatGo > Apps page
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
@@ -74,6 +76,9 @@ def desk_includes() -> tuple[list[str], list[str]]:
     js.append(asset_url(IFRS_TOGGLE_JS))
     js.append(asset_url(ROUTE_REDIRECTS_JS))
     js.append(asset_url(SIDEBAR_TABS_JS))
+    if on.get("duplicate_prevention"):
+        css.append(asset_url(DUPLICATE_CSS))
+        js.append(asset_url(DUPLICATE_JS))
     if on["saas_theme"]:
         css.append(asset_url(THEME_CSS))
         js.append(asset_url(THEME_JS))

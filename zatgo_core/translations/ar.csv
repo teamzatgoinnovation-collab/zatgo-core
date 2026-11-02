@@ -15,3 +15,21 @@ You do not have access to this app,ليس لديك صلاحية الوصول إ�
 There is no such app,لا يوجد تطبيق بهذا الاسم
 Could not load this app,تعذر تحميل هذا التطبيق
 Open ZatGo Apps,فتح تطبيقات ZatGo
+Duplicate record,سجل مكرر
+Possible duplicate,تكرار محتمل
+A matching {0} already exists.,يوجد {0} مطابق بالفعل.
+A similar {0} may already exist. Please verify before saving.,قد يوجد {0} مشابه. يرجى التحقق قبل الحفظ.
+A matching record that you cannot view ({0} match),يوجد سجل مطابق لا يمكنك عرضه (تطابق {0})
+Open Existing,فتح السجل الموجود
+Use Existing,استخدام السجل الموجود
+Override (authorized),تجاوز (مصرح به)
+Override duplicate prevention,تجاوز منع التكرار
+Register override,تسجيل التجاوز
+Override registered. You can save now.,تم تسجيل التجاوز. يمكنك الحفظ الآن.
+Existing {0} found,تم العثور على {0} موجود
+Existing {0} found — this looks like a duplicate,تم العثور على {0} موجود — يبدو أنه مكرر
+Possible existing {0}. Please verify before saving.,قد يوجد {0} بالفعل. يرجى التحقق قبل الحفظ.
+Similar {0} found,تم العثور على {0} مشابه
+A similar {0} already exists ({1}). Save anyway?,يوجد {0} مشابه بالفعل ({1}). هل تريد الحفظ على أي حال؟
+matched,المطابق
+A record with the same identifier was just created by another request. Please refresh and check before saving.,تم إنشاء سجل بنفس المعرّف للتو بواسطة طلب آخر. يرجى التحديث والتحقق قبل الحفظ.

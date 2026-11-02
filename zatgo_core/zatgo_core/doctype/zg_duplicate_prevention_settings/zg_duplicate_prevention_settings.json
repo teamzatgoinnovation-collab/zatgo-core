@@ -1,0 +1,144 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_tab",
+  "enabled_section",
+  "enabled",
+  "live_lookup",
+  "fuzzy_threshold",
+  "column_break_limits",
+  "result_limit",
+  "scan_limit",
+  "overrides_tab",
+  "override_section",
+  "override_roles",
+  "override_needs_reason",
+  "rules_tab",
+  "rules_help"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_tab",
+   "fieldtype": "Tab Break",
+   "label": "General"
+  },
+  {
+   "fieldname": "enabled_section",
+   "fieldtype": "Section Break",
+   "label": "Behaviour"
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable Duplicate Prevention",
+   "default": "1",
+   "description": "Master switch. Off: nothing is checked or blocked."
+  },
+  {
+   "fieldname": "live_lookup",
+   "fieldtype": "Check",
+   "label": "Enable Live Lookup",
+   "default": "1",
+   "description": "Show matching records while a new record is being typed (Desk)."
+  },
+  {
+   "fieldname": "fuzzy_threshold",
+   "fieldtype": "Percent",
+   "label": "Fuzzy Name Threshold",
+   "default": "85",
+   "description": "Names at least this similar are suggested."
+  },
+  {
+   "fieldname": "column_break_limits",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "result_limit",
+   "fieldtype": "Int",
+   "label": "Results per Lookup",
+   "default": "8",
+   "description": "1 to 25."
+  },
+  {
+   "fieldname": "scan_limit",
+   "fieldtype": "Int",
+   "label": "Formatted-Value Scan Limit (rows)",
+   "default": "50000",
+   "description": "Phone/ID values stored with spaces or dashes are matched by a scan; skipped on tables bigger than this."
+  },
+  {
+   "fieldname": "overrides_tab",
+   "fieldtype": "Tab Break",
+   "label": "Overrides"
+  },
+  {
+   "fieldname": "override_section",
+   "fieldtype": "Section Break",
+   "label": "Authorized Override"
+  },
+  {
+   "fieldname": "override_roles",
+   "fieldtype": "Table",
+   "label": "Override Roles",
+   "options": "ZG Duplicate Role",
+   "description": "Users with one of these roles may save over a blocking match (logged in ZG Duplicate Override Log)."
+  },
+  {
+   "fieldname": "override_needs_reason",
+   "fieldtype": "Check",
+   "label": "Reason Required",
+   "default": "1"
+  },
+  {
+   "fieldname": "rules_tab",
+   "fieldtype": "Tab Break",
+   "label": "Rules"
+  },
+  {
+   "fieldname": "rules_help",
+   "fieldtype": "HTML",
+   "label": "Rules",
+   "options": "<p>Rules are kept per DocType in <a href='/desk/zg-duplicate-rule'>ZG Duplicate Rule</a>. Defaults are created on migrate for the supported DocTypes.</p>"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "ZG Duplicate Prevention Settings",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "issingle": 1,
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  },
+  {
+   "role": "ZG Application Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  }
+ ]
+}

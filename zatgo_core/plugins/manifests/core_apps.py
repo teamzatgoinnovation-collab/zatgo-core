@@ -86,6 +86,23 @@ APPS = (
         "api_prefixes": ("zatgo_core.api.v1.resto_pos.", "zatgo_core.api.v1.retail_pos."),
     },
     {
+        "key": "duplicate_prevention",
+        "label": "Duplicate Prevention",
+        "group": "app",
+        "icon": "duplicate",
+        "description": "Stops duplicate Items, Customers, Suppliers and other masters: blocks strong matches, warns on possible ones, live lookup while typing and smart Link search.",
+        # On everywhere it ships (a site with no stored value counts as on); rules are seeded on migrate.
+        "switch_field": "enable_duplicate_prevention",
+        "default_on": True,
+        "settings": (
+            ("ZG Duplicate Prevention Settings", "Settings"),
+            ("ZG Duplicate Rule", "Rules"),
+            ("ZG Duplicate Override Log", "Override Log"),
+        ),
+        # Off: the lookup API answers 404 (Link search and saves are unaffected -- the hooks return at once).
+        "api_prefixes": ("zatgo_core.api.v1.duplicate.",),
+    },
+    {
         "key": "industries",
         "label": "Industries",
         "group": "industries",

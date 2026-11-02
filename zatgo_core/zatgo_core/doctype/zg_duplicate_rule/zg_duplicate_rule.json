@@ -1,0 +1,165 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "general_tab",
+  "ref_doctype",
+  "enabled",
+  "rule_type",
+  "live_lookup",
+  "column_break_actions",
+  "strong_action",
+  "possible_action",
+  "fuzzy_suggest",
+  "fields_section",
+  "fields",
+  "display_fields",
+  "overrides_tab",
+  "override_roles"
+ ],
+ "fields": [
+  {
+   "fieldname": "general_tab",
+   "fieldtype": "Tab Break",
+   "label": "Rule"
+  },
+  {
+   "fieldname": "ref_doctype",
+   "fieldtype": "Link",
+   "label": "DocType",
+   "options": "DocType",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "rule_type",
+   "fieldtype": "Select",
+   "label": "Rule Type",
+   "options": "Master\nTransaction",
+   "default": "Master",
+   "in_list_view": 1,
+   "description": "Transaction rules ignore cancelled documents."
+  },
+  {
+   "fieldname": "live_lookup",
+   "fieldtype": "Check",
+   "label": "Live Lookup while Typing",
+   "default": "1"
+  },
+  {
+   "fieldname": "column_break_actions",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "strong_action",
+   "fieldtype": "Select",
+   "label": "Strong Match",
+   "options": "Block\nWarn",
+   "default": "Block",
+   "description": "Exact unique identifier, or several identifiers matching."
+  },
+  {
+   "fieldname": "possible_action",
+   "fieldtype": "Select",
+   "label": "Possible Match",
+   "options": "Warn\nBlock\nIgnore",
+   "default": "Warn",
+   "description": "Same name only, or a phone/email shared by several records."
+  },
+  {
+   "fieldname": "fuzzy_suggest",
+   "fieldtype": "Check",
+   "label": "Suggest Similar Names",
+   "default": "1",
+   "description": "Fuzzy name similarity is only ever a suggestion, never blocks."
+  },
+  {
+   "fieldname": "fields_section",
+   "fieldtype": "Section Break",
+   "label": "Identifying Fields"
+  },
+  {
+   "fieldname": "fields",
+   "fieldtype": "Table",
+   "label": "Fields",
+   "options": "ZG Duplicate Rule Field"
+  },
+  {
+   "fieldname": "display_fields",
+   "fieldtype": "Small Text",
+   "label": "Result Details",
+   "description": "Comma-separated fieldnames shown for each matching record (besides the ID and title). Only fields the viewer may read are shown."
+  },
+  {
+   "fieldname": "overrides_tab",
+   "fieldtype": "Tab Break",
+   "label": "Overrides"
+  },
+  {
+   "fieldname": "override_roles",
+   "fieldtype": "Table",
+   "label": "Override Roles",
+   "options": "ZG Duplicate Role",
+   "description": "Empty: the roles in ZG Duplicate Prevention Settings."
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "ZG Duplicate Rule",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "autoname": "field:ref_doctype",
+ "title_field": "ref_doctype",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  },
+  {
+   "role": "ZG Application Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  },
+  {
+   "role": "ZG Company Admin",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "print": 1,
+   "email": 0,
+   "export": 1,
+   "share": 0
+  }
+ ],
+ "track_changes": 1
+}

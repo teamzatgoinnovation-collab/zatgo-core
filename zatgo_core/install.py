@@ -38,6 +38,12 @@ def after_install() -> None:
     seed_number_series()
     seed_feature_flags()
     try:
+        from zatgo_core.services.duplicate.defaults import seed_defaults
+
+        seed_defaults()  # fresh sites skip patches; existing ones get them from patches/v0_5_0
+    except Exception:
+        logger.exception("Duplicate prevention rule seed failed")
+    try:
         ensure_custom_fields()
     except Exception:
         logger.exception("Custom field seed failed")

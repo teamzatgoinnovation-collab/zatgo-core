@@ -44,6 +44,7 @@
     "enable_vansalex",
     "enable_zatgo_pos",
     "enable_mybis",
+    "enable_duplicate_prevention",
     "bundled_apps_section",
     "enable_chat_ai",
     "enable_tracker",
@@ -289,6 +290,13 @@
       "description": "The MyBis management / business-intelligence API (read-only). Off: its methods answer 404."
     },
     {
+      "default": "1",
+      "fieldname": "enable_duplicate_prevention",
+      "fieldtype": "Check",
+      "label": "Enable Duplicate Prevention",
+      "description": "Blocks / warns about duplicate Items, Customers, Suppliers and other masters, with live lookup and smart Link search. On unless switched off."
+    },
+    {
       "fieldname": "bundled_apps_section",
       "fieldtype": "Section Break",
       "label": "Bundled Apps",
@@ -348,7 +356,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-31 15:00:00.000000",
+  "modified": "2026-11-02 09:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG System Settings",

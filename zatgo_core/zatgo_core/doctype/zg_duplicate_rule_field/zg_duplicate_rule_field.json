@@ -1,0 +1,97 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-02 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "fieldname",
+  "kind",
+  "match_role",
+  "source",
+  "child_table",
+  "match_group",
+  "show_in_results",
+  "excluded"
+ ],
+ "fields": [
+  {
+   "fieldname": "fieldname",
+   "fieldtype": "Data",
+   "label": "Field",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Fieldname on the DocType (or in the child table below)."
+  },
+  {
+   "fieldname": "kind",
+   "fieldtype": "Select",
+   "label": "Kind",
+   "options": "Name\nEmail\nPhone\nTax ID\nCode\nText",
+   "default": "Text",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Decides how values are normalised before comparing."
+  },
+  {
+   "fieldname": "match_role",
+   "fieldtype": "Select",
+   "label": "Match Role",
+   "options": "Unique Identifier\nName\nShared",
+   "default": "Unique Identifier",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Unique Identifier: an exact match is a strong match. Name: a match alone is only possible. Shared: phone/email that legitimate records may share."
+  },
+  {
+   "fieldname": "source",
+   "fieldtype": "Select",
+   "label": "Source",
+   "options": "Document\nChild Table\nLinked Contact",
+   "default": "Document",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Linked Contact: also looks at the Contacts linked to Customers/Suppliers."
+  },
+  {
+   "fieldname": "child_table",
+   "fieldtype": "Data",
+   "label": "Child Table",
+   "depends_on": "eval:doc.source=='Child Table'",
+   "description": "Table fieldname on the DocType, e.g. barcodes."
+  },
+  {
+   "fieldname": "match_group",
+   "fieldtype": "Data",
+   "label": "Group",
+   "description": "Fields sharing a group must ALL match to count as one identifier (e.g. Supplier + Supplier Invoice No)."
+  },
+  {
+   "fieldname": "show_in_results",
+   "fieldtype": "Check",
+   "label": "Show in Results",
+   "default": "1"
+  },
+  {
+   "fieldname": "excluded",
+   "fieldtype": "Check",
+   "label": "Excluded",
+   "description": "Kept in the rule but ignored while matching."
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-02 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "ZG Duplicate Rule Field",
+ "owner": "Administrator",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1,
+ "editable_grid": 1
+}

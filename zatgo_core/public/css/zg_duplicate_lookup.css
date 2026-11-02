@@ -1,0 +1,25 @@
+/* Duplicate Prevention panel (public/js/zg_duplicate_lookup.js). Uses the ZatGo tokens when the SaaS theme is
+   on, Frappe's own alert variables otherwise. */
+.zg-dup {
+	margin: var(--zg-space-2, 8px) 0 var(--zg-space-3, 12px);
+	padding: var(--zg-space-3, 12px);
+	border: 1px solid var(--zg-info-fg, var(--alert-text-info, #2490ef));
+	border-left-width: 4px;
+	border-radius: var(--zg-radius-md, 8px);
+	background: var(--zg-info-bg, var(--alert-bg-info, #e8f4fd));
+	color: var(--text-color);
+	font-size: var(--text-sm, 13px);
+}
+.zg-dup--possible { background: var(--zg-warning-bg, var(--alert-bg-warning, #fff8e6)); border-color: var(--zg-warning-fg, var(--alert-text-warning, #b7791f)); }
+.zg-dup--strong { background: var(--zg-danger-bg, var(--alert-bg-danger, #fdecea)); border-color: var(--zg-danger-fg, var(--alert-text-danger, #e03636)); }
+.zg-dup__title { font-weight: 600; margin-bottom: var(--zg-space-2, 8px); }
+.zg-dup__list { list-style: none; margin: 0; padding: 0; }
+.zg-dup__item { padding: var(--zg-space-2, 8px) 0; border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08)); }
+.zg-dup__item:first-child { border-top: 0; }
+.zg-dup__details { display: flex; flex-wrap: wrap; gap: var(--zg-space-1, 4px) var(--zg-space-3, 12px); margin-top: var(--zg-space-1, 4px); color: var(--text-muted); }
+.zg-dup__actions, .zg-dup__override { display: flex; flex-wrap: wrap; gap: var(--zg-space-2, 8px); margin-top: var(--zg-space-2, 8px); }
+.zg-dup__restricted { color: var(--text-muted); }
+@media (max-width: 575px) {
+	.zg-dup { padding: var(--zg-space-2, 8px); }
+	.zg-dup__actions .btn, .zg-dup__override .btn { flex: 1 1 100%; min-height: 36px; }
+}

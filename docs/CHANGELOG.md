@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added — Duplicate Prevention & Smart Record Lookup
+
+- New in-core app `duplicate_prevention` (switch `enable_duplicate_prevention`, on by default): one `validate` hook on Item, Customer, Supplier, Employee, Contact, Address, Warehouse, Account, UOM, Brand, Manufacturer, Sales Partner, Territory, Lead, Opportunity, Purchase Invoice and Sales Invoice. Strong match (unique identifier, or several identifiers) blocks, possible match (name only, shared phone / e-mail) warns, fuzzy names only suggest; authorized override with reason, logged. Configured per DocType in **ZG Duplicate Rule**, globally in **ZG Duplicate Prevention Settings**. Named-lock + locking-read serialisation for concurrent creates.
+- Desk: inline live lookup panel on new forms (Open Existing / Use Existing / Override) and a `search_link` override that also finds records by VAT / phone / e-mail / barcode. API `zatgo_core.api.v1.duplicate.lookup`.
+- Docs: `docs/duplicate_prevention.md`. Tests: `test_duplicate_normalizers` (8), `test_duplicate_prevention` (23). Needs `bench migrate` + `bench clear-cache` on each site (seeds rules, adds indexes).
+
 ### Added — Supermarket industry: the retail POS engine
 
 - **Supermarket** is an implemented industry: `api/v1/retail_pos/` (catalog, stock, customers, payments, dashboard, one-step `sale.create`) over `services/retail_pos_service.py`. A sale posts ONE submitted Sales Invoice (`update_stock=1`, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment (idempotent on `client_id` and `client_id:pay`); a card / wallet / bank mode lands in its own account with the invoice number and date as the bank reference. The API answers 404 while the industry or the ZatGo POS app is off.

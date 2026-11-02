@@ -150,6 +150,20 @@ doc_events = {
     },
 }
 
+# Duplicate Prevention (services/duplicate): one validate hook on every DocType it can have a rule for. It
+# returns at once where the app is switched off or the DocType has no enabled rule. Appended, never replacing,
+# so the handlers above keep running.
+DUPLICATE_PREVENTION_DOCTYPES = (
+    "Item", "Customer", "Supplier", "Employee", "Contact", "Address", "Warehouse", "Account", "UOM", "Brand",
+    "Manufacturer", "Sales Partner", "Territory", "Lead", "Opportunity", "Purchase Invoice", "Sales Invoice",
+)
+for _dt in DUPLICATE_PREVENTION_DOCTYPES:
+    _handlers = doc_events.setdefault(_dt, {}).get("validate", [])
+    doc_events[_dt]["validate"] = [
+        *([_handlers] if isinstance(_handlers, str) else _handlers),
+        "zatgo_core.services.duplicate.enforcement.validate_document",
+    ]
+
 # Mixins (Frappe v16) layered over ERPNext's classes -- and over hrms's
 # Payment Entry override -- rather than replacing them. Sales Invoice: keep
 # an allowed payment-row account instead of resetting it to the mode default.
@@ -238,6 +252,8 @@ override_whitelisted_methods = {
     **OLD_METHOD_PATHS,
     "frappe.desk.query_report.run": "zatgo_core.overrides.query_report.run",
     "frappe.desk.query_report.export_query": "zatgo_core.overrides.query_report.export_query",
+    # Link fields also find records by tax ID / phone / e-mail / barcode (services/duplicate/link_search.py).
+    "frappe.desk.search.search_link": "zatgo_core.services.duplicate.link_search.search_link",
 }
 
 
