@@ -231,6 +231,15 @@ class TestLookupAndPrivacy(DuplicateTestCase):
         row = next(r for r in by_name if r["value"] == doc.name)
         self.assertIn(f"VAT: {vat}", row["description"])
 
+    def test_link_search_through_the_request_handler(self):
+        # What frappe.handler.execute_cmd does for an overridden method: resolve it from the hooks and call it with
+        # the whole request (cmd and anything else the browser sent). The core function takes named arguments only.
+        doc = self.customer(name=f"Handler Trading {_tag()}").insert()
+        override = frappe.get_hooks("override_whitelisted_methods")["frappe.desk.search.search_link"][-1]
+        result = frappe.call(frappe.get_attr(override), cmd="frappe.desk.search.search_link", doctype="Customer",
+                             txt=doc.customer_name, page_length=10, extra_unknown_arg="x")
+        self.assertIn(doc.name, [r["value"] for r in result])
+
     def test_check_api_returns_details_for_permitted_user(self):  # 16
         vat = _vat()
         doc = self.customer(vat=vat).insert()

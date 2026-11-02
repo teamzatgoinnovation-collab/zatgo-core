@@ -62,6 +62,9 @@ def _details(doctype: str, rule: dict[str, Any], names: list[str]) -> dict[str, 
 
 @frappe.whitelist()
 def search_link(*args, **kwargs):
+    # Frappe hands an overriding method the whole request (cmd, ...); the core function takes named arguments only,
+    # exactly as `frappe.call` would filter them for it.
+    kwargs = frappe.get_newargs(_core_search_link, kwargs)
     results = _core_search_link(*args, **kwargs)
     try:
         return _enhance(results, *args, **kwargs)
