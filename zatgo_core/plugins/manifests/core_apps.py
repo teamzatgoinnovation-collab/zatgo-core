@@ -24,6 +24,9 @@ APPS = (
             ("ZG Sync Settings", "Sync"),
             ("ZG Number Series Settings", "Number Series"),
             ("ZG Sales Invoice Naming Settings", "Sales Invoice Naming"),
+            ("ZG Duplicate Prevention Settings", "Duplicate Prevention"),
+            ("ZG Duplicate Rule", "Duplicate Rules"),
+            ("ZG Duplicate Override Log", "Duplicate Override Log"),
         ),
     },
     {
@@ -94,11 +97,8 @@ APPS = (
         # On everywhere it ships (a site with no stored value counts as on); rules are seeded on migrate.
         "switch_field": "enable_duplicate_prevention",
         "default_on": True,
-        "settings": (
-            ("ZG Duplicate Prevention Settings", "Settings"),
-            ("ZG Duplicate Rule", "Rules"),
-            ("ZG Duplicate Override Log", "Override Log"),
-        ),
+        # Its settings sit in General Settings (platform-wide, like Security / Feature Flags): listed under
+        # core_settings below and as shortcuts in workspace/zatgo/zatgo.json -- not owned by an app sidebar.
         # Off: the lookup API answers 404 (Link search and saves are unaffected -- the hooks return at once).
         "api_prefixes": ("zatgo_core.api.v1.duplicate.",),
     },
