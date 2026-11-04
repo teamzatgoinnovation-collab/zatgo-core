@@ -27,7 +27,9 @@ def get_prefs() -> dict[str, Any]:
     return ok(_prefs())
 
 
-@frappe.whitelist(methods=["POST"])
+# set_prefs and mark_read change only the caller's own notification choices and read flags; like every MyBis call they also
+# accept GET because the app sends all of them that way (some Android stacks fail POST with HTTP 417).
+@frappe.whitelist(methods=["GET", "POST"])
 def set_prefs(prefs: Any = None) -> dict[str, Any]:
     """Save choices: `prefs` is a JSON object like {"sales_invoice": 1, "daily_report": 0}. Unknown keys are ignored."""
     require_login()
@@ -43,7 +45,7 @@ def inbox(limit: int = 30) -> dict[str, Any]:
     return ok({"items": rows, "unread": sum(1 for r in rows if not r["read"])})
 
 
-@frappe.whitelist(methods=["POST"])
+@frappe.whitelist(methods=["GET", "POST"])
 def mark_read() -> dict[str, Any]:
     """Mark all of the caller's MyBis notifications read."""
     require_login()
