@@ -28,6 +28,7 @@ SOURCE_DOCTYPES = {
     "sales": "Sales Invoice",
     "purchases": "Purchase Invoice",
     "gl": "GL Entry",
+    "payments": "Payment Entry",
     "stock": "Stock Ledger Entry",
     "bin": "Bin",
     "items": "Item",
@@ -183,6 +184,29 @@ def cogs(company: str, start: date, end: date, gl_cogs: float) -> tuple[float, s
     if frappe.get_cached_value("Company", company, "enable_perpetual_inventory"):
         return gl_cogs, "gl"
     return estimated_cogs(company, start, end), "valuation_estimate"
+
+
+def payment_totals(company: str, start: date, end: date) -> dict[str, float]:
+    """Money received from customers (Payment Entry type Receive) and paid to suppliers (Pay), submitted entries, company currency.
+    Internal transfers are neither. A payment of `paid_amount` is in the account currency; `base_paid_amount` is the company's."""
+    row = _one(
+        """
+        SELECT
+          COALESCE(SUM(CASE WHEN payment_type = 'Receive' THEN base_paid_amount END), 0) AS received,
+          COALESCE(SUM(CASE WHEN payment_type = 'Pay' THEN base_paid_amount END), 0) AS paid,
+          COALESCE(SUM(payment_type = 'Receive'), 0) AS receipts,
+          COALESCE(SUM(payment_type = 'Pay'), 0) AS payments
+        FROM `tabPayment Entry`
+        WHERE docstatus = 1 AND company = %(company)s AND posting_date BETWEEN %(start)s AND %(end)s
+        """,
+        {"company": company, "start": start, "end": end},
+    )
+    return {
+        "received": flt(row.get("received")),
+        "paid": flt(row.get("paid")),
+        "receipts": int(row.get("receipts") or 0),
+        "payments": int(row.get("payments") or 0),
+    }
 
 
 def balance_as_of(company: str, account_type: str, as_of: date) -> float:

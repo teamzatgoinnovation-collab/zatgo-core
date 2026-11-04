@@ -29,6 +29,11 @@
     "disable_export_pdf",
     "device_section",
     "disable_offline_copy",
+    "notify_section",
+    "disable_invoice_alerts",
+    "disable_daily_report",
+    "daily_report_hour",
+    "disable_daily_report_email",
     "mybis_help"
   ],
   "fields": [
@@ -168,6 +173,37 @@
       "description": "Devices then keep no copy of the figures, and a copy already saved is removed the next time the app opens."
     },
     {
+      "fieldname": "notify_section",
+      "fieldtype": "Section Break",
+      "label": "Notifications and daily report",
+      "description": "Users still opt in to each notification themselves in the MyBis app, inside these limits."
+    },
+    {
+      "fieldname": "disable_invoice_alerts",
+      "fieldtype": "Check",
+      "label": "Disable Invoice Alerts",
+      "description": "No notification is sent when a Sales or Purchase Invoice is submitted."
+    },
+    {
+      "fieldname": "disable_daily_report",
+      "fieldtype": "Check",
+      "label": "Disable Daily Report",
+      "description": "No scheduled daily report is sent. The report can still be opened in the app."
+    },
+    {
+      "fieldname": "daily_report_hour",
+      "fieldtype": "Int",
+      "label": "Daily Report Hour (0-23)",
+      "default": "20",
+      "description": "Site time. From 12 on the report covers today so far; before 12 it covers yesterday."
+    },
+    {
+      "fieldname": "disable_daily_report_email",
+      "fieldtype": "Check",
+      "label": "Do Not E-mail the Daily Report",
+      "description": "Users who opted in get the daily report in the app only, never by e-mail."
+    },
+    {
       "fieldname": "mybis_help",
       "fieldtype": "HTML",
       "options": "MyBis is read-only: it never changes accounting or stock data. It is switched on or off in <a href=\"/desk/zg-app-hub\">ZatGo Apps</a>."
@@ -177,7 +213,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-31 20:00:00.000000",
+  "modified": "2026-11-04 10:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG MyBis Settings",

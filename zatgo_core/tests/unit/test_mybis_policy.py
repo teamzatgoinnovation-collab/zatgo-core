@@ -17,6 +17,7 @@ OPEN = {
     "export_formats": ["csv", "xlsx", "pdf"],
     "kpis": list(settings.KPI_KEYS),
     "offline_copy": True,
+    "notifications": {"invoice_alerts": True, "daily_report": True, "report_hour": 20, "report_email": True},
 }
 
 
@@ -108,3 +109,13 @@ class TestDoctypeAgreesWithTheCode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestNotificationLimits(unittest.TestCase):
+    def test_switches_read_as_disable_flags(self):
+        n = settings.sanitize({"disable_invoice_alerts": "1", "disable_daily_report_email": "1", "daily_report_hour": "7"})["notifications"]
+        self.assertEqual(n, {"invoice_alerts": False, "daily_report": True, "report_hour": 7, "report_email": False})
+
+    def test_a_bad_hour_means_the_default(self):
+        for bad in ("24", "-1", "x", None, ""):
+            self.assertEqual(settings.sanitize({"daily_report_hour": bad})["notifications"]["report_hour"], 20, bad)

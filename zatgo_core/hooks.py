@@ -89,7 +89,11 @@ doc_events = {
             # Warehouses a field user may sell from, once ERPNext has filled them in.
             "zatgo_core.services.vansalex_access.check_doc_access",
         ],
-        "on_submit": "zatgo_core.events.sales_invoice_payment.on_submit",
+        "on_submit": [
+            "zatgo_core.events.sales_invoice_payment.on_submit",
+            # MyBis invoice alerts: only acts when the mybis switch is on; never raises.
+            "zatgo_core.services.mybis.invoice_alerts.on_submit",
+        ],
         "before_cancel": "zatgo_core.events.sales_invoice_payment.before_cancel",
     },
     "Purchase Invoice": {
@@ -97,7 +101,10 @@ doc_events = {
             "zatgo_core.services.vansalex_access.check_doc_access",
             "zatgo_core.events.return_naming.sync_naming_series",
         ],
-        "on_submit": "zatgo_core.events.purchase_invoice_payment.on_submit",
+        "on_submit": [
+            "zatgo_core.events.purchase_invoice_payment.on_submit",
+            "zatgo_core.services.mybis.invoice_alerts.on_submit",
+        ],
         "before_cancel": "zatgo_core.events.purchase_invoice_payment.before_cancel",
     },
     # Multi-method / multi-account payment allocation -- see
@@ -179,6 +186,8 @@ scheduler_events = {
     ],
     "hourly": [
         "zatgo_core.services.bundled_apps.chat_ai_hourly",
+        # MyBis daily report: acts only at the configured hour and when the mybis switch is on.
+        "zatgo_core.services.mybis.daily_report.send_due",
     ],
     "daily": [
         "zatgo_core.services.jobs.daily",

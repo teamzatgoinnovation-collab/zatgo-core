@@ -37,11 +37,23 @@ EXPORT_FORMATS = ("csv", "xlsx", "pdf")
 # Alert severities, most severe first (`services/mybis/insights.SEVERITIES`).
 SEVERITIES = ("critical", "high", "medium", "low")
 MAX_REFRESH_MINUTES = 1440
+DEFAULT_REPORT_HOUR = 20
 DEFAULT_PRESET = "this_month"
 
 
 def _flag(value: Any) -> bool:
     return cint(value) == 1
+
+
+def _report_hour(value: Any) -> int:
+    """The hour (0-23) the daily report goes out; nothing stored or out of range = the default evening hour."""
+    if value in (None, ""):
+        return DEFAULT_REPORT_HOUR
+    try:
+        hour = int(str(value).strip())
+    except ValueError:
+        return DEFAULT_REPORT_HOUR
+    return hour if 0 <= hour <= 23 else DEFAULT_REPORT_HOUR
 
 
 def sanitize(stored: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -59,6 +71,12 @@ def sanitize(stored: Mapping[str, Any] | None) -> dict[str, Any]:
         "export_formats": [f for f in EXPORT_FORMATS if not _flag(raw.get(f"disable_export_{f}"))],
         "kpis": kpis or list(KPI_KEYS),
         "offline_copy": not _flag(raw.get("disable_offline_copy")),
+        "notifications": {
+            "invoice_alerts": not _flag(raw.get("disable_invoice_alerts")),
+            "daily_report": not _flag(raw.get("disable_daily_report")),
+            "report_hour": _report_hour(raw.get("daily_report_hour")),
+            "report_email": not _flag(raw.get("disable_daily_report_email")),
+        },
     }
 
 
@@ -95,6 +113,11 @@ class ZGMyBisSettings(Document):
             self.min_alert_severity = SEVERITIES[-1]
         elif self.min_alert_severity not in SEVERITIES:
             frappe.throw(_("{0} is not an alert severity").format(self.min_alert_severity))
+
+        if self.daily_report_hour in (None, ""):
+            self.daily_report_hour = DEFAULT_REPORT_HOUR
+        elif not 0 <= cint(self.daily_report_hour) <= 23:
+            frappe.throw(_("The daily report hour must be between 0 and 23"))
 
         if all(_flag(self.get(f"hide_kpi_{k}")) for k in KPI_KEYS):
             frappe.throw(_("Leave at least one dashboard card visible"))
