@@ -16,6 +16,7 @@ import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import random_string
 
+from zatgo_core.services.erpnext_writes import create_quotation
 from zatgo_core.services.vansalex_service import create_order
 from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
@@ -86,7 +87,22 @@ class TestIdempotency(IntegrationTestCase):
         self.assertTrue(frappe.db.has_column("Sales Invoice", "zatgo_client_id"))
         self.assertTrue(frappe.db.has_column("Payment Entry", "zatgo_client_id"))
         self.assertTrue(frappe.db.has_column("Stock Entry", "zatgo_client_id"))
-        for doctype in ("Sales Invoice", "Payment Entry", "Stock Entry"):
+        for doctype in (
+            "Sales Invoice",
+            "Payment Entry",
+            "Stock Entry",
+            "Sales Order",
+            "Purchase Invoice",
+            "Purchase Order",
+            "Journal Entry",
+            "Quotation",
+            "Customer",
+            "Item",
+            "Supplier",
+            "Warehouse",
+            "Address",
+            "Contact",
+        ):
             rows = frappe.db.sql(
                 """
                 SELECT NON_UNIQUE FROM information_schema.STATISTICS
@@ -100,6 +116,15 @@ class TestIdempotency(IntegrationTestCase):
             self.assertEqual(rows[0][0], 0, f"{doctype}.zatgo_client_id index is not UNIQUE")
 
     # -- ordinary pre-check idempotency --------------------------------------
+
+    def test_create_quotation_retry_returns_the_same_quotation(self) -> None:
+        cid = f"test-quote-{random_string(8)}"
+        items = [{"item_code": self.item_code, "qty": 1, "rate": 10}]
+        first = create_quotation(self.customer, items, company=self.company, client_id=cid)
+        second = create_quotation(self.customer, items, company=self.company, client_id=cid)
+        self.assertEqual(first["data"]["id"], second["data"]["id"])
+        self.assertTrue(second["meta"]["idempotent"])
+        self.assertEqual(frappe.db.count("Quotation", {"zatgo_client_id": cid}), 1)
 
     def test_create_order_same_client_id_twice_returns_same_invoice(self) -> None:
         cid = f"idem-test-{random_string(8)}"

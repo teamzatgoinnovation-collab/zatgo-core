@@ -68,6 +68,19 @@ def execute() -> None:
                 "translatable": 0,
             }
         ],
+        # create_quotation has always sent a client_id; without this field it was dropped and retries duplicated.
+        "Quotation": [
+            {
+                "fieldname": "zatgo_client_id",
+                "label": "ZatGo Client Id",
+                "fieldtype": "Data",
+                "insert_after": "transaction_date",
+                "unique": 1,
+                "read_only": 1,
+                "no_copy": 1,
+                "translatable": 0,
+            }
+        ],
     }
     filtered = {dt: defs for dt, defs in fields.items() if frappe.db.exists("DocType", dt)}
     if filtered:
