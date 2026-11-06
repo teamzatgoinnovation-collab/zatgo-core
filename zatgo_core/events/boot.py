@@ -9,7 +9,7 @@ import frappe
 from zatgo_core import __version__
 from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.industries.gate import enabled_keys
-from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, ui_settings
+from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, subscription_gate, ui_settings
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 
 
@@ -149,6 +149,7 @@ def boot_session(bootinfo: Any) -> None:
             # This user's own invoice/return series per company, for the
             # Sales Invoice form (public/js/sales_invoice.js).
             "sales_invoice_naming": get_session_user_series(),
+            "subscription": subscription_gate.boot_payload(),
         }
         _zatgo_folder_children(bootinfo)
     except Exception:

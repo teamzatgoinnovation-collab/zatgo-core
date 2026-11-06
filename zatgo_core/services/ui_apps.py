@@ -36,6 +36,7 @@ IFRS_TOGGLE_JS = "js/ifrs_toggle.js"  # always on: reads the IFRS switch itself
 SIDEBAR_TABS_JS = "js/zg_sidebar_tabs.js"  # always on: lights the sidebar item of the open settings tab
 DUPLICATE_JS = "js/zg_duplicate_lookup.js"  # on with the Duplicate Prevention switch
 DUPLICATE_CSS = "css/zg_duplicate_lookup.css"
+SUBSCRIPTION_BANNER_JS = "js/zg_subscription_banner.js"  # trial countdown / read-only notice, on managed sites only
 ROUTE_REDIRECTS_JS = "js/zg_route_redirects.js"  # always on: old Desk routes of the apps -> their ZatGo > Apps page
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
@@ -76,6 +77,10 @@ def desk_includes() -> tuple[list[str], list[str]]:
     js.append(asset_url(IFRS_TOGGLE_JS))
     js.append(asset_url(ROUTE_REDIRECTS_JS))
     js.append(asset_url(SIDEBAR_TABS_JS))
+    from zatgo_core.services import subscription_gate
+
+    if subscription_gate.raw_state():  # only a site the platform manages; every other site loads nothing new
+        js.append(asset_url(SUBSCRIPTION_BANNER_JS))
     if on.get("duplicate_prevention"):
         css.append(asset_url(DUPLICATE_CSS))
         js.append(asset_url(DUPLICATE_JS))

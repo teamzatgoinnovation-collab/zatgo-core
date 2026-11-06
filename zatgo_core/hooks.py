@@ -31,6 +31,8 @@ boot_session = "zatgo_core.events.boot.boot_session"
 # (services/ui_apps.py) -- deliberately not app_include_css/js, which would
 # load them on every site.
 before_request = [
+    # Trial over / subscription lapsed -> write endpoints answer 403 (services/subscription_gate.py).
+    "zatgo_core.services.subscription_gate.gate_requests",
     # Whitelisted methods of switched-off apps (bundled modules, VanSaleX) -> 404.
     "zatgo_core.services.app_gate.gate_api",
     # Whitelisted methods of switched-off industries -> 404.
@@ -150,6 +152,14 @@ doc_events = {
     # Chat AI (bundled module): on every doctype, but returns at once on
     # sites where it is switched off (services/bundled_apps.py).
     "*": {
+        # Read-only site (subscription_gate): every document write is refused, ignore_permissions or not.
+        "before_insert": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "before_save": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "validate": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "on_trash": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "before_submit": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "before_cancel": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "before_update_after_submit": "zatgo_core.services.subscription_gate.enforce_doc_write",
         "after_insert": "zatgo_core.services.bundled_apps.chat_ai_after_insert",
         "on_update": "zatgo_core.services.bundled_apps.chat_ai_on_update",
         "on_submit": "zatgo_core.services.bundled_apps.chat_ai_on_submit",
@@ -246,6 +256,8 @@ has_permission = {
     "AI Scheduled Task": "zatgo_core.chat_ai.permissions.perm_ai_scheduled_task",
     # Bundled modules' own DocTypes: nobody's where the module is switched off.
     "*": [
+        # True unless this is a write on a read-only (trial over) site.
+        "zatgo_core.services.subscription_gate.doc_has_permission",
         "zatgo_core.services.bundled_apps.module_doc_has_permission",
         # Industries' own DocTypes: nobody's where the industry is off.
         "zatgo_core.industries.gate.industry_doc_has_permission",
