@@ -182,7 +182,7 @@ def _maybe_free_boy(boy: str | None) -> None:
         return
     active = frappe.db.count(
         "ZG Delivery Stop",
-        {"delivery_boy": boy, "status": ("in", list(_ACTIVE_STATUS))},
+        {"delivery_boy": boy, "status": ("in", sorted(_ACTIVE_STATUS))},  # not list(): this module's list is the endpoint
     )
     if active == 0:
         frappe.db.set_value("ZG Delivery Boy", boy, "status", "Available")
