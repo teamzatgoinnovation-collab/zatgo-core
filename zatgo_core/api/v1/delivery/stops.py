@@ -9,7 +9,11 @@ from frappe.utils import flt, now_datetime
 
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
+from zatgo_core.constants.roles import ROLES
 from zatgo_core.services.erpnext_reads import get_zg, list_zg
+
+# May act on any stop. Everyone else (Desk User and Delivery hold DocType write) only on a stop assigned to their own login.
+_STOP_MANAGER_ROLES = {ROLES["SYSTEM_MANAGER"], ROLES["COMPANY_ADMIN"], ROLES["BRANCH_ADMIN"]}
 
 _VALID_STATUS = {
     "Assigned",
@@ -169,6 +173,18 @@ def _resolve_boy(delivery_boy: str | None) -> str | None:
     return boy
 
 
+def _is_stop_manager() -> bool:
+    return bool(_STOP_MANAGER_ROLES.intersection(frappe.get_roles()))
+
+
+def _assert_own_stop(doc: Any) -> None:
+    if _is_stop_manager():
+        return
+    user = doc.delivery_boy and frappe.db.get_value("ZG Delivery Boy", doc.delivery_boy, "user")
+    if user != frappe.session.user:
+        frappe.throw("This delivery stop is not assigned to you.", frappe.PermissionError)
+
+
 def _set_boy_on_route(boy: str | None) -> None:
     if not boy or not frappe.db.exists("DocType", "ZG Delivery Boy"):
         return
@@ -277,6 +293,7 @@ def _apply_status(
     frappe.has_permission("ZG Delivery Stop", "write", doc=name, throw=True)
 
     doc = frappe.get_doc("ZG Delivery Stop", name)
+    _assert_own_stop(doc)
     current = (doc.status or "Assigned").strip()
     if current in _LEGACY_STATUS:
         current = _LEGACY_STATUS[current]
@@ -492,6 +509,9 @@ def assign(name: str, delivery_boy: str) -> dict[str, Any]:
         frappe.throw(f"ZG Delivery Stop {name} not found", frappe.DoesNotExistError)
 
     frappe.has_permission("ZG Delivery Stop", "write", doc=name, throw=True)
+    # A courier must not be able to move another courier's stop to themselves and then complete it.
+    if not _is_stop_manager() and frappe.db.exists("ZG Delivery Boy", {"user": frappe.session.user}):
+        frappe.throw("A delivery boy cannot reassign delivery stops.", frappe.PermissionError)
 
     boy = _resolve_boy(delivery_boy)
     if not boy:
