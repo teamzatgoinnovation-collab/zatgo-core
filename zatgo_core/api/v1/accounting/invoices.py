@@ -134,13 +134,13 @@ def get_zatca_qr(name: str) -> dict[str, Any]:
         qr = generate_and_store_zatca_qr(doc)
         frappe.db.commit()
         fields["qr_base64"] = qr
-    elif not qr:
+    elif not qr and fields["vat_number"]:
         # Draft preview — do not persist
         from zatgo_core.services.zatca_qr import build_zatca_tlv_base64
 
         fields["qr_base64"] = build_zatca_tlv_base64(
             seller_name=str(fields["seller_name"]),
-            vat_number=str(fields["vat_number"] or "000000000000000"),
+            vat_number=str(fields["vat_number"]),
             timestamp=str(fields["timestamp"]),
             invoice_total=fields["invoice_total"],
             vat_amount=fields["vat_amount"],

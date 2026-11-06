@@ -96,6 +96,8 @@ def zatca_qr_data_uri(doc: Any) -> str:
     company = doc.company
     seller_name = frappe.db.get_value("Company", company, "company_name") or company
     vat_number = _seller_vat(company)
+    if not vat_number:
+        return ""  # a Phase 1 QR needs the seller's VAT number; no made-up one on a printed invoice
     grand_total = doc.get("grand_total") or 0
     taxes = doc.get("total_taxes_and_charges") or 0
     if bool(int(doc.get("is_return") or 0)):
@@ -103,7 +105,7 @@ def zatca_qr_data_uri(doc: Any) -> str:
         taxes = abs(flt(taxes))
     tlv_b64 = build_zatca_tlv_base64(
         seller_name=str(seller_name),
-        vat_number=vat_number or "000000000000000",
+        vat_number=vat_number,
         timestamp=_invoice_timestamp(doc),
         invoice_total=grand_total,
         vat_amount=taxes,
@@ -133,6 +135,10 @@ def generate_and_store_zatca_qr(doc: Any) -> str:
     company = doc.company
     seller_name = frappe.db.get_value("Company", company, "company_name") or company
     vat_number = _seller_vat(company)
+    if not vat_number:
+        # The invoice stands; it just gets no QR until the company has its VAT number.
+        frappe.logger("zatgo_core").warning(f"No ZATCA QR for {doc.name}: company {company} has no VAT number")
+        return ""
     # Return (credit-note) invoices carry negative totals in ERPNext; the simplified
     # phase-1 TLV here has no invoice-subtype tag to convey "return", so emit the
     # magnitude only. Full ZATCA credit-note encoding is out of scope for now.
@@ -144,7 +150,7 @@ def generate_and_store_zatca_qr(doc: Any) -> str:
         taxes = abs(flt(taxes))
     qr = build_zatca_tlv_base64(
         seller_name=str(seller_name),
-        vat_number=vat_number or "000000000000000",
+        vat_number=vat_number,
         timestamp=_invoice_timestamp(doc),
         invoice_total=grand_total,
         vat_amount=taxes,
