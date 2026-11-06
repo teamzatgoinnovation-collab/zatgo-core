@@ -11,6 +11,7 @@ from frappe.utils import random_string
 
 from zatgo_core.api.v1 import devices
 from zatgo_core.overrides import query_report
+from zatgo_core.tracker.api.v1 import audit as tracker_audit
 from zatgo_core.zatgo_space.api.v1 import space
 
 
@@ -142,6 +143,22 @@ class TestDeviceTokenTakeover(IntegrationTestCase):
         frappe.set_user("Administrator")
         self.assertTrue(devices.register_token(self.token, "web")["success"])
         self.assertEqual(frappe.db.get_value("ZG Device Token", {"token": self.token}, "user"), "Administrator")
+
+
+class TestTrackerAuditAccess(IntegrationTestCase):
+    def test_comments_need_read_on_the_document(self) -> None:
+        email = f"zgt-noread-{random_string(5).lower()}@example.test"
+        frappe.get_doc(
+            {"doctype": "User", "email": email, "first_name": "noread", "send_welcome_email": 0, "roles": [{"role": "Employee"}]}
+        ).insert(ignore_permissions=True)
+        try:
+            self.assertTrue(tracker_audit.list_for_doc("User", "Administrator")["success"])
+            frappe.set_user(email)
+            with self.assertRaises(frappe.PermissionError):
+                tracker_audit.list_for_doc("User", "Administrator")
+        finally:
+            frappe.set_user("Administrator")
+            frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 
 
 class TestQueryReportForwarding(IntegrationTestCase):

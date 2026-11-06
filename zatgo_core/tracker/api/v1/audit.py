@@ -12,6 +12,7 @@ from zatgo_core.tracker.services.audit import list_feed, list_for
 def list_for_doc(doctype: str, name: str, limit: int = 50):
 	if not doctype or not name:
 		return fail("bad_request", "doctype and name required")
+	frappe.has_permission(doctype, "read", doc=name, throw=True)
 	return ok(list_for(doctype, name, limit=limit))
 
 
