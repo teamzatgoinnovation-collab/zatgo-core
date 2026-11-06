@@ -61,9 +61,6 @@ class TestRowScope(IntegrationTestCase):
 		super().setUpClass()
 		cls.company_a = get_or_create_test_company()
 		cls.company_b = _other_company()
-		# VanSale Admin as well: on a site that ran ensure_vansale_perms, Warehouse / Account / Sales Invoice /
-		# Sales Order / Bin carry Custom DocPerm rows for the VanSale roles only (the standard roles' rows are
-		# replaced wholesale), so the accounting roles alone cannot read them there.
 		roles = ("Accounts User", "Accounts Manager", "Stock User", "VanSale Admin")
 		cls.restricted = _user(*roles)
 		_restrict_to_company(cls.restricted, cls.company_b)

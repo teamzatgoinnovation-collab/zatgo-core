@@ -1,8 +1,8 @@
 """Only the stop's own delivery boy, or a manager, may change it through the delivery API.
 
-Every test user also holds VanSale User: where ensure_vansale_perms seeded Custom DocPerms on this DocType, they replace
-the standard ones, so only that role keeps DocType write. Without it each call stops at the DocType check and the
-refusals below would pass without ever reaching the ownership check."""
+Couriers hold only their real Delivery role. The Desk User and manager here also hold VanSale User, the role that keeps
+DocType write once ensure_vansale_perms has run (it leaves Desk User's write out): without it they would stop at the
+DocType check and the refusal below would pass without ever reaching the ownership check."""
 
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ class TestDeliveryStopAccess(IntegrationTestCase):
         return email
 
     def _boy(self, tag: str) -> tuple[str, str]:
-        user = self._user(tag, ROLES["DELIVERY"], ROLES["VANSALE_USER"])
+        user = self._user(tag, ROLES["DELIVERY"])
         code = f"ZGD-{random_string(6).upper()}"
         boy = frappe.get_doc({"doctype": "ZG Delivery Boy", "full_name": tag, "code": code, "user": user}).insert(
             ignore_permissions=True

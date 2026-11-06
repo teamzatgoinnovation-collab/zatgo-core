@@ -155,6 +155,19 @@ them; an admin removal made *before* that upgrade is re-granted that one
 time. To have a grant seeded again, delete its marker (Desk → Defaults, or
 `frappe.db.delete("DefaultValue", {"defkey": ...})`) and migrate.
 
+Frappe ignores all of a DocType's standard DocPerm rows once it has any Custom
+DocPerm, so before the first seed of a DocType the standard rows are copied in
+— **once per DocType**, marker `zg_vansale_std_perms_<doctype>`, add-only, and
+a row an admin later removes stays removed. Left out: a row giving `All` or
+`Desk User` write on other people's records. Every staff user holds `Desk User`,
+VanSale User included, so copying it would make field users writers of
+`ZG Vehicle` and creators of `ZG Delivery Stop`. Such a DocType needs an explicit
+role to be written (System Manager, Delivery, a VanSale role).
+
+**Upgrading a site restores access**: roles such as Accounts User, Sales User and
+Stock User get back the ERPNext documents they had lost. List who holds them
+before deploying, in case a site came to rely on the narrower access.
+
 ## Migration of existing clients
 
 `after_migrate` → `ensure_vansalex_access()` only **adds** rows for keys a

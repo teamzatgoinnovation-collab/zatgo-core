@@ -70,8 +70,47 @@ _PERMS: list[tuple[str, str, dict]] = [
 ]
 
 
+# Roles every staff member (or everyone) holds.
+_BROAD_ROLES = {"All", "Desk User", "Guest"}
+_WRITE_FLAGS = ("write", "create", "delete", "submit", "cancel", "amend")
+
+
 def _seeded_key(doctype: str, role: str) -> str:
     return f"zg_vansale_perm_{frappe.scrub(doctype)}_{frappe.scrub(role)}"
+
+
+def _standard_kept_key(doctype: str) -> str:
+    return f"zg_vansale_std_perms_{frappe.scrub(doctype)}"
+
+
+def _opens_to_all_staff(row: dict) -> bool:
+    """A standard row that lets every staff member change other people's records. Never in effect on a seeded site, and
+    VanSale roles are least-privilege (VanSale User holds Desk User too, and is read-only on ZG Vehicle), so it stays out."""
+    return row.role in _BROAD_ROLES and not row.if_owner and any(row.get(flag) for flag in _WRITE_FLAGS)
+
+
+def _keep_standard_perms(doctype: str) -> None:
+    """Copy the DocType's standard rows into Custom DocPerm -- once per DocType.
+
+    Frappe ignores every standard DocPerm of a DocType that has any Custom DocPerm, so a seeded row alone takes the
+    DocType away from Accounts User, Stock User, Delivery, even System Manager. Role Permissions Manager copies them
+    first for the same reason (`setup_custom_perms`), but only while no custom row exists. Add-only: a row with the same
+    role, permlevel and if_owner is left as it is. After the marker they belong to the admin, like the seeded grants."""
+    marker = _standard_kept_key(doctype)
+    if frappe.db.get_global(marker):
+        return
+    have = {
+        (r.role, r.permlevel, r.if_owner)
+        for r in frappe.get_all("Custom DocPerm", filters={"parent": doctype}, fields=["role", "permlevel", "if_owner"])
+    }
+    for row in frappe.get_all("DocPerm", filters={"parent": doctype}, fields="*"):
+        if (row.role, row.permlevel, row.if_owner) in have or _opens_to_all_staff(row):
+            continue
+        doc = frappe.new_doc("Custom DocPerm")
+        doc.update({k: v for k, v in row.items() if k not in frappe.model.default_fields})
+        doc.insert(ignore_permissions=True)
+        logger.info("Kept standard DocPerm %s / %s (level %s)", doctype, row.role, row.permlevel)
+    frappe.db.set_global(marker, 1)
 
 
 def _ensure_perm(doctype: str, role: str, flags: dict) -> None:
@@ -83,6 +122,7 @@ def _ensure_perm(doctype: str, role: str, flags: dict) -> None:
     they delete is not re-created and a flag they change is not reset."""
     if not frappe.db.exists("DocType", doctype):
         return
+    _keep_standard_perms(doctype)
     marker = _seeded_key(doctype, role)
     if frappe.db.get_global(marker):
         return

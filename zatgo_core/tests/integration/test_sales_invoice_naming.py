@@ -78,10 +78,7 @@ class TestSalesInvoiceNaming(IntegrationTestCase):
         cls.van_warehouse = cls._make_warehouse("ZTNamingVan")
         cls.stocked_item = cls._make_item(stocked=True, warehouse=cls.van_warehouse, qty=500)
 
-        # Naming is per user, not per role. "VanSale User" is there because on
-        # sites where setup/ensure_vansale_perms.py has run, its Custom DocPerm
-        # rows currently make Frappe ignore the standard Sales Invoice perms
-        # (Accounts User included).
+        # Naming is per user, not per role.
         accounting = ["Accounts User", "Sales User", "VanSale User"]
         cls.web_user = cls._make_user("web", accounting)
         cls.van_user = cls._make_user("van", ["VanSale User"])
