@@ -14,12 +14,12 @@ def modes() -> dict[str, Any]:
     return svc.payment_modes()
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def mark_billing(order_id: str) -> dict[str, Any]:
     return svc.mark_billing(order_id)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def pay(
     order_id: str,
     method: str,

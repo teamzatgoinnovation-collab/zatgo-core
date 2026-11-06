@@ -19,7 +19,7 @@ def get(name: str) -> dict[str, Any]:
     return svc.get_order(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     table: str | None = None,
     covers: int | str = 1,
@@ -48,7 +48,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def add_item(
     order_id: str,
     item_code: str,
@@ -60,26 +60,26 @@ def add_item(
     return svc.add_item(order_id, item_code, qty=qty, extras=extras, rate=rate, station=station)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_item_qty(order_id: str, item_row: str, qty: float | str) -> dict[str, Any]:
     return svc.update_item_qty(order_id, item_row, qty)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def send(order_id: str) -> dict[str, Any]:
     return svc.send_order(order_id)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_note(order_id: str, note: str) -> dict[str, Any]:
     return svc.set_note(order_id, note)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def void(order_id: str) -> dict[str, Any]:
     return svc.void_order(order_id)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def give_to_delivery(order_id: str) -> dict[str, Any]:
     return svc.give_to_delivery(order_id)

@@ -452,6 +452,12 @@ def void_order(order_id: str) -> dict[str, Any]:
         )
     if doc.status == "Void":
         return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    # The invoice can be posted while the payment failed: the order is not Paid yet, but its stock and revenue are booked.
+    if doc.sales_invoice and frappe.db.get_value("Sales Invoice", doc.sales_invoice, "docstatus") == 1:
+        frappe.throw(
+            f"Order {doc.name} has a posted Sales Invoice ({doc.sales_invoice}). "
+            "Retry the payment, or cancel the invoice through the accounting flow before voiding the order."
+        )
 
     doc.status = "Void"
     doc.save()
@@ -603,6 +609,10 @@ def pay(
 
     doc = _load_order(order_id)
     frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    # One checkout per order at a time. A locking read returns the latest committed row, so a request that waited here
+    # sees the invoice the other one posted even under a client_id of its own.
+    locked = frappe.db.get_value("ZG Order", doc.name, ["sales_invoice", "payment_entry", "status"], as_dict=True, for_update=True)
+    doc.sales_invoice, doc.payment_entry, doc.status = locked.sales_invoice, locked.payment_entry, locked.status
 
     if doc.status == "Paid" and doc.sales_invoice:
         si = frappe.get_doc("Sales Invoice", doc.sales_invoice)
@@ -656,6 +666,8 @@ def pay(
         _apply_discount(si, doc, discount_type, discount_value)
         _apply_sales_taxes(si, comp)
         si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
+        # In the invoice's own commit: a payment failure below must not leave a posted invoice the order doesn't know.
+        frappe.db.set_value("ZG Order", doc.name, "sales_invoice", si.name, update_modified=False)
         if int(si.docstatus or 0) != 1:
             # The insert above isn't committed either: the rollback removes the invoice too.
             submit_or_rollback(
@@ -666,6 +678,8 @@ def pay(
                     "Nothing was recorded -- fix this and retry."
                 ),
             )
+        else:
+            frappe.db.commit()
         doc.sales_invoice = si.name
 
     # COD delivery: dispatch the invoice, don't record money that hasn't
