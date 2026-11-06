@@ -202,29 +202,49 @@ def default_bank_account(company: str | None) -> str | None:
     )
 
 
-def sales_tax_template(company: str | None) -> tuple[str | None, bool]:
-    """(Sales Taxes and Charges Template, prices-are-tax-inclusive) for
+def _sales_tax_choice(company: str | None) -> tuple[str | None, bool, str | None]:
+    """(template, prices-are-tax-inclusive, why no template can be chosen) for
     [company]: zatgo_core's per-company choice first, then ERPNext's own
-    default template for the company."""
+    default template for the company, then the company's only template."""
     template = _zg_company_setting(company, "default_tax_template")
     inclusive = bool(cint(_zg_company_setting(company, "enable_tax_inclusive") or 0))
     if not company or not frappe.db.exists("DocType", "Sales Taxes and Charges Template"):
-        return template, inclusive
-    if not template:
-        filters = {"company": company, "disabled": 0}
-        template = frappe.db.get_value(
-            "Sales Taxes and Charges Template", {**filters, "is_default": 1}, "name"
-        ) or frappe.db.get_value("Sales Taxes and Charges Template", filters, "name")
-    if template and not frappe.db.exists("Sales Taxes and Charges Template", template):
-        template = None
+        return template, inclusive, None
+    if template:
+        if frappe.db.exists("Sales Taxes and Charges Template", template):
+            return template, inclusive, None
+        return None, inclusive, (
+            f"The Default Tax Template of company {company} ({template}) no longer exists. "
+            "Choose another in ZG Company Settings."
+        )
+    filters = {"company": company, "disabled": 0}
+    template = frappe.db.get_value("Sales Taxes and Charges Template", {**filters, "is_default": 1}, "name")
+    if template:
+        return template, inclusive, None
+    candidates = frappe.get_all("Sales Taxes and Charges Template", filters=filters, pluck="name", limit=2)
+    if len(candidates) > 1:
+        return None, inclusive, (
+            f"Company {company} has several Sales Taxes and Charges Templates and none is the default. "
+            "Mark one as Default, or choose one in ZG Company Settings."
+        )
+    return (candidates[0] if candidates else None), inclusive, None
+
+
+def sales_tax_template(company: str | None) -> tuple[str | None, bool]:
+    """The template a sale posts with. Refuses rather than picks when the
+    choice is gone or several could apply: the wrong template posts the wrong VAT."""
+    template, inclusive, problem = _sales_tax_choice(company)
+    if problem:
+        frappe.throw(problem)
     return template, inclusive
 
 
 def tax_summary(company: str | None) -> dict[str, Any]:
     """What the app needs to show VAT before the invoice exists: the
     template name and its combined percentage on net total. The server
-    still computes the real figures through ERPNext on submit."""
-    template, inclusive = sales_tax_template(company)
+    still computes the real figures through ERPNext on submit. Never raises
+    on a template problem: the app still has to open; the sale is what refuses."""
+    template, inclusive, _problem = _sales_tax_choice(company)
     rate = 0.0
     if template:
         rows = frappe.get_all(

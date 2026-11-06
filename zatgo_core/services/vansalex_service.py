@@ -102,7 +102,9 @@ def _apply_sales_taxes(doc: Any, company: str) -> None:
                 for tax in doc.taxes or []:
                     tax.included_in_print_rate = 1
         except Exception:
+            # Never post without the tax the company's template asks for.
             frappe.log_error(title="VanSale tax template apply failed", message=frappe.get_traceback())
+            frappe.throw(f"Could not apply the tax template {template}. Nothing was recorded -- fix the template and retry.")
 
 
 def _ack_sales_invoice(doc: Any, cid: str, *, idempotent: bool, created: bool) -> dict[str, Any]:
