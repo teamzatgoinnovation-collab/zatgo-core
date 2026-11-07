@@ -49,6 +49,17 @@ class TestEvaluate(unittest.TestCase):
         self.assertFalse(gate.evaluate(s, paid_until + timedelta(days=2))["read_only"])
         self.assertTrue(gate.evaluate(s, paid_until + timedelta(days=3, seconds=1))["read_only"])
 
+    def test_the_platforms_grace_setting_travels_with_the_state(self):
+        paid_until = T0 + timedelta(days=10)
+        base = {"enforcement_on": 1, "status": "ACTIVE", "paid_until": paid_until.isoformat()}
+        cases = (({**base, "grace_days": 0}, -0.01, 0.01), ({**base, "grace_days": 7}, 6.9, 7.1), (dict(base), 2.9, 3.1))  # last: default 3
+        for state, still_open, locked in cases:
+            self.assertFalse(gate.evaluate(state, paid_until + timedelta(days=still_open))["read_only"], state)
+            self.assertTrue(gate.evaluate(state, paid_until + timedelta(days=locked))["read_only"], state)
+        odd = {**base, "grace_days": "junk"}  # an odd value falls back to the default instead of locking or crashing
+        self.assertFalse(gate.evaluate(odd, paid_until + timedelta(days=2.9))["read_only"])
+        self.assertTrue(gate.evaluate(odd, paid_until + timedelta(days=3.1))["read_only"])
+
     def test_read_only_statuses(self):
         for status in ("EXPIRED", "SUSPENDED", "PENDING_PAYMENT", "DELETION_SCHEDULED", "DELETED"):
             self.assertTrue(gate.evaluate({"enforcement_on": 1, "status": status}, T0)["read_only"], status)

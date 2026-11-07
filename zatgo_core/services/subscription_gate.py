@@ -133,7 +133,7 @@ def evaluate(state: dict[str, Any] | None, now: datetime | None = None) -> dict[
         if trial_end is not None and now >= trial_end and not paid:
             read_only, reason = True, "trial_ended"
     elif status == "ACTIVE":
-        if paid_until is not None and now > paid_until + timedelta(days=GRACE_DAYS):
+        if paid_until is not None and now > paid_until + timedelta(days=_grace_days(state)):
             read_only, reason = True, "payment_overdue"
     elif status not in KNOWN_STATUSES:
         # A state this code does not know is not a reason to lock a customer out.
@@ -151,6 +151,14 @@ def evaluate(state: dict[str, Any] | None, now: datetime | None = None) -> dict[
         "paid_until": paid_until.isoformat() if paid_until else None,
         "reason": reason,
     }
+
+
+def _grace_days(state: dict[str, Any]) -> int:
+    """The platform's payment grace (Space Settings) travels with the state; 3 days if it is absent or odd."""
+    try:
+        return max(0, min(int(state.get("grace_days", GRACE_DAYS)), 30))
+    except (TypeError, ValueError):
+        return GRACE_DAYS
 
 
 def current(now: datetime | None = None) -> dict[str, Any]:
