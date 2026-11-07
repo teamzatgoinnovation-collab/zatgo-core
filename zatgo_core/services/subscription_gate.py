@@ -166,6 +166,8 @@ def current(now: datetime | None = None) -> dict[str, Any]:
     state = raw_state() or {}
     result["site_url"] = state.get("site_url")
     result["portal_url"] = state.get("portal_url")
+    result["manage_url"] = state.get("manage_url") or state.get("portal_url")
+    result["billing_period"] = state.get("billing_period")
     return result
 
 
@@ -286,10 +288,11 @@ def boot_payload() -> dict[str, Any]:
             # (the gate keeps reading `current()`, which stays unmanaged), so a customer sees the countdown
             # before the platform ever restricts anything.
             info = evaluate({**state, "enforcement_on": 1})
-            info.update(read_only=False, reason=None,
-                        site_url=state.get("site_url"), portal_url=state.get("portal_url"))
+            info.update(read_only=False, reason=None, site_url=state.get("site_url"),
+                        portal_url=state.get("portal_url"), manage_url=state.get("manage_url") or state.get("portal_url"),
+                        billing_period=state.get("billing_period"))
         out = {k: info[k] for k in ("managed", "status", "read_only", "remaining_days", "trial_ends_at",
-                                    "paid_until", "reason", "portal_url", "site_url")}
+                                    "paid_until", "reason", "portal_url", "site_url", "manage_url", "billing_period")}
         out["enforced"] = enforced
         return out
     except Exception:

@@ -243,6 +243,17 @@ class TestSubscriptionGate(IntegrationTestCase):
         self.assertFalse(gate.is_read_only())
         _note().insert()
 
+    def test_period_and_manage_link_reach_the_banner_for_an_active_site(self):
+        from zatgo_core.api.v1 import subscription
+        _push(enforcement_on=0, status="ACTIVE", trial_ends_at=None, paid_until=_iso(200), billing_period="Yearly",
+              manage_url="https://space.test/sites/acme")
+        out = subscription.get_status()
+        self.assertTrue(out["managed"])
+        self.assertEqual((out["status"], out["billing_period"], out["manage_url"]), ("ACTIVE", "Yearly", "https://space.test/sites/acme"))
+        self.assertFalse(out["read_only"])
+        _push(enforcement_on=0, status="ACTIVE", trial_ends_at=None, billing_period="Monthly")  # no manage_url: portal root
+        self.assertEqual(subscription.get_status()["manage_url"], "https://space.test")
+
     def test_reactivation_by_a_new_push_restores_writes(self):
         self._expire()
         with self.assertRaises(frappe.PermissionError):
