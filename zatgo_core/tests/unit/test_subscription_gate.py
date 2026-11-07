@@ -49,6 +49,14 @@ class TestEvaluate(unittest.TestCase):
         self.assertFalse(gate.evaluate(s, paid_until + timedelta(days=2))["read_only"])
         self.assertTrue(gate.evaluate(s, paid_until + timedelta(days=3, seconds=1))["read_only"])
 
+    def test_active_counts_days_to_paid_until(self):
+        s = {"enforcement_on": 1, "status": "ACTIVE", "paid_until": (T0 + timedelta(days=45)).isoformat()}
+        self.assertEqual(gate.evaluate(s, T0)["remaining_days"], 45)
+        self.assertEqual(gate.evaluate(s, T0 + timedelta(days=15, hours=1))["remaining_days"], 30)
+        self.assertEqual(gate.evaluate(s, T0 + timedelta(days=46))["remaining_days"], 0)  # in grace: never negative
+        self.assertIsNone(gate.evaluate({"enforcement_on": 1, "status": "ACTIVE"}, T0)["remaining_days"])
+        self.assertIsNone(gate.evaluate({"enforcement_on": 1, "status": "SUSPENDED"}, T0)["remaining_days"])
+
     def test_the_platforms_grace_setting_travels_with_the_state(self):
         paid_until = T0 + timedelta(days=10)
         base = {"enforcement_on": 1, "status": "ACTIVE", "paid_until": paid_until.isoformat()}

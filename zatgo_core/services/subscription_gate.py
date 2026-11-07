@@ -146,7 +146,9 @@ def evaluate(state: dict[str, Any] | None, now: datetime | None = None) -> dict[
         "managed": True,
         "status": effective,
         "read_only": read_only,
-        "remaining_days": remaining_days(trial_end, now) if status == "TRIAL" else None,
+        # Days to the trial end, or for a paid subscription to paid_until (the Desk badge turns yellow at 30).
+        "remaining_days": (remaining_days(trial_end, now) if status == "TRIAL"
+                           else remaining_days(paid_until, now) if status == "ACTIVE" else None),
         "trial_ends_at": trial_end.isoformat() if trial_end else None,
         "paid_until": paid_until.isoformat() if paid_until else None,
         "reason": reason,
