@@ -16,6 +16,10 @@
 			text = sub.status === "SUSPENDED"
 				? __("Site suspended: read-only.")
 				: __("Free trial ended: this site is read-only. Activate a monthly subscription to edit.");
+		} else if (sub.status === "EXPIRED" || (sub.status === "TRIAL" && sub.remaining_days === 0)) {
+			// Enforcement is off: the trial is over but nothing is locked yet.
+			tone = "warning";
+			text = __("Free trial ended. Subscribe monthly to keep your site.");
 		} else if (sub.status === "TRIAL") {
 			const days = sub.remaining_days;
 			tone = days <= 5 ? "warning" : "info";

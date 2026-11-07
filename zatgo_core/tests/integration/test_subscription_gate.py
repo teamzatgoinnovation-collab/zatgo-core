@@ -229,6 +229,20 @@ class TestSubscriptionGate(IntegrationTestCase):
         self.assertEqual(out["status"], "EXPIRED")
         self.assertEqual(out["portal_url"], "https://space.test")
 
+    def test_banner_shows_trial_while_enforcement_is_off_and_nothing_is_locked(self):
+        from zatgo_core.api.v1 import subscription
+        _push(enforcement_on=0, trial_ends_at=_iso(12))
+        out = subscription.get_status()
+        self.assertTrue(out["managed"])
+        self.assertFalse(out["enforced"])
+        self.assertFalse(out["read_only"])
+        self.assertEqual(out["status"], "TRIAL")
+        self.assertIn(out["remaining_days"], (11, 12, 13))
+        _push(enforcement_on=0, trial_ends_at=_iso(-3))  # ended, still not enforced: informational, writes stay open
+        self.assertFalse(subscription.get_status()["read_only"])
+        self.assertFalse(gate.is_read_only())
+        _note().insert()
+
     def test_reactivation_by_a_new_push_restores_writes(self):
         self._expire()
         with self.assertRaises(frappe.PermissionError):

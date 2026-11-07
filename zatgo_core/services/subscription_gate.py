@@ -276,11 +276,22 @@ def guard_job(fn):
 def boot_payload() -> dict[str, Any]:
     """What the Desk banner needs; never raises (boot must not break)."""
     try:
-        info = current()
-        if not info["managed"]:
+        state = raw_state()
+        if not state:
             return {"managed": False}
-        return {k: info[k] for k in ("managed", "status", "read_only", "remaining_days", "trial_ends_at",
-                                     "paid_until", "reason", "portal_url", "site_url")}
+        info = current()
+        enforced = bool(info["managed"])
+        if not enforced:
+            # Enforcement is off on this site: show the trial picture as information only. Nothing is read-only
+            # (the gate keeps reading `current()`, which stays unmanaged), so a customer sees the countdown
+            # before the platform ever restricts anything.
+            info = evaluate({**state, "enforcement_on": 1})
+            info.update(read_only=False, reason=None,
+                        site_url=state.get("site_url"), portal_url=state.get("portal_url"))
+        out = {k: info[k] for k in ("managed", "status", "read_only", "remaining_days", "trial_ends_at",
+                                    "paid_until", "reason", "portal_url", "site_url")}
+        out["enforced"] = enforced
+        return out
     except Exception:
         frappe.log_error(title="ZatGo subscription boot payload failed")
         return {"managed": False}
