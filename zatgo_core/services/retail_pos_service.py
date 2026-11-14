@@ -75,7 +75,47 @@ def _map_invoice(si: Any) -> dict[str, Any]:
 
 
 def _method_key(mode_of_payment: str | None) -> str:
-    return _MODE_TO_KEY.get((mode_of_payment or "").lower(), "cash")
+    key = _MODE_TO_KEY.get((mode_of_payment or "").lower())
+    if key:
+        return key
+    # Any other bank-type Mode of Payment (Bank Transfer, Wire Transfer ...) is the till's "bank".
+    if mode_of_payment and frappe.db.get_value("Mode of Payment", mode_of_payment, "type") == "Bank":
+        return "bank"
+    return "cash"
+
+
+# What the till's "Bank" button posts to, best match first: a Mode of Payment named like a bank, then any other bank-type
+# mode, then the Card / Wallet modes a site that only has those uses for non-cash money.
+_BANK_MODE_NAMES = ("Bank", "Bank Transfer", "Wire Transfer", "Bank Draft")
+
+
+def bank_mode(company: str | None = None) -> str | None:
+    """The enabled Mode of Payment the Bank method posts to for `company` (needs a default account there), or None when the
+    site has none: the till then does not offer Bank."""
+    comp = company or _company()
+    enabled = {
+        r.name: r
+        for r in frappe.get_all("Mode of Payment", filters={"enabled": 1}, fields=["name", "type"], order_by="name asc")
+    }
+
+    def has_account(name: str) -> bool:
+        return bool(frappe.db.get_value("Mode of Payment Account", {"parent": name, "company": comp}, "default_account"))
+
+    named = [n for n in _BANK_MODE_NAMES if n in enabled]
+    typed = [n for n, r in enabled.items() if r.type == "Bank" and n not in named and n not in ("Card", "Wallet")]
+    fallback = [n for n in ("Card", "Wallet") if n in enabled]
+    for name in [*named, *typed, *fallback]:
+        if has_account(name):
+            return name
+    return None
+
+
+def resolve_mode(key: str, company: str | None = None) -> str | None:
+    """The Mode of Payment for a till method key (cash / card / wallet / bank), or None when this site has none."""
+    key = str(key or "").lower()
+    if key == "bank":
+        return bank_mode(company)
+    return _MODE_OF_PAYMENT_MAP.get(key)
 
 
 def _map_payment(pe: Any, si: Any) -> dict[str, Any]:
@@ -236,7 +276,7 @@ def create_sale(
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     require_login()
     cid = require_str(client_id, "client_id")
-    plan = _parse_payments(payments)
+    plan = _parse_payments(payments, company)
     method_key = plan[0]["key"] if plan else str(method or "").lower()
     credit = method_key == "credit" and not plan
     paid_now_amt = 0.0
@@ -250,14 +290,14 @@ def create_sale(
         paid_now_amt = flt(paid_now)
         if paid_now_amt < 0:
             frappe.throw("The amount paid now cannot be negative.")
-        mop = _MODE_OF_PAYMENT_MAP.get(str(paid_method or "cash").lower())
+        mop = resolve_mode(str(paid_method or "cash"), company)
         if not mop:
             frappe.throw(f"Unknown payment method: {paid_method}")
         plan = [{"key": str(paid_method or "cash").lower(), "mop": mop, "amount": paid_now_amt, "reference": ""}] if paid_now_amt > 0 else []
     else:
-        mop = _MODE_OF_PAYMENT_MAP.get(method_key)
+        mop = resolve_mode(method_key, company)
         if not mop:
-            frappe.throw(f"Unknown payment method: {method}")
+            frappe.throw(_no_mode_message(method))
         plan = [{"key": method_key, "mop": mop, "amount": None, "reference": ""}]
 
     rows = _parse_order_items(items)
@@ -415,7 +455,7 @@ def create_sale(
     )
 
 
-def _parse_payments(payments: Any) -> list[dict[str, Any]]:
+def _parse_payments(payments: Any, company: str | None = None) -> list[dict[str, Any]]:
     """The `payments` argument as rows `{key, mop, amount, reference}`; [] when none were sent. Every row must be a
     method this site offers (an enabled ERPNext Mode of Payment) with a positive amount."""
     import json
@@ -433,9 +473,9 @@ def _parse_payments(payments: Any) -> list[dict[str, Any]]:
     for row in payments:
         row = row or {}
         key = str(row.get("method") or "").lower()
-        mop = _MODE_OF_PAYMENT_MAP.get(key)
+        mop = resolve_mode(key, company)
         if not mop:
-            frappe.throw(f"Unknown payment method: {row.get('method')}")
+            frappe.throw(_no_mode_message(row.get("method")))
         if not frappe.db.get_value("Mode of Payment", {"name": mop, "enabled": 1}):
             frappe.throw(f"{mop} is not set up on this site: add or enable that Mode of Payment first.")
         amount = flt(row.get("amount"))
@@ -443,6 +483,12 @@ def _parse_payments(payments: Any) -> list[dict[str, Any]]:
             frappe.throw(f"The {mop} amount must be more than 0.")
         out.append({"key": key, "mop": mop, "amount": amount, "reference": str(row.get("reference") or "").strip()[:140]})
     return out
+
+
+def _no_mode_message(method: Any) -> str:
+    if str(method or "").lower() == "bank":
+        return "Bank is not set up on this site: add an enabled bank Mode of Payment with an account for this company."
+    return f"Unknown payment method: {method}"
 
 
 _WALK_IN = "Walk-in Customer"
@@ -483,11 +529,11 @@ def collect_payment(invoice: str, method: str, client_id: str, amount: Any = Non
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
     require_login()
     cid = require_str(client_id, "client_id")
-    mop = _MODE_OF_PAYMENT_MAP.get(str(method or "").lower())
-    if not mop:
-        frappe.throw(f"Unknown payment method: {method}")
     frappe.has_permission("Payment Entry", "create", throw=True)
     si = frappe.get_doc("Sales Invoice", require_str(invoice, "invoice"))
+    mop = resolve_mode(str(method or ""), si.company)
+    if not mop:
+        frappe.throw(_no_mode_message(method))
     frappe.has_permission("Sales Invoice", "read", doc=si, throw=True)
     if si.remarks != _MARKER or int(si.docstatus or 0) != 1 or int(si.is_return or 0):
         frappe.throw(f"{si.name} is not a posted POS sale that can take a payment.")

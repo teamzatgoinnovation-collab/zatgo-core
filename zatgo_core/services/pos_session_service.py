@@ -21,7 +21,7 @@ from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.resto_pos_admin_service import _company
 from zatgo_core.services.resto_pos_service import _MODE_OF_PAYMENT_MAP, _resolve_pos_warehouse
-from zatgo_core.services.retail_pos_service import _MARKER, _method_key
+from zatgo_core.services.retail_pos_service import _MARKER, _method_key, bank_mode
 
 _CASH = _MODE_OF_PAYMENT_MAP["cash"]
 
@@ -65,7 +65,7 @@ def _ensure_profile(user: str, company: str) -> str:
             # ERPNext refuses a session on a method that has no default account for the company, so only those are listed.
             "payments": [
                 {"mode_of_payment": mop, "default": 1 if mop == _CASH else 0}
-                for mop in _MODE_OF_PAYMENT_MAP.values()
+                for mop in dict.fromkeys([*_MODE_OF_PAYMENT_MAP.values(), *filter(None, [bank_mode(company)])])
                 if frappe.db.get_value(
                     "Mode of Payment Account", {"parent": mop, "company": company}, "default_account"
                 )

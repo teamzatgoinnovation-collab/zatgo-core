@@ -95,6 +95,17 @@ def _tax_version(tax: dict[str, Any]) -> str:
     return hashlib.sha1(raw.encode()).hexdigest()[:12]
 
 
+def _bank_mode_or_none(company: str | None) -> str | None:
+    if not company:
+        return None
+    try:
+        from zatgo_core.services.retail_pos_service import bank_mode
+
+        return bank_mode(company)
+    except Exception:
+        return None
+
+
 def get_profile() -> dict[str, Any]:
     """What this site offers the POS: enabled industries, restaurant features,
     company / currency and payment modes. Not industry-gated, so the POS can
@@ -156,6 +167,8 @@ def get_profile() -> dict[str, Any]:
             "company_info": company_info(company),
             "currency": currency,
             "payment_modes": modes,
+            # The Mode of Payment the till's Bank method posts to (None: the site has none, the till hides Bank).
+            "bank_mode": _bank_mode_or_none(company),
             "user": frappe.session.user,
         },
         meta={"stub": False, "source": "ZG System Settings"},
