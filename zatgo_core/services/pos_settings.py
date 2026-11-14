@@ -114,6 +114,12 @@ def _stored(doc, field: str, default):
     return default
 
 
+def credit_allowed(doc=None) -> bool:
+    """Credit (pay later) sales at the counter: off unless a manager ticked it in ZG POS Settings -> Payments."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    return bool(cint(_stored(doc, "allow_credit_sales", 0)))
+
+
 def discount_policy(doc=None) -> tuple[int, float]:
     """(allow_discounts, max_discount_percent) as ZG POS Settings stores them, with the DocType defaults when never saved."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
@@ -183,6 +189,7 @@ def effective() -> dict[str, Any]:
         "max_discount_percent": max_discount_percent,
         "default_payment_mode": doc.default_payment_mode or None,
         "allow_split_payment": cint(_stored(doc, "allow_split_payment", 1)),
+        "allow_credit_sales": 1 if credit_allowed(doc) else 0,
         "receipt_header": doc.receipt_header or "",
         "receipt_footer": doc.receipt_footer or "",
         "show_tax_on_receipt": cint(_stored(doc, "show_tax_on_receipt", 1)),

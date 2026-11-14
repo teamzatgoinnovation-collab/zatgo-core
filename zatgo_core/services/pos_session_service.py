@@ -35,6 +35,15 @@ def _ensure_profile(user: str, company: str) -> str:
     name = f"ZatGo POS - {user} - {co.abbr}"  # a profile belongs to one company, so one per cashier and company
     if frappe.db.exists("POS Profile", name):
         return name
+    # A profile made earlier under another name (before the company abbreviation was part of it) is reused: ERPNext
+    # allows only one default profile per user.
+    earlier = frappe.db.sql(
+        """select p.name from `tabPOS Profile` p join `tabPOS Profile User` u on u.parent = p.name
+           where p.company = %s and u.user = %s and ifnull(p.disabled, 0) = 0 order by p.creation limit 1""",
+        (company, user),
+    )
+    if earlier:
+        return earlier[0][0]
     warehouse = _resolve_pos_warehouse(company)
     write_off = co.write_off_account or frappe.db.get_value(
         "Account", {"company": company, "account_type": "Expense Account", "is_group": 0}, "name"

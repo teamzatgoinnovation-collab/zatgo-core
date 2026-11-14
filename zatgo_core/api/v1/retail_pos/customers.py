@@ -23,3 +23,11 @@ def list(
 @frappe.whitelist(methods=["POST"])
 def upsert(customer_id: str | None = None, customer_name: str | None = None, phone: str | None = None, email: str | None = None, client_id: str | None = None) -> dict[str, Any]:
     return svc.upsert_customer(customer_id, customer_name, phone, email, client_id)
+
+
+@frappe.whitelist()
+def balance(customer: str) -> dict[str, Any]:
+    """Outstanding balance and credit limit of one customer (shown at the till before a credit sale)."""
+    from zatgo_core.services import retail_pos_service
+
+    return retail_pos_service.customer_balance(customer)

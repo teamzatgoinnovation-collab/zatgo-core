@@ -26,6 +26,7 @@
     "payment_section",
     "default_payment_mode",
     "allow_split_payment",
+    "allow_credit_sales",
     "payment_help",
     "receipt_tab",
     "receipt_section",
@@ -182,6 +183,13 @@
       "label": "Allow Split Payment",
       "default": "1",
       "description": "Let one sale be paid with more than one mode of payment."
+    },
+    {
+      "fieldname": "allow_credit_sales",
+      "fieldtype": "Check",
+      "label": "Allow Credit Sales (Pay Later)",
+      "default": "0",
+      "description": "Adds a Credit button at the counter: the sale is posted unpaid (or part-paid) to a named customer and collected later. ERPNext's own customer credit limit applies. Needs a connection; never offline."
     },
     {
       "fieldname": "payment_help",
@@ -373,7 +381,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-11-14 18:00:00.000000",
+  "modified": "2026-11-14 20:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

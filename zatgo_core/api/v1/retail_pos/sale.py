@@ -25,11 +25,16 @@ def create(
     device_id: str | None = None,
     expected_total: Any = None,
     expected_tax: Any = None,
+    paid_now: Any = None,
+    paid_method: str | None = None,
 ) -> dict[str, Any]:
     """items = [{item_code, item_name?, qty, rate}]. Idempotent on client_id.
 
     A sale the POS made offline passes offline=1 with sale_datetime (ISO 8601, the moment it was paid), offline_ref (the receipt
-    number it printed), device_id and the receipt's expected_total / expected_tax; see services/offline_sale.py."""
+    number it printed), device_id and the receipt's expected_total / expected_tax; see services/offline_sale.py.
+
+    method="credit" (when the site allows it) posts the sale to a named customer unpaid; `paid_now` + `paid_method` take a
+    part payment at the till."""
     return svc.create_sale(
         items,
         method,
@@ -45,4 +50,18 @@ def create(
         device_id=device_id,
         expected_total=expected_total,
         expected_tax=expected_tax,
+        paid_now=paid_now,
+        paid_method=paid_method,
     )
+
+
+@frappe.whitelist(methods=["POST"])
+def collect(invoice: str, method: str, client_id: str, amount: Any = None) -> dict[str, Any]:
+    """Take a (part) payment against a posted POS invoice that is still owing. Idempotent on client_id."""
+    return svc.collect_payment(invoice, method, client_id, amount)
+
+
+@frappe.whitelist()
+def unpaid(customer: str | None = None, page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
+    """Posted POS invoices that still owe money (credit sales), oldest first."""
+    return svc.unpaid_invoices(customer, page, page_size)

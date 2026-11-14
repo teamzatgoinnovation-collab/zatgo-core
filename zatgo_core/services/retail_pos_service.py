@@ -21,7 +21,7 @@ from frappe.utils import flt, get_datetime, today
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
-from zatgo_core.services import offline_sale, pos_settings
+from zatgo_core.services import offline_sale, pos_settings, row_scope
 from zatgo_core.services.offline_sale import PaymentPendingError
 from zatgo_core.services.resto_pos_admin_service import _MODE_TO_KEY, _company, _stock_rows
 from zatgo_core.services.resto_pos_service import (
@@ -69,6 +69,7 @@ def _map_invoice(si: Any) -> dict[str, Any]:
         "discount": flt(si.discount_amount),
         "tax": flt(si.total_taxes_and_charges),
         "total": flt(si.grand_total),
+        "outstanding": flt(si.outstanding_amount),
         "postedAt": _posted_at(si),
     }
 
@@ -213,21 +214,38 @@ def create_sale(
     device_id: str | None = None,
     expected_total: Any = None,
     expected_tax: Any = None,
+    paid_now: Any = None,
+    paid_method: str | None = None,
 ) -> dict[str, Any]:
     """Post a counter sale: Sales Invoice (stock out) + Payment Entry. Idempotent on `client_id`.
 
     `offline=1` (with `sale_datetime`, `offline_ref`, `device_id`, `expected_*`): a sale the POS made without a connection
     and sends late. It keeps its own date and time, is posted even where stock, price, tax or the discount cap no longer fit,
-    and those cases open a review entry (services/offline_sale.py); `meta.offline` lists them."""
+    and those cases open a review entry (services/offline_sale.py); `meta.offline` lists them.
+
+    `method="credit"` (ZG POS Settings -> Allow Credit Sales) posts the invoice to a named customer and leaves it unpaid
+    -- or part-paid, `paid_now` taken by `paid_method` (cash / card / wallet) -- for `collect_payment` later. ERPNext's own
+    customer credit limit applies when the invoice is submitted; a credit sale is never taken offline."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     require_login()
     cid = require_str(client_id, "client_id")
     method_key = str(method or "").lower()
-    mop = _MODE_OF_PAYMENT_MAP.get(method_key)
+    credit = method_key == "credit"
+    paid_now_amt = 0.0
+    if credit:
+        if not pos_settings.credit_allowed():
+            frappe.throw("Credit sales are not switched on for this site (ZG POS Settings -> Payments).", frappe.PermissionError)
+        _require_credit_customer(customer_id)
+        paid_now_amt = flt(paid_now)
+        if paid_now_amt < 0:
+            frappe.throw("The amount paid now cannot be negative.")
+        mop = _MODE_OF_PAYMENT_MAP.get(str(paid_method or "cash").lower())
+    else:
+        mop = _MODE_OF_PAYMENT_MAP.get(method_key)
     if not mop:
-        frappe.throw(f"Unknown payment method: {method}")
+        frappe.throw(f"Unknown payment method: {paid_method if credit else method}")
 
     rows = _parse_order_items(items)
     if not rows:
@@ -236,6 +254,8 @@ def create_sale(
     frappe.has_permission("Sales Invoice", "create", throw=True)
     frappe.has_permission("Payment Entry", "create", throw=True)
     sale = offline_sale.parse(offline, sale_datetime, offline_ref, device_id, expected_total, expected_tax)
+    if sale and credit:
+        frappe.throw("A credit sale needs a connection: it cannot be taken offline.")
     if sale:
         offline_sale.check_method(sale, method_key)
     _validate_rates(rows, enforce_floor=sale is None)
@@ -274,6 +294,11 @@ def create_sale(
 
     posted_now = int(si.docstatus or 0) == 0
     if posted_now:
+        if credit and paid_now_amt >= flt(si.grand_total) - 0.005:
+            # The draft was inserted (and committed) above: remove it so a refused sale leaves nothing behind.
+            frappe.delete_doc("Sales Invoice", si.name, force=1, ignore_permissions=True)
+            frappe.db.commit()
+            frappe.throw("The amount paid now covers the whole total: take it as Cash, Card or Wallet instead of Credit.")
         if sale:
             si.flags.zg_offline_sale = True  # may take stock below zero (overrides/sales_invoice.py)
         # The insert above is not committed either: the rollback removes the draft too.
@@ -297,6 +322,12 @@ def create_sale(
         frappe.db.commit()
     meta_extra = {"offline": offline_sale.issues_of(cid)} if sale else {}
 
+    if credit and paid_now_amt <= 0:
+        # Nothing paid now: the invoice stays open for collect_payment.
+        return ok(
+            {"invoice": _map_invoice(si), "payment": _zero_payment(si, "credit")},
+            meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE, "credit": True},
+        )
     if flt(si.outstanding_amount) <= 0 and not find_by_client_id("Payment Entry", f"{cid}:pay"):
         # Fully discounted (zero total): nothing to collect, so no Payment Entry.
         return ok(
@@ -309,7 +340,7 @@ def create_sale(
     if existing_pe:
         pe = frappe.get_doc("Payment Entry", existing_pe)
     else:
-        pe = get_payment_entry("Sales Invoice", si.name)
+        pe = get_payment_entry("Sales Invoice", si.name, party_amount=paid_now_amt) if credit else get_payment_entry("Sales Invoice", si.name)
         if sale:
             pe.posting_date = si.posting_date  # the money was taken on the day of the sale
         pe.mode_of_payment = mop
@@ -330,9 +361,151 @@ def create_sale(
                 PaymentPendingError,
             )
     frappe.db.commit()
+    si.reload()  # outstanding_amount moved when the payment was submitted
     return ok(
         _result(si, pe),
-        meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE, **meta_extra},
+        meta={
+            "stub": False,
+            "created": si_created,
+            "idempotent": not si_created,
+            "source": _SOURCE,
+            **({"credit": True} if credit else {}),
+            **meta_extra,
+        },
+    )
+
+
+_WALK_IN = "Walk-in Customer"
+
+
+def _require_credit_customer(customer_id: str | None) -> None:
+    """Credit goes to an existing, named customer: never the walk-in, never one typed in at the till."""
+    cid = (customer_id or "").strip()
+    if not cid or not frappe.db.exists("Customer", cid):
+        frappe.throw("Pick an existing customer for a credit sale.")
+    if cid == _WALK_IN or frappe.db.get_value("Customer", cid, "customer_name") == _WALK_IN:
+        frappe.throw("A credit sale needs a named customer, not the walk-in customer.")
+
+
+def _net_owing(invoices: list[str]) -> dict[str, float]:
+    """What each invoice still owes after its credit notes: ERPNext keeps a credit note's own (negative) outstanding open
+    ("Update Outstanding for Self") and leaves the original's untouched, so the till nets them."""
+    if not invoices:
+        return {}
+    owing = {n: flt(frappe.db.get_value("Sales Invoice", n, "outstanding_amount")) for n in invoices}
+    rows = frappe.db.sql(
+        """select return_against, sum(outstanding_amount) from `tabSales Invoice`
+           where docstatus = 1 and is_return = 1 and update_outstanding_for_self = 1 and return_against in %(names)s
+           group by return_against""",
+        {"names": tuple(invoices)},
+    )
+    for against, credit in rows:
+        owing[against] = max(owing[against] + flt(credit), 0.0)
+    return owing
+
+
+def collect_payment(invoice: str, method: str, client_id: str, amount: Any = None, company: str | None = None) -> dict[str, Any]:
+    """Take a (part) payment against a posted retail POS invoice that is still owing. Idempotent on `client_id`
+    (the Payment Entry's `zatgo_client_id`), so a retried request returns the same payment."""
+    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+    require_login()
+    cid = require_str(client_id, "client_id")
+    mop = _MODE_OF_PAYMENT_MAP.get(str(method or "").lower())
+    if not mop:
+        frappe.throw(f"Unknown payment method: {method}")
+    frappe.has_permission("Payment Entry", "create", throw=True)
+    si = frappe.get_doc("Sales Invoice", require_str(invoice, "invoice"))
+    frappe.has_permission("Sales Invoice", "read", doc=si, throw=True)
+    if si.remarks != _MARKER or int(si.docstatus or 0) != 1 or int(si.is_return or 0):
+        frappe.throw(f"{si.name} is not a posted POS sale that can take a payment.")
+
+    existing = find_by_client_id("Payment Entry", cid)
+    if existing:
+        pe = frappe.get_doc("Payment Entry", existing)
+    else:
+        owing = _net_owing([si.name])[si.name]
+        if owing <= 0.005:
+            frappe.throw(f"{si.name} is already paid.")
+        amt = flt(amount) if amount not in (None, "") else owing
+        if amt <= 0 or amt > owing + 0.005:
+            frappe.throw(f"The amount must be more than 0 and at most {owing:.2f} (what is still owing).")
+        pe = get_payment_entry("Sales Invoice", si.name, party_amount=min(amt, owing))
+        pe.mode_of_payment = mop
+        _set_paid_to(pe, mop, si.company)
+        _set_bank_reference(pe, si)
+        pe.zatgo_client_id = cid
+        pe, _created = insert_idempotent(pe, doctype="Payment Entry", client_id=cid)
+    if int(pe.docstatus or 0) == 0:
+        try:
+            pe.submit()
+            frappe.db.commit()
+        except Exception as exc:
+            frappe.db.rollback()
+            frappe.log_error(title="Retail POS collect payment failed", message=frappe.get_traceback())
+            frappe.throw(f"Recording the payment failed: {_reason(exc)} Nothing was recorded -- retry.", PaymentPendingError)
+    frappe.db.commit()
+    si.reload()
+    return ok(_result(si, pe), meta={"stub": False, "source": _SOURCE})
+
+
+def unpaid_invoices(customer: str | None = None, page: int | str = 1, page_size: int | str = 50, company: str | None = None) -> dict[str, Any]:
+    """Posted retail POS invoices that still owe money (credit sales), oldest first; permission-aware."""
+    require_login()
+    page_i, size_i, start = parse_pagination(page, page_size)
+    filters: dict[str, Any] = {
+        "docstatus": 1,
+        "is_return": 0,
+        "remarks": _MARKER,
+        "outstanding_amount": [">", 0.005],
+        "company": _company(company),
+    }
+    if (customer or "").strip():
+        filters["customer"] = customer.strip()
+    rows = frappe.get_list(
+        "Sales Invoice",
+        filters=filters,
+        fields=["name", "customer", "customer_name", "grand_total", "outstanding_amount", "posting_date", "posting_time"],
+        order_by="posting_date asc, creation asc",
+        start=start,
+        page_length=size_i,
+    )
+    net = _net_owing([r.name for r in rows])
+    data = [
+        {
+            "id": r.name,
+            "customer": r.customer,
+            "customerName": r.customer_name or r.customer,
+            "total": flt(r.grand_total),
+            "outstanding": net[r.name],
+            "postedAt": f"{r.posting_date} {r.posting_time}",
+        }
+        for r in rows
+        if net[r.name] > 0.005  # a credit note may have cancelled what was owing
+    ]
+    return paginated(data, page=page_i, page_size=size_i, total=row_scope.count("Sales Invoice", filters), sort="oldest first")
+
+
+def customer_balance(customer: str, company: str | None = None) -> dict[str, Any]:
+    """What a customer owes (ERPNext's outstanding, open orders included) against their credit limit, so the till can show
+    it before a credit sale. `creditLimit` 0 means no limit is set (ERPNext then lets the sale through)."""
+    from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
+
+    require_login()
+    cust = require_str(customer, "customer")
+    frappe.has_permission("Customer", "read", doc=cust, throw=True)
+    comp = _company(company)
+    owing = flt(get_customer_outstanding(cust, comp, ignore_outstanding_sales_order=False))
+    limit = flt(get_credit_limit(cust, comp))
+    return ok(
+        {
+            "customer": cust,
+            "outstanding": owing,
+            "creditLimit": limit,
+            "available": max(limit - owing, 0.0) if limit > 0 else None,
+        },
+        meta={"stub": False, "source": "Customer"},
     )
 
 
