@@ -21,7 +21,7 @@ from frappe.utils import flt, get_datetime, today
 
 from zatgo_core.api.response import ok, paginated
 from zatgo_core.api.validators import parse_pagination, require_login, require_str
-from zatgo_core.services import offline_sale
+from zatgo_core.services import offline_sale, pos_settings
 from zatgo_core.services.offline_sale import PaymentPendingError
 from zatgo_core.services.resto_pos_admin_service import _MODE_TO_KEY, _company, _stock_rows
 from zatgo_core.services.resto_pos_service import (
@@ -193,6 +193,7 @@ def _build_invoice(rows, comp, cid, customer_id, customer_name, customer_phone, 
         discount_value,
     )
     _apply_sales_taxes(si, comp)
+    pos_settings.apply_tax_mode(si)
     return si
 
 

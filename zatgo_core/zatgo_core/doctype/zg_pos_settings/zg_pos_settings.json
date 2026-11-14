@@ -20,6 +20,8 @@
     "product_view",
     "counter_column",
     "allow_price_change",
+    "tax_section",
+    "tax_mode",
     "payments_tab",
     "payment_section",
     "default_payment_mode",
@@ -142,8 +144,21 @@
       "fieldname": "allow_price_change",
       "fieldtype": "Check",
       "label": "Allow Cashier to Change Prices",
-      "default": "0",
-      "description": "A price below the item's list price is still refused unless the user has a price-override role."
+      "default": "1",
+      "description": "Lets the cashier edit the rate on a cart line. A price below the item's list price is still refused unless the user has a price-override role."
+    },
+    {
+      "fieldname": "tax_section",
+      "fieldtype": "Section Break",
+      "label": "Tax"
+    },
+    {
+      "fieldname": "tax_mode",
+      "fieldtype": "Select",
+      "label": "Prices and Tax",
+      "options": "Follow tax template\nPrices include tax\nPrices exclude tax",
+      "default": "Follow tax template",
+      "description": "Inclusive: the price a cashier sees already contains the tax. Exclusive: tax is added on top at checkout. Follow tax template: as the company's Sales Taxes template says. Applies to POS sales only."
     },
     {
       "fieldname": "payments_tab",
@@ -358,7 +373,7 @@
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-11-14 12:00:00.000000",
+  "modified": "2026-11-14 18:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

@@ -122,6 +122,9 @@ def get_profile() -> dict[str, Any]:
         from zatgo_core.services.vansalex_settings import tax_summary
 
         tax = tax_summary(company)
+        override = pos_settings.tax_inclusive_override()
+        if override is not None:
+            tax = {**tax, "tax_inclusive": int(override)}  # ZG POS Settings -> Prices and Tax wins over the template
     return ok(
         {
             # The invoice's tax comes from the company's Sales Taxes template (the

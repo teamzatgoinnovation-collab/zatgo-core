@@ -64,13 +64,13 @@ class TestPOSSettings(IntegrationTestCase):
         self.assertEqual(got["data"]["print_copies"], 2)
 
     def test_counter_defaults_and_values(self) -> None:
-        # nothing stored: the DocType defaults (80mm, grid, no price change, Phase 1 QR)
+        # nothing stored: the DocType defaults (80mm, grid, price change allowed, Phase 1 QR)
         for field in ("paper_size", "product_view", "allow_price_change", "invoice_qr"):
             frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
         frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
         self.assertEqual(
             pos_settings.effective()["counter"],
-            {"paper_size": "80mm", "product_view": "grid", "allow_price_change": 0, "invoice_qr": "phase1"},
+            {"paper_size": "80mm", "product_view": "grid", "allow_price_change": 1, "invoice_qr": "phase1"},
         )
         doc = frappe.get_doc(pos_settings.SETTINGS)
         doc.paper_size, doc.product_view, doc.allow_price_change, doc.invoice_qr = "A4", "Row", 1, "Off"
@@ -124,6 +124,49 @@ class TestPOSSettings(IntegrationTestCase):
             p.execute()
         self.assertEqual(pos_settings.effective()["pages"]["reports"], 0)  # a stored choice is never overwritten
         clear()
+
+    def test_prices_and_tax_mode(self) -> None:
+        frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, "tax_mode"))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+        self.assertIsNone(pos_settings.tax_inclusive_override())  # never chosen: follow the template
+
+        def invoice():
+            return frappe._dict(
+                taxes=[
+                    frappe._dict(charge_type="On Net Total", included_in_print_rate=0),
+                    frappe._dict(charge_type="Actual", included_in_print_rate=0),
+                ]
+            )
+
+        doc = frappe.get_doc(pos_settings.SETTINGS)
+        doc.tax_mode = "Prices include tax"
+        doc.save()
+        self.assertIs(pos_settings.tax_inclusive_override(), True)
+        si = invoice()
+        pos_settings.apply_tax_mode(si)
+        self.assertEqual([r.included_in_print_rate for r in si.taxes], [1, 0])  # an Actual row cannot be inclusive
+        doc.tax_mode = "Prices exclude tax"
+        doc.save()
+        self.assertIs(pos_settings.tax_inclusive_override(), False)
+        si = invoice()
+        si.taxes[0].included_in_print_rate = 1  # the template said inclusive; the site chose exclusive
+        pos_settings.apply_tax_mode(si)
+        self.assertEqual([r.included_in_print_rate for r in si.taxes], [0, 0])
+        doc.tax_mode = "Follow tax template"
+        doc.save()
+        si = invoice()
+        si.taxes[0].included_in_print_rate = 1
+        pos_settings.apply_tax_mode(si)
+        self.assertEqual(si.taxes[0].included_in_print_rate, 1)  # untouched
+        # the POS profile reports what the site chose, so the app and the invoice agree
+        doc.tax_mode = "Prices exclude tax"
+        doc.save()
+        from zatgo_core.api.v1 import pos_profile
+
+        got = pos_profile.get()
+        self.assertEqual(got["data"]["tax_inclusive"], 0)
+        frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, "tax_mode"))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
 
     def test_no_discounts_means_a_zero_cap(self) -> None:
         doc = frappe.get_doc(pos_settings.SETTINGS)

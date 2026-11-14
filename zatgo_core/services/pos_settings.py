@@ -132,9 +132,31 @@ def counter_policy(doc=None) -> dict[str, Any]:
     return {
         "paper_size": paper if paper in ("80mm", "A4") else "80mm",
         "product_view": "row" if view == "Row" else "grid",
-        "allow_price_change": cint(_stored(doc, "allow_price_change", 0)),
+        "allow_price_change": cint(_stored(doc, "allow_price_change", 1)),
         "invoice_qr": "off" if qr == "Off" else "phase1",
     }
+
+
+TAX_MODES = {"Prices include tax": True, "Prices exclude tax": False}
+
+
+def tax_inclusive_override(doc=None) -> bool | None:
+    """ZG POS Settings -> Prices and Tax: True = prices include tax, False = tax is added on top, None = follow the company's
+    Sales Taxes template (the default, and what a site that never chose gets)."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    return TAX_MODES.get(_stored(doc, "tax_mode", "Follow tax template"))
+
+
+def apply_tax_mode(doc) -> None:
+    """Make a POS Sales Invoice's tax rows follow the chosen mode (after the template's rows were copied onto it). Only
+    rows that can be part of a price (On Net Total / On Previous Row ...) change: an Actual amount cannot be inclusive."""
+    mode = tax_inclusive_override()
+    if mode is None:
+        return
+    for row in doc.get("taxes") or []:
+        if row.get("charge_type") == "Actual":
+            continue
+        row.included_in_print_rate = 1 if mode else 0
 
 
 PAGE_KEYS = ("dashboard", "orders", "floor", "kds", "catalog", "billing", "delivery", "inventory", "reports")

@@ -598,6 +598,7 @@ def pay(
     discount_value: float | str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
+    from zatgo_core.services import pos_settings
     from zatgo_core.services.vansalex_service import _apply_sales_taxes
 
     require_login()
@@ -665,6 +666,7 @@ def pay(
         )
         _apply_discount(si, doc, discount_type, discount_value)
         _apply_sales_taxes(si, comp)
+        pos_settings.apply_tax_mode(si)
         si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
         # In the invoice's own commit: a payment failure below must not leave a posted invoice the order doesn't know.
         frappe.db.set_value("ZG Order", doc.name, "sales_invoice", si.name, update_modified=False)
