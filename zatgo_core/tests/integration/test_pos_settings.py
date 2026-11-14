@@ -83,6 +83,22 @@ class TestPOSSettings(IntegrationTestCase):
             frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
         frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
 
+    def test_only_the_pos_screen_by_default_and_pages_follow_the_switches(self) -> None:
+        fields = [f"page_{k}" for k in pos_settings.PAGE_KEYS]
+        for field in fields:
+            frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+        # nothing stored: every page is off
+        self.assertEqual(pos_settings.effective()["pages"], {k: 0 for k in pos_settings.PAGE_KEYS})
+        doc = frappe.get_doc(pos_settings.SETTINGS)
+        doc.page_reports, doc.page_dashboard = 1, 1
+        doc.save()
+        got = pos_settings.effective()["pages"]
+        self.assertEqual({k for k, v in got.items() if v}, {"reports", "dashboard"})
+        for field in fields:
+            frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+
     def test_no_discounts_means_a_zero_cap(self) -> None:
         doc = frappe.get_doc(pos_settings.SETTINGS)
         doc.allow_discounts, doc.max_discount_percent = 0, 40

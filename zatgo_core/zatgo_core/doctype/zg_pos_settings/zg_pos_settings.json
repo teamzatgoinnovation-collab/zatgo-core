@@ -43,7 +43,19 @@
     "offline_column",
     "snapshot_refresh_minutes",
     "allow_card_offline",
-    "offline_help"
+    "offline_help",
+    "pages_tab",
+    "pages_section",
+    "page_dashboard",
+    "page_orders",
+    "page_floor",
+    "page_kds",
+    "page_catalog",
+    "page_billing",
+    "page_delivery",
+    "page_inventory",
+    "page_reports",
+    "pages_help"
   ],
   "fields": [
     {
@@ -271,13 +283,82 @@
       "fieldname": "offline_help",
       "fieldtype": "HTML",
       "options": "A sale made offline is posted with its original date and time. If prices, tax or stock changed meanwhile it is still posted, at the server's figures, and listed under <a href=\"/desk/zg-offline-sale-issue\">Offline Sale Issues</a> for a manager to review."
+    },
+    {
+      "fieldname": "pages_tab",
+      "fieldtype": "Tab Break",
+      "label": "Pages"
+    },
+    {
+      "fieldname": "pages_section",
+      "fieldtype": "Section Break",
+      "label": "Pages shown in the POS app"
+    },
+    {
+      "fieldname": "page_dashboard",
+      "fieldtype": "Check",
+      "label": "Dashboard",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_orders",
+      "fieldtype": "Check",
+      "label": "Orders",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_floor",
+      "fieldtype": "Check",
+      "label": "Floor (tables)",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_kds",
+      "fieldtype": "Check",
+      "label": "Kitchen display",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_catalog",
+      "fieldtype": "Check",
+      "label": "Menu / Catalog",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_billing",
+      "fieldtype": "Check",
+      "label": "Billing",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_delivery",
+      "fieldtype": "Check",
+      "label": "Couriers (delivery)",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_inventory",
+      "fieldtype": "Check",
+      "label": "Inventory",
+      "default": "0"
+    },
+    {
+      "fieldname": "page_reports",
+      "fieldtype": "Check",
+      "label": "Reports",
+      "default": "0"
+    },
+    {
+      "fieldname": "pages_help",
+      "fieldtype": "HTML",
+      "options": "The POS screen is always on. Every other page stays hidden until it is ticked here; when only the POS screen is left, the app shows no sidebar. Restaurant pages (Floor, Orders, Kitchen, Billing) also need the Restaurant industry."
     }
   ],
   "index_web_pages_for_search": 0,
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-11-01 09:00:00.000000",
+  "modified": "2026-11-14 12:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG POS Settings",

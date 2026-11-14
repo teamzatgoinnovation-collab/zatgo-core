@@ -137,6 +137,16 @@ def counter_policy(doc=None) -> dict[str, Any]:
     }
 
 
+PAGE_KEYS = ("dashboard", "orders", "floor", "kds", "catalog", "billing", "delivery", "inventory", "reports")
+
+
+def pages_policy(doc=None) -> dict[str, int]:
+    """Which POS app pages the site switched on (ZG POS Settings -> Pages). The POS screen itself is always on and not listed.
+    Unticked or never saved means off: a site shows only the POS screen until an admin ticks more."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    return {key: cint(doc.get(f"page_{key}")) for key in PAGE_KEYS}
+
+
 def effective() -> dict[str, Any]:
     doc = frappe.get_cached_doc(SETTINGS)
     allow_discounts, max_discount_percent = discount_policy(doc)
@@ -157,4 +167,5 @@ def effective() -> dict[str, Any]:
         "print_copies": max(cint(doc.print_copies), 1),
         "offline": offline_policy(doc),
         "counter": counter_policy(doc),
+        "pages": pages_policy(doc),
     }
