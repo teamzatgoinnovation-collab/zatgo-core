@@ -308,6 +308,11 @@ class TestRetailPosBank(_SplitBase):
                 self.assertEqual(admin.get_profile()["data"]["bank_mode"], "Bank Transfer")
             self.assertEqual(svc._method_key("Bank Transfer"), "bank")
 
+    def test_a_site_whose_modes_have_no_accounts_still_gets_bank(self) -> None:
+        mode = svc.bank_mode("A Company With No Mode Accounts")  # no mode has an account there
+        self.assertIsNotNone(mode)
+        self.assertTrue(frappe.db.get_value("Mode of Payment", {"name": mode, "enabled": 1}))
+
     def test_bank_sale_posts_to_the_bank_mode_with_a_reference(self) -> None:
         with bank_transfer_mode(self.company) as name:
             if not name:

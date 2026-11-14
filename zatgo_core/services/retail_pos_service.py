@@ -90,8 +90,8 @@ _BANK_MODE_NAMES = ("Bank", "Bank Transfer", "Wire Transfer", "Bank Draft")
 
 
 def bank_mode(company: str | None = None) -> str | None:
-    """The enabled Mode of Payment the Bank method posts to for `company` (needs a default account there), or None when the
-    site has none: the till then does not offer Bank."""
+    """The enabled Mode of Payment the Bank method posts to for `company` (one with a default account there is preferred), or
+    None when the site has no bank-like mode at all: the till then does not offer Bank."""
     comp = company or _company()
     enabled = {
         r.name: r
@@ -104,10 +104,13 @@ def bank_mode(company: str | None = None) -> str | None:
     named = [n for n in _BANK_MODE_NAMES if n in enabled]
     typed = [n for n, r in enabled.items() if r.type == "Bank" and n not in named and n not in ("Card", "Wallet")]
     fallback = [n for n in ("Card", "Wallet") if n in enabled]
-    for name in [*named, *typed, *fallback]:
+    candidates = [*named, *typed, *fallback]
+    for name in candidates:
         if has_account(name):
             return name
-    return None
+    # No mode has an account for this company (a young site): ERPNext then posts to the company's default bank account, the
+    # way Card and Wallet always did here, so the first candidate still works. None only when the site has no such mode at all.
+    return candidates[0] if candidates else None
 
 
 def resolve_mode(key: str, company: str | None = None) -> str | None:
