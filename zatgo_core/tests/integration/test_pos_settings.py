@@ -99,6 +99,32 @@ class TestPOSSettings(IntegrationTestCase):
             frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
         frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
 
+    def test_restaurant_sites_keep_their_pages_on_upgrade(self) -> None:
+        from unittest.mock import patch
+
+        from zatgo_core.patches.v0_5_2 import keep_pages_for_restaurant_sites as p
+
+        fields = [f"page_{k}" for k in pos_settings.PAGE_KEYS]
+
+        def clear() -> None:
+            for field in fields:
+                frappe.db.sql("delete from tabSingles where doctype = %s and field = %s", (pos_settings.SETTINGS, field))
+            frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+
+        clear()
+        with patch("zatgo_core.industries.gate.is_enabled", return_value=False):
+            p.execute()
+        self.assertEqual(sum(pos_settings.effective()["pages"].values()), 0)  # not a restaurant site: POS only
+        with patch("zatgo_core.industries.gate.is_enabled", return_value=True):
+            p.execute()
+        self.assertEqual(sum(pos_settings.effective()["pages"].values()), len(fields))  # restaurant site: all kept
+        frappe.db.set_single_value(pos_settings.SETTINGS, "page_reports", 0)  # the admin's own later choice
+        frappe.clear_document_cache(pos_settings.SETTINGS, pos_settings.SETTINGS)
+        with patch("zatgo_core.industries.gate.is_enabled", return_value=True):
+            p.execute()
+        self.assertEqual(pos_settings.effective()["pages"]["reports"], 0)  # a stored choice is never overwritten
+        clear()
+
     def test_no_discounts_means_a_zero_cap(self) -> None:
         doc = frappe.get_doc(pos_settings.SETTINGS)
         doc.allow_discounts, doc.max_discount_percent = 0, 40

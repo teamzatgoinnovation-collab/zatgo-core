@@ -49,3 +49,4 @@ zatgo_core.patches.v0_4_11.add_offline_receipt_field
 zatgo_core.patches.v0_5_0.enable_duplicate_prevention_default_on
 zatgo_core.patches.v0_5_0.seed_duplicate_rules
 zatgo_core.patches.v0_5_0.add_duplicate_indexes
+zatgo_core.patches.v0_5_2.keep_pages_for_restaurant_sites
