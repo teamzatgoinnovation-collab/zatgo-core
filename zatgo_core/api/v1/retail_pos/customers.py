@@ -21,8 +21,8 @@ def list(
 
 
 @frappe.whitelist(methods=["POST"])
-def upsert(customer_id: str | None = None, customer_name: str | None = None, phone: str | None = None, email: str | None = None, client_id: str | None = None) -> dict[str, Any]:
-    return svc.upsert_customer(customer_id, customer_name, phone, email, client_id)
+def upsert(customer_id: str | None = None, customer_name: str | None = None, phone: str | None = None, email: str | None = None, client_id: str | None = None, vat_number: str | None = None) -> dict[str, Any]:
+    return svc.upsert_customer(customer_id, customer_name, phone, email, client_id, vat_number)
 
 
 @frappe.whitelist()

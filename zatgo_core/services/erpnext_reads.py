@@ -111,6 +111,8 @@ def map_item_row(row: dict[str, Any]) -> dict[str, Any]:
         "barcode": row.get("barcode") or "",
         "uom": row.get("stock_uom"),
         "stock_uom": row.get("stock_uom"),
+        # Set by list_items from the UOM; absent = unknown (the till then allows decimals, as before).
+        **({"must_be_whole_number": int(row["must_be_whole_number"])} if row.get("must_be_whole_number") is not None else {}),
         "sales_uom": row.get("sales_uom") or "",
         "description": row.get("description") or "",
         "has_batch_no": int(row.get("has_batch_no") or 0),
@@ -167,6 +169,7 @@ def list_items(
         map_row=map_item_row,
     )
     _fill_barcodes(payload["data"])
+    _fill_whole_uom(payload["data"])
     # Items with no Standard Selling Rate still have an ERPNext selling price
     # (Item Price): show that instead of 0.00.
     missing = [r["item_code"] for r in payload["data"] if not r["standard_rate"]]
@@ -175,6 +178,20 @@ def list_items(
         if not r["standard_rate"] and r["item_code"] in prices:
             r["standard_rate"] = r["price"] = r["rate"] = prices[r["item_code"]]
     return payload
+
+
+def _fill_whole_uom(rows: list[dict[str, Any]]) -> None:
+    """Whether each Item's UOM only allows whole quantities (ERPNext UOM -> Must be Whole Number): a scale item (Kg, Litre)
+    takes decimals at the till, a counted one (Nos) does not."""
+    uoms = sorted({r["stock_uom"] for r in rows if r.get("stock_uom")})
+    if not uoms:
+        return
+    whole = {u.name: int(u.must_be_whole_number or 0) for u in frappe.get_all(
+        "UOM", filters={"name": ["in", uoms]}, fields=["name", "must_be_whole_number"]
+    )}
+    for r in rows:
+        if r.get("stock_uom") in whole:
+            r["must_be_whole_number"] = whole[r["stock_uom"]]
 
 
 def _fill_barcodes(rows: list[dict[str, Any]]) -> None:

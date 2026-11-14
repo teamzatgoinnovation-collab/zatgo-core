@@ -27,6 +27,7 @@ def create(
     expected_tax: Any = None,
     paid_now: Any = None,
     paid_method: str | None = None,
+    payments: Any = None,
 ) -> dict[str, Any]:
     """items = [{item_code, item_name?, qty, rate}]. Idempotent on client_id.
 
@@ -34,7 +35,10 @@ def create(
     number it printed), device_id and the receipt's expected_total / expected_tax; see services/offline_sale.py.
 
     method="credit" (when the site allows it) posts the sale to a named customer unpaid; `paid_now` + `paid_method` take a
-    part payment at the till."""
+    part payment at the till.
+
+    payments=[{method, amount, reference?}] pays the sale with several modes of payment (split payment): the amounts
+    must add up to the invoice total; `method` is then ignored."""
     return svc.create_sale(
         items,
         method,
@@ -52,6 +56,7 @@ def create(
         expected_tax=expected_tax,
         paid_now=paid_now,
         paid_method=paid_method,
+        payments=payments,
     )
 
 

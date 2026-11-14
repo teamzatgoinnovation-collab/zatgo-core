@@ -120,6 +120,12 @@ def credit_allowed(doc=None) -> bool:
     return bool(cint(_stored(doc, "allow_credit_sales", 0)))
 
 
+def split_allowed(doc=None) -> bool:
+    """One sale paid with more than one mode of payment (ZG POS Settings -> Payments), on unless switched off."""
+    doc = doc or frappe.get_cached_doc(SETTINGS)
+    return bool(cint(_stored(doc, "allow_split_payment", 1)))
+
+
 def discount_policy(doc=None) -> tuple[int, float]:
     """(allow_discounts, max_discount_percent) as ZG POS Settings stores them, with the DocType defaults when never saved."""
     doc = doc or frappe.get_cached_doc(SETTINGS)

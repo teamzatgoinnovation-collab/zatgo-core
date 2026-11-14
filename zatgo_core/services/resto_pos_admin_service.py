@@ -125,12 +125,23 @@ def get_profile() -> dict[str, Any]:
         override = pos_settings.tax_inclusive_override()
         if override is not None:
             tax = {**tax, "tax_inclusive": int(override)}  # ZG POS Settings -> Prices and Tax wins over the template
+    tax_rows: list[dict[str, Any]] = []
+    if tax.get("tax_template"):
+        # The template's rows, for the till's tax breakdown only (the invoice's own figures stay authoritative).
+        for r in frappe.get_all(
+            "Sales Taxes and Charges",
+            filters={"parent": tax["tax_template"], "parenttype": "Sales Taxes and Charges Template", "charge_type": "On Net Total"},
+            fields=["description", "rate"],
+            order_by="idx asc",
+        ):
+            tax_rows.append({"description": r.description, "rate": float(r.rate or 0)})
     return ok(
         {
             # The invoice's tax comes from the company's Sales Taxes template (the
             # POS only displays it): percent on net total, and whether prices include it.
             "tax_template": tax["tax_template"],
             "tax_rate": tax["tax_rate"],
+            "tax_rows": tax_rows,
             "tax_inclusive": tax["tax_inclusive"],
             # Changes whenever the tax a sale would carry changes: an offline POS compares it with the copy it sells from.
             "tax_version": _tax_version(tax),
@@ -475,16 +486,20 @@ def upsert_customer(
     phone: str | None = None,
     email: str | None = None,
     client_id: str | None = None,
+    vat_number: str | None = None,
 ) -> dict[str, Any]:
     from zatgo_core.services.erpnext_writes import create_customer
 
     require_login()
+    vat = (vat_number or "").strip()
     cid = (customer_id or "").strip()
     if cid and frappe.db.exists("Customer", cid):
         frappe.has_permission("Customer", "write", doc=cid, throw=True)
         doc = frappe.get_doc("Customer", cid)
         if customer_name and customer_name.strip():
             doc.customer_name = customer_name.strip()
+        if vat_number is not None:
+            doc.tax_id = vat or None
         doc.save()
         # mobile_no / email_id are fetched-from-contact fields: a plain save keeps
         # the fetched value, so write them directly (same as create_customer).
@@ -502,6 +517,8 @@ def upsert_customer(
     )
     data = created["data"]
     name = data.get("id") or data.get("name")
+    if vat:
+        frappe.db.set_value("Customer", name, "tax_id", vat)  # ERPNext's own Tax ID: printed as the buyer's VAT number
     return ok(_map_customer(frappe.get_doc("Customer", name)), meta={"stub": False, "source": "Customer"})
 
 

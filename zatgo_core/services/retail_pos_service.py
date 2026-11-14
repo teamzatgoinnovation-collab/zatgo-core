@@ -216,6 +216,7 @@ def create_sale(
     expected_tax: Any = None,
     paid_now: Any = None,
     paid_method: str | None = None,
+    payments: Any = None,
 ) -> dict[str, Any]:
     """Post a counter sale: Sales Invoice (stock out) + Payment Entry. Idempotent on `client_id`.
 
@@ -225,16 +226,24 @@ def create_sale(
 
     `method="credit"` (ZG POS Settings -> Allow Credit Sales) posts the invoice to a named customer and leaves it unpaid
     -- or part-paid, `paid_now` taken by `paid_method` (cash / card / wallet) -- for `collect_payment` later. ERPNext's own
-    customer credit limit applies when the invoice is submitted; a credit sale is never taken offline."""
+    customer credit limit applies when the invoice is submitted; a credit sale is never taken offline.
+
+    `payments=[{method, amount, reference?}]` (instead of `method`) pays one invoice with several modes of payment: the
+    amounts must add up to the invoice total, one Payment Entry is posted per row (idempotent, `<client_id>:pay`,
+    `:pay:2` ...), more than one row needs ZG POS Settings -> Allow Split Payment and a connection."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     require_login()
     cid = require_str(client_id, "client_id")
-    method_key = str(method or "").lower()
-    credit = method_key == "credit"
+    plan = _parse_payments(payments)
+    method_key = plan[0]["key"] if plan else str(method or "").lower()
+    credit = method_key == "credit" and not plan
     paid_now_amt = 0.0
-    if credit:
+    if plan:
+        if len(plan) > 1 and not pos_settings.split_allowed():
+            frappe.throw("Split payment is not switched on for this site (ZG POS Settings -> Payments).", frappe.PermissionError)
+    elif credit:
         if not pos_settings.credit_allowed():
             frappe.throw("Credit sales are not switched on for this site (ZG POS Settings -> Payments).", frappe.PermissionError)
         _require_credit_customer(customer_id)
@@ -242,10 +251,14 @@ def create_sale(
         if paid_now_amt < 0:
             frappe.throw("The amount paid now cannot be negative.")
         mop = _MODE_OF_PAYMENT_MAP.get(str(paid_method or "cash").lower())
+        if not mop:
+            frappe.throw(f"Unknown payment method: {paid_method}")
+        plan = [{"key": str(paid_method or "cash").lower(), "mop": mop, "amount": paid_now_amt, "reference": ""}] if paid_now_amt > 0 else []
     else:
         mop = _MODE_OF_PAYMENT_MAP.get(method_key)
-    if not mop:
-        frappe.throw(f"Unknown payment method: {paid_method if credit else method}")
+        if not mop:
+            frappe.throw(f"Unknown payment method: {method}")
+        plan = [{"key": method_key, "mop": mop, "amount": None, "reference": ""}]
 
     rows = _parse_order_items(items)
     if not rows:
@@ -256,6 +269,8 @@ def create_sale(
     sale = offline_sale.parse(offline, sale_datetime, offline_ref, device_id, expected_total, expected_tax)
     if sale and credit:
         frappe.throw("A credit sale needs a connection: it cannot be taken offline.")
+    if sale and len(plan) > 1:
+        frappe.throw("Split payment needs a connection: it cannot be taken offline.")
     if sale:
         offline_sale.check_method(sale, method_key)
     _validate_rates(rows, enforce_floor=sale is None)
@@ -299,6 +314,17 @@ def create_sale(
             frappe.delete_doc("Sales Invoice", si.name, force=1, ignore_permissions=True)
             frappe.db.commit()
             frappe.throw("The amount paid now covers the whole total: take it as Cash, Card or Wallet instead of Credit.")
+        if plan and not credit and plan[0]["amount"] is not None:
+            # The till rounds like the site, but a cent of difference is not a refusal: it goes on the last payment.
+            diff = flt(si.grand_total) - sum(flt(p["amount"]) for p in plan)
+            if abs(diff) > _PAY_TOLERANCE or plan[-1]["amount"] + diff <= 0:
+                paid_total = sum(flt(p["amount"]) for p in plan)
+                frappe.delete_doc("Sales Invoice", si.name, force=1, ignore_permissions=True)
+                frappe.db.commit()
+                frappe.throw(
+                    f"The payments add up to {paid_total:.2f} but the sale total is {flt(si.grand_total):.2f}: they must match."
+                )
+            plan[-1]["amount"] = flt(plan[-1]["amount"] + diff, 2)
         if sale:
             si.flags.zg_offline_sale = True  # may take stock below zero (overrides/sales_invoice.py)
         # The insert above is not committed either: the rollback removes the draft too.
@@ -335,35 +361,49 @@ def create_sale(
             meta={"stub": False, "created": si_created, "idempotent": not si_created, "source": _SOURCE, **meta_extra},
         )
 
-    pay_cid = f"{cid}:pay"
-    existing_pe = find_by_client_id("Payment Entry", pay_cid)
-    if existing_pe:
-        pe = frappe.get_doc("Payment Entry", existing_pe)
-    else:
-        pe = get_payment_entry("Sales Invoice", si.name, party_amount=paid_now_amt) if credit else get_payment_entry("Sales Invoice", si.name)
-        if sale:
-            pe.posting_date = si.posting_date  # the money was taken on the day of the sale
-        pe.mode_of_payment = mop
-        _set_paid_to(pe, mop, comp)
-        _set_bank_reference(pe, si)
-        pe.zatgo_client_id = pay_cid
-        pe, _pe_created = insert_idempotent(pe, doctype="Payment Entry", client_id=pay_cid)
-    if int(pe.docstatus or 0) == 0:
-        try:
-            pe.submit()
-            frappe.db.commit()
-        except Exception as exc:
-            # Rolls back the uncommitted payment insert; the invoice was committed above (posted, unpaid).
-            frappe.db.rollback()
-            frappe.log_error(title="Retail POS Payment Entry submit failed", message=frappe.get_traceback())
-            frappe.throw(
-                f"The invoice {si.name} posted, but recording the payment failed: {_reason(exc)} Retry the payment.",
-                PaymentPendingError,
+    pes = []
+    for idx, p in enumerate(plan):
+        pay_cid = f"{cid}:pay" if idx == 0 else f"{cid}:pay:{idx + 1}"
+        existing_pe = find_by_client_id("Payment Entry", pay_cid)
+        if existing_pe:
+            pe = frappe.get_doc("Payment Entry", existing_pe)
+        else:
+            pe = (
+                get_payment_entry("Sales Invoice", si.name, party_amount=p["amount"])
+                if p["amount"] is not None
+                else get_payment_entry("Sales Invoice", si.name)
             )
+            if sale:
+                pe.posting_date = si.posting_date  # the money was taken on the day of the sale
+            pe.mode_of_payment = p["mop"]
+            _set_paid_to(pe, p["mop"], comp)
+            if p["reference"]:
+                pe.reference_no = p["reference"]
+                pe.reference_date = si.posting_date
+            _set_bank_reference(pe, si)
+            pe.zatgo_client_id = pay_cid
+            pe, _pe_created = insert_idempotent(pe, doctype="Payment Entry", client_id=pay_cid)
+        if int(pe.docstatus or 0) == 0:
+            try:
+                pe.submit()
+                frappe.db.commit()
+            except Exception as exc:
+                # Rolls back the uncommitted payment insert; the invoice (and any earlier payment) is committed.
+                frappe.db.rollback()
+                frappe.log_error(title="Retail POS Payment Entry submit failed", message=frappe.get_traceback())
+                frappe.throw(
+                    f"The invoice {si.name} posted, but recording the payment failed: {_reason(exc)} Retry the payment.",
+                    PaymentPendingError,
+                )
+        pes.append(pe)
     frappe.db.commit()
-    si.reload()  # outstanding_amount moved when the payment was submitted
+    si.reload()  # outstanding_amount moved when the payments were submitted
+    data = _result(si, pes[0])
+    data["payments"] = [_map_payment(pe, si) for pe in pes]
+    if len(pes) > 1:
+        data["payment"]["amount"] = sum(flt(pe.paid_amount) for pe in pes)  # the sale's payment is all of them
     return ok(
-        _result(si, pe),
+        data,
         meta={
             "stub": False,
             "created": si_created,
@@ -375,7 +415,38 @@ def create_sale(
     )
 
 
+def _parse_payments(payments: Any) -> list[dict[str, Any]]:
+    """The `payments` argument as rows `{key, mop, amount, reference}`; [] when none were sent. Every row must be a
+    method this site offers (an enabled ERPNext Mode of Payment) with a positive amount."""
+    import json
+
+    if payments in (None, "", []):
+        return []
+    if isinstance(payments, str):
+        try:
+            payments = json.loads(payments)
+        except ValueError:
+            frappe.throw("payments must be a list of {method, amount}.")
+    if not isinstance(payments, list) or not payments:
+        frappe.throw("payments must be a list of {method, amount}.")
+    out = []
+    for row in payments:
+        row = row or {}
+        key = str(row.get("method") or "").lower()
+        mop = _MODE_OF_PAYMENT_MAP.get(key)
+        if not mop:
+            frappe.throw(f"Unknown payment method: {row.get('method')}")
+        if not frappe.db.get_value("Mode of Payment", {"name": mop, "enabled": 1}):
+            frappe.throw(f"{mop} is not set up on this site: add or enable that Mode of Payment first.")
+        amount = flt(row.get("amount"))
+        if amount <= 0:
+            frappe.throw(f"The {mop} amount must be more than 0.")
+        out.append({"key": key, "mop": mop, "amount": amount, "reference": str(row.get("reference") or "").strip()[:140]})
+    return out
+
+
 _WALK_IN = "Walk-in Customer"
+_PAY_TOLERANCE = 0.05  # largest rounding difference between the till's total and the invoice's
 
 
 def _require_credit_customer(customer_id: str | None) -> None:
