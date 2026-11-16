@@ -5,6 +5,9 @@
 frappe.ui.form.on("ZG Sales Invoice Naming Settings", {
 	setup(frm) {
 		frm.set_query("user", "rules", () => ({ filters: { enabled: 1 } }));
+		for (const f of ["print_format_a4", "print_format_80mm"]) {
+			frm.set_query(f, "rules", () => ({ filters: { doc_type: "Sales Invoice", disabled: 0 } }));
+		}
 	},
 	refresh(frm) {
 		set_series_options(frm, (frm.doc.__onload || {}).sales_invoice_series || []);

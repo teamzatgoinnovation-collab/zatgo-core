@@ -8,6 +8,7 @@ from frappe.model.document import Document
 
 from zatgo_core.services.naming_series import get_naming_series_options
 from zatgo_core.services.sales_invoice_naming import validate_rules
+from zatgo_core.services.sales_invoice_print import validate_rule_formats
 
 
 class ZGSalesInvoiceNamingSettings(Document):
@@ -19,3 +20,4 @@ class ZGSalesInvoiceNamingSettings(Document):
 
     def validate(self) -> None:
         validate_rules(self.rules)
+        validate_rule_formats(self.rules)

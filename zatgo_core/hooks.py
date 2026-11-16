@@ -271,6 +271,9 @@ from zatgo_core.compat_methods import OLD_METHOD_PATHS  # noqa: E402
 # Old app method paths + the IFRS Report Template switch on query reports (services/report_templates.py).
 override_whitelisted_methods = {
     **OLD_METHOD_PATHS,
+    # User-wise Sales Invoice print format (services/sales_invoice_print.py).
+    "frappe.www.printview.get_html_and_style": "zatgo_core.overrides.print_entry.get_html_and_style",
+    "frappe.utils.print_format.download_pdf": "zatgo_core.overrides.print_entry.download_pdf",
     "frappe.desk.query_report.run": "zatgo_core.overrides.query_report.run",
     "frappe.desk.query_report.export_query": "zatgo_core.overrides.query_report.export_query",
     # Link fields also find records by tax ID / phone / e-mail / barcode (services/duplicate/link_search.py).

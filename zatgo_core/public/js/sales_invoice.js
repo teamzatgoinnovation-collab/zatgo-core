@@ -60,10 +60,12 @@ frappe.ui.form.on("Sales Invoice", {
 	refresh(frm) {
 		show_payment_type_hint(frm);
 		show_user_naming_series(frm);
+		show_user_print_format(frm);
 		show_payment_summary(frm);
 	},
 	company(frm) {
 		show_user_naming_series(frm);
+		show_user_print_format(frm);
 	},
 	is_return(frm) {
 		show_user_naming_series(frm);
@@ -81,6 +83,15 @@ function show_user_naming_series(frm) {
 	if (!rule) return;
 	const series = frm.doc.is_return ? rule.return_series : rule.normal_series;
 	if (frm.doc.naming_series !== series) frm.set_value("naming_series", series);
+}
+
+// User-wise print format (ZG Sales Invoice Naming Settings, print columns): make the
+// user's own format the one Print opens with. The server enforces "restricted" users
+// (overrides/print_entry.py) -- this only pre-selects.
+function show_user_print_format(frm) {
+	const all = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.sales_invoice_print) || {};
+	const cfg = all[frm.doc.company];
+	if (cfg && cfg.default) frm.meta.default_print_format = cfg.default;
 }
 
 // ZG System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).

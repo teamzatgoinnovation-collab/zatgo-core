@@ -344,16 +344,23 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
             frappe.ValidationError,
         )
 
-    fmt = (print_format or "").strip() or default_print_format()
+    # User-wise print format (services/sales_invoice_print.py): the caller's
+    # rule maps the app's A4 / 80mm choice to their own formats and, when
+    # restricted, refuses any other.
+    from zatgo_core.services.sales_invoice_naming import find_rule
+    from zatgo_core.services.sales_invoice_print import is_80mm, resolve_print_format
+
+    company = frappe.db.get_value("Sales Invoice", invoice, "company")
+    fmt = resolve_print_format(frappe.session.user, company, print_format) or default_print_format()
     if not frappe.db.exists("Print Format", fmt):
         fmt = default_print_format()
     # Printing is read-only, but which papers a client prints on is a
     # VanSaleX feature: the thermal format is "80mm", anything else is A4.
-    from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_80MM_NAME
-
     require_access("sales_invoice", "sales_return", "documents")
     require_access(
-        "sales_invoice.print_80mm" if fmt == PRINT_FORMAT_80MM_NAME else "sales_invoice.print_a4"
+        "sales_invoice.print_80mm"
+        if is_80mm(fmt, find_rule(frappe.session.user, company))
+        else "sales_invoice.print_a4"
     )
 
     pdf_bytes = frappe.get_print(

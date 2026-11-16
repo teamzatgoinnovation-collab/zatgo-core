@@ -11,6 +11,7 @@ from zatgo_core.constants.settings import DOCTYPES
 from zatgo_core.industries.gate import enabled_keys
 from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, subscription_gate, ui_settings
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
+from zatgo_core.services.sales_invoice_print import session_print_config
 
 
 def _desk_route(link_type: str, name: str) -> str:
@@ -149,6 +150,8 @@ def boot_session(bootinfo: Any) -> None:
             # This user's own invoice/return series per company, for the
             # Sales Invoice form (public/js/sales_invoice.js).
             "sales_invoice_naming": get_session_user_series(),
+            # Same user's print formats per company (public/js/sales_invoice.js).
+            "sales_invoice_print": session_print_config(),
             "subscription": subscription_gate.boot_payload(),
         }
         _zatgo_folder_children(bootinfo)
