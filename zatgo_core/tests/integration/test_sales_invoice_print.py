@@ -6,7 +6,6 @@ suite never touches a site's real naming settings.
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import patch
 
 import frappe
@@ -23,7 +22,7 @@ def rule(**kw):
         default_paper="", restrict_print_format=0,
     )
     base.update(kw)
-    return SimpleNamespace(**base)
+    return frappe._dict(base)
 
 
 def resolve(r, requested, user="u@x.com"):
