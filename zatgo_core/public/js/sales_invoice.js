@@ -85,13 +85,57 @@ function show_user_naming_series(frm) {
 	if (frm.doc.naming_series !== series) frm.set_value("naming_series", series);
 }
 
-// User-wise print format (ZG Sales Invoice Naming Settings, print columns): make the
-// user's own format the one Print opens with. The server enforces "restricted" users
-// (overrides/print_entry.py) -- this only pre-selects.
+// Print: ask A4 or 80mm, then open the print view with that paper's format.
+// A4 = the user's own A4 format (ZG Sales Invoice Naming Settings, print columns), else the site's
+// default Sales Invoice print format; 80mm = the user's 80mm format, else zatgo-core's
+// "VanSale Tax Invoice 80mm". A user restricted to some formats is only offered those; the server
+// enforces it (overrides/print_entry.py), this only pre-selects. Covers the Print button, the
+// menu and Ctrl+P (all call frm.print_doc).
+function print_options(frm) {
+	const boot = frappe.boot.zatgo_core || {};
+	const cfg = (boot.sales_invoice_print || {})[frm.doc.company] || {};
+	const site_a4 = frm.meta.__zg_site_default || "";
+	const stock_80 = (boot.sales_invoice_print_defaults || {}).mm || "";
+	const opts = [];
+	const a4 = cfg.a4 || (cfg.restrict ? "" : site_a4);
+	const mm = cfg.mm || (cfg.restrict ? "" : stock_80);
+	if (a4 || !cfg.restrict) opts.push({ label: __("A4"), format: a4 });
+	if (mm) opts.push({ label: __("80mm thermal"), format: mm });
+	return { opts, preferred: cfg.default };
+}
+
 function show_user_print_format(frm) {
-	const all = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.sales_invoice_print) || {};
-	const cfg = all[frm.doc.company];
-	if (cfg && cfg.default) frm.meta.default_print_format = cfg.default;
+	if (frm.meta.__zg_site_default === undefined) frm.meta.__zg_site_default = frm.meta.default_print_format || "";
+	if (frm.__zg_print_chooser) return;
+	frm.__zg_print_chooser = true;
+	const original = frm.print_doc.bind(frm);
+	frm.print_doc = function () {
+		const { opts, preferred } = print_options(frm);
+		if (opts.length < 2) {
+			if (opts.length === 1) frm.meta.default_print_format = opts[0].format;
+			return original();
+		}
+		const dialog = new frappe.ui.Dialog({
+			title: __("Print"),
+			fields: [
+				{
+					fieldname: "paper",
+					fieldtype: "Select",
+					label: __("Paper"),
+					options: opts.map((o) => o.label).join("\n"),
+					default: (opts.find((o) => o.format === preferred) || opts[0]).label,
+				},
+			],
+			primary_action_label: __("Print"),
+			primary_action(values) {
+				const chosen = opts.find((o) => o.label === values.paper) || opts[0];
+				frm.meta.default_print_format = chosen.format;
+				dialog.hide();
+				original();
+			},
+		});
+		dialog.show();
+	};
 }
 
 // ZG System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).

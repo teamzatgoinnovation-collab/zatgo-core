@@ -12,6 +12,7 @@ from zatgo_core.industries.gate import enabled_keys
 from zatgo_core.services import app_page, app_sidebar, app_state, core_sidebar, subscription_gate, ui_settings
 from zatgo_core.services.sales_invoice_naming import get_session_user_series
 from zatgo_core.services.sales_invoice_print import session_print_config
+from zatgo_core.setup.ensure_print_formats import PRINT_FORMAT_80MM_NAME
 
 
 def _desk_route(link_type: str, name: str) -> str:
@@ -152,6 +153,8 @@ def boot_session(bootinfo: Any) -> None:
             "sales_invoice_naming": get_session_user_series(),
             # Same user's print formats per company (public/js/sales_invoice.js).
             "sales_invoice_print": session_print_config(),
+            # Format names the Sales Invoice Print dialog falls back to (public/js/sales_invoice.js).
+            "sales_invoice_print_defaults": {"mm": PRINT_FORMAT_80MM_NAME},
             "subscription": subscription_gate.boot_payload(),
         }
         _zatgo_folder_children(bootinfo)
