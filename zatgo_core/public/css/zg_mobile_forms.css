@@ -1,0 +1,190 @@
+/* Phone layout for Desk forms (public/js/zg_mobile_forms.js), on every site, with or without the SaaS theme.
+
+   Child tables: below 768px Frappe keeps the desktop column widths (.column-limit-reached) and scrolls the
+   grid sideways by moving .form-grid's `left` from a 12px scrollbar, so on a phone only the first column or
+   two is ever visible. Here each row becomes a card instead: line 1 = select box, row no., first column
+   (bold), edit button; then every other column as a labelled two-up field. The labels come from the JS
+   (data-zg-label, copied from the grid's own header), and every rule is gated on html.zg-grid-cards, which
+   the JS sets only while it runs at phone width -- without the JS the stock grid is left untouched.
+   Tapping a card still makes it editable in place (Frappe's editable grid); the pencil opens the full row form.
+
+   !important is used only where Frappe sets the value inline (min-width/position/left from grid_row.js) or
+   with !important itself (cell padding of the editable row, column-limit-reached widths). */
+
+@media (max-width: 767.98px) {
+	/* ---- 1. No sideways scroller: the card shows every column ---- */
+	html.zg-grid-cards .form-grid-container,
+	html.zg-grid-cards .form-grid-container.column-limit-reached {
+		overflow: visible;
+		background: transparent;
+		border: 0;
+	}
+
+	html.zg-grid-cards .frappe-control[data-fieldtype="Table"].form-group:has(.column-limit-reached) {
+		overflow-x: visible;
+	}
+
+	html.zg-grid-cards .form-grid-container .form-grid {
+		display: block;
+		position: relative !important; /* grid_row.js sets it inline */
+		left: 0 !important;            /* the sideways scroll offset */
+		min-width: 0 !important;       /* grid_row.js sets 738px inline */
+		width: 100%;
+		border: 1px solid var(--table-border-color, var(--border-color));
+		border-radius: var(--border-radius-md, 8px);
+		overflow: hidden;
+	}
+
+	html.zg-grid-cards .form-grid-container .grid-scroll-bar,
+	html.zg-grid-cards .form-grid-container .form-grid > .grid-heading-row {
+		display: none;
+	}
+
+	/* ---- 2. The card ---- */
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		height: auto;
+		margin: 0;
+		padding: 6px 4px 8px;
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .col {
+		flex: 1 1 50% !important;      /* column-limit-reached widths are fixed px */
+		width: 50% !important;
+		max-width: 50% !important;
+		min-width: 0 !important;
+		height: auto;
+		min-height: 0;
+		max-height: none;
+		padding: 4px 8px !important;   /* the editable row zeroes it with !important */
+		border: 0 !important;
+		position: static !important;   /* sticky columns / sticky edit button */
+		background: transparent;
+		text-align: start !important;  /* numbers too: the label sits above them, left-aligned */
+		order: 0;
+	}
+
+	/* Line 1: select box, row no., first column, edit button */
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .row-check,
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .row-index {
+		flex: 0 0 32px !important;
+		width: 32px !important;
+		max-width: 32px !important;
+		padding: 6px 0 0 !important;
+		order: -1;
+		text-align: center !important;
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .row-index {
+		display: block;
+		color: var(--text-muted);
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .row-index + .col {
+		flex: 0 0 calc(100% - 104px) !important; /* fills line 1 (32 + 32 + 40px beside it), so the next column wraps */
+		width: calc(100% - 104px) !important;
+		max-width: calc(100% - 104px) !important;
+		order: -1;
+		font-weight: 600;
+		color: var(--heading-color, var(--text-color));
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .grid-row > .data-row.row > .col:last-child {
+		flex: 0 0 40px !important;
+		width: 40px !important;
+		max-width: 40px !important;
+		min-height: 36px;
+		padding: 0 !important;
+		order: -1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	/* The other columns: muted label over the value */
+	html.zg-grid-cards .form-grid .grid-body .data-row > .grid-static-col[data-zg-label]::before {
+		content: attr(data-zg-label);
+		display: block;
+		margin-bottom: 2px;
+		overflow: hidden;
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.3;
+		color: var(--text-muted);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .data-row > .row-index + .grid-static-col::before {
+		content: none;                 /* the bold first column is the card's title */
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .data-row > .grid-static-col .static-area {
+		display: block;
+		min-height: 20px;
+		overflow: hidden;
+		line-height: 20px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .data-row > .grid-static-col .static-area > div {
+		text-align: start !important;  /* Frappe's number formatter writes an inline text-align: right */
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .data-row > .row-index + .grid-static-col .static-area {
+		white-space: normal;           /* long item names wrap instead of being cut */
+		overflow-wrap: anywhere;
+	}
+
+	/* ---- 3. Editing in place: the inputs look like inputs and are big enough to tap ---- */
+	html.zg-grid-cards .form-grid .grid-body .editable-row > .grid-static-col .form-control {
+		min-height: 36px;
+		padding: 6px 8px;
+		border: 1px solid var(--border-color);
+		border-radius: var(--border-radius, 6px);
+		background: var(--control-bg, var(--fg-color));
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .editable-row > .grid-static-col textarea.form-control {
+		height: 72px !important;       /* Frappe pins it to 43px with !important */
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .editable-row .frappe-control[data-fieldtype="Select"].form-group .select-icon {
+		top: 10px;
+	}
+
+	html.zg-grid-cards .form-grid .grid-body .editable-row .link-btn {
+		height: 32px;
+		margin-top: 2px;
+	}
+
+	/* ---- 4. Form tabs: still swiped sideways, without the thick scrollbar drawn under them ---- */
+	html.zg-grid-cards .form-tabs-list {
+		scrollbar-width: none;
+	}
+
+	html.zg-grid-cards .form-tabs-list::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* ---- 5. Table buttons: a full row of evenly sized targets ---- */
+	html.zg-grid-cards .frappe-control[data-fieldtype="Table"] .grid-footer .grid-buttons,
+	html.zg-grid-cards .frappe-control[data-fieldtype="Table"] .grid-footer-toolbar {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+}
+
+/* iOS Safari zooms the page into any focused field under 16px and does not zoom back out. Touch phones only,
+   so the desktop look is unchanged. */
+@media (max-width: 767.98px) and (pointer: coarse) {
+	html.zg-grid-cards .form-control,
+	html.zg-grid-cards .awesomplete > input,
+	html.zg-grid-cards select.form-control,
+	html.zg-grid-cards textarea.form-control {
+		font-size: 16px;
+	}
+}

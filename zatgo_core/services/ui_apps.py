@@ -38,6 +38,8 @@ DUPLICATE_JS = "js/zg_duplicate_lookup.js"  # on with the Duplicate Prevention s
 DUPLICATE_CSS = "css/zg_duplicate_lookup.css"
 SUBSCRIPTION_BANNER_JS = "js/zg_subscription_banner.js"  # trial countdown / read-only notice, on managed sites only
 ROUTE_REDIRECTS_JS = "js/zg_route_redirects.js"  # always on: old Desk routes of the apps -> their ZatGo > Apps page
+MOBILE_FORMS_CSS = "css/zg_mobile_forms.css"  # always on: child tables as labelled cards on phones
+MOBILE_FORMS_JS = "js/zg_mobile_forms.js"
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 
@@ -77,6 +79,8 @@ def desk_includes() -> tuple[list[str], list[str]]:
     js.append(asset_url(IFRS_TOGGLE_JS))
     js.append(asset_url(ROUTE_REDIRECTS_JS))
     js.append(asset_url(SIDEBAR_TABS_JS))
+    css.append(asset_url(MOBILE_FORMS_CSS))
+    js.append(asset_url(MOBILE_FORMS_JS))
     from zatgo_core.services import subscription_gate
 
     if subscription_gate.raw_state():  # only a site the platform manages; every other site loads nothing new
