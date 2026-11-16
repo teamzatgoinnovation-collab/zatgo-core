@@ -9,7 +9,10 @@
     "rules_section",
     "rules",
     "behavior_section",
-    "unmapped_user_behavior"
+    "unmapped_user_behavior",
+    "print_section",
+    "default_print_format_a4",
+    "default_print_format_80mm"
   ],
   "fields": [
     {
@@ -36,13 +39,32 @@
       "default": "Use ERPNext default series",
       "reqd": 1,
       "description": "Use ERPNext default series: they keep ERPNext's normal behaviour (the Series on the invoice; returns switch to its -RET- series). Block: they can't create Sales Invoices or Sales Returns until they get a rule. Administrator (scheduler jobs, Auto Repeat, Subscriptions) is never blocked."
+    },
+    {
+      "fieldname": "print_section",
+      "fieldtype": "Section Break",
+      "label": "Site Sales Invoice Print Formats"
+    },
+    {
+      "fieldname": "default_print_format_a4",
+      "fieldtype": "Link",
+      "label": "A4 Print Format",
+      "options": "Print Format",
+      "description": "Used when Print / the VanSaleX app asks for A4. Blank = ERPNext's default Sales Invoice print format. A user's own rule above overrides this."
+    },
+    {
+      "fieldname": "default_print_format_80mm",
+      "fieldtype": "Link",
+      "label": "80mm Print Format",
+      "options": "Print Format",
+      "description": "Used when Print / the VanSaleX app asks for 80mm. Blank = VanSale Tax Invoice 80mm. A user's own rule above overrides this."
     }
   ],
   "index_web_pages_for_search": 0,
   "issingle": 1,
   "istable": 0,
   "links": [],
-  "modified": "2026-10-02 00:00:01.000000",
+  "modified": "2026-11-16 12:00:00.000000",
   "modified_by": "Administrator",
   "module": "ZatGo Core",
   "name": "ZG Sales Invoice Naming Settings",

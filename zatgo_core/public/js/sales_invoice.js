@@ -94,8 +94,11 @@ function show_user_naming_series(frm) {
 function print_options(frm) {
 	const boot = frappe.boot.zatgo_core || {};
 	const cfg = (boot.sales_invoice_print || {})[frm.doc.company] || {};
-	const site_a4 = frm.meta.__zg_site_default || "";
-	const stock_80 = (boot.sales_invoice_print_defaults || {}).mm || "";
+	const site = boot.sales_invoice_print_defaults || {};
+	// The site's A4 setting; else ERPNext's default format -- unless that is the 80mm one.
+	const erp_default = frm.meta.__zg_site_default || "";
+	const site_a4 = site.a4 || (erp_default === site.mm ? "" : erp_default);
+	const stock_80 = site.mm || "";
 	const opts = [];
 	const a4 = cfg.a4 || (cfg.restrict ? "" : site_a4);
 	const mm = cfg.mm || (cfg.restrict ? "" : stock_80);

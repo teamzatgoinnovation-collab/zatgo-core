@@ -36,10 +36,27 @@ def _clean(value: str | None) -> str:
     return "" if value == STANDARD else value
 
 
+def site_formats() -> tuple[str, str]:
+    """(A4, 80mm) print formats set for the whole site in ZG Sales Invoice Naming
+    Settings; "" where unset. ERPNext's default Sales Invoice format can itself be an
+    80mm one, so A4 is never guessed from it once this is set."""
+    settings = get_settings()
+    if not settings:
+        return "", ""
+    return (settings.get("default_print_format_a4") or "").strip(), (settings.get("default_print_format_80mm") or "").strip()
+
+
 def is_80mm(fmt: str | None, rule: Any | None = None) -> bool:
-    """True for the stock thermal format and for the rule's own 80mm format."""
+    """True for the stock thermal format, the site's 80mm format and the rule's own."""
     fmt = _clean(fmt)
-    return bool(fmt) and (fmt == _fmt80_default() or (rule is not None and fmt == (rule.get("print_format_80mm") or "")))
+    if not fmt:
+        return False
+    own = (rule.get("print_format_80mm") or "") if rule is not None else ""
+    return fmt in (_fmt80_default(), site_formats()[1], own)
+
+
+def restricted_rule(rule: Any, user: str | None) -> bool:
+    return bool(cint(rule.get("restrict_print_format"))) and user not in EXEMPT_USERS
 
 
 def resolve_print_format(user: str | None, company: str | None, requested: str | None) -> str:
@@ -49,12 +66,19 @@ def resolve_print_format(user: str | None, company: str | None, requested: str |
     their rule resolves it to) is not one of their assigned formats.
     """
     requested = _clean(requested)
+    site_a4, site_mm = site_formats()
     rule = find_rule(user, company)
     if not rule:
+        # No rule: the site's own A4 / 80mm choice, when set, stands in for the
+        # app's "A4" (blank) and stock 80mm requests.
+        if not requested:
+            return site_a4
+        if requested == _fmt80_default() and site_mm:
+            return site_mm
         return requested
-    a4 = (rule.get("print_format_a4") or "").strip()
-    mm = (rule.get("print_format_80mm") or "").strip()
-    restricted = bool(cint(rule.get("restrict_print_format"))) and user not in EXEMPT_USERS
+    a4 = (rule.get("print_format_a4") or "").strip() or ("" if restricted_rule(rule, user) else site_a4)
+    mm = (rule.get("print_format_80mm") or "").strip() or ("" if restricted_rule(rule, user) else site_mm)
+    restricted = restricted_rule(rule, user)
 
     final = requested
     if not requested:
@@ -70,6 +94,12 @@ def resolve_print_format(user: str | None, company: str | None, requested: str |
             frappe.PermissionError,
         )
     return final
+
+
+def session_site_formats() -> dict[str, str]:
+    """Site-wide formats for the Desk print dialog: the site's own choice, else stock 80mm."""
+    a4, mm = site_formats()
+    return {"a4": a4, "mm": mm or _fmt80_default()}
 
 
 def session_print_config() -> dict[str, dict[str, Any]]:

@@ -84,3 +84,19 @@ class TestSalesInvoicePrint(IntegrationTestCase):
             sip.validate_rule_formats([rule(print_format_a4="No Such Format")])
         with self.assertRaises(frappe.ValidationError):
             sip.validate_rule_formats([rule(restrict_print_format=1)])
+
+    def test_site_formats_stand_in_when_no_rule(self):
+        with patch.object(sip, "site_formats", return_value=("Site A4", "Site 80")):
+            # blank = the app's A4 -> site A4 (even if ERPNext's own default is an 80mm format)
+            self.assertEqual(resolve(None, ""), "Site A4")
+            self.assertEqual(resolve(None, VANSALE_80), "Site 80")
+            self.assertEqual(resolve(None, "Other"), "Other")
+            self.assertTrue(sip.is_80mm("Site 80"))
+            self.assertFalse(sip.is_80mm("Site A4"))
+
+    def test_rule_overrides_site_and_restricted_ignores_site(self):
+        with patch.object(sip, "site_formats", return_value=("Site A4", "Site 80")):
+            self.assertEqual(resolve(rule(print_format_80mm="Mine 80"), VANSALE_80), "Mine 80")
+            self.assertEqual(resolve(rule(print_format_80mm="Mine 80"), ""), "Site A4")
+            with self.assertRaises(frappe.PermissionError):  # restricted: site A4 is not theirs
+                resolve(rule(print_format_80mm="Mine 80", restrict_print_format=1, default_paper="A4"), "")
