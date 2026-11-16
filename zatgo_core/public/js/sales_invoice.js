@@ -111,7 +111,14 @@ function show_user_print_format(frm) {
 	if (frm.meta.__zg_site_default === undefined) frm.meta.__zg_site_default = frm.meta.default_print_format || "";
 	if (frm.__zg_print_chooser) return;
 	frm.__zg_print_chooser = true;
-	const original = frm.print_doc.bind(frm);
+	const open_print = frm.print_doc.bind(frm);
+	// Frappe keeps one Print page alive and, when its Print Format box already holds a valid
+	// format, ignores the new default -- so the second paper chosen would not apply. Empty the
+	// box first so the format picked in the dialog is the one the print view selects.
+	const original = () => {
+		$(frappe.pages["print"]).find('input[data-fieldname="print_format"]').val("");
+		open_print();
+	};
 	frm.print_doc = function () {
 		const { opts, preferred } = print_options(frm);
 		if (opts.length < 2) {
