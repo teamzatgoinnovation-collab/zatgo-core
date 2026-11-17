@@ -14,6 +14,7 @@ from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.ensure_vansalex_access import ensure_vansalex_access
 from zatgo_core.industries.sync import sync_industries
+from zatgo_core.licensing.sync import sync_registry
 from zatgo_core.services.ui_apps import ensure_ui_apps
 from zatgo_core.setup.seed_defaults import (
     seed_application_settings,
@@ -93,6 +94,11 @@ def after_install() -> None:
         ensure_core_desk()
     except Exception:
         logger.exception("ZatGo Desk entry failed")
+    try:
+        # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
+        sync_registry()
+    except Exception:
+        logger.exception("Licensing registry sync failed")
     logger.info("zatgo_core after_install completed")
 
 
@@ -152,6 +158,11 @@ def after_migrate() -> None:
         ensure_core_desk()
     except Exception:
         logger.exception("ZatGo Desk entry failed")
+    try:
+        # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
+        sync_registry()
+    except Exception:
+        logger.exception("Licensing registry sync failed")
 
 
 def before_uninstall() -> None:
