@@ -14,7 +14,9 @@ Settings      Accounts, Stock, Buying, Selling, Print, System
 At the top of the Home page, one tile per Sales Invoice, Purchase Invoice, Sales Order and Purchase Order shows **how many
 submitted documents and their Grand Total** (click to open the list), with a period switch (All time / This year /
 This month; the choice is remembered in the browser). Below them: the **top selling product** and the **top category**
-(by net amount over submitted Sales Invoices, the next four listed underneath). Source: `services/erp_summary.py`,
+(by net amount over submitted Sales Invoices, the next four listed underneath). **User Permissions are respected:** a user restricted to Item Groups / Items (or to customers, warehouses...) sees only
+those documents and items; their totals are then the net amount of the lines they may see, and the top lists only
+cover those. Source: `services/erp_summary.py`,
 API `zatgo_core.api.v1.erp_summary.get`, drawn by the Custom HTML Block "ZG ERP Summary"
 (`templates/erp_summary/`, refreshed on every migrate).
 
