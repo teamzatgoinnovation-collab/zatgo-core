@@ -44,6 +44,12 @@ _PERMS: list[tuple[str, dict]] = [
     ("GL Entry", _REPORTING),
     ("Stock Ledger Entry", _REPORTING),
     ("Bin", _REPORTING),
+    # The summary block on the workspace page is a Custom HTML Block the user must be able to read
+    ("Custom HTML Block", _READ),
+    # The Dashboard entry of the sidebar: ERPNext charts and number cards
+    ("Dashboard", _READ),
+    ("Dashboard Chart", _READ),
+    ("Number Card", _READ),
     # Settings: read only
     ("Accounts Settings", _READ),
     ("Stock Settings", _READ),

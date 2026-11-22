@@ -1,9 +1,15 @@
 {
  "app": "zatgo_core",
  "charts": [],
- "content": "[{\"id\": \"zgerp_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Accounts & Inventory</b></span>\", \"col\": 12}}, {\"id\": \"zgerp_sc0\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Invoice\", \"col\": 3}}, {\"id\": \"zgerp_sc1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Invoice\", \"col\": 3}}, {\"id\": \"zgerp_sc2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Sales Order\", \"col\": 3}}, {\"id\": \"zgerp_sc3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Purchase Order\", \"col\": 3}}, {\"id\": \"zgerp_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"zgerp_cd0\", \"type\": \"card\", \"data\": {\"card_name\": \"Transactions\", \"col\": 3}}, {\"id\": \"zgerp_cd1\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 3}}, {\"id\": \"zgerp_cd2\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 3}}, {\"id\": \"zgerp_cd3\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 3}}]",
+ "content": "[{\"id\": \"zgerp_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Accounts & Inventory</b></span>\", \"col\": 12}}, {\"id\": \"zgerp_blk\", \"type\": \"custom_block\", \"data\": {\"custom_block_name\": \"ZG ERP Summary\", \"col\": 12}}, {\"id\": \"zgerp_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"zgerp_cd0\", \"type\": \"card\", \"data\": {\"card_name\": \"Transactions\", \"col\": 3}}, {\"id\": \"zgerp_cd1\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 3}}, {\"id\": \"zgerp_cd2\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 3}}, {\"id\": \"zgerp_cd3\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 3}}]",
  "creation": "2026-11-22 00:00:00.000000",
- "custom_blocks": [],
+ "custom_blocks": [
+  {
+   "custom_block_name": "ZG ERP Summary",
+   "doctype": "Workspace Custom Block",
+   "label": "ZG ERP Summary"
+  }
+ ],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
@@ -318,7 +324,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-22 12:00:00.000000",
+ "modified": "2026-11-22 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "ZatGo ERP",
@@ -338,48 +344,7 @@
   }
  ],
  "sequence_id": 2.0,
- "shortcuts": [
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "doctype": "Workspace Shortcut",
-   "format": "{}",
-   "label": "Sales Invoice",
-   "link_to": "Sales Invoice",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "doctype": "Workspace Shortcut",
-   "format": "{}",
-   "label": "Purchase Invoice",
-   "link_to": "Purchase Invoice",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "doctype": "Workspace Shortcut",
-   "format": "{}",
-   "label": "Sales Order",
-   "link_to": "Sales Order",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "doctype": "Workspace Shortcut",
-   "format": "{}",
-   "label": "Purchase Order",
-   "link_to": "Purchase Order",
-   "stats_filter": "[]",
-   "type": "DocType"
-  }
- ],
+ "shortcuts": [],
  "title": "ZatGo ERP",
  "type": "Workspace"
 }

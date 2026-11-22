@@ -18,14 +18,37 @@ ICON = "home"
 MODULE = "ZatGo Core"
 APP = "zatgo_core"
 ROLE = "ZG Accounts & Inventory"
-DASHBOARD = "Accounts"  # ERPNext's own Dashboard record behind the sidebar's "Dashboard" entry
+# The sidebar's "Dashboard" entry opens this Dashboard (shipped as zatgo_core_dashboard/zatgo_erp_dashboard/zatgo_erp_dashboard.json).
+# It has its own name on purpose: Frappe picks the sidebar from the last part of the route, and "dashboard-view/Accounts"
+# would switch to ERPNext's own "Accounts" sidebar and leave this one.
+DASHBOARD = "ZatGo ERP Dashboard"
+# ERPNext's standard charts and number cards, reused as they are: (name, width) / name.
+DASHBOARD_CHARTS = (
+    ("Profit and Loss", "Full"),
+    ("Incoming Bills (Purchase Invoice)", "Half"),
+    ("Outgoing Bills (Sales Invoice)", "Half"),
+    ("Accounts Receivable Ageing", "Half"),
+    ("Accounts Payable Ageing", "Half"),
+    ("Bank Balance", "Full"),
+    ("Warehouse wise Stock Value", "Full"),
+    ("Delivery Trends", "Half"),
+    ("Purchase Receipt Trends", "Half"),
+)
+DASHBOARD_CARDS = (
+    "Total Outgoing Bills",
+    "Total Incoming Bills",
+    "Total Incoming Payment",
+    "Total Outgoing Payment",
+    "Total Active Items",
+    "Total Stock Value",
+)
 
 # The role that owns the workspace (+ System Manager). ROLE is made by setup/ensure_roles.py.
 ROLES = (ROLE, "System Manager")
 
 # Bump when SECTIONS / ROLES / SHORTCUTS change: migrate re-imports a Workspace file only when this is newer than the
 # site's copy (then run scripts/build_zatgo_erp_workspace.py).
-WORKSPACE_MODIFIED = "2026-11-22 12:00:00.000000"
+WORKSPACE_MODIFIED = "2026-11-22 18:00:00.000000"
 
 
 def _dt(label: str, link_to: str | None = None) -> dict:
@@ -79,8 +102,13 @@ SECTIONS = (
     ),
 )
 
-# The most used documents, as big quick-open shortcuts at the top of the Home page.
+# The most used documents: count + total tiles at the top of the Home page (the custom block below; same order as
+# services/erp_summary.DOCS).
 SHORTCUTS = ("Sales Invoice", "Purchase Invoice", "Sales Order", "Purchase Order")
+
+# The Custom HTML Block drawing those tiles, the top selling product and the top category. Its source is
+# templates/erp_summary/block.{html,js,css}; ensure_block() copies it into the site on migrate.
+BLOCK_NAME = "ZG ERP Summary"
 
 
 # --------------------------------------------------------------------------- Workspace file (generated)
@@ -92,12 +120,7 @@ def workspace_json() -> dict:
 
     links, content = [], []
     content.append({"id": "zgerp_head", "type": "header", "data": {"text": f'<span class="h4"><b>{TITLE}</b></span>', "col": 12}})
-    shortcuts = []
-    for n, label in enumerate(SHORTCUTS):
-        shortcuts.append(
-            {"doctype": "Workspace Shortcut", "label": label, "link_to": label, "type": "DocType", "color": "Grey", "format": "{}", "stats_filter": "[]", "doc_view": "List"}
-        )
-        content.append({"id": f"zgerp_sc{n}", "type": "shortcut", "data": {"shortcut_name": label, "col": 3}})
+    content.append({"id": "zgerp_blk", "type": "custom_block", "data": {"custom_block_name": BLOCK_NAME, "col": 12}})
     content.append({"id": "zgerp_sp", "type": "spacer", "data": {"col": 12}})
     for n, (label, _icon, items) in enumerate(SECTIONS):
         links.append({"hidden": 0, "is_query_report": 0, "label": label, "link_count": len(items), "onboard": 0, "type": "Card Break"})
@@ -122,7 +145,7 @@ def workspace_json() -> dict:
         "charts": [],
         "content": json.dumps(content),
         "creation": "2026-11-22 00:00:00.000000",
-        "custom_blocks": [],
+        "custom_blocks": [{"doctype": "Workspace Custom Block", "custom_block_name": BLOCK_NAME, "label": BLOCK_NAME}],
         "docstatus": 0,
         "doctype": "Workspace",
         "for_user": "",
@@ -143,9 +166,29 @@ def workspace_json() -> dict:
         "quick_lists": [],
         "roles": [{"doctype": "Has Role", "role": r} for r in ROLES],
         "sequence_id": 2.0,
-        "shortcuts": shortcuts,
+        "shortcuts": [],
         "title": NAME,
         "type": "Workspace",
+    }
+
+
+def dashboard_json() -> dict:
+    """The Dashboard document as shipped in zatgo_core_dashboard/zatgo_erp_dashboard/zatgo_erp_dashboard.json (Frappe reads module dashboards from "<module>_dashboard")."""
+    return {
+        "cards": [{"doctype": "Number Card Link", "card": c} for c in DASHBOARD_CARDS],
+        "charts": [{"doctype": "Dashboard Chart Link", "chart": c, "width": w} for c, w in DASHBOARD_CHARTS],
+        "creation": "2026-11-22 00:00:00.000000",
+        "dashboard_name": DASHBOARD,
+        "docstatus": 0,
+        "doctype": "Dashboard",
+        "idx": 0,
+        "is_default": 0,
+        "is_standard": 1,
+        "modified": WORKSPACE_MODIFIED,
+        "modified_by": "Administrator",
+        "module": MODULE,
+        "name": DASHBOARD,
+        "owner": "Administrator",
     }
 
 
@@ -171,6 +214,26 @@ def _row_key(r) -> tuple:
     return (get("type"), get("label"), get("link_type") or "", get("link_to") or "", int(get("child") or 0))
 
 
+def ensure_block() -> None:
+    """Create or refresh the Custom HTML Block from templates/erp_summary (code and style follow the app on every migrate)."""
+    import os
+
+    import frappe
+
+    folder = os.path.join(frappe.get_app_path(APP), "templates", "erp_summary")
+    parts = {}
+    for key, name in (("html", "block.html"), ("script", "block.js"), ("style", "block.css")):
+        with open(os.path.join(folder, name), encoding="utf-8") as f:
+            parts[key] = f.read()
+    if frappe.db.exists("Custom HTML Block", BLOCK_NAME):
+        doc = frappe.get_doc("Custom HTML Block", BLOCK_NAME)
+        if any(doc.get(k) != v for k, v in parts.items()):
+            doc.update(parts)
+            doc.save(ignore_permissions=True)
+        return
+    frappe.get_doc({"doctype": "Custom HTML Block", "name": BLOCK_NAME, "private": 0, **parts}).insert(ignore_permissions=True)
+
+
 def sync_erp_desk() -> None:
     """Idempotent: Workspace (imported from its file if the migrate sync did not), Workspace Sidebar, Apps-screen icon.
 
@@ -180,6 +243,7 @@ def sync_erp_desk() -> None:
 
     import frappe
 
+    ensure_block()  # before the Workspace import: the workspace points at it
     if not frappe.db.exists("Workspace", NAME):
         from frappe.modules.import_file import import_file_by_path
 

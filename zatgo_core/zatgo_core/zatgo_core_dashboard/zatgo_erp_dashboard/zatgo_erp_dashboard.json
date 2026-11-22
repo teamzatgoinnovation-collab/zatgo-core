@@ -1,0 +1,87 @@
+{
+ "cards": [
+  {
+   "card": "Total Outgoing Bills",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "Total Incoming Bills",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "Total Incoming Payment",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "Total Outgoing Payment",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "Total Active Items",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "Total Stock Value",
+   "doctype": "Number Card Link"
+  }
+ ],
+ "charts": [
+  {
+   "chart": "Profit and Loss",
+   "doctype": "Dashboard Chart Link",
+   "width": "Full"
+  },
+  {
+   "chart": "Incoming Bills (Purchase Invoice)",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  },
+  {
+   "chart": "Outgoing Bills (Sales Invoice)",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  },
+  {
+   "chart": "Accounts Receivable Ageing",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  },
+  {
+   "chart": "Accounts Payable Ageing",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  },
+  {
+   "chart": "Bank Balance",
+   "doctype": "Dashboard Chart Link",
+   "width": "Full"
+  },
+  {
+   "chart": "Warehouse wise Stock Value",
+   "doctype": "Dashboard Chart Link",
+   "width": "Full"
+  },
+  {
+   "chart": "Delivery Trends",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  },
+  {
+   "chart": "Purchase Receipt Trends",
+   "doctype": "Dashboard Chart Link",
+   "width": "Half"
+  }
+ ],
+ "creation": "2026-11-22 00:00:00.000000",
+ "dashboard_name": "ZatGo ERP Dashboard",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "modified": "2026-11-22 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "ZatGo ERP Dashboard",
+ "owner": "Administrator"
+}
