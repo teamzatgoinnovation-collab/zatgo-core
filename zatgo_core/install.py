@@ -97,6 +97,20 @@ def before_install() -> None:
             frappe.throw(
                 f"ZatGo Core supports {name} {SUPPORTED_MAJOR}.x only; this bench has {name} {version}."
             )
+    _ensure_default_activity_type()
+
+
+def _ensure_default_activity_type() -> None:
+    """Make sure the Activity Type "Execution" exists before Frappe initialises the singles.
+
+    Tracker Settings defaults ``default_activity_type`` to "Execution" (a Link). ERPNext's setup wizard
+    creates that record, but a site that skipped the wizard has none, and the install then fails with
+    "Could not find Default Activity Type: Execution". Creating the standard record is idempotent.
+    """
+    if not frappe.db.exists("DocType", "Activity Type"):
+        return
+    if not frappe.db.exists("Activity Type", "Execution"):
+        frappe.get_doc({"doctype": "Activity Type", "activity_type": "Execution"}).insert(ignore_permissions=True)
 
 
 def after_install() -> None:
