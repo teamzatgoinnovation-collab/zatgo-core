@@ -1,0 +1,272 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:edition_id",
+ "creation": "2026-11-17 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "description": "A commercial edition: which registry features a product includes, on which platforms, with which licence defaults. Edited on the licence issuer site only; a licence keeps its own signed copy, so changing an edition never changes an issued licence.",
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "ZatGo Core",
+ "name": "ZG Edition",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "modified": "2026-11-17 12:00:00.000000",
+ "modified_by": "Administrator",
+ "sort_field": "edition_id",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "edition_name",
+ "track_changes": 1,
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "create": 1,
+   "write": 1,
+   "delete": 1,
+   "share": 1,
+   "email": 1
+  },
+  {
+   "role": "ZG Application Admin",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  },
+  {
+   "role": "ZG Read Only",
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1
+  }
+ ],
+ "fields": [
+  {
+   "fieldname": "edition_tab",
+   "fieldtype": "Tab Break",
+   "label": "Edition"
+  },
+  {
+   "fieldname": "edition_id",
+   "fieldtype": "Data",
+   "label": "Edition ID",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "set_only_once": 1,
+   "description": "Stable code, lower case (sales, retail_plus). Licences name it."
+  },
+  {
+   "fieldname": "edition_name",
+   "fieldtype": "Data",
+   "label": "Edition Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nActive\nArchived",
+   "default": "Draft",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "Active editions can be issued as licences and must have no missing dependency. Archived ones are kept, never deleted."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Int",
+   "label": "Version",
+   "default": "1",
+   "read_only": 1,
+   "description": "Goes up whenever what the edition grants changes."
+  },
+  {
+   "fieldname": "preset",
+   "fieldtype": "Data",
+   "label": "Started From Preset",
+   "read_only": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "platforms_section",
+   "fieldtype": "Section Break",
+   "label": "Platforms"
+  },
+  {
+   "fieldname": "platform_desk",
+   "fieldtype": "Check",
+   "label": "ERPNext Desk (browser)",
+   "default": "1"
+  },
+  {
+   "fieldname": "platform_desktop",
+   "fieldtype": "Check",
+   "label": "ZatGo desktop apps"
+  },
+  {
+   "fieldname": "platform_mobile",
+   "fieldtype": "Check",
+   "label": "ZatGo mobile apps"
+  },
+  {
+   "fieldname": "features_section",
+   "fieldtype": "Section Break",
+   "label": "Features",
+   "description": "Foundation features (setup, shared masters read-only, users, backups) are part of every edition and are not listed."
+  },
+  {
+   "fieldname": "features",
+   "fieldtype": "Table",
+   "label": "Features",
+   "options": "ZG Edition Feature"
+  },
+  {
+   "fieldname": "licence_tab",
+   "fieldtype": "Tab Break",
+   "label": "Licence Defaults"
+  },
+  {
+   "fieldname": "licence_type",
+   "fieldtype": "Select",
+   "label": "Licence Type",
+   "options": "Trial\nMonthly\nYearly\nLifetime\nCustom Duration\nPerpetual",
+   "default": "Yearly"
+  },
+  {
+   "fieldname": "duration_days",
+   "fieldtype": "Int",
+   "label": "Duration (days)",
+   "default": "365",
+   "description": "Ignored for Lifetime and Perpetual."
+  },
+  {
+   "fieldname": "trial_days",
+   "fieldtype": "Int",
+   "label": "Trial (days)",
+   "default": "30"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_users",
+   "fieldtype": "Int",
+   "label": "Maximum Users",
+   "default": "5",
+   "description": "0 = no limit."
+  },
+  {
+   "fieldname": "max_companies",
+   "fieldtype": "Int",
+   "label": "Maximum Companies",
+   "default": "1",
+   "description": "0 = no limit."
+  },
+  {
+   "fieldname": "default_roles",
+   "fieldtype": "Small Text",
+   "label": "Default Roles",
+   "description": "One role per line, suggested for the customer's users (informational)."
+  },
+  {
+   "fieldname": "inspector_tab",
+   "fieldtype": "Tab Break",
+   "label": "Dependencies"
+  },
+  {
+   "fieldname": "module_count",
+   "fieldtype": "Int",
+   "label": "Modules",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feature_count",
+   "fieldtype": "Int",
+   "label": "Features",
+   "read_only": 1
+  },
+  {
+   "fieldname": "missing_count",
+   "fieldtype": "Int",
+   "label": "Missing Dependencies",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "grant_hash",
+   "fieldtype": "Data",
+   "label": "Grant Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "registry_hash",
+   "fieldtype": "Data",
+   "label": "Registry Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "inspector_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "dependency_report",
+   "fieldtype": "Code",
+   "label": "Dependency Report",
+   "options": "JSON",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "edition_tab",
+  "edition_id",
+  "edition_name",
+  "status",
+  "column_break_1",
+  "version",
+  "preset",
+  "description",
+  "platforms_section",
+  "platform_desk",
+  "platform_desktop",
+  "platform_mobile",
+  "features_section",
+  "features",
+  "licence_tab",
+  "licence_type",
+  "duration_days",
+  "trial_days",
+  "column_break_2",
+  "max_users",
+  "max_companies",
+  "default_roles",
+  "inspector_tab",
+  "module_count",
+  "feature_count",
+  "missing_count",
+  "column_break_3",
+  "grant_hash",
+  "registry_hash",
+  "inspector_section",
+  "dependency_report"
+ ]
+}

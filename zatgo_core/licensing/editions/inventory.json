@@ -1,0 +1,37 @@
+{
+ "edition_id": "inventory",
+ "edition_name": "ZatGo Inventory",
+ "description": "Items, warehouses, stock movements, batches, serials and valuation.",
+ "features": [
+  "dashboard.business",
+  "inventory.batch",
+  "inventory.items",
+  "inventory.pick_pack",
+  "inventory.reconciliation",
+  "inventory.reorder",
+  "inventory.serial",
+  "inventory.settings",
+  "inventory.stock_issue",
+  "inventory.stock_receipt",
+  "inventory.stock_reports",
+  "inventory.stock_transfer",
+  "inventory.valuation",
+  "inventory.warehouses",
+  "print.printers"
+ ],
+ "platforms": {
+  "desk": 1,
+  "mobile": 1
+ },
+ "default_roles": [
+  "Stock User",
+  "Stock Manager"
+ ],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 5,
+  "max_companies": 1
+ }
+}

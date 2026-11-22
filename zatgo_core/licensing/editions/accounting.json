@@ -1,0 +1,44 @@
+{
+ "edition_id": "accounting",
+ "edition_name": "ZatGo Accounting",
+ "description": "Chart of accounts, journals, payments, ledgers, receivables, payables, bank and financial statements.",
+ "features": [
+  "accounting.bank",
+  "accounting.budget",
+  "accounting.chart_of_accounts",
+  "accounting.financial_statements",
+  "accounting.journal_entry",
+  "accounting.ledgers",
+  "accounting.payables",
+  "accounting.payment_entry",
+  "accounting.period_closing",
+  "accounting.receivables",
+  "accounting.settings",
+  "dashboard.business",
+  "print.printers",
+  "procurement.purchase_invoice",
+  "procurement.purchase_return",
+  "procurement.suppliers",
+  "sales.customers",
+  "sales.invoice",
+  "sales.return",
+  "tax.templates",
+  "tax.vat_reports",
+  "tax.withholding"
+ ],
+ "platforms": {
+  "desk": 1,
+  "desktop": 1
+ },
+ "default_roles": [
+  "Accounts User",
+  "Accounts Manager"
+ ],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 5,
+  "max_companies": 1
+ }
+}

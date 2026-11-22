@@ -1,0 +1,38 @@
+{
+ "edition_id": "sales",
+ "edition_name": "ZatGo Sales",
+ "description": "Quotations, orders, invoices, returns and deliveries, with customer payments and VAT.",
+ "features": [
+  "accounting.payment_entry",
+  "accounting.receivables",
+  "dashboard.business",
+  "print.printers",
+  "sales.analytics",
+  "sales.customers",
+  "sales.delivery_note",
+  "sales.invoice",
+  "sales.order",
+  "sales.pricing",
+  "sales.quotation",
+  "sales.return",
+  "sales.settings",
+  "sales.team",
+  "tax.templates",
+  "tax.vat_reports"
+ ],
+ "platforms": {
+  "desk": 1,
+  "desktop": 1
+ },
+ "default_roles": [
+  "Sales User",
+  "Sales Manager"
+ ],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 5,
+  "max_companies": 1
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "edition_id": "retail",
+ "edition_name": "ZatGo Retail",
+ "description": "POS, inventory and purchasing for shops and supermarkets.",
+ "features": [
+  "accounting.payment_entry",
+  "dashboard.business",
+  "industries.supermarket",
+  "inventory.batch",
+  "inventory.items",
+  "inventory.pick_pack",
+  "inventory.reconciliation",
+  "inventory.reorder",
+  "inventory.serial",
+  "inventory.settings",
+  "inventory.stock_issue",
+  "inventory.stock_receipt",
+  "inventory.stock_reports",
+  "inventory.stock_transfer",
+  "inventory.valuation",
+  "inventory.warehouses",
+  "pos.invoice",
+  "pos.profile",
+  "pos.session",
+  "pos.zatgo_pos",
+  "print.printers",
+  "procurement.purchase_invoice",
+  "procurement.purchase_order",
+  "procurement.purchase_receipt",
+  "procurement.purchase_return",
+  "procurement.suppliers",
+  "sales.analytics",
+  "sales.customers",
+  "sales.invoice",
+  "sales.pricing",
+  "sales.return",
+  "tax.templates"
+ ],
+ "platforms": {
+  "desk": 1,
+  "desktop": 1
+ },
+ "default_roles": [
+  "Sales User",
+  "Stock User",
+  "Purchase User"
+ ],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 10,
+  "max_companies": 1
+ }
+}

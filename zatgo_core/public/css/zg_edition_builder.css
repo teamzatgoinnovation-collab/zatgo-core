@@ -1,0 +1,318 @@
+/* ZatGo Editions (Desk page zg-edition-builder). Colours are Frappe's CSS variables, so light and dark follow
+   the Desk theme. Mobile first: one column; list | features | summary from 1200px. The .zg-stat and .zg-banner
+   look matches zg_app_hub.css. */
+.zg-eb {
+	padding-bottom: var(--padding-xl, 32px);
+	/* Frappe's sidebar resize handle overlaps the first pixels of the page body. */
+	padding-inline: var(--padding-sm, 8px);
+}
+@media (max-width: 575px) {
+	.zg-eb {
+		padding-inline: var(--padding-md, 12px);
+	}
+}
+.zg-eb__layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--margin-lg, 20px);
+	margin-top: var(--margin-md, 12px);
+}
+@media (min-width: 992px) {
+	.zg-eb__layout {
+		grid-template-columns: 240px minmax(0, 1fr);
+	}
+	.zg-eb__side {
+		grid-column: 1 / -1;
+	}
+}
+@media (min-width: 1200px) {
+	.zg-eb__layout {
+		grid-template-columns: 240px minmax(0, 1fr) 300px;
+	}
+	.zg-eb__side {
+		grid-column: auto;
+	}
+	.zg-eb__list,
+	.zg-eb__side {
+		position: sticky;
+		top: calc(var(--navbar-height, 48px) + 12px);
+		align-self: start;
+		max-height: calc(100vh - var(--navbar-height, 48px) - 24px);
+		overflow: auto;
+	}
+}
+
+.zg-banner {
+	background: var(--yellow-highlight-color, #fff7d3);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+	color: var(--text-color, #1f272e);
+}
+
+/* -- edition list -- */
+.zg-eb__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: var(--margin-sm, 8px);
+}
+.zg-eb__chip {
+	border: 1px solid var(--border-color, #e2e6e9);
+	background: var(--control-bg, #f4f5f6);
+	color: var(--text-color, #1f272e);
+	border-radius: 999px;
+	padding: 2px 10px;
+	font-size: var(--text-sm, 0.875rem);
+	min-height: 28px;
+}
+.zg-eb__chip[aria-pressed="true"] {
+	background: var(--primary, #2490ef);
+	border-color: var(--primary, #2490ef);
+	color: var(--neutral, #fff);
+}
+.zg-eb__items {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 6px;
+}
+.zg-eb__item {
+	width: 100%;
+	text-align: start;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 2px 8px;
+	border: 1px solid var(--border-color, #e2e6e9);
+	background: var(--card-bg, #fff);
+	color: var(--text-color, #1f272e);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+}
+.zg-eb__item[aria-current="true"] {
+	border-color: var(--primary, #2490ef);
+	box-shadow: 0 0 0 1px var(--primary, #2490ef);
+}
+.zg-eb__item-name {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+.zg-eb__item-meta {
+	grid-column: 1;
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-xs, 0.75rem);
+}
+.zg-eb__item .indicator-pill {
+	grid-column: 2;
+	grid-row: 1 / span 2;
+	align-self: center;
+}
+
+/* -- main -- */
+.zg-eb__head {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--margin-sm, 8px) var(--margin-md, 12px);
+	align-items: end;
+}
+@media (min-width: 768px) {
+	.zg-eb__head {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+	}
+	.zg-eb__head .zg-eb__field:last-child {
+		grid-column: 1 / -1;
+	}
+}
+.zg-eb__field {
+	display: grid;
+	gap: 4px;
+	margin: 0 0 var(--margin-sm, 8px);
+	font-weight: normal;
+}
+.zg-eb__field > span {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-eb__version,
+.zg-eb__dirty {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-eb__dirty {
+	color: var(--orange-600, #b45309);
+	font-weight: 600;
+}
+.zg-eb__title {
+	font-size: var(--text-lg, 1.125rem);
+	font-weight: 600;
+	margin: var(--margin-lg, 20px) 0 var(--margin-sm, 8px);
+}
+.zg-eb__search {
+	margin-bottom: var(--margin-sm, 8px);
+}
+.zg-eb__module {
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	background: var(--card-bg, #fff);
+	margin-bottom: var(--margin-sm, 8px);
+}
+.zg-eb__module[data-foundation] {
+	background: var(--control-bg, #f4f5f6);
+}
+.zg-eb__module > summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+	cursor: pointer;
+	min-height: 44px;
+}
+.zg-eb__module-name {
+	font-weight: 600;
+	flex: 1;
+}
+.zg-eb__count {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-eb__features {
+	list-style: none;
+	margin: 0;
+	padding: 0 var(--padding-md, 12px) var(--padding-sm, 8px);
+	display: grid;
+	gap: 2px;
+}
+.zg-eb__feature {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 10px;
+	padding: 6px 0;
+	border-top: 1px solid var(--border-color, #e2e6e9);
+}
+.zg-eb__feature > input {
+	margin-top: 4px;
+}
+.zg-eb__feature label {
+	margin: 0;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+.zg-eb code {
+	font-size: var(--text-xs, 0.75rem);
+	color: var(--text-muted, #5f6b76);
+	background: none;
+	padding: 0;
+}
+.zg-eb__hint {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-eb__tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 4px;
+}
+.zg-eb__tag {
+	font-size: var(--text-xs, 0.75rem);
+	border-radius: 999px;
+	padding: 0 8px;
+	background: var(--control-bg, #f4f5f6);
+	color: var(--text-muted, #5f6b76);
+}
+.zg-eb__tag[data-tone="warn"] {
+	color: var(--orange-600, #b45309);
+}
+.zg-eb__tag[data-tone="info"] {
+	color: var(--blue-600, #1d64b0);
+}
+.zg-eb__actions {
+	margin-top: 6px;
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-eb__actions > summary {
+	cursor: pointer;
+	color: var(--text-muted, #5f6b76);
+}
+.zg-eb__action-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+	gap: 2px 12px;
+	margin-top: 6px;
+}
+.zg-eb__action-grid label {
+	font-weight: normal;
+	margin: 0;
+}
+
+/* -- summary -- */
+.zg-eb__stats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--margin-sm, 8px);
+}
+.zg-stat {
+	background: var(--card-bg, #fff);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+}
+.zg-stat__value {
+	font-size: 1.5rem;
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--text-color, #1f272e);
+}
+.zg-stat__label {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-stat[data-tone="good"] .zg-stat__value {
+	color: var(--green-600, #16794c);
+}
+.zg-stat[data-tone="warn"] .zg-stat__value {
+	color: var(--orange-600, #b45309);
+}
+.zg-eb__platforms {
+	display: grid;
+	gap: 4px;
+}
+.zg-eb__platforms label {
+	font-weight: normal;
+	margin: 0;
+}
+.zg-eb__warn {
+	padding-inline-start: 18px;
+	color: var(--orange-600, #b45309);
+	display: grid;
+	gap: 4px;
+}
+.zg-eb__ok {
+	color: var(--green-600, #16794c);
+}
+.zg-eb__add {
+	margin-inline-start: 6px;
+}
+.zg-eb__empty {
+	color: var(--text-muted, #5f6b76);
+}
+
+/* -- dialogs -- */
+.zg-eb__dialog h5 {
+	margin-top: var(--margin-md, 12px);
+	font-weight: 600;
+}
+.zg-eb__table {
+	font-size: var(--text-sm, 0.875rem);
+	display: block;
+	overflow-x: auto;
+}
+.zg-eb__mono {
+	font-family: var(--font-family-monospace, monospace);
+	white-space: pre-wrap;
+	font-size: var(--text-xs, 0.75rem);
+}
+.zg-eb__diff ul {
+	padding-inline-start: 18px;
+}

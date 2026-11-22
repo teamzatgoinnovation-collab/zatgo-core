@@ -1,0 +1,34 @@
+{
+ "edition_id": "pos",
+ "edition_name": "ZatGo POS",
+ "description": "Counter sales with the ZatGo POS app: profiles, cash sessions, invoices, payments.",
+ "features": [
+  "accounting.payment_entry",
+  "dashboard.business",
+  "inventory.stock_reports",
+  "pos.invoice",
+  "pos.profile",
+  "pos.session",
+  "pos.zatgo_pos",
+  "print.printers",
+  "sales.customers",
+  "sales.invoice",
+  "sales.pricing",
+  "sales.return",
+  "tax.templates"
+ ],
+ "platforms": {
+  "desk": 1,
+  "desktop": 1
+ },
+ "default_roles": [
+  "Sales User"
+ ],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 5,
+  "max_companies": 1
+ }
+}

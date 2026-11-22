@@ -1,7 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 2 of 10 — the module / feature registry.** Nothing is enforced yet: no hook, permission or
-API answers differently because of this code. Audit and decisions: `licensing_audit_2026-11-17.md`.
+Status: **Phase 3 of 10 — registry, editions and the dependency inspector.** Nothing is enforced yet: no
+hook, permission or API answers differently because of this code. Audit and decisions:
+`licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
 
@@ -78,8 +79,67 @@ code is marked retired, never deleted. `available` = its source app is installed
 3. Run `tests/unit/test_licensing_registry.py` (structure) and `tests/integration/test_licensing_registry.py`
    (everything it names exists on the site).
 
+## Editions (Phase 3)
+
+An **edition** is a commercial product configuration (`ZG Edition` + child `ZG Edition Feature`): which
+registry features it includes — each optionally narrowed to fewer actions — on which platforms (Desk, desktop
+apps, mobile apps), with which licence defaults (type, duration, trial days, maximum users / companies, 0 = no
+limit) and suggested default roles. Foundation features are in every edition and are never listed.
+
+It is a **template**. A licence (Phase 5) will carry its own signed copy of the resolved features, so changing
+an edition never changes a licence that was already issued.
+
+### Issuer mode (decision D2)
+Editions are written only on the licence issuer site: `"zg_licence_issuer": 1` in its `site_config.json`
+(`licensing/issuer.py`), and only by a System Manager. The `ZG Edition` controller enforces it, so the form, REST
+and the builder page are all bound; on every other site editions are read-only. The private signing key
+(Phase 5) will also live only there, outside `sites/`.
+
+### Rules (`zg_edition.py`, `licensing/edition_config.py`)
+- Features must be live registry features, not foundation ones; narrowed actions must be ones the feature grants.
+- **Active** = no missing dependency. A Draft may miss some (its `Dependencies` tab lists them); nothing is ever
+  added for it.
+- The **version** goes up whenever what the edition grants changes (features, actions, platforms, licence
+  defaults, default roles — `grant_hash`); renaming or a status change does not bump it.
+- **Archived** editions cannot change until set back to Draft. Only a **Draft** can be deleted.
+- Field changes and feature-table changes go to `ZG Audit Log` (derived fields are left out).
+
+### Presets (`licensing/editions/*.json`)
+Sales, Accounting, Inventory, POS, Sales + Inventory, Accounting + Inventory, Retail, Distribution, Enterprise
+(`"features": "*"` = every live feature) and an empty Custom Edition (Draft). Each is checked by the unit tests
+to have no missing dependency. On the issuer site `after_migrate` creates any preset that does not exist yet and
+never touches one that does (`editions.seed_presets`).
+
+### Dependency Inspector (`licensing/inspector.py`)
+For any selection (saved or not): missing dependencies with the module each belongs to; every DocType with its
+actions and field conditions, reports, pages, workspaces and API prefixes (foundation included); the Single
+settings users can change; and **what submitting writes** — for each transaction DocType the edition may
+submit, the ledgers ERPNext posts itself (GL Entry, Payment Ledger Entry, Stock Ledger Entry, ZATCA records
+when `tax.zatca` is in) and the reposting jobs (`repost_entries`, `run_parallel_reposting`). Those ledgers are
+never gated; they are listed so a reader sees what a Sales-only edition still writes. Also warns about
+features this site cannot run (app not installed) and features no edition platform reaches.
+
+### Edition files (export / import)
+`{"type": "zatgo.edition", "schema_version": 1, "product_id": "zatgo_erp", ...}` plus an informational
+`resolved` block (modules, dependencies, DocType / report / workspace mappings — recomputed on import, never
+trusted). Import is previewed first (create / update / unchanged / refuse, a diff against the existing edition,
+the inspection); replacing an existing, different edition needs an explicit overwrite; an Active file with
+missing dependencies comes in as a Draft; a licence file (`zatgo.licence`) or a newer schema is refused. Every
+import is recorded in `ZG Audit Log` (`fieldname = import`, file hash).
+
+### The page: **ZatGo Editions** (`/desk/zg-edition-builder`)
+System Manager, ZG Application Admin, ZG Read Only may open it; only a System Manager on the issuer site can
+change anything (elsewhere it says so and is read-only). Left: editions by status. Middle: modules with feature
+checkboxes, search, per-feature action narrowing, availability and `requires` tags. Right: live summary,
+platforms, licence defaults, warnings with an **Add** button per missing feature (an explicit choice). Menu:
+New, Import, Duplicate, Archive / Restore, Compare, Export; **Dependency inspector** opens the full report.
+There is no "Activate on site" yet: that needs a signed licence (Phases 5-6).
+
+API: `zatgo_core.api.v1.licensing.editions.*` (`get_builder`, `get_edition`, `inspect`, `save_edition`,
+`duplicate_edition`, `set_edition_status`, `compare_editions`, `export_edition`, `preview_import`,
+`import_edition`, `import_history`); writes are POST only and go through the controller.
+
 ## Next phases
-3 editions + dependency inspector · 4 enforcement in the existing hooks (behind the per-site switch, off) ·
-5 licence format, Ed25519 issuer and verification · 6 licence workspace · 7 expiry/trial into
-`subscription_gate`, limits · 8 one client capability payload · 9 audit, endpoint coverage, money-path tests ·
-10 rollout.
+4 enforcement in the existing hooks (behind the per-site switch, off) · 5 licence format, Ed25519 issuer and
+verification · 6 licence workspace · 7 expiry/trial into `subscription_gate`, limits · 8 one client capability
+payload · 9 audit, endpoint coverage, money-path tests · 10 rollout.

@@ -1,0 +1,18 @@
+{
+ "edition_id": "custom",
+ "edition_name": "ZatGo Custom Edition",
+ "description": "Foundation only: a starting point to copy and build a custom edition from.",
+ "features": [],
+ "platforms": {
+  "desk": 1
+ },
+ "default_roles": [],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 5,
+  "max_companies": 1
+ },
+ "status": "Draft"
+}

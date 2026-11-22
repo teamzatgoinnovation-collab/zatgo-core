@@ -62,7 +62,7 @@ NEVER_GATE = frozenset(
         "GL Entry", "Payment Ledger Entry", "Advance Payment Ledger Entry", "Stock Ledger Entry", "Bin",
         "Repost Item Valuation", "Repost Payment Ledger", "Repost Accounting Ledger", "Serial and Batch Bundle",
         "Stock Reservation Entry", "Process Deferred Accounting", "Unreconcile Payment", "Stock Closing Entry",
-        "Stock Closing Balance", "Account Closing Balance", "Bisect Accounting Statements",
+        "Stock Closing Balance", "Account Closing Balance", "Bisect Accounting Statements", "POS Invoice Merge Log",
         # e-invoicing records made on submit (zatca_integration)
         "ZATCA Invoice", "ZATCA Submission Log",
         # system / platform records zatgo_core itself needs

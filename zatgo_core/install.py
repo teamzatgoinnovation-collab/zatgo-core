@@ -14,6 +14,7 @@ from zatgo_core.setup.ensure_roles import ensure_roles
 from zatgo_core.setup.ensure_vansale_perms import ensure_vansale_perms
 from zatgo_core.setup.ensure_vansalex_access import ensure_vansalex_access
 from zatgo_core.industries.sync import sync_industries
+from zatgo_core.licensing.editions import seed_presets
 from zatgo_core.licensing.sync import sync_registry
 from zatgo_core.services.ui_apps import ensure_ui_apps
 from zatgo_core.setup.seed_defaults import (
@@ -99,6 +100,11 @@ def after_install() -> None:
         sync_registry()
     except Exception:
         logger.exception("Licensing registry sync failed")
+    try:
+        # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
+        seed_presets()
+    except Exception:
+        logger.exception("Preset edition seed failed")
     logger.info("zatgo_core after_install completed")
 
 
@@ -163,6 +169,11 @@ def after_migrate() -> None:
         sync_registry()
     except Exception:
         logger.exception("Licensing registry sync failed")
+    try:
+        # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
+        seed_presets()
+    except Exception:
+        logger.exception("Preset edition seed failed")
 
 
 def before_uninstall() -> None:

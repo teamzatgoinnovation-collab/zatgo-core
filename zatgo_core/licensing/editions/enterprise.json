@@ -1,0 +1,19 @@
+{
+ "edition_id": "enterprise",
+ "edition_name": "ZatGo Enterprise",
+ "description": "Every supported module and feature.",
+ "features": "*",
+ "platforms": {
+  "desk": 1,
+  "desktop": 1,
+  "mobile": 1
+ },
+ "default_roles": [],
+ "licence_defaults": {
+  "licence_type": "Yearly",
+  "duration_days": 365,
+  "trial_days": 30,
+  "max_users": 0,
+  "max_companies": 0
+ }
+}
