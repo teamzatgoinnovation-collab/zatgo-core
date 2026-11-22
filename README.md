@@ -40,13 +40,18 @@ industries a site has switched on.
 
 ## Install
 
-Push this app to its own git remote, then on a stock frappe_docker bench ([`ERPNEXT/README.md`](../../ERPNEXT/README.md)):
+Supported: **Frappe 16 + ERPNext 16** (tested on Frappe 16.29 / ERPNext 16.31). Install refuses other major versions. The GitHub repository is `zatgo-core` (hyphen); the app and Python package are `zatgo_core`.
+
+On a bench that already has ERPNext:
 
 ```bash
-bench get-app https://github.com/<org>/zatgo_core.git
+bench get-app https://github.com/teamzatgoinnovation-collab/zatgo-core.git
 bench --site <site> install-app zatgo_core
 bench --site <site> migrate
+bench --site <site> clear-cache
 ```
+
+Install and every migrate re-run only idempotent setup (roles, custom fields, print formats, settings defaults, workspaces); company, accounts, warehouses, users and transactions are never touched. A step that fails is logged and named in one `zatgo_core ... finished with failed steps` error line in the bench log.
 
 See [Plugin author guide](docs/plugin_guide.md) for registering client/plugin manifests via API.
 

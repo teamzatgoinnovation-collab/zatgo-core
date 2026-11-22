@@ -21,6 +21,7 @@ app_version = "0.4.0"
 
 required_apps = ["erpnext"]
 
+before_install = "zatgo_core.install.before_install"
 after_install = "zatgo_core.install.after_install"
 after_migrate = "zatgo_core.install.after_migrate"
 before_uninstall = "zatgo_core.install.before_uninstall"

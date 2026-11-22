@@ -27,10 +27,76 @@ from zatgo_core.utils.logging import get_logger
 
 logger = get_logger("system")
 
+SUPPORTED_MAJOR = 16  # Frappe / ERPNext major version this release is tested on
+
 _DESK_SIDEBAR_NAMES = ("ZatGo Core", "Core Administration")
 _DESK_PAGE_NAMES = ("zg-core",)
 _DESK_ICON_LABELS = ("ZatGo Core",)
 _DESK_ICON_APPS = ("zatgo_core",)
+
+
+def _run_steps(hook: str, steps) -> list[str]:
+    """Run each setup step, keep going when one fails, and say so at the end.
+
+    A step that raises is logged and the rest still run (a migrate must not
+    be aborted by one optional seed), but the failures are named in one
+    ERROR line so a half-set-up site is visible in the log.
+    """
+    failed: list[str] = []
+    for label, step in steps:
+        try:
+            step()
+        except Exception:
+            failed.append(label)
+            logger.exception("%s: %s failed", hook, label)
+    if failed:
+        logger.error("zatgo_core %s finished with failed steps: %s", hook, ", ".join(failed))
+    return failed
+
+
+def _seed_duplicate_rules() -> None:
+    from zatgo_core.services.duplicate.defaults import seed_defaults
+
+    seed_defaults()  # fresh sites skip patches; existing ones get them from patches/v0_5_0
+
+
+# Idempotent steps shared by install and migrate, in order. Each one only adds
+# what is missing and never touches customer data (company, accounts, users...).
+_SHARED_STEPS = (
+    ("custom fields", ensure_custom_fields),
+    ("application settings", seed_application_settings),
+    ("print formats", ensure_print_formats),
+    ("financial statement print formats", ensure_report_print_formats),
+    ("Mode of Payment", ensure_mode_of_payment),
+    ("VanSale DocPerms", ensure_vansale_perms),
+    ("VanSaleX modules and features", ensure_vansalex_access),
+    ("Desk UI leftover purge", lambda: purge_desk_ui_leftovers()),
+    ("theme / language switcher", ensure_ui_apps),
+    ("industry sync", sync_industries),
+    # After the switches are final (ensure_ui_apps): the registry carries each app's real enabled state.
+    ("plugin manifest registration", discover_and_register_manifests),
+    # After the industry sync: the sidebar lists the enabled industries' workspaces.
+    ("ZatGo Desk entry", ensure_core_desk),
+    # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
+    ("licensing registry sync", sync_registry),
+    # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
+    ("preset edition seed", seed_presets),
+)
+
+
+def before_install() -> None:
+    """Refuse to install on a Frappe / ERPNext major version this app was not built and tested for."""
+    import erpnext
+
+    for name, version in (("Frappe", frappe.__version__), ("ERPNext", erpnext.__version__)):
+        try:
+            major = int(str(version).split(".")[0])
+        except ValueError:
+            continue  # unparseable dev version string: do not block
+        if major != SUPPORTED_MAJOR:
+            frappe.throw(
+                f"ZatGo Core supports {name} {SUPPORTED_MAJOR}.x only; this bench has {name} {version}."
+            )
 
 
 def after_install() -> None:
@@ -39,73 +105,8 @@ def after_install() -> None:
     seed_singletons()
     seed_number_series()
     seed_feature_flags()
-    try:
-        from zatgo_core.services.duplicate.defaults import seed_defaults
-
-        seed_defaults()  # fresh sites skip patches; existing ones get them from patches/v0_5_0
-    except Exception:
-        logger.exception("Duplicate prevention rule seed failed")
-    try:
-        ensure_custom_fields()
-    except Exception:
-        logger.exception("Custom field seed failed")
-    try:
-        seed_application_settings()
-    except Exception:
-        logger.exception("Application settings seed failed")
-    try:
-        ensure_print_formats()
-    except Exception:
-        logger.exception("Print format seed failed")
-    try:
-        ensure_report_print_formats()
-    except Exception:
-        logger.exception("Financial statement print format seed failed")
-    try:
-        ensure_mode_of_payment()
-    except Exception:
-        logger.exception("Mode of Payment seed failed")
-    try:
-        ensure_vansale_perms()
-    except Exception:
-        logger.exception("VanSale DocPerm seed failed")
-    try:
-        ensure_vansalex_access()
-    except Exception:
-        logger.exception("VanSaleX Modules & Features seed failed")
-    try:
-        purge_desk_ui_leftovers()
-    except Exception:
-        logger.exception("Desk UI leftover purge failed")
-    try:
-        ensure_ui_apps()
-    except Exception:
-        logger.exception("Theme / language switcher setup failed")
-    try:
-        sync_industries()
-    except Exception:
-        logger.exception("Industry sync failed")
-    try:
-        # After the switches are final (ensure_ui_apps): the registry carries each app's real enabled state.
-        discover_and_register_manifests()
-    except Exception:
-        logger.exception("Plugin manifest registration failed")
-    try:
-        # After the industry sync: the sidebar lists the enabled industries' workspaces.
-        ensure_core_desk()
-    except Exception:
-        logger.exception("ZatGo Desk entry failed")
-    try:
-        # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
-        sync_registry()
-    except Exception:
-        logger.exception("Licensing registry sync failed")
-    try:
-        # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
-        seed_presets()
-    except Exception:
-        logger.exception("Preset edition seed failed")
-    logger.info("zatgo_core after_install completed")
+    failed = _run_steps("after_install", (("duplicate prevention rules", _seed_duplicate_rules),) + _SHARED_STEPS)
+    logger.info("zatgo_core after_install completed%s", f" with {len(failed)} failed step(s)" if failed else "")
 
 
 def after_migrate() -> None:
@@ -114,66 +115,7 @@ def after_migrate() -> None:
     seed_singletons()
     seed_number_series()
     seed_feature_flags()
-    try:
-        ensure_custom_fields()
-    except Exception:
-        logger.exception("Custom field seed failed")
-    try:
-        seed_application_settings()
-    except Exception:
-        logger.exception("Application settings seed failed")
-    try:
-        ensure_print_formats()
-    except Exception:
-        logger.exception("Print format seed failed")
-    try:
-        ensure_report_print_formats()
-    except Exception:
-        logger.exception("Financial statement print format seed failed")
-    try:
-        ensure_mode_of_payment()
-    except Exception:
-        logger.exception("Mode of Payment seed failed")
-    try:
-        ensure_vansale_perms()
-    except Exception:
-        logger.exception("VanSale DocPerm seed failed")
-    try:
-        ensure_vansalex_access()
-    except Exception:
-        logger.exception("VanSaleX Modules & Features seed failed")
-    try:
-        purge_desk_ui_leftovers()
-    except Exception:
-        logger.exception("Desk UI leftover purge failed")
-    try:
-        ensure_ui_apps()
-    except Exception:
-        logger.exception("Theme / language switcher setup failed")
-    try:
-        sync_industries()
-    except Exception:
-        logger.exception("Industry sync failed")
-    try:
-        # After the switches are final (ensure_ui_apps): the registry carries each app's real enabled state.
-        discover_and_register_manifests()
-    except Exception:
-        logger.exception("Plugin manifest registration failed")
-    try:
-        # After the industry sync: the sidebar lists the enabled industries' workspaces.
-        ensure_core_desk()
-    except Exception:
-        logger.exception("ZatGo Desk entry failed")
-    try:
-        # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
-        sync_registry()
-    except Exception:
-        logger.exception("Licensing registry sync failed")
-    try:
-        # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
-        seed_presets()
-    except Exception:
-        logger.exception("Preset edition seed failed")
+    _run_steps("after_migrate", _SHARED_STEPS)
 
 
 def before_uninstall() -> None:

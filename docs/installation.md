@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-- Frappe latest stable
-- ERPNext latest stable
+- Frappe 16.x and ERPNext 16.x (tested: Frappe 16.29, ERPNext 16.31). `before_install` refuses any other major version.
 - MariaDB, Redis
 - Python ≥ 3.11
 
@@ -15,10 +14,10 @@ From the monorepo root:
 ./scripts/install_custom_apps.sh development <site> zatgo_core
 ```
 
-Manual equivalent:
+Manual equivalent (from GitHub, or a local path instead of the URL):
 
 ```bash
-bench get-app /absolute/path/to/CustomApps/ZatGoCore
+bench get-app https://github.com/teamzatgoinnovation-collab/zatgo-core.git
 bench --site <site> install-app zatgo_core
 bench --site <site> migrate
 bench build --app zatgo_core
