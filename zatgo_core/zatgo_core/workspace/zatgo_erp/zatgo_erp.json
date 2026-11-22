@@ -324,7 +324,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-11-22 18:00:00.000000",
+ "modified": "2026-11-22 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "ZatGo ERP",
@@ -341,6 +341,46 @@
   {
    "doctype": "Has Role",
    "role": "System Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Accounts User"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Accounts Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Sales User"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Sales Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Purchase User"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Purchase Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Stock User"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Stock Manager"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Manufacturing User"
+  },
+  {
+   "doctype": "Has Role",
+   "role": "Manufacturing Manager"
   }
  ],
  "sequence_id": 2.0,

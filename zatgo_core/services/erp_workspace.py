@@ -43,12 +43,29 @@ DASHBOARD_CARDS = (
     "Total Stock Value",
 )
 
-# The role that owns the workspace (+ System Manager). ROLE is made by setup/ensure_roles.py.
-ROLES = (ROLE, "System Manager")
+# Who sees the workspace and its Apps-screen icon: the role that owns it (ROLE, made by setup/ensure_roles.py), System
+# Manager and ERPNext's own working roles, so existing staff need nothing extra. What each person can open inside it is
+# still decided by their own document rights (Frappe hides a link they may not use); ROLE is the one that grants those rights
+# (setup/ensure_erp_perms.py). ERPNext standard roles only: they exist when the Workspace file is imported (ZG roles do not yet
+# on a fresh install).
+STANDARD_ROLES = (
+    "System Manager",
+    "Accounts User",
+    "Accounts Manager",
+    "Sales User",
+    "Sales Manager",
+    "Purchase User",
+    "Purchase Manager",
+    "Stock User",
+    "Stock Manager",
+    "Manufacturing User",
+    "Manufacturing Manager",
+)
+ROLES = (ROLE,) + STANDARD_ROLES
 
 # Bump when SECTIONS / ROLES / SHORTCUTS change: migrate re-imports a Workspace file only when this is newer than the
 # site's copy (then run scripts/build_zatgo_erp_workspace.py).
-WORKSPACE_MODIFIED = "2026-11-22 18:00:00.000000"
+WORKSPACE_MODIFIED = "2026-11-22 21:00:00.000000"
 
 
 def _dt(label: str, link_to: str | None = None) -> dict:
@@ -273,8 +290,15 @@ def sync_erp_desk() -> None:
         icon = frappe.get_doc(
             {
                 "doctype": "Desktop Icon", "label": NAME, "app": APP, "icon_type": "Link", "link_type": "Workspace Sidebar",
-                "link_to": NAME, "icon": ICON, "standard": 0, "hidden": 0,
+                "link_to": NAME, "icon": ICON, "standard": 0, "hidden": 0, "roles": [{"role": r} for r in ROLES],
             }
         )
         icon.flags.ignore_links = True
         icon.insert(ignore_permissions=True)
+    else:
+        # The icon follows the Workspace's roles (it used to be open to everyone, leading to a page some could not open).
+        icon = frappe.get_doc("Desktop Icon", NAME)
+        if {r.role for r in icon.get("roles", [])} != set(ROLES):
+            icon.set("roles", [{"role": r} for r in ROLES])
+            icon.flags.ignore_links = True
+            icon.save(ignore_permissions=True)

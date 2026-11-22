@@ -54,3 +54,8 @@ class TestErpWorkspace(unittest.TestCase):
         self.assertEqual(shipped, json.loads(json.dumps(erp_workspace.dashboard_json())))
         # a Dashboard named like an existing Workspace Sidebar (e.g. "Accounts") would switch the sidebar away
         self.assertNotIn(erp_workspace.DASHBOARD, ("Accounts", "Stock", "Selling", "Buying"))
+
+    def test_standard_erpnext_roles_see_the_workspace_too(self):
+        for role in ("System Manager", "Accounts User", "Sales User", "Purchase User", "Stock User"):
+            self.assertIn(role, erp_workspace.ROLES)
+        self.assertEqual(erp_workspace.ROLES[0], erp_workspace.ROLE)
