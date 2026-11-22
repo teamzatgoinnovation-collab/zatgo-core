@@ -7,6 +7,7 @@ import frappe
 from zatgo_core.plugins.discover import discover_and_register_manifests
 from zatgo_core.setup.ensure_core_desk import ensure_core_desk
 from zatgo_core.setup.ensure_custom_fields import ensure_custom_fields
+from zatgo_core.setup.ensure_erp_perms import ensure_erp_perms
 from zatgo_core.setup.ensure_mode_of_payment import ensure_mode_of_payment
 from zatgo_core.setup.ensure_print_formats import ensure_print_formats
 from zatgo_core.setup.ensure_report_print_formats import ensure_report_print_formats
@@ -69,6 +70,7 @@ _SHARED_STEPS = (
     ("financial statement print formats", ensure_report_print_formats),
     ("Mode of Payment", ensure_mode_of_payment),
     ("VanSale DocPerms", ensure_vansale_perms),
+    ("ZG Accounts & Inventory rights", ensure_erp_perms),
     ("VanSaleX modules and features", ensure_vansalex_access),
     ("Desk UI leftover purge", lambda: purge_desk_ui_leftovers()),
     ("theme / language switcher", ensure_ui_apps),

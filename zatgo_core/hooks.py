@@ -298,6 +298,7 @@ fixtures = [
                     "VanSale User",
                     "VanSale Admin",
                     "ZG Invoice Naming Manager",
+                    "ZG Accounts & Inventory",
                 ],
             ]
         ],

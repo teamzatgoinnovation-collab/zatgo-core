@@ -14,6 +14,9 @@ ROLES = {
     "VANSALE_ADMIN": "VanSale Admin",
     # Manages ZG Sales Invoice Naming Settings (user-wise invoice series).
     "INVOICE_NAMING_MANAGER": "ZG Invoice Naming Manager",
+    # Owns the "ZatGo ERP" workspace and the rights its links need (setup/ensure_erp_perms.py). Same string as
+    # services/erp_workspace.ROLE (kept import-free so the workspace generator script can run without bench).
+    "ACCOUNTS_INVENTORY": "ZG Accounts & Inventory",
 }
 
 # Which roles may write which settings categories.

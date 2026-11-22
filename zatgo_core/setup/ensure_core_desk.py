@@ -13,7 +13,7 @@ import os
 
 import frappe
 
-from zatgo_core.services import app_desk, app_sidebar, core_sidebar
+from zatgo_core.services import app_desk, app_sidebar, core_sidebar, erp_workspace
 
 NAME = "ZatGo"
 ICON = "setting"
@@ -125,3 +125,5 @@ def ensure_core_desk() -> None:
     # Apps open from ZatGo > Apps: their own rail icons (created by their install / industries sync, which
     # ran before this) stay hidden.
     app_desk.sync_rail_icons()
+    # "ZatGo ERP": the everyday ERP workspace (services/erp_workspace.py), its sidebar and Apps-screen icon.
+    erp_workspace.sync_erp_desk()

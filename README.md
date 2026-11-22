@@ -32,6 +32,7 @@ industries a site has switched on.
 - [DocTypes](docs/doctypes.md)
 - [API Reference](docs/api.md)
 - [Permission Matrix](docs/permissions.md)
+- [ZatGo ERP workspace and role](docs/erp_workspace.md)
 - [Installation Guide](docs/installation.md)
 - [Upgrade Guide](docs/upgrade.md)
 - [Developer Guide](docs/developer.md)
