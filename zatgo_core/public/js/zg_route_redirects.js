@@ -17,4 +17,7 @@
 	});
 	const boot = (frappe.boot && frappe.boot.zatgo_core) || {};
 	Object.assign(frappe.re_route, boot.app_routes || {});
+	// A bare /desk (empty sub-path) opens the user's Default Workspace when that is ZatGo ERP
+	// (events/boot.py::_start_route); Frappe starts on the Apps screen otherwise.
+	if (boot.start_route) frappe.re_route[""] = boot.start_route;
 })();

@@ -104,6 +104,30 @@ def _zatgo_folder_children(bootinfo: Any) -> None:
         )
 
 
+def _start_route() -> str | None:
+    """The Desk route a bare /desk redirects to, or None.
+
+    Frappe's own Default Workspace only decides the website home page; the Desk starts on the Apps (desktop) screen.
+    A user whose Default Workspace is "ZatGo ERP" gets that workspace instead, so their choice is what they open."""
+    from zatgo_core.services import erp_workspace
+
+    user = frappe.session.user
+    if user == "Guest":
+        return None
+    try:
+        if frappe.get_cached_value("User", user, "default_workspace") != erp_workspace.NAME:
+            return None
+        if not frappe.db.exists("Workspace", erp_workspace.NAME):
+            return None
+        from frappe.desk.desktop import Workspace
+
+        if not Workspace({"name": erp_workspace.NAME, "title": erp_workspace.NAME, "public": 1}, minimal=True).is_permitted():
+            return None
+    except Exception:
+        return None
+    return app_page.workspace_slug(erp_workspace.NAME)
+
+
 def boot_session(bootinfo: Any) -> None:
     """Inject compact ZatGo Core boot payload for Desk / Vue clients."""
     try:
@@ -133,6 +157,9 @@ def boot_session(bootinfo: Any) -> None:
             )
 
         bootinfo.zatgo_core = {
+            # Where a bare /desk opens for this user: ZatGo ERP when it is their Default Workspace (User form ->
+            # Settings) and they may open it (public/js/zg_route_redirects.js). None leaves Frappe's own start page.
+            "start_route": _start_route(),
             "system": system,
             "feature_flags": flags,
             "version": __version__,
