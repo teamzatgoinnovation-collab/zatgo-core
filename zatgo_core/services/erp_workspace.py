@@ -296,9 +296,22 @@ def sync_erp_desk() -> None:
         icon.flags.ignore_links = True
         icon.insert(ignore_permissions=True)
     else:
-        # The icon follows the Workspace's roles (it used to be open to everyone, leading to a page some could not open).
+        # An icon that already exists (made by Frappe from an older workspace of this name, or by an earlier version) is
+        # brought to what this app ships: picture, target, app, visible, top level -- and the Workspace's roles.
         icon = frappe.get_doc("Desktop Icon", NAME)
+        wanted = {
+            "icon_type": "Link", "link_type": "Workspace Sidebar", "link_to": NAME, "icon": ICON, "app": APP, "hidden": 0,
+            "parent_icon": None,
+        }
+        changed = False
+        for key, value in wanted.items():
+            if (icon.get(key) or None) != (value or None) and (value or icon.get(key)):
+                icon.set(key, value)
+                changed = True
         if {r.role for r in icon.get("roles", [])} != set(ROLES):
             icon.set("roles", [{"role": r} for r in ROLES])
+            changed = True
+        if changed:
             icon.flags.ignore_links = True
             icon.save(ignore_permissions=True)
+    frappe.cache.hdel("desktop_icons", frappe.session.user)  # other users' lists are rebuilt by clear-cache / their next boot
