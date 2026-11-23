@@ -200,7 +200,9 @@ def config_version() -> int:
 
 
 def effective(user: str | None = None) -> dict[str, Any]:
-    """Effective modules/features for [user] (default: session user)."""
+    """Effective modules/features for [user] (default: session user). A key the site's licence does not
+    include is off for everyone (licensing/gate.py; no effect while no licence is enforced)."""
+    from zatgo_core.licensing.gate import vansalex_key_licensed
     from zatgo_core.services.vansalex_settings import resolve
 
     uid = user or frappe.session.user
@@ -213,7 +215,7 @@ def effective(user: str | None = None) -> dict[str, Any]:
         on = _derived(derived, settings) if derived else client.get(key, default)
         if on and key in REQUIRES_SETTING:
             on = _derived(REQUIRES_SETTING[key], settings)
-        base[key] = 1 if on and (derived or key not in disabled) else 0
+        base[key] = 1 if on and (derived or key not in disabled) and vansalex_key_licensed(key) else 0
 
     def _on(key: str) -> bool:
         parent = CATALOG[key][2]

@@ -156,11 +156,21 @@ doc_events = {
         # Read-only site (subscription_gate): every document write is refused, ignore_permissions or not.
         "before_insert": "zatgo_core.services.subscription_gate.enforce_doc_write",
         "before_save": "zatgo_core.services.subscription_gate.enforce_doc_write",
-        "validate": "zatgo_core.services.subscription_gate.enforce_doc_write",
-        "on_trash": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "validate": [
+            "zatgo_core.services.subscription_gate.enforce_doc_write",
+            # Licence (licensing/gate.py): writes the site's licence does not include. Inert until licensed.
+            "zatgo_core.licensing.gate.enforce_doc_write",
+        ],
+        "on_trash": [
+            "zatgo_core.services.subscription_gate.enforce_doc_write",
+            "zatgo_core.licensing.gate.enforce_doc_write",
+        ],
         "before_submit": "zatgo_core.services.subscription_gate.enforce_doc_write",
         "before_cancel": "zatgo_core.services.subscription_gate.enforce_doc_write",
-        "before_update_after_submit": "zatgo_core.services.subscription_gate.enforce_doc_write",
+        "before_update_after_submit": [
+            "zatgo_core.services.subscription_gate.enforce_doc_write",
+            "zatgo_core.licensing.gate.enforce_doc_write",
+        ],
         "after_insert": "zatgo_core.services.bundled_apps.chat_ai_after_insert",
         "on_update": "zatgo_core.services.bundled_apps.chat_ai_on_update",
         "on_submit": "zatgo_core.services.bundled_apps.chat_ai_on_submit",
@@ -259,6 +269,8 @@ has_permission = {
     "*": [
         # True unless this is a write on a read-only (trial over) site.
         "zatgo_core.services.subscription_gate.doc_has_permission",
+        # True unless the site's licence does not include this write (licensing/gate.py; inert until licensed).
+        "zatgo_core.licensing.gate.doc_has_permission",
         "zatgo_core.services.bundled_apps.module_doc_has_permission",
         # Industries' own DocTypes: nobody's where the industry is off.
         "zatgo_core.industries.gate.industry_doc_has_permission",

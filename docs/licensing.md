@@ -1,7 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 3 of 10 — registry, editions and the dependency inspector.** Nothing is enforced yet: no
-hook, permission or API answers differently because of this code. Audit and decisions:
+Status: **Phase 4 of 10 — registry, editions, inspector and the enforcement engine.** Enforcement is built
+but **dormant on every site**: it needs the `zg_licence_enforcement` switch *and* a verified entitlement, and
+the only source of entitlements — a signed licence — arrives in Phase 5. Audit and decisions:
 `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
@@ -139,7 +140,54 @@ API: `zatgo_core.api.v1.licensing.editions.*` (`get_builder`, `get_edition`, `in
 `duplicate_edition`, `set_edition_status`, `compare_editions`, `export_edition`, `preview_import`,
 `import_edition`, `import_history`); writes are POST only and go through the controller.
 
+## Enforcement (Phase 4)
+
+### When it is on (`licensing/entitlement.py`)
+Only when **both** hold: `"zg_licence_enforcement": 1` in the site's `site_config.json` (bench-owned, D4) and
+an **entitlement** exists — the licensed features with their actions, foundation always included. Otherwise
+everything is unrestricted (fail-open). Phase 4 has no entitlement source on any site; Phase 5's verified
+licence plugs into `entitlement._load()`. `entitlement.use(...)` installs one per request (Python only: the
+loader and the tests).
+
+### What is refused (`licensing/gate.py`, decision D6)
+| Action | Unlicensed |
+|---|---|
+| create, write, delete, submit, amend, import | **refused** |
+| read, print, email, export, report, share | allowed — history stays viewable and printable (ZATCA) |
+| cancel | allowed — mistakes stay reversible through ERPNext's own cancellation |
+
+A check is decided per **document**: the registry grants that match it (`is_return`, Stock Entry `purpose`, ...)
+and whether a licensed feature gives the action. DocTypes the registry does not map (ledgers, NEVER_GATE, anything
+not product-controlled) and documents no feature describes (a Stock Entry purpose nobody lists, e.g. Repack)
+are never touched. The message names the feature that would allow it.
+
+Layers, as in `subscription_gate`: `has_permission "*"` (Desk buttons, REST, list actions; Frappe skips it for
+Administrator) and `doc_events "*"` — `validate` (after the controller's own, so `purpose` is set; create /
+amend / write / submit by `_action`), `on_trash`, `before_update_after_submit` — which catches
+`ignore_permissions`, Administrator in a request, imports and jobs a user started. Exempt: install / migrate /
+patch, and Administrator outside a request (scheduler, bench console).
+
+### Apps, industries, VanSaleX
+An app (`app_key`), industry or VanSaleX key that some feature names is **off when the licence does not include
+it**, whatever its switch says: `app_state.is_on` / `switches()`, `industries.gate.enabled_keys` and
+`vansalex_access.effective` ask `licensing.gate`, so the existing API 404s, sidebars, hub and `me.context.access`
+follow. Switching such an app or industry **on** is refused by `app_authority` (switching off always works).
+
+### Desk (`licensing/desk.py`)
+At the end of `boot_session`, workspaces, sidebars, rail icons and pages that only unlicensed features list are
+left out of the boot payload — per request, nothing stored, so a new licence shows them again at the next load.
+Navigation only: the gate is what refuses, and a direct URL still opens a record read-only.
+
+### Cross-feature effects in `requires`
+Documents one feature's flow makes for another are declared so editions include both: POS Invoice → Sales
+Invoice (closing entry consolidation), Payroll Entry → Journal Entry, VanSaleX cash invoice → Payment Entry.
+
+### Known gaps (by design of Frappe, as in `subscription_gate`)
+Writes through raw SQL / `db.set_value` / `db_set` fire no document event; a job Administrator enqueued from a
+request runs without one. Narrowing an edition's *viewing* actions (print, export, report) is recorded but not
+enforced (D6).
+
 ## Next phases
-4 enforcement in the existing hooks (behind the per-site switch, off) · 5 licence format, Ed25519 issuer and
-verification · 6 licence workspace · 7 expiry/trial into `subscription_gate`, limits · 8 one client capability
-payload · 9 audit, endpoint coverage, money-path tests · 10 rollout.
+5 licence format, Ed25519 issuer and verification (feeds `entitlement._load`) · 6 licence workspace · 7
+expiry/trial into `subscription_gate`, limits, "switch on + no licence" policy · 8 one client capability payload
+· 9 audit, endpoint coverage, more money-path tests · 10 rollout.

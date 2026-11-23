@@ -186,3 +186,11 @@ def boot_session(bootinfo: Any) -> None:
         _zatgo_folder_children(bootinfo)
     except Exception:
         frappe.logger("zatgo_core").exception("boot_session enrichment failed")
+    try:
+        # Last, after every entry above exists: leave out what only unlicensed features use (navigation only;
+        # licensing/gate.py is what refuses). Does nothing while no licence is enforced.
+        from zatgo_core.licensing.desk import filter_boot
+
+        filter_boot(bootinfo)
+    except Exception:
+        frappe.logger("zatgo_core").exception("licence Desk filter failed")

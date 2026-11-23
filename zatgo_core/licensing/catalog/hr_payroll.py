@@ -41,7 +41,8 @@ FEATURES = [
         reports=["Salary Register", "Bank Remittance", "Salary Payments Based On Payment Mode",
                  "Employee CTC Break-up"],
         workspaces=["Payroll", "Tax & Benefits"],
-        requires={"hr_payroll.employee": ["read"]},
+        # A Payroll Entry books the salaries with a Journal Entry.
+        requires={"hr_payroll.employee": ["read"], "accounting.journal_entry": ["create", "submit"]},
         source_app="hrms",
     ),
     feature(

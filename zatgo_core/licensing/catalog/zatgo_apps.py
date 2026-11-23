@@ -44,7 +44,9 @@ FEATURES = [
     _app("vansalex.web", "ZatGo VanSaleX in the browser", "vansalex_web", ["ZatGo VanSaleX Web"],
          platforms=("mobile",), requires={"vansalex.app": []}),
     _vx("dashboard", "VanSaleX dashboard"),
-    _vx("sales_invoice", "VanSaleX sales invoices", {"sales.invoice": ["create", "submit"]},
+    # A cash invoice from the app also books its Payment Entry (services/invoice_cash_payment_service.py).
+    _vx("sales_invoice", "VanSaleX sales invoices",
+        {"sales.invoice": ["create", "submit"], "accounting.payment_entry": ["create", "submit"]},
         extra_keys=("sales_invoice.print_a4", "sales_invoice.print_80mm", "sales_invoice.multiple_payment_modes",
                     "sales_invoice.multiple_payment_accounts", "sales_invoice.credit_sale",
                     "sales_invoice.bank_payment", "sales_invoice.discount", "sales_invoice.line_discount",

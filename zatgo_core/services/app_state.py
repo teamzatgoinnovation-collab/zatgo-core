@@ -69,13 +69,23 @@ def switches() -> dict[str, bool]:
         for a in defaults:
             raw = stored.get(a["switch_field"])
             state[a["key"]] = True if raw is None else bool(cint(raw))  # nothing stored: the default
-    return state
+    return {key: on and _licensed(key) for key, on in state.items()}
+
+
+def _licensed(key: str) -> bool:
+    """An app the site's licence does not include is off whatever its switch says (licensing/gate.py; always
+    True while no licence is enforced)."""
+    from zatgo_core.licensing.gate import app_licensed
+
+    return app_licensed(key)
 
 
 def is_on(key: str) -> bool:
     """One app. Unknown keys are off; an app without a switch is on."""
     app = app_catalog.get(key)
     if app is None:
+        return False
+    if not _licensed(key):
         return False
     if app["switch_field"] and app["default_on"]:
         raw = _stored([app["switch_field"]]).get(app["switch_field"])

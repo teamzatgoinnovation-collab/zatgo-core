@@ -20,7 +20,9 @@ FEATURES = [
         doctypes=[dt("POS Invoice", TRANSACTION)],
         reports=["POS Register"],
         pages=["point-of-sale"],
-        requires={"pos.profile": ["read"], "pos.session": ["create", "submit"]},
+        # The POS Closing Entry consolidates POS Invoices into Sales Invoices.
+        requires={"pos.profile": ["read"], "pos.session": ["create", "submit"],
+                  "sales.invoice": ["create", "submit"]},
     ),
     feature(
         "pos.session", "Cash sessions (opening / closing)",

@@ -38,7 +38,15 @@ def enabled_keys() -> set[str]:
         row.industry
         for row in (doc.get(TABLE_FIELD) or [])
         if row.enabled and row.industry in registry.INDUSTRIES and registry.INDUSTRIES[row.industry].implemented
+        and _licensed(row.industry)
     }
+
+
+def _licensed(key: str) -> bool:
+    """An industry the site's licence does not include is off (licensing/gate.py; True while unenforced)."""
+    from zatgo_core.licensing.gate import industry_licensed
+
+    return industry_licensed(key)
 
 
 def is_enabled(key: str) -> bool:

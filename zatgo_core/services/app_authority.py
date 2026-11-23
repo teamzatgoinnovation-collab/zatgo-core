@@ -59,3 +59,25 @@ def assert_can_switch(before: Any | None, after: Any) -> None:
         new = [p for p in app_catalog.dependency_problems(app_state.switches_of(after)) if p not in old]
         if new:
             frappe.throw(_("Cannot save: {0}.").format("; ".join(new)))
+    _refuse_unlicensed(before, after, changed, industries)
+
+
+def _refuse_unlicensed(before: Any, after: Any, changed: set[str], industries: bool) -> None:
+    """Switching ON an app or industry the site's licence does not include is refused (licensing/gate.py;
+    never while no licence is enforced). Switching off, and leaving an existing state alone, always works."""
+    from zatgo_core.licensing.gate import app_licensed, industry_licensed
+
+    old_on, new_on = app_state.switches_of(before), app_state.switches_of(after)
+    apps = sorted(k for k in changed if new_on.get(k) and not old_on.get(k) and not app_licensed(k))
+    names = [(app_catalog.get(k) or {"label": k})["label"] for k in apps]
+    if industries:
+        def on(doc):
+            return {r.industry for r in (doc.get("enabled_industries") or []) if r.enabled}
+
+        names += sorted(k for k in on(after) - on(before) if not industry_licensed(k))
+    if names:
+        frappe.throw(
+            _("Your ZatGo licence does not include: {0}.").format(", ".join(names)),
+            frappe.PermissionError,
+            title=_("Not licensed"),
+        )
