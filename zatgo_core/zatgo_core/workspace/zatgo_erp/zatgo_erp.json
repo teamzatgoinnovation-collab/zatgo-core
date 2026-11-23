@@ -1,7 +1,7 @@
 {
  "app": "zatgo_core",
  "charts": [],
- "content": "[{\"id\": \"zgerp_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Accounts & Inventory</b></span>\", \"col\": 12}}, {\"id\": \"zgerp_blk\", \"type\": \"custom_block\", \"data\": {\"custom_block_name\": \"ZG ERP Summary\", \"col\": 12}}, {\"id\": \"zgerp_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"zgerp_cd0\", \"type\": \"card\", \"data\": {\"card_name\": \"Transactions\", \"col\": 3}}, {\"id\": \"zgerp_cd1\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 3}}, {\"id\": \"zgerp_cd2\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 3}}, {\"id\": \"zgerp_cd3\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 3}}]",
+ "content": "[{\"id\": \"zgerp_head\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Accounts & Inventory</b></span>\", \"col\": 12}}, {\"id\": \"zgerp_blk\", \"type\": \"custom_block\", \"data\": {\"custom_block_name\": \"ZG ERP Summary\", \"col\": 12}}, {\"id\": \"zgerp_db\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Dashboard\", \"col\": 3}}, {\"id\": \"zgerp_sp\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"zgerp_cd0\", \"type\": \"card\", \"data\": {\"card_name\": \"Transactions\", \"col\": 3}}, {\"id\": \"zgerp_cd1\", \"type\": \"card\", \"data\": {\"card_name\": \"Setup\", \"col\": 3}}, {\"id\": \"zgerp_cd2\", \"type\": \"card\", \"data\": {\"card_name\": \"Reports\", \"col\": 3}}, {\"id\": \"zgerp_cd3\", \"type\": \"card\", \"data\": {\"card_name\": \"Settings\", \"col\": 3}}]",
  "creation": "2026-11-22 00:00:00.000000",
  "custom_blocks": [
   {
@@ -384,7 +384,18 @@
   }
  ],
  "sequence_id": 2.0,
- "shortcuts": [],
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "doctype": "Workspace Shortcut",
+   "format": "{}",
+   "label": "Dashboard",
+   "link_to": "ZatGo ERP Dashboard",
+   "stats_filter": "[]",
+   "type": "Dashboard"
+  }
+ ],
  "title": "ZatGo ERP",
  "type": "Workspace"
 }

@@ -1,6 +1,38 @@
 {
  "cards": [
   {
+   "card": "ZG Sales Invoices",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Sales Invoice Total",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Purchase Invoices",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Purchase Invoice Total",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Sales Orders",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Sales Order Total",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Purchase Orders",
+   "doctype": "Number Card Link"
+  },
+  {
+   "card": "ZG Purchase Order Total",
+   "doctype": "Number Card Link"
+  },
+  {
    "card": "Total Outgoing Bills",
    "doctype": "Number Card Link"
   },
@@ -79,7 +111,7 @@
  "idx": 0,
  "is_default": 0,
  "is_standard": 1,
- "modified": "2026-11-22 21:00:00.000000",
+ "modified": "2026-11-23 22:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "ZatGo ERP Dashboard",

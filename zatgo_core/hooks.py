@@ -73,6 +73,8 @@ jinja = {
 }
 
 doc_events = {
+    # A Workspace saved in Desk (a DocType / Page / Report added to ZatGo ERP or an app) -> its sidebar follows at once.
+    "Workspace": {"on_update": "zatgo_core.services.app_sidebar.on_workspace_update"},
     "Account": {
         "before_insert": "zatgo_core.events.account_category.inherit_account_category",
     },

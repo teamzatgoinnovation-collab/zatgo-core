@@ -21,3 +21,13 @@ dash = root / "zatgo_core" / "zatgo_core" / "zatgo_core_dashboard" / "zatgo_erp_
 dash.parent.mkdir(parents=True, exist_ok=True)
 dash.write_text(json.dumps(mod.dashboard_json(), indent=1, sort_keys=True) + "\n")
 print("wrote", dash)
+
+# Number Cards (standard records, synced by migrate)
+import re
+
+for label, doctype, function, field in mod.NUMBER_CARDS:
+    slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+    card = root / "zatgo_core" / "zatgo_core" / "number_card" / slug / f"{slug}.json"
+    card.parent.mkdir(parents=True, exist_ok=True)
+    card.write_text(json.dumps(mod.number_card_json(label, doctype, function, field), indent=1, sort_keys=True) + "\n")
+    print("wrote", card)

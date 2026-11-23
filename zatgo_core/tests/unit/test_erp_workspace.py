@@ -59,3 +59,27 @@ class TestErpWorkspace(unittest.TestCase):
         for role in ("System Manager", "Accounts User", "Sales User", "Purchase User", "Stock User"):
             self.assertIn(role, erp_workspace.ROLES)
         self.assertEqual(erp_workspace.ROLES[0], erp_workspace.ROLE)
+
+    def test_dashboard_shortcut_is_in_the_workspace_file_and_its_page_content(self):
+        with open(WS_FILE) as f:
+            shipped = json.load(f)
+        self.assertIn(("Dashboard", erp_workspace.DASHBOARD), [(s["type"], s["link_to"]) for s in shipped["shortcuts"]])
+        blocks = json.loads(shipped["content"])
+        # the editor deletes a shortcut no content block shows
+        self.assertTrue(any(b["type"] == "shortcut" and b["data"]["shortcut_name"] == "Dashboard" for b in blocks))
+
+    def test_number_cards_are_files_and_on_the_dashboard(self):
+        import re
+
+        for label, doctype, function, field in erp_workspace.NUMBER_CARDS:
+            slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+            path = os.path.join(PACKAGE, "zatgo_core", "number_card", slug, f"{slug}.json")
+            with open(path) as f:
+                self.assertEqual(json.load(f), json.loads(json.dumps(erp_workspace.number_card_json(label, doctype, function, field))))
+            self.assertIn(label, erp_workspace.DASHBOARD_CARDS)
+
+    def test_app_dict_describes_zatgo_erp_for_the_sidebar_builder(self):
+        app = erp_workspace.app_dict()
+        self.assertEqual(app["workspaces"], (erp_workspace.NAME,))
+        self.assertEqual(app["overview_label"], "Home")
+        self.assertEqual(set(app["group_icons"]), {s[0] for s in erp_workspace.SECTIONS})

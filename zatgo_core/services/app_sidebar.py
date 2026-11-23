@@ -14,6 +14,11 @@ The sidebar is the same for every user: Frappe filters each item by the viewer's
 (frappe.boot.get_sidebar_items -> `is_item_allowed`), so a role sees only what it may open. An app that is switched off
 keeps its sidebar with no items (Frappe shows a sidebar only when it has an item), so switching back on is one sync.
 
+An app dict may also carry `overview_label` (default "Overview"), `group_icons` ({card label: icon}) and, as
+Workspace *shortcuts* of type Dashboard, top-level entries after the Overview (Workspace links can only be a DocType,
+Page or Report). `sync_for_workspace()` re-syncs one sidebar when its Workspace is saved, so a link added in Desk shows
+at once.
+
 `sync_app_sidebars()` is an upsert like core_sidebar.sync_core_sidebar(): rows are replaced only when they drift, so
 it is cheap to call from migrate and from ZG System Settings' on_update.
 """
@@ -66,26 +71,28 @@ def _settings_links(app: dict) -> list[dict]:
     return rows
 
 
-def _workspace_groups(name: str, skip: set[str]) -> list[dict]:
+def _workspace_groups(name: str, skip: set[str], group_icons: dict | None = None) -> list[dict]:
     """The Workspace's cards as sections of links, then its uncovered shortcuts as a "Shortcuts" section. `skip`:
     DocTypes already listed under Settings."""
     ws = frappe.get_doc("Workspace", name)
     rows: list[dict] = []
     seen: set[tuple[str, str]] = {("DocType", dt) for dt in skip}
     section_open = False
+    icon = "list"
     for row in ws.links:
         if row.type == "Card Break":
             rows.append(_section(row.label or name))
             section_open = True
+            icon = (group_icons or {}).get(row.label) or "list"
         elif row.type == "Link" and section_open and row.link_type in LINK_TYPES and row.link_to and (row.link_type, row.link_to) not in seen:
-            rows.append(_link(row.label or row.link_to, row.link_type, row.link_to, "list"))
+            rows.append(_link(row.label or row.link_to, row.link_type, row.link_to, icon))
             seen.add((row.link_type, row.link_to))
     # A card with no link left (the sections above are added blind) must not leave an empty header behind.
     rows = _drop_empty_sections(rows)
     extra = [
         _link(s.label or s.link_to, s.type, s.link_to, "list")
         for s in ws.shortcuts
-        if s.type in LINK_TYPES and s.link_to and (s.type, s.link_to) not in seen
+        if s.type in LINK_TYPES and s.link_to and (s.type, s.link_to) not in seen  # Dashboards: see _dashboard_links
     ]
     if extra:
         rows += [_section(SHORTCUTS_LABEL), *extra]
@@ -107,13 +114,25 @@ def desired_items(app: dict) -> list[dict]:
     items: list[dict] = []
     workspace = _workspace_name(app)
     if workspace:
-        items.append(_link(OVERVIEW_LABEL, "Workspace", workspace, app["icon"], child=0))
+        items.append(_link(app.get("overview_label") or OVERVIEW_LABEL, "Workspace", workspace, app["icon"], child=0))
+        items += _dashboard_links(workspace)
     settings = _settings_links(app)
     if settings:
         items += [_section(SETTINGS_LABEL), *settings]
     if workspace:
-        items += _workspace_groups(workspace, {dt for dt, _ in app["settings"]})
+        items += _workspace_groups(workspace, {dt for dt, _ in app["settings"]}, app.get("group_icons"))
     return items
+
+
+def _dashboard_links(workspace: str) -> list[dict]:
+    """The Workspace's Dashboard shortcuts as top-level entries right after the Overview."""
+    seen: set[str] = set()
+    rows: list[dict] = []
+    for s in frappe.get_doc("Workspace", workspace).shortcuts:
+        if s.type == "Dashboard" and s.link_to and s.link_to not in seen:
+            seen.add(s.link_to)
+            rows.append(_link(s.label or s.link_to, "Dashboard", s.link_to, "dashboard", child=0))
+    return rows
 
 
 def _fp(row) -> tuple:
@@ -168,3 +187,30 @@ def sync_app_sidebars() -> bool:
         except Exception:
             frappe.log_error(title=f"zatgo_core: sync sidebar of {app['label']}")
     return changed
+
+
+def sync_for_workspace(name: str) -> bool:
+    """Re-sync the one sidebar built from the Workspace [name] (a catalog app's, or ZatGo ERP's). True if it changed.
+
+    Called when a Workspace is saved (events: hooks.py doc_events), so a DocType / Page / Report added in the Desk editor
+    is in the sidebar straight away."""
+    from zatgo_core.services import erp_workspace
+
+    if name == erp_workspace.NAME:
+        return _sync_one(erp_workspace.app_dict(), True)
+    for app in app_page.apps():
+        if name in app["workspaces"]:
+            return _sync_one(app, app_page.is_enabled(app))
+    return False
+
+
+def on_workspace_update(doc, method=None) -> None:
+    """doc_events["Workspace"]["on_update"]: never blocks saving a Workspace. Not during install / migrate / import: those run
+    ensure_core_desk() afterwards, which syncs every sidebar."""
+    if frappe.flags.in_migrate or frappe.flags.in_install or frappe.flags.in_import:
+        return
+    try:
+        if sync_for_workspace(doc.name):
+            frappe.clear_cache()
+    except Exception:
+        frappe.log_error(title=f"zatgo_core: sidebar sync of Workspace {doc.name}")
