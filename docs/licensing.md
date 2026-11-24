@@ -1,9 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 6 of 10 — the Licence page.** A site enforces its licence only when its `site_config` has
-`zg_licence_enforcement` **and** a verified licence is imported; no production site has either yet, and no
-production signing key exists until one is generated (see *Keys* below). Audit and decisions:
-`licensing_audit_2026-11-17.md`.
+Status: **Phase 7 of 10 — expiry, grace, clock and limits.** A site enforces its licence only when its
+`site_config` has `zg_licence_enforcement`; no production site has it, and no production signing key exists until
+one is generated (see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
 
@@ -235,8 +234,7 @@ writable on a read-only (lapsed subscription) site so a licence can reactivate i
 ### Offline limits (stated, not hidden)
 - Binding is tamper-evident, not tamper-proof: someone with shell access can copy `zg_site_id` and the site name.
 - There is no central revocation: a signed revocation list or a replacement licence is imported like a licence.
-- The clock is the server's: expiry and rollback detection belong to Phase 7. Until then an expired licence that
-  was imported in time keeps giving its features, and a site with the switch on but no licence is unrestricted.
+- The clock is the server's: Phase 7's rollback check is best effort (see below).
 
 ## The Licence page (Phase 6): **ZatGo Licence** (`/desk/zg-licence`)
 
@@ -266,7 +264,34 @@ every action is a System Manager's, enforced on the server.
 API: `zatgo_core.api.v1.licensing.licences.get_page / site_request / licence_info / download_licence /
 download_issued`, plus the Phase 5 endpoints. Data: `licensing/licence_overview.py`.
 
+## Expiry, grace, clock and limits (Phase 7, `licensing/licence_policy.py`)
+
+All of this applies only while the enforcement switch is on.
+
+| Situation | Effect |
+|---|---|
+| no licence, an invalid one, or a revoked one | **foundation only** (the basics can be changed, nothing else) — deleting the licence record never lifts a restriction |
+| up to the expiry date | normal; the page warns 30 days ahead (a trial 7) |
+| after expiry, within `grace_days` | normal, with a danger warning naming the read-only date |
+| after the grace | **read-only site** |
+| server clock more than the tolerance behind the highest time seen | **read-only site** until the clock is corrected |
+| Lifetime / Perpetual | never expires |
+
+**Read-only** is the same gate a lapsed Space subscription uses (`services/subscription_gate.py`): `current()`
+merges the licence verdict, the most restrictive wins (D3). Viewing, reports, printing, exports, backups and
+importing a new licence (ZG Licence is exempt) keep working; every create / update / delete / submit / cancel /
+amend is refused with a licence message, and the Desk badge says why. Nothing is deleted.
+
+**Clock**: the highest time seen is stored in the `DefaultValue` row `zg_licence_clock_hwm`, moved forward at most
+hourly and written directly (no document events, no cache clear — a normal save would run the read-only gate
+again). Tolerance: `site_config` `zg_licence_clock_tolerance_hours` (default 48). Someone with database access can
+reset it: best effort, as the brief requires.
+
+**Limits** (D9 / D10, in `licensing/gate.py::check_limits`): a new licensed user — an enabled System User other
+than Administrator, i.e. one with a desk role — or enabling one, is refused once `max_users` would be exceeded; a
+new Company once `max_companies` would be. Editing existing users and companies is never refused and nothing is
+disabled. Scheduler / console work (Administrator outside a request) is exempt.
+
 ## Next phases
-7 expiry, grace, trial and clock-rollback policy into `subscription_gate`; user / company limits enforced; "switch
-on + no valid licence" policy · 8 one client capability payload · 9 audit, endpoint coverage, more money-path
-tests · 10 rollout (real signing key, `public_keys.json`, staged switch-on).
+8 one client capability payload for VanSaleX / POS / MyBis / desktop · 9 audit, endpoint coverage, more
+money-path tests · 10 rollout (real signing key, `public_keys.json`, staged switch-on).

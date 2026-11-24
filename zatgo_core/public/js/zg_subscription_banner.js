@@ -14,6 +14,12 @@
 		const period = sub.billing_period === "Yearly" ? __("Yearly") : __("Monthly");
 		const renews = sub.paid_until ? String(sub.paid_until).slice(0, 10) : null;
 		const days = typeof sub.remaining_days === "number" ? sub.remaining_days : null;
+		if (sub.read_only && sub.reason === "licence_expired") {
+			return { tone: "danger", text: __("Licence expired: this site is read-only. Import a renewed licence to edit.") };
+		}
+		if (sub.read_only && sub.reason === "clock_rollback") {
+			return { tone: "danger", text: __("Server clock is behind: this site is read-only until the date and time are corrected.") };
+		}
 		if (sub.read_only) {
 			return {
 				tone: "danger",

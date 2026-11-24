@@ -54,8 +54,9 @@ def _write(fn, *args, **kwargs):
 
 def clear_cache() -> None:
     frappe.cache.delete_value(CACHE_KEY)
-    if hasattr(frappe.local, "zg_licence_entitlement"):
-        del frappe.local.zg_licence_entitlement
+    for attr in ("zg_licence_entitlement", "zg_licence_data", "zg_licence_hwm"):
+        if hasattr(frappe.local, attr):
+            delattr(frappe.local, attr)
 
 
 # -- checks ---------------------------------------------------------------------------------------------------
@@ -207,22 +208,44 @@ def _compute() -> dict[str, Any]:
                 "reason": check["code"]}
     if doc.status == "Revoked" or doc.revoked_on:
         return {"present": True, "valid": False, "number": doc.licence_number, "features": {}, "reason": "revoked"}
-    return {"present": True, "valid": True, "number": doc.licence_number, "features": check["payload"]["features"]}
+    payload = check["payload"]
+    return {"present": True, "valid": True, "number": doc.licence_number, "features": payload["features"],
+            "terms": {"expiry_date": payload.get("expiry_date"), "grace_days": payload.get("grace_days") or 0,
+                      "licence_type": payload.get("licence_type"), "limits": payload.get("limits") or {}}}
 
 
-def current_entitlement() -> Entitlement | None:
-    """The entitlement the licence in force gives; None when the site has no licence. A licence that no longer
-    verifies, or was revoked, gives the foundation only -- never more."""
+def _data() -> dict[str, Any]:
+    data = getattr(frappe.local, "zg_licence_data", None)
+    if data is None:
+        data = frappe.cache.get_value(CACHE_KEY)
+        if data is None:
+            data = _compute()
+            frappe.cache.set_value(CACHE_KEY, data, expires_in_sec=3600)
+        frappe.local.zg_licence_data = data
+    return data
+
+
+def current_entitlement() -> Entitlement:
+    """The entitlement of the licence in force. A site with no licence, a licence that no longer verifies, or a
+    revoked one gets the foundation only -- never more (Phase 7: deleting the licence record must not lift any
+    restriction). Only asked while enforcement is switched on."""
     cached = getattr(frappe.local, "zg_licence_entitlement", None)
     if cached is not None:
-        return cached or None
-    data = frappe.cache.get_value(CACHE_KEY)
-    if data is None:
-        data = _compute()
-        frappe.cache.set_value(CACHE_KEY, data, expires_in_sec=3600)
-    ent = Entitlement.from_features(data["features"], source=f"licence:{data['number']}") if data.get("present") else None
-    frappe.local.zg_licence_entitlement = ent or False
+        return cached
+    data = _data()
+    if not data.get("present"):
+        ent = Entitlement.from_features({}, source="none")
+    else:
+        source = f"licence:{data['number']}" if data.get("valid", True) else f"invalid:{data['number']}"
+        ent = Entitlement.from_features(data["features"], source=source)
+    frappe.local.zg_licence_entitlement = ent
     return ent
+
+
+def current_terms() -> dict[str, Any] | None:
+    """Expiry, grace, type and limits of the valid licence in force (None without one)."""
+    data = _data()
+    return data.get("terms") if data.get("present") and data.get("valid") else None
 
 
 def summary(doc=None) -> dict[str, Any]:

@@ -166,13 +166,34 @@ def _grace_days(state: dict[str, Any]) -> int:
 
 
 def current(now: datetime | None = None) -> dict[str, Any]:
+    now = now or now_utc()  # one instant for the subscription and the licence
     result = evaluate(raw_state(), now)
     state = raw_state() or {}
     result["site_url"] = state.get("site_url")
     result["portal_url"] = state.get("portal_url")
     result["manage_url"] = state.get("manage_url") or state.get("portal_url")
     result["billing_period"] = state.get("billing_period")
+    # The site's licence (licensing/licence_policy.py) can make it read-only too: expired past its grace, or a
+    # clock set back. The most restrictive of subscription and licence wins (decision D3).
+    lic = _licence_read_only(now)
+    result["licence"] = lic
+    if lic and not result["read_only"]:
+        result.update(managed=True, read_only=True, reason=lic["reason"], status="EXPIRED")
     return result
+
+
+def _licence_switch() -> bool:
+    from zatgo_core.licensing.entitlement import enforcement_switch
+
+    return enforcement_switch()
+
+
+def _licence_read_only(now: datetime | None) -> dict[str, Any] | None:
+    if not _licence_switch():
+        return None
+    from zatgo_core.licensing.licence_policy import read_only_state
+
+    return read_only_state(now)
 
 
 def is_read_only() -> bool:
@@ -187,6 +208,13 @@ def _in_system_context() -> bool:
 
 def read_only_message() -> str:
     info = current()
+    if info["reason"] == "licence_expired":
+        lic = info.get("licence") or {}
+        return _("Your ZatGo licence expired on {0}. This site is read-only: you can still view, print and export "
+                 "everything. Import a renewed licence to continue editing.").format(lic.get("expiry_date") or "")
+    if info["reason"] == "clock_rollback":
+        return _("This server's clock is behind the last time ZatGo saw on this site, so the licence cannot be "
+                 "checked and the site is read-only. Correct the server's date and time.")
     if info["reason"] == "trial_ended":
         return _("Your ZatGo ERP free trial has ended. This site is read-only: you can still view everything. "
                  "Activate a monthly subscription to continue editing.")
@@ -256,7 +284,7 @@ def doc_has_permission(doc: Any = None, ptype: str | None = None, user: str | No
 
 def enforce_doc_write(doc: Any, method: str | None = None, *args: Any, **kwargs: Any) -> None:
     """doc_events "*": refuse any document write on a read-only site, `ignore_permissions` or not."""
-    if _in_system_context() or not frappe.conf.get(CONF_KEY):
+    if _in_system_context() or not (frappe.conf.get(CONF_KEY) or _licence_switch()):
         return
     if _exempt(getattr(doc, "doctype", None), doc):
         return
@@ -284,7 +312,14 @@ def boot_payload() -> dict[str, Any]:
     try:
         state = raw_state()
         if not state:
-            return {"managed": False}
+            info = current()  # no Space subscription: only the licence can make the site read-only
+            if not info["read_only"]:
+                return {"managed": False}
+            out = {k: info.get(k) for k in ("managed", "status", "read_only", "remaining_days", "trial_ends_at",
+                                            "paid_until", "reason", "portal_url", "site_url", "manage_url",
+                                            "billing_period")}
+            out.update(enforced=True, licence=info.get("licence"))
+            return out
         info = current()
         enforced = bool(info["managed"])
         if not enforced:

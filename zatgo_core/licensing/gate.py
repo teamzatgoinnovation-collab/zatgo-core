@@ -141,6 +141,8 @@ def enforce_doc_write(doc: Any, method: str | None = None, *args: Any, **kwargs:
     entitlement = ent.active()
     if entitlement is None or _system_context():
         return
+    if doc.doctype in ("User", "Company") and method == "validate":
+        check_limits(doc)
     if doc.doctype not in registry.doctype_index():
         return
     if method == "on_trash":
@@ -185,3 +187,38 @@ def vansalex_key_licensed(key: str) -> bool:
         return True
     named = any(key in f.vansalex_keys for f in registry.features() if not f.retired)
     return not named or key in entitlement.vansalex_keys
+
+
+# -- licence limits (Phase 7, decision D10) -------------------------------------------------------------------------
+
+def _counts_as_user(doc: Any) -> bool:
+    return (cint(doc.get("enabled")) == 1 and doc.get("user_type") == "System User"
+            and doc.name not in ("Administrator", "Guest"))
+
+
+def check_limits(doc: Any) -> None:
+    """Refuse a new licensed user (an enabled System User other than Administrator -- D9) or a new Company beyond
+    the licence's limits. Existing users and companies are never disabled or removed (D10): only the change that
+    would go over the limit is refused."""
+    from zatgo_core.licensing.licences import current_terms
+
+    terms = current_terms()
+    limits = (terms or {}).get("limits") or {}
+    if doc.doctype == "User":
+        cap = cint(limits.get("max_users"))
+        if not cap or not _counts_as_user(doc):
+            return
+        before = None if doc.is_new() else doc.get_doc_before_save()
+        if before is not None and _counts_as_user(before):
+            return  # already counted: editing an existing user is never refused
+        others = frappe.db.count("User", {"enabled": 1, "user_type": "System User",
+                                          "name": ["not in", ["Administrator", "Guest", doc.name]]})
+        if others + 1 > cap:
+            frappe.throw(_("Your ZatGo licence allows {0} users and {1} are active. Disable a user or import a "
+                           "licence with more users.").format(cap, others), frappe.PermissionError,
+                         title=_("User limit reached"))
+    elif doc.doctype == "Company" and doc.is_new():
+        cap = cint(limits.get("max_companies"))
+        if cap and frappe.db.count("Company") + 1 > cap:
+            frappe.throw(_("Your ZatGo licence allows {0} companies. Import a licence with more companies to add "
+                           "one.").format(cap), frappe.PermissionError, title=_("Company limit reached"))

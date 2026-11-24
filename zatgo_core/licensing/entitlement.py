@@ -1,13 +1,12 @@
 """Entitlement: what this site is licensed for, compiled for fast permission checks (docs/licensing.md).
 
 An entitlement is a set of registry features, each with the actions it may use (the foundation is always in).
-It is built from a *verified* source only: the site's current signed licence (Phase 5, licensing/licences.py).
-A site without a licence has no entitlement, so nothing is enforced there.
+It is built from a *verified* source only: the site's current signed licence (licensing/licences.py).
 
-Enforcement is on only when BOTH hold:
-- `site_config.json` has `"zg_licence_enforcement": 1` (a file only the bench user writes -- decision D4), and
-- an entitlement exists for the site.
-Anything else is unrestricted (fail-open), so an unmanaged or not-yet-licensed site is never locked out.
+Enforcement is on only when `site_config.json` has `"zg_licence_enforcement": 1` (a file only the bench user
+writes -- decision D4). Without the switch everything is unrestricted, so an unmanaged site is never locked out.
+With the switch on, the licence decides -- and no licence, an invalid one or a revoked one gives the foundation
+only (Phase 7), so removing the licence record never lifts a restriction.
 
 `use(entitlement)` installs one for the current request / test (`frappe.local`): Phase 5's licence loader and
 the tests go through it. It is Python-only -- nothing reachable over HTTP sets it.
@@ -89,7 +88,7 @@ def use(entitlement: Entitlement | None) -> None:
 
 def _load() -> Entitlement | None:
     """The verified source: the site's current signed licence (licensing/licences.py), re-verified whenever its
-    cached entitlement is rebuilt. None when the site has no licence."""
+    cached entitlement is rebuilt. Without a valid licence: the foundation only."""
     from zatgo_core.licensing.licences import current_entitlement
 
     return current_entitlement()
@@ -115,6 +114,7 @@ def describe() -> dict[str, Any]:
         "switch": enforcement_switch(),
         "enforcing": active() is not None,
         "source": ent.source if ent else None,
+        "licensed": bool(ent and ent.source.startswith("licence:")),
         "features": len(ent.features) if ent else 0,
         "digest": ent.digest if ent else None,
     }

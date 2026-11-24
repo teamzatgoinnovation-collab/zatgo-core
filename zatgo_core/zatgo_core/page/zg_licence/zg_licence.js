@@ -138,7 +138,7 @@ frappe.pages["zg-licence"].on_page_load = function (wrapper) {
 			"section",
 			{ class: "zg-lic__card" },
 			h("h3", {}, __("This site")),
-			h("dl", { class: "zg-lic__grid" }, field(__("Site name"), site.site_name), field(__("Site ID"), site.site_id || __("not created yet (Export site identity creates it)")), field(__("ZatGo version"), site.app_version), field(__("Users"), limit(l.usage ? l.usage.users : "-", l.present ? l.limits.max_users : 0)), field(__("Companies"), limit(l.usage ? l.usage.companies : "-", l.present ? l.limits.max_companies : 0)), field(__("Enforcement"), S.enforcement.switch ? (S.enforcement.enforcing ? __("On") : __("Switched on, no licence")) : __("Off")))
+			h("dl", { class: "zg-lic__grid" }, field(__("Site name"), site.site_name), field(__("Site ID"), site.site_id || __("not created yet (Export site identity creates it)")), field(__("ZatGo version"), site.app_version), field(__("Users"), limit(l.usage ? l.usage.users : "-", l.present ? l.limits.max_users : 0)), field(__("Companies"), limit(l.usage ? l.usage.companies : "-", l.present ? l.limits.max_companies : 0)), field(__("Enforcement"), S.enforcement.switch ? (S.enforcement.licensed ? __("On") : __("On: no valid licence, basics only")) : __("Off")))
 		);
 		if (!l.present) {
 			return [h("section", { class: "zg-lic__card zg-lic__empty" }, h("h3", {}, __("No licence imported")), h("p", {}, __("Export this site's identity, send it to ZatGo, and import the licence file you receive."))), siteBox];

@@ -75,7 +75,8 @@ def warnings(summary: dict[str, Any], check: dict[str, Any] | None, enforcement:
     if not summary.get("present"):
         if enforcement["switch"]:
             add("danger", "no_licence", "Licence enforcement is switched on for this site but no licence is "
-                                        "imported. Import the licence ZatGo issued for this site.")
+                                        "imported: only the basics can be changed. Import the licence ZatGo "
+                                        "issued for this site.")
         else:
             add("info", "no_licence", "No licence is imported on this site. Nothing is restricted.")
         return out
@@ -83,11 +84,21 @@ def warnings(summary: dict[str, Any], check: dict[str, Any] | None, enforcement:
         add("danger", f"invalid_{check['code']}",
             f"The licence in force no longer verifies ({check['message']}). Only the basics stay available "
             "while licensing is enforced. Import a valid licence.")
+    policy = summary.get("policy") or {}
+    if policy.get("reason") == "clock_rollback":
+        add("danger", "clock_rollback", "This server's clock is behind the last time seen on this site: the site "
+                                        "is read-only until the date and time are corrected.")
+    elif policy.get("state") == "read_only":
+        add("danger", "read_only", f"The licence expired on {policy['expiry_date']} and its grace period ended on "
+                                   f"{policy['grace_ends']}: this site is read-only. Import a renewed licence.")
+    elif policy.get("state") == "grace":
+        add("danger", "grace", f"The licence expired on {policy['expiry_date']}. This site becomes read-only after "
+                               f"{policy['grace_ends']} ({policy['days_left']} day(s) left). Import a renewed licence.")
     status = summary["status"]
     days = summary.get("days_remaining")
     if status == "Revoked":
         add("danger", "revoked", "This licence was revoked by ZatGo. Import a replacement licence.")
-    elif status == "Expired":
+    elif status == "Expired" and policy.get("state") not in ("grace", "read_only"):
         add("danger", "expired", f"This licence expired on {summary['expiry_date']}.")
     elif status == "Trial" and days is not None and days <= TRIAL_WARN_DAYS:
         add("warning", "trial_ending", f"The trial ends in {days} day(s), on {summary['expiry_date']}.")
@@ -117,13 +128,16 @@ def history(limit: int = 50) -> dict[str, list[dict[str, Any]]]:
     return {"licences": rows, "events": events}
 
 
-def overview() -> dict[str, Any]:
+def overview(now=None) -> dict[str, Any]:
     summary = licences.summary()
     doc = licences.current_doc()
     check = licences.verify_stored(doc) if doc else None
     payload = _payload(doc) if doc else {}
     enforcement = entitlement.describe()
     summary["usage"] = {"users": active_users(), "companies": companies()}
+    from zatgo_core.licensing.licence_policy import state as policy_state
+
+    summary["policy"] = policy_state(now)
     if doc:
         summary["product_id"] = payload.get("product_id")
         summary["platforms"] = payload.get("platforms")
