@@ -1,8 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 5 of 10 — signed offline licences.** A site enforces its licence only when its
-`site_config` has `zg_licence_enforcement` **and** a verified licence is imported; no production site has either
-yet, and no production signing key exists until one is generated (see *Keys* below). Audit and decisions:
+Status: **Phase 6 of 10 — the Licence page.** A site enforces its licence only when its `site_config` has
+`zg_licence_enforcement` **and** a verified licence is imported; no production site has either yet, and no
+production signing key exists until one is generated (see *Keys* below). Audit and decisions:
 `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
@@ -238,8 +238,35 @@ writable on a read-only (lapsed subscription) site so a licence can reactivate i
 - The clock is the server's: expiry and rollback detection belong to Phase 7. Until then an expired licence that
   was imported in time keeps giving its features, and a site with the switch on but no licence is unrestricted.
 
+## The Licence page (Phase 6): **ZatGo Licence** (`/desk/zg-licence`)
+
+In the ZatGo sidebar under General Settings, next to **Editions** (both are shortcuts of
+`workspace/zatgo/zatgo.json`). Readers of ZG Licence (System Manager, ZG Application Admin, ZG Read Only) see it;
+every action is a System Manager's, enforced on the server.
+
+- **Overview**: edition, status, customer, licence number and version, type, issue / start / import / expiry
+  dates, days remaining, signature verified or not, feature count; **this site**: site name and ID, ZatGo
+  version, users and companies against the licence limits (D9: enabled System Users other than Administrator;
+  Company records), whether enforcement is on.
+- **Warnings** (`licence_overview.warnings`): no trusted signing key yet; no licence (danger when the switch is
+  on); licence no longer verifies; revoked; expired; trial ending (7 days); expiring (30 days); users / companies
+  over the limit; imported but not enforced.
+- **Module access**: every module with licensed / total features and, per feature, the actions it gets. With no
+  licence it says *unrestricted*; a revoked or broken licence shows only the foundation.
+- **Activation history**: every imported licence (current one marked, download its signed file) and the licence
+  events of ZG Audit Log (imported, rejected with reason, revoked, verification failed).
+- **Actions** (menu): Import / Replace licence, Verify licence, Import revocation list, Export site identity
+  (`zatgo.site_request` — the file to send ZatGo for a licence; creates the site ID the first time), Export
+  licence information (`zatgo.licence_info`, a metadata backup — never importable), Download licence file.
+- **Issuer section** (issuer site + System Manager only): Issue licence (Active editions; customer; site IDs —
+  or load the customer's site identity file; type, dates and limits, blank = the edition's defaults) which
+  downloads the signed file; every issued licence with Download, Replace (next version) and Revoke (downloads a
+  signed revocation list).
+
+API: `zatgo_core.api.v1.licensing.licences.get_page / site_request / licence_info / download_licence /
+download_issued`, plus the Phase 5 endpoints. Data: `licensing/licence_overview.py`.
+
 ## Next phases
-6 licence workspace (overview, import / replace / verify, history, warnings, site identity export) · 7 expiry,
-grace, trial and clock-rollback policy into `subscription_gate`; user / company limits; "switch on + no valid
-licence" policy · 8 one client capability payload · 9 audit, endpoint coverage, more money-path tests · 10
-rollout (real signing key, `public_keys.json`, staged switch-on).
+7 expiry, grace, trial and clock-rollback policy into `subscription_gate`; user / company limits enforced; "switch
+on + no valid licence" policy · 8 one client capability payload · 9 audit, endpoint coverage, more money-path
+tests · 10 rollout (real signing key, `public_keys.json`, staged switch-on).

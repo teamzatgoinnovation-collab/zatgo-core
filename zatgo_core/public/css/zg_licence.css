@@ -1,0 +1,208 @@
+/* ZatGo Licence (Desk page zg-licence). Frappe's CSS variables, so light and dark follow the Desk theme. Mobile
+   first: one column; overview + site side by side from 992px. Same card look as zg_edition_builder.css. */
+.zg-lic {
+	padding: 0 var(--padding-sm, 8px) var(--padding-xl, 32px);
+	display: grid;
+	gap: var(--margin-lg, 20px);
+	margin-top: var(--margin-md, 12px);
+}
+@media (max-width: 575px) {
+	.zg-lic {
+		padding-inline: var(--padding-md, 12px);
+	}
+}
+.zg-lic__top {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--margin-lg, 20px);
+}
+@media (min-width: 992px) {
+	.zg-lic__top {
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+	}
+}
+.zg-lic__card {
+	background: var(--card-bg, #fff);
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-md, 12px) var(--padding-lg, 16px);
+	min-width: 0;
+}
+.zg-lic__card h3 {
+	font-size: var(--text-lg, 1.125rem);
+	font-weight: 600;
+	margin: 0 0 var(--margin-sm, 8px);
+}
+.zg-lic__card h4 {
+	font-size: var(--text-base, 1rem);
+	font-weight: 600;
+	margin: var(--margin-md, 12px) 0 var(--margin-xs, 4px);
+}
+.zg-lic__hero-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: var(--margin-md, 12px);
+	flex-wrap: wrap;
+	margin-bottom: var(--margin-sm, 8px);
+}
+.zg-lic__hero-head h2 {
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 600;
+}
+.zg-lic__eyebrow {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-lic__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: var(--margin-sm, 8px) var(--margin-lg, 20px);
+	margin: 0;
+}
+.zg-lic__field dt {
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-sm, 0.875rem);
+	font-weight: normal;
+}
+.zg-lic__field dd {
+	margin: 0;
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+.zg-lic__hint,
+.zg-lic__empty p {
+	color: var(--text-muted, #5f6b76);
+}
+
+/* warnings */
+.zg-lic__warnings {
+	display: grid;
+	gap: var(--margin-sm, 8px);
+}
+.zg-lic__warning {
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-inline-start-width: 4px;
+	border-radius: var(--border-radius-md, 8px);
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+	background: var(--card-bg, #fff);
+	color: var(--text-color, #1f272e);
+}
+.zg-lic__warning[data-level="danger"] {
+	border-inline-start-color: var(--red-500, #e03636);
+}
+.zg-lic__warning[data-level="warning"] {
+	border-inline-start-color: var(--orange-500, #e86c13);
+}
+.zg-lic__warning[data-level="info"] {
+	border-inline-start-color: var(--blue-500, #2490ef);
+}
+
+/* modules */
+.zg-lic__modules {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: var(--margin-sm, 8px);
+}
+.zg-lic__module {
+	border: 1px solid var(--border-color, #e2e6e9);
+	border-radius: var(--border-radius-md, 8px);
+	min-width: 0;
+}
+.zg-lic__module > summary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
+	cursor: pointer;
+	min-height: 44px;
+}
+.zg-lic__module-name {
+	font-weight: 600;
+}
+.zg-lic__count {
+	font-size: var(--text-sm, 0.875rem);
+	color: var(--text-muted, #5f6b76);
+	white-space: nowrap;
+}
+.zg-lic__count[data-state="all"] {
+	color: var(--green-600, #16794c);
+}
+.zg-lic__count[data-state="some"] {
+	color: var(--orange-600, #b45309);
+}
+.zg-lic__module ul {
+	list-style: none;
+	margin: 0;
+	padding: 0 var(--padding-md, 12px) var(--padding-sm, 8px);
+	display: grid;
+	gap: 4px;
+}
+.zg-lic__module li {
+	display: grid;
+	grid-template-columns: 1.25em minmax(0, 1fr);
+	gap: 2px 6px;
+	font-size: var(--text-sm, 0.875rem);
+}
+.zg-lic__module li[data-licensed="0"] {
+	color: var(--text-muted, #5f6b76);
+}
+.zg-lic__mark {
+	color: var(--green-600, #16794c);
+}
+.zg-lic__module li[data-licensed="0"] .zg-lic__mark {
+	color: var(--text-muted, #5f6b76);
+}
+.zg-lic__actions {
+	grid-column: 2;
+	color: var(--text-muted, #5f6b76);
+	font-size: var(--text-xs, 0.75rem);
+}
+.zg-visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+.zg-lic__module li > span:nth-child(3) {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+/* history / issuer tables */
+.zg-lic__table-wrap {
+	overflow-x: auto;
+}
+.zg-lic__table {
+	font-size: var(--text-sm, 0.875rem);
+	margin: 0;
+}
+.zg-lic__table td {
+	vertical-align: middle;
+}
+.zg-lic__table tr[data-revoked] {
+	color: var(--text-muted, #5f6b76);
+}
+.zg-lic__current {
+	margin-inline-start: 6px;
+}
+.zg-lic__row-actions {
+	white-space: nowrap;
+}
+.zg-lic__row-actions .btn + .btn {
+	margin-inline-start: 4px;
+}
+.zg-lic__events {
+	padding-inline-start: 18px;
+	font-size: var(--text-sm, 0.875rem);
+	color: var(--text-muted, #5f6b76);
+}
+.zg-lic__event {
+	color: var(--text-color, #1f272e);
+	font-weight: 500;
+	text-transform: capitalize;
+}

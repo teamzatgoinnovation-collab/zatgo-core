@@ -106,3 +106,62 @@ def issued_licences() -> dict[str, Any]:
 @frappe.whitelist(methods=["POST"])
 def revoke_licences(licence_ids: Any) -> dict[str, Any]:
     return ok(issuing.revocation_list(_list(licence_ids)))
+
+
+# -- the Licence page (zg-licence) ----------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_page() -> dict[str, Any]:
+    """Everything the Licence page shows. Readers of ZG Licence see it; actions are for a System Manager."""
+    if not frappe.has_permission(licences.DOCTYPE, "read"):
+        frappe.throw(_("Not permitted to read the licence."), frappe.PermissionError)
+    from zatgo_core.licensing import editions, issuer, licence_overview
+    from zatgo_core.services.ui_apps import asset_url
+
+    is_manager = frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles()
+    data = {**licence_overview.overview(), "can_manage": is_manager, "is_issuer": issuer.is_issuer_site(),
+            "history": licence_overview.history(), "css": asset_url("css/zg_licence.css")}
+    if data["is_issuer"] and is_manager:
+        data["issuer"] = {
+            "editions": [e for e in editions.list_editions() if e["status"] == "Active"],
+            "issued": issuing.history(),
+            "licence_types": list(editions.edition_config.LICENCE_TYPES),
+        }
+    return ok(data)
+
+
+@frappe.whitelist()
+def site_request() -> dict[str, Any]:
+    """The file to send ZatGo to get a licence for this site."""
+    _require_system_manager()
+    from zatgo_core.licensing import licence_overview
+
+    return ok(licence_overview.site_request())
+
+
+@frappe.whitelist()
+def licence_info() -> dict[str, Any]:
+    """Licence metadata export / backup (not a licence; cannot be imported)."""
+    _require_system_manager()
+    from zatgo_core.licensing import licence_overview
+
+    return ok(licence_overview.licence_info())
+
+
+@frappe.whitelist()
+def download_licence(name: str) -> dict[str, Any]:
+    """The signed file of an imported licence, to keep a copy."""
+    _require_system_manager()
+    from zatgo_core.licensing import licence_overview
+
+    return ok(licence_overview.licence_file(require_str(name, "name")))
+
+
+@frappe.whitelist()
+def download_issued(licence_number: str) -> dict[str, Any]:
+    """Issuer site: the signed file of a licence issued here, to send again."""
+    from zatgo_core.licensing import issuer
+
+    issuer.require_issuer_manager()
+    doc = frappe.get_doc(issuing.HISTORY, require_str(licence_number, "licence_number"))
+    return ok({"filename": f"{doc.licence_number}.zglicence", "file": doc.licence_file})
