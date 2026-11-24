@@ -53,6 +53,15 @@ def context() -> dict[str, Any]:
             # app shows only these; the endpoints enforce them
             # (services/vansalex_access.py).
             "access": effective_access(user),
+            # The site's licence in short (read-only and why, edition, expiry) -- full contract:
+            # zatgo_core.api.v1.licensing.capabilities.get (licensing/capabilities.py). A hint; the server enforces.
+            "licence": _licence_block(),
         },
         meta={"source": "vansalex.me"},
     )
+
+
+def _licence_block() -> dict[str, Any]:
+    from zatgo_core.licensing.capabilities import safe_licence_block
+
+    return safe_licence_block()

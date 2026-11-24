@@ -42,13 +42,19 @@ class Entitlement:
     digest: str = ""
 
     @classmethod
-    def from_features(cls, features: Mapping[str, Iterable[str]] | Iterable[str], source: str = "") -> "Entitlement":
+    def from_features(cls, features: Mapping[str, Iterable[str]] | Iterable[str], source: str = "",
+                      platforms: Mapping[str, Any] | None = None) -> "Entitlement":
         """From an edition-style map {feature_id: [actions]} ([] = all of the feature). Unknown and retired ids
-        are dropped (a licence may name a feature a later app version retired); the foundation is added."""
+        are dropped (a licence may name a feature a later app version retired); the foundation is added. With
+        `platforms` (the licence's), a feature none of whose platforms is licensed is dropped too -- a
+        mobile-only feature in a Desk-only licence is not licensed."""
+        allowed = {p for p, on in (platforms or {}).items() if on} if platforms else None
         chosen: dict[str, tuple[str, ...]] = {}
         for fid, narrowed in edition_config.normalise_features(features).items():
             feature = registry.get_feature(fid)
             if feature is None or feature.retired:
+                continue
+            if allowed is not None and not allowed.intersection(feature.platforms):
                 continue
             chosen[fid] = tuple(edition_config.effective_actions(feature, narrowed))
         for feature in registry.foundation_features():

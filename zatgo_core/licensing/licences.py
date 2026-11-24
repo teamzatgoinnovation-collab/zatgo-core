@@ -211,7 +211,8 @@ def _compute() -> dict[str, Any]:
     payload = check["payload"]
     return {"present": True, "valid": True, "number": doc.licence_number, "features": payload["features"],
             "terms": {"expiry_date": payload.get("expiry_date"), "grace_days": payload.get("grace_days") or 0,
-                      "licence_type": payload.get("licence_type"), "limits": payload.get("limits") or {}}}
+                      "licence_type": payload.get("licence_type"), "limits": payload.get("limits") or {},
+                      "platforms": payload.get("platforms") or {}}}
 
 
 def _data() -> dict[str, Any]:
@@ -237,7 +238,8 @@ def current_entitlement() -> Entitlement:
         ent = Entitlement.from_features({}, source="none")
     else:
         source = f"licence:{data['number']}" if data.get("valid", True) else f"invalid:{data['number']}"
-        ent = Entitlement.from_features(data["features"], source=source)
+        ent = Entitlement.from_features(data["features"], source=source,
+                                        platforms=(data.get("terms") or {}).get("platforms"))
     frappe.local.zg_licence_entitlement = ent
     return ent
 

@@ -19,4 +19,7 @@ from zatgo_core.services.app_gate import app_api
 @frappe.whitelist()
 @app_api("zatgo_pos")
 def get() -> dict[str, Any]:
-    return ok(pos_settings.effective(), meta={"source": pos_settings.SETTINGS})
+    from zatgo_core.licensing.capabilities import safe_licence_block
+
+    # `licence`: the site's licence in short (read-only and why, edition, expiry); the server enforces it anyway.
+    return ok({**pos_settings.effective(), "licence": safe_licence_block()}, meta={"source": pos_settings.SETTINGS})

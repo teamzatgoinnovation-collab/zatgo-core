@@ -1,8 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 7 of 10 — expiry, grace, clock and limits.** A site enforces its licence only when its
-`site_config` has `zg_licence_enforcement`; no production site has it, and no production signing key exists until
-one is generated (see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
+Status: **Phase 8 of 10 — client contract.** A site enforces its licence only when its `site_config` has
+`zg_licence_enforcement`; no production site has it, and no production signing key exists until one is generated
+(see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
 
@@ -292,6 +292,43 @@ than Administrator, i.e. one with a desk role — or enabling one, is refused on
 new Company once `max_companies` would be. Editing existing users and companies is never refused and nothing is
 disabled. Scheduler / console work (Administrator outside a request) is exempt.
 
+## Client contract (Phase 8, `licensing/capabilities.py`)
+
+For ZatGo's own clients (VanSaleX mobile / web, ZatGo POS and the desktop accounting apps, MyBis), with the same
+stable ids as the registry and the licence. A **hint** for what to show — the server enforces every rule whatever
+a client hides; a hidden mobile feature is not a secure one.
+
+**Full contract**: `GET zatgo_core.api.v1.licensing.capabilities.get?platform=desk|desktop|mobile` (any logged-in
+user):
+
+```json
+{"schema_version": 1, "product_id": "zatgo_erp", "digest": "16 hex, changes when anything below changes",
+ "licence": {"enforced": true, "licensed": true, "read_only": false, "read_only_reason": null, "message": null,
+             "edition_id": "sales", "edition_name": "ZatGo Sales", "status": "Active", "expiry_date": "2027-11-23",
+             "days_remaining": 364},
+ "platforms": {"desk": 1, "desktop": 1, "mobile": 0}, "platform": "mobile", "platform_allowed": false,
+ "modules": {"sales": true, "inventory": false},
+ "features": {"sales.invoice": {"licensed": true, "actions": ["read", "create", "submit"]},
+              "inventory.stock_transfer": {"licensed": false, "actions": []}},
+ "apps": {"vansalex": false, "zatgo_pos": true}, "industries": [],
+ "user": {"name": "user@example.com", "roles": ["Sales User"]}}
+```
+
+`licensed: null` / `modules: null` = the site enforces no licence (nothing restricted by licensing). What the
+licence gives (`features`, `modules`, `platforms`), what the site switched on (`apps`, `industries`) and what the
+user's roles allow are kept apart: clients still ask Frappe for document permissions — `user.roles` is for
+display. Cache by `digest`.
+
+**Short block** — the `licence` object above — is also in the payloads the apps already load, so they can show a
+read-only / expiry notice without another call: VanSaleX `vansalex.me.context` → `data.licence`, ZatGo POS
+`pos_settings.get` → `data.licence`, MyBis `mybis.context.get_context` → `data.licence`. It never fails the
+payload (`safe_licence_block`: an error is logged and `"error": true` returned). Older app builds ignore the
+extra key; reading it is a client-side change in each app's own repository (not done here).
+
+**Platforms are enforced on the server**: with a licence, a feature none of whose platforms the licence includes is
+not in the entitlement (`Entitlement.from_features(platforms=...)`) — e.g. VanSaleX's mobile-only modules on a
+Desk-only licence; an app whose feature drops out is off, so its API answers 404 like a switched-off app.
+
 ## Next phases
-8 one client capability payload for VanSaleX / POS / MyBis / desktop · 9 audit, endpoint coverage, more
-money-path tests · 10 rollout (real signing key, `public_keys.json`, staged switch-on).
+9 audit, endpoint coverage, more money-path tests · 10 rollout (real signing key, `public_keys.json`, staged
+switch-on).

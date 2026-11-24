@@ -89,8 +89,16 @@ def get_context() -> dict[str, Any]:
             "week_start": scope.week_start(),
             "server_date": getdate(today()).isoformat(),
             "policy": zg_mybis_settings.policy(),
+            # The site's licence in short (read-only and why, edition, expiry); the server enforces it anyway.
+            "licence": _licence_block(),
         }
     )
+
+
+def _licence_block() -> dict[str, Any]:
+    from zatgo_core.licensing.capabilities import safe_licence_block
+
+    return safe_licence_block()
 
 
 def _default_company(allowed: list[str]) -> str | None:
