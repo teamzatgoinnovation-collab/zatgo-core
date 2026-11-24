@@ -45,6 +45,8 @@ FORMAT = 1
 SCHEMA_VERSION = 1
 PRODUCT_ID = edition_config.PRODUCT_ID
 NO_EXPIRY_TYPES = ("Lifetime", "Perpetual")
+# A licence is a few kilobytes; anything far larger is refused before it is parsed.
+MAX_FILE_BYTES = 256 * 1024
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 REQUIRED = (
@@ -102,6 +104,8 @@ def seal(payload: Mapping[str, Any], private_key, kind: str = FILE_TYPE) -> str:
 
 def open_envelope(text: str | bytes, kind: str = FILE_TYPE) -> tuple[dict[str, Any], bytes, dict[str, Any]]:
     """Parse and verify a file. Returns (payload, payload bytes, envelope). Raises LicenceError."""
+    if len(text) > MAX_FILE_BYTES:
+        raise LicenceError("too_large", "the file is too large to be a ZatGo licence")
     if isinstance(text, bytes):
         try:
             text = text.decode("utf-8")

@@ -1,8 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 8 of 10 — client contract.** A site enforces its licence only when its `site_config` has
-`zg_licence_enforcement`; no production site has it, and no production signing key exists until one is generated
-(see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
+Status: **Phase 9 of 10 — audit, coverage, hardening, money-path tests.** A site enforces its licence only
+when its `site_config` has `zg_licence_enforcement`; no production site has it, and no production signing key
+exists until one is generated (see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
 
@@ -329,6 +329,43 @@ extra key; reading it is a client-side change in each app's own repository (not 
 not in the entitlement (`Entitlement.from_features(platforms=...)`) — e.g. VanSaleX's mobile-only modules on a
 Desk-only licence; an app whose feature drops out is off, so its API answers 404 like a switched-off app.
 
+## Audit, coverage and hardening (Phase 9)
+
+**Audit trail** (`ZG Audit Log`, brief Part 17): edition field and feature changes, edition imports, licence
+imported / replaced / rejected (with reason code) / verification failed / revoked, licences and revocation lists
+issued, site identity created, and **site_config changes** — enforcement switch, issuer mode, signing-key
+configured or not, site ID, clock tolerance — detected by `licensing/watch.py` (daily job and every Licence page
+load; `doctype_name` "ZG Licence Config"). App switch changes were already audited by ZG System Settings. Never a
+key or a licence file in a log. Role permission changes stay with Frappe's own history (not duplicated).
+
+The log is **append-only** (`zg_audit_log.py`): an existing entry cannot be changed by any route; an entry typed in
+through the Desk or REST is refused (the system writes them in code), so none can be forged; licensing entries
+cannot be deleted; other entries keep the old System Manager rule. Install / migrate / patches are exempt.
+
+**API coverage** (`licensing/api_coverage.py`): every whitelisted `zatgo_core.api.v1` endpoint is owned by a
+feature, an app or an industry — or listed in `NOT_LICENSED` with its reason (health checks, platform
+administration, licensing itself, the Space subscription, portals, client sync, and the delivery / fleet products
+that are not in the registry yet). `test_licensing_api_coverage` fails on a new endpoint without a decision and on
+stale entries. Whatever the classification, documents an endpoint writes still pass the document-level gate.
+
+**Hardening**: licence / revocation files over 256 KB and edition files over 1 MB are refused before parsing;
+every licensing endpoint refuses Guest, and all but the client contract refuse a user without a ZatGo or System
+Manager role — the permission check comes before the request is read (a test calls each endpoint).
+
+### Brief Part 18 — where each test lives
+
+| # | Area | Test |
+|---|---|---|
+| 1-5 | editions, registries, dependencies | `unit/test_licensing_registry`, `unit/test_licensing_editions`, `integration/test_licensing_registry`, `integration/test_licensing_editions` |
+| 6-10 | edition / licence / role permissions, intersection, direct DocType access | `unit/test_licensing_gate`, `integration/test_licensing_enforcement` |
+| 11-12 | REST / whitelisted methods | `integration/test_licensing_api_coverage`, `test_licensing_enforcement` (Administrator in a request) |
+| 13-14 | reports / print | allowed by design (D6) — `unit/test_licensing_gate::test_read_print_and_cancel_are_never_refused` |
+| 15-20 | signature, tampering, expiry, trial, perpetual, wrong site | `unit/test_licence_format`, `unit/test_licence_policy`, `integration/test_licensing_licences`, `integration/test_licensing_policy` |
+| 21-23 | downgrade, upgrade, existing data kept | `integration/test_licensing_money_path::test_upgrade_then_downgrade_keeps_history` |
+| 24-28 | Sales Invoice + GL, Stock Entry + SLE, Payment Entry, sales and purchase returns | `test_licensing_money_path`, `test_licensing_enforcement` |
+| 29 | multi-company | company limit in `test_licensing_policy`; the licence is site-wide (no per-company grant) |
+| 30 | migration safety | every phase migrated the local test site; new DocTypes only, no data patches |
+
 ## Next phases
-9 audit, endpoint coverage, more money-path tests · 10 rollout (real signing key, `public_keys.json`, staged
-switch-on).
+10 rollout: real signing key + `public_keys.json`, deploy (migrate), issue and import licences on testerp first,
+then switch enforcement on site by site.

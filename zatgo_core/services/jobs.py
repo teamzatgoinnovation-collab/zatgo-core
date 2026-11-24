@@ -17,4 +17,8 @@ def sync_application_registry() -> None:
 
 def daily() -> None:
     """Daily maintenance entrypoint."""
+    # Licensing config edited in site_config (switch, issuer, site ID) -> ZG Audit Log (licensing/watch.py).
+    from zatgo_core.licensing import watch
+
+    watch.daily()
     logger.info("zatgo_core daily job ok")

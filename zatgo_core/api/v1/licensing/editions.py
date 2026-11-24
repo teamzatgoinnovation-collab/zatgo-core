@@ -70,6 +70,7 @@ def inspect(features: Any, platforms: Any = None) -> dict[str, Any]:
 
 @frappe.whitelist(methods=["POST"])
 def save_edition(config: Any) -> dict[str, Any]:
+    issuer.require_issuer_manager()  # before reading the payload: a refusal must not depend on its content
     config = _json(config, "config") or {}
     saved = editions.save(config)
     return ok({"config": saved, "inspection": editions.inspect(saved["features"], saved["platforms"])})

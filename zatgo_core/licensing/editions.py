@@ -121,7 +121,12 @@ def _file_hash(payload: Mapping[str, Any]) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:16]
 
 
+MAX_FILE_BYTES = 1024 * 1024
+
+
 def _parse(payload: Any) -> dict[str, Any]:
+    if isinstance(payload, (str, bytes)) and len(payload) > MAX_FILE_BYTES:
+        frappe.throw(_("The file is too large to be an edition configuration."))
     if isinstance(payload, str):
         try:
             payload = json.loads(payload)

@@ -68,4 +68,4 @@ staff role may do what per product (cashier vs. kitchen vs. dispatcher) is a pro
 
 ## Audit immutability
 
-- `ZG Audit Log` is create/read for managers; delete restricted to System Manager in controller.
+- `ZG Audit Log` is append-only (controller): entries are written by the system only (a Desk / REST insert is refused), never changed; delete needs System Manager, and licensing entries cannot be deleted (`docs/licensing.md`).

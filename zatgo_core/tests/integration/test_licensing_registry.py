@@ -56,8 +56,11 @@ class TestLicensingRegistryOnSite(IntegrationTestCase):
             for name in f.reports:
                 if not frappe.db.exists("Report", name):
                     problems.append(f"{f.id}: Report {name}")
+            # A bundled module's Desk records are created by its own setup, not synced: tolerated here like its
+            # workspaces (a missing one is that module's problem, not the registry's).
+            bundled = bool(f.app_key) and (app_catalog.get(f.app_key) or {}).get("group") == "bundled"
             for name in f.pages:
-                if not frappe.db.exists("Page", name):
+                if not frappe.db.exists("Page", name) and not bundled:
                     problems.append(f"{f.id}: Page {name}")
             # A bundled app's workspace exists only while the app is switched on (its desk_records); it must
             # then be one the app's manifest owns.

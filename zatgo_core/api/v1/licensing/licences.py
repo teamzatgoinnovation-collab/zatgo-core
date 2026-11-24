@@ -119,6 +119,9 @@ def get_page() -> dict[str, Any]:
     from zatgo_core.services.ui_apps import asset_url
 
     is_manager = frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles()
+    from zatgo_core.licensing import watch
+
+    watch.daily()  # audit site_config changes made since the last look (never raises)
     data = {**licence_overview.overview(), "can_manage": is_manager, "is_issuer": issuer.is_issuer_site(),
             "history": licence_overview.history(), "css": asset_url("css/zg_licence.css")}
     if data["is_issuer"] and is_manager:

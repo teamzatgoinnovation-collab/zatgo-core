@@ -105,6 +105,11 @@ class TestEnvelope(_Keys):
         body, _raw, _env = licence_format.open_envelope(revocation, kind=licence_format.REVOCATION_TYPE)
         self.assertEqual(licence_format.validate_revocation(body), [])
 
+    def test_oversized_files_are_refused_before_parsing(self) -> None:
+        with self.assertRaises(LicenceError) as ctx:
+            licence_format.open_envelope("x" * (licence_format.MAX_FILE_BYTES + 1))
+        self.assertEqual(ctx.exception.code, "too_large")
+
     def test_floats_are_not_allowed(self) -> None:
         with self.assertRaises(LicenceError):
             licence_format.canonical({"a": 1.5})
