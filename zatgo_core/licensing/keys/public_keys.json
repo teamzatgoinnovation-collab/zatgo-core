@@ -1,0 +1,4 @@
+{
+ "_comment": "Public keys sites trust for ZatGo licences: key_id -> base64 raw Ed25519 public key. Add one with scripts/licence_keygen.py on the issuer host (it prints the line to add). Never put a private key in this repository.",
+ "keys": {}
+}

@@ -49,6 +49,8 @@ EXEMPT_DOCTYPES = {
     "ZG Audit Log", "Sessions", "Document Follow", "Notification Settings", "View Log", "Email Unsubscribe",
     "Webhook", "OAuth Bearer Token", "OAuth Authorization Code", "Token Cache", "Data Import Log",
     "DocShare",
+    # A site whose subscription lapsed must still be able to import the licence that reactivates it.
+    "ZG Licence",
 }
 # Writes to these are refused unless the person edits their own record (password, language, preferences).
 OWN_RECORD_DOCTYPES = {"User", "User Settings", "ZG User Preferences", "ZG Device Token"}

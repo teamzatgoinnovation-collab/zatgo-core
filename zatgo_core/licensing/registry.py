@@ -67,6 +67,7 @@ NEVER_GATE = frozenset(
         "ZATCA Invoice", "ZATCA Submission Log",
         # system / platform records zatgo_core itself needs
         "ZG System Settings", "ZG Registered Application", "ZG Setting Section", "ZG Module", "ZG Feature",
+        "ZG Licence", "ZG Licence History", "ZG Edition",
         "User", "Role", "Has Role", "DocType", "Custom Field", "Property Setter", "Custom DocPerm", "DocPerm",
         "Module Def", "Workspace", "Workspace Sidebar", "Desktop Icon", "Page", "File", "Session Default Settings",
     }

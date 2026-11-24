@@ -1,8 +1,8 @@
 # Editions and licensing
 
-Status: **Phase 4 of 10 — registry, editions, inspector and the enforcement engine.** Enforcement is built
-but **dormant on every site**: it needs the `zg_licence_enforcement` switch *and* a verified entitlement, and
-the only source of entitlements — a signed licence — arrives in Phase 5. Audit and decisions:
+Status: **Phase 5 of 10 — signed offline licences.** A site enforces its licence only when its
+`site_config` has `zg_licence_enforcement` **and** a verified licence is imported; no production site has either
+yet, and no production signing key exists until one is generated (see *Keys* below). Audit and decisions:
 `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
@@ -187,7 +187,59 @@ Writes through raw SQL / `db.set_value` / `db_set` fire no document event; a job
 request runs without one. Narrowing an edition's *viewing* actions (print, export, report) is recorded but not
 enforced (D6).
 
+## Licences (Phase 5)
+
+### The file (`licensing/licence_format.py`)
+`<number>.zglicence`: `{"type": "zatgo.licence", "format": 1, "key_id", "payload": base64, "signature":
+base64}`. The Ed25519 signature covers the exact payload bytes, and those bytes must be the canonical JSON of
+what they decode to (sorted keys, compact, UTF-8, no floats). Payload: licence id (UUID), number, version,
+product `zatgo_erp`, customer, site ids (+ optional site names), edition id / name / version, **resolved
+features with their actions** (taken from the edition at issue time — later edition changes never touch it),
+licence type, issue / start / expiry dates (no expiry for Lifetime / Perpetual), grace days, platforms, limits
+(users / companies / sites, 0 = none), device policy, issued_at, key id. A revocation list is the same envelope
+(`zatgo.revocation`) around `{"revoked": [licence ids]}`; an edition file is refused as a licence and vice versa.
+
+### Keys (`licensing/crypto.py`, `scripts/licence_keygen.py`)
+- Sites trust only public keys shipped in code: `licensing/keys/public_keys.json` (key id = first 16 hex of
+  SHA-256 of the raw key). Nothing on a site can add one. **It is empty today**: no licence can be imported
+  anywhere until a real key is generated and its public half committed.
+- Generate the key **on the issuer host**: `python3 scripts/licence_keygen.py /secure/path/key.pem` (mode 600,
+  never overwrites). It prints the `public_keys.json` line to commit and the issuer site's
+  `"zg_licence_issuer_key": "<path>"`. The private key must stay outside the bench's `sites/` folder (backups)
+  and owner-readable only — signing refuses otherwise — and never enters a site database, a repository or a
+  licence file. Rotation = add a new key id; a leaked key = remove its public key and re-issue.
+
+### Issuing (issuer site, `licensing/issuing.py`)
+`issue(edition_id, customer_name, site_ids, ...)` — Active, dependency-complete editions only; dates and limits
+default from the edition's licence defaults; `replaces=<licence id>` issues the next version of an existing
+licence. The signed file is recorded in **ZG Licence History** (number series `ZGL-.YYYY.-.#####`) and audited.
+`revocation_list([licence ids])` signs a revocation list. API: `zatgo_core.api.v1.licensing.licences.
+issue_licence / issued_licences / revoke_licences` (POST for writes; issuer + System Manager).
+
+### Importing (customer site, `licensing/licences.py`)
+`import_licence(file)`: signature with a trusted key → schema / product / dates / features → **site binding**
+(this site's `zg_site_id` from `site_config`, created the first time the identity is read — never on migrate —
+plus the site name when the licence lists names) → refuse a licence not started yet, expired, revoked, already
+imported, or older than the version in force → store the original signed file in **ZG Licence** (it becomes
+current) → audit. Refusals are audited with a reason code. `import_revocation(file)` marks listed licences
+Revoked. API: `site_identity_info` (the IDs to send to the issuer), `current_licence`, `import_licence`,
+`import_revocation`, `verify_licence` — System Manager for everything but reading.
+
+### What the site trusts
+Only the signed file. The entitlement (`entitlement._load` → `licences.current_entitlement`) is rebuilt from
+the stored file — signature and site re-checked — and cached for an hour or until the next import / revocation.
+A record edited in the database no longer verifies and gives the **foundation only**; so does a revoked
+licence. `ZG Licence` and `ZG Licence History` cannot be written by hand (controller), and `ZG Licence` stays
+writable on a read-only (lapsed subscription) site so a licence can reactivate it.
+
+### Offline limits (stated, not hidden)
+- Binding is tamper-evident, not tamper-proof: someone with shell access can copy `zg_site_id` and the site name.
+- There is no central revocation: a signed revocation list or a replacement licence is imported like a licence.
+- The clock is the server's: expiry and rollback detection belong to Phase 7. Until then an expired licence that
+  was imported in time keeps giving its features, and a site with the switch on but no licence is unrestricted.
+
 ## Next phases
-5 licence format, Ed25519 issuer and verification (feeds `entitlement._load`) · 6 licence workspace · 7
-expiry/trial into `subscription_gate`, limits, "switch on + no licence" policy · 8 one client capability payload
-· 9 audit, endpoint coverage, more money-path tests · 10 rollout.
+6 licence workspace (overview, import / replace / verify, history, warnings, site identity export) · 7 expiry,
+grace, trial and clock-rollback policy into `subscription_gate`; user / company limits; "switch on + no valid
+licence" policy · 8 one client capability payload · 9 audit, endpoint coverage, more money-path tests · 10
+rollout (real signing key, `public_keys.json`, staged switch-on).

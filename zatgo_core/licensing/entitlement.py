@@ -1,9 +1,8 @@
 """Entitlement: what this site is licensed for, compiled for fast permission checks (docs/licensing.md).
 
 An entitlement is a set of registry features, each with the actions it may use (the foundation is always in).
-It is built from a *verified* source only. Phase 4 ships the model and the enforcement; the source -- a signed
-licence verified on import -- arrives in Phase 5. Until then no site has an entitlement, so nothing is enforced
-anywhere.
+It is built from a *verified* source only: the site's current signed licence (Phase 5, licensing/licences.py).
+A site without a licence has no entitlement, so nothing is enforced there.
 
 Enforcement is on only when BOTH hold:
 - `site_config.json` has `"zg_licence_enforcement": 1` (a file only the bench user writes -- decision D4), and
@@ -89,8 +88,11 @@ def use(entitlement: Entitlement | None) -> None:
 
 
 def _load() -> Entitlement | None:
-    """The verified source. Phase 4 has none: the signed-licence loader (Phase 5) plugs in here."""
-    return None
+    """The verified source: the site's current signed licence (licensing/licences.py), re-verified whenever its
+    cached entitlement is rebuilt. None when the site has no licence."""
+    from zatgo_core.licensing.licences import current_entitlement
+
+    return current_entitlement()
 
 
 def current() -> Entitlement | None:
