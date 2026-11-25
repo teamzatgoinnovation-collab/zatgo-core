@@ -1,4 +1,4 @@
-"""Resolve free-text ZG Trip.customer values to Customer links after field change."""
+"""Resolve free-text Trip.customer values to Customer links after field change."""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ import frappe
 
 
 def execute() -> None:
-    if not frappe.db.exists("DocType", "ZG Trip"):
+    if not frappe.db.exists("DocType", "Trip"):
         return
-    if not frappe.db.has_column("ZG Trip", "customer"):
+    if not frappe.db.has_column("Trip", "customer"):
         return
 
     rows = frappe.db.sql(
-        "select name, customer from `tabZG Trip` where ifnull(customer, '') != ''",
+        "select name, customer from `tabTrip` where ifnull(customer, '') != ''",
         as_dict=True,
     )
     for row in rows:
@@ -23,4 +23,4 @@ def execute() -> None:
             continue
         by_name = frappe.db.get_value("Customer", {"customer_name": cust}, "name")
         if by_name:
-            frappe.db.set_value("ZG Trip", row.name, "customer", by_name, update_modified=False)
+            frappe.db.set_value("Trip", row.name, "customer", by_name, update_modified=False)

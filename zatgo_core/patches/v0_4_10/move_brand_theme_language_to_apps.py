@@ -1,13 +1,13 @@
-"""Brand name, logo and theme moved from ZG System Settings to ZG Theme Settings, the default language to ZG Language
+"""Brand name, logo and theme moved from ZatGo System Settings to Theme Settings, the default language to ZatGo Language
 Settings (services/ui_settings.py). Copy what a site had stored; a value the new settings already hold is kept, and
 the old fields stay where they were (hidden), so a rollback loses nothing."""
 
 import frappe
 
-LEGACY = "ZG System Settings"
+LEGACY = "ZatGo System Settings"
 MOVES = {
-    "ZG Theme Settings": ("brand_name", "company_logo", "theme"),
-    "ZG Language Settings": ("language",),
+    "Theme Settings": ("brand_name", "company_logo", "theme"),
+    "Language Settings": ("language",),
 }
 
 

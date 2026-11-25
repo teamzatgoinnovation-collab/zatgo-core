@@ -121,7 +121,7 @@ class TestSubscriptionGate(IntegrationTestCase):
                 call()
 
     def test_custom_doctype_blocked(self):
-        name = f"ZG Gate Probe {random_string(5)}"
+        name = f"ZatGo Gate Probe {random_string(5)}"
         dt = frappe.get_doc({
             "doctype": "DocType", "name": name, "module": "Core", "custom": 1, "autoname": "hash",
             "fields": [{"fieldname": "title", "fieldtype": "Data", "label": "Title"}],

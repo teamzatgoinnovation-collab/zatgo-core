@@ -3,7 +3,7 @@
 ERPNext fills the field from the Mode of Payment's default account and lists every Bank *and* Cash
 account whose Account Type is set. For a Bank mode of payment that leaves the field empty when the default
 is missing or disabled, offers cash accounts, and hides a bank ledger that has no Account Type. With
-ZG System Settings -> "Auto-fill Account Paid To / Paid From on Payment Entry" ticked (default):
+ZatGo System Settings -> "Auto-fill Account Paid To / Paid From on Payment Entry" ticked (default):
 
 - a Bank mode of payment fills the field with the mode's default account, else the company's default bank
   account, else the first ledger listed under "Bank Accounts" in the chart of accounts, and the picker offers
@@ -20,7 +20,7 @@ from frappe.utils import cint
 
 from zatgo_core.services import payment_allocation
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELD = "autofill_payment_entry_account"
 
 

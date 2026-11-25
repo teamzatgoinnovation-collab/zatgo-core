@@ -1,7 +1,7 @@
 """Owner scoping, confirmation tokens, quotas, usage counters, provider errors.
 
 Run: bench --site <site> run-tests --app zatgo_core --module zatgo_core.chat_ai.tests.test_security
-(the module switch is patched on, so the site's ZG System Settings stay untouched)
+(the module switch is patched on, so the site's ZatGo System Settings stay untouched)
 """
 
 from __future__ import annotations

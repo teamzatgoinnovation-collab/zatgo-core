@@ -128,7 +128,7 @@ class TestLicensingRegistryOnSite(IntegrationTestCase):
             set_value(FEATURE_DOCTYPE, "sales.invoice", "label", "x")
 
     def test_read_only_role_can_read(self) -> None:
-        frappe.set_user(self._user("ZG Read Only"))
+        frappe.set_user(self._user("ZatGo Read Only"))
         rows = frappe.get_list(FEATURE_DOCTYPE, filters={"module": "accounting"}, pluck="name")
         self.assertIn("accounting.journal_entry", rows)
         self.assertTrue(frappe.has_permission(MODULE_DOCTYPE, "read"))

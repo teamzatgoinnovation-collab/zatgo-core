@@ -15,11 +15,11 @@ The **Settings Map** (Desk page `zg-settings-map`) shows these same facts as liv
 | Scope | Meaning | Where it lives |
 |---|---|---|
 | Site | one value for the whole site | every Single DocType (`ZG ... Settings`), app switches, industries, feature flags |
-| Company | per company | `ZG Company Settings` (named by company), Mode of Payment accounts, invoice naming rules (with user) |
-| Branch | per branch | `ZG Branch Settings` (the client passes the branch; there is no user-to-branch resolver yet) |
-| User | per user | `ZG User Preferences`, `ZG Van Sale Profile` (overrides VanSaleX Settings), naming rules, user default Company |
+| Company | per company | `Company Settings` (named by company), Mode of Payment accounts, invoice naming rules (with user) |
+| Branch | per branch | `Branch Settings` (the client passes the branch; there is no user-to-branch resolver yet) |
+| User | per user | `User Preferences`, `Van Sale Profile` (overrides VanSaleX Settings), naming rules, user default Company |
 | Role | per role | VanSale `user_type`, Tracker Top / Sub / Worker |
-| Device / client | per installed client | `ZG Client Application` rows (app key x platform), device tokens, **preferences kept on the device** |
+| Device / client | per installed client | `Client Application` rows (app key x platform), device tokens, **preferences kept on the device** |
 | Warehouse | per warehouse | transfer-point flag |
 
 **Status** — what the setting does today:
@@ -36,23 +36,23 @@ cached document.
 
 ## 2. Platform (core settings)
 
-Editors: System Manager, ZG Application Admin, ZG Company Admin unless noted. `api/v1/settings.save_settings` covers 15 core
+Editors: System Manager, ZatGo Application Admin, ZatGo Company Admin unless noted. `api/v1/settings.save_settings` covers 15 core
 DocTypes and checks `assert_can_write_settings` (`permissions/guards.py:46`) before DocType permissions; category `system` is
 System Manager only. The apps below (VanSaleX, POS, Theme, Language, MyBis, Chat AI, Tracker, Space) are **outside** that API.
 
 | DocType | Scope | Fields (by control) | Status |
 |---|---|---|---|
-| ZG System Settings | Site | 28 shown: 17 switches, 6 links, 2 choose-one, 1 text, 1 number, 1 table (+4 hidden legacy: brand, logo, theme, language) | Enforced: the 9 app switches, industries, `enable_ifrs_reports`, `autofill_source_warehouse`, `autofill_payment_entry_account`, `stock_summary_live_only`. Boot-only: `autofill_payment_accounts`, `maintenance_mode`. Rest informational |
-| ZG Company Settings | Company | 28 (11 links, 5 text, 4 switches, 2 rich text, 2 colours, 1 choose-one, ...) | Partly enforced: default warehouse (VanSaleX, both POS), cash account, tax template, `tax_id` (ZATCA). `enable_negative_stock` is copied to Stock Settings only on an API save |
-| ZG Branch Settings | Branch | 16 (7 text, 3 links, 2 times, 2 switches) | Informational |
-| ZG Payment / Printer / Sync / Number Series | Site | 13 / 14 / 7 / 1 table | Informational (no client reads them) |
-| ZG Security | Site, System Manager only | 15 (8 switches, 5 numbers) | Informational: floors are checked, not wired to Frappe's own policy |
-| ZG Integration, Storage | Site | 31 (16 switches, 10 secrets) / 19 | Informational |
-| ZG Notification | Site | 12 | Partly: `push_enabled`, `fcm_server_key` (`api/v1/devices.py:100`) |
-| ZG Feature Flag | Site (optional company / branch) | 9 | Informational: nothing gates on it, `rollout_percent` unused |
-| ZG User Preferences | User, owner-scoped; API save System Manager only | 9 (`theme`, `sidebar_collapsed`, ...) | Informational: no client uses it |
-| ZG Application Settings + Client Application rows | Site / client | 6 + 12 per row | Informational / advisory: `clients_require_auth`, `block_disabled_clients` are unread |
-| ZG Sales Invoice Naming | User x company rules + site `unmapped_user_behavior` | 1 choose-one + rule rows | Enforced (can block invoice creation); editors: System Manager, Accounts Manager, ZG Invoice Naming Manager |
+| ZatGo System Settings | Site | 28 shown: 17 switches, 6 links, 2 choose-one, 1 text, 1 number, 1 table (+4 hidden legacy: brand, logo, theme, language) | Enforced: the 9 app switches, industries, `enable_ifrs_reports`, `autofill_source_warehouse`, `autofill_payment_entry_account`, `stock_summary_live_only`. Boot-only: `autofill_payment_accounts`, `maintenance_mode`. Rest informational |
+| Company Settings | Company | 28 (11 links, 5 text, 4 switches, 2 rich text, 2 colours, 1 choose-one, ...) | Partly enforced: default warehouse (VanSaleX, both POS), cash account, tax template, `tax_id` (ZATCA). `enable_negative_stock` is copied to Stock Settings only on an API save |
+| Branch Settings | Branch | 16 (7 text, 3 links, 2 times, 2 switches) | Informational |
+| ZatGo Payment / Printer / Sync / Number Series | Site | 13 / 14 / 7 / 1 table | Informational (no client reads them) |
+| ZatGo Security | Site, System Manager only | 15 (8 switches, 5 numbers) | Informational: floors are checked, not wired to Frappe's own policy |
+| ZatGo Integration, Storage | Site | 31 (16 switches, 10 secrets) / 19 | Informational |
+| ZatGo Notification | Site | 12 | Partly: `push_enabled`, `fcm_server_key` (`api/v1/devices.py:100`) |
+| Feature Flag | Site (optional company / branch) | 9 | Informational: nothing gates on it, `rollout_percent` unused |
+| User Preferences | User, owner-scoped; API save System Manager only | 9 (`theme`, `sidebar_collapsed`, ...) | Informational: no client uses it |
+| Application Settings + Client Application rows | Site / client | 6 + 12 per row | Informational / advisory: `clients_require_auth`, `block_disabled_clients` are unread |
+| ZatGo Sales Invoice Naming | User x company rules + site `unmapped_user_behavior` | 1 choose-one + rule rows | Enforced (can block invoice creation); editors: System Manager, Accounts Manager, ZatGo Invoice Naming Manager |
 
 Read APIs for the core settings: `settings.get_system_settings` (System Manager), `get_company_settings`, `get_branch_settings`,
 `get_user_preferences`, `features.get_feature_flags`, `apps.get_application_settings`, `integrations.get_printers`,
@@ -63,16 +63,16 @@ autofill_payment_accounts, enable_ifrs_reports}`.
 
 | App | Settings | Scope | Fields | Status |
 |---|---|---|---|---|
-| **ZatGo VanSaleX** | `VanSaleX Settings` (3 tabs) + per-user `ZG Van Sale Profile` | Site = one client; User overrides | 14 (7 switches, payment type, discount %, max write-off qty, access table of 30 keys: 16 modules + 14 features); profile 17 (8 Inherit/Yes/No selects, warehouse, cash account, off-only access overrides) | **Enforced** everywhere: `services/vansalex_access.py:202` (effective = client on AND profile not off AND parent on), `:241` require, `:443` DocType backstop. `allow_orders`, `max_discount_percent`, `max_adjust_qty` are not user-overridable. Served by `vansalex.me.context` (`api/v1/vansalex/me.py:22`) |
-| **ZatGo POS** | `ZG POS Settings` (General / Payments / Receipt & Printing) | Site | 13: **POS Type** (6 choices), default warehouse / price list / customer, discounts (allow, max %), default payment mode, split payment, receipt header / footer, tax on receipt, copies | **Only `pos_type` has an effect** (engine, industry, vertical); everything else is served by `pos_settings.get` and **not wired yet**: no client calls it (*verified*: no caller in `desktop/zatgo-pos` or `packages/`), and server code enforces none of it (`services/resto_pos_service.py:711` caps a discount only at the subtotal; the warehouse and "Walk-in Customer" ignore the settings) |
+| **ZatGo VanSaleX** | `VanSaleX Settings` (3 tabs) + per-user `Van Sale Profile` | Site = one client; User overrides | 14 (7 switches, payment type, discount %, max write-off qty, access table of 30 keys: 16 modules + 14 features); profile 17 (8 Inherit/Yes/No selects, warehouse, cash account, off-only access overrides) | **Enforced** everywhere: `services/vansalex_access.py:202` (effective = client on AND profile not off AND parent on), `:241` require, `:443` DocType backstop. `allow_orders`, `max_discount_percent`, `max_adjust_qty` are not user-overridable. Served by `vansalex.me.context` (`api/v1/vansalex/me.py:22`) |
+| **ZatGo POS** | `ZatGo POS Settings` (General / Payments / Receipt & Printing) | Site | 13: **POS Type** (6 choices), default warehouse / price list / customer, discounts (allow, max %), default payment mode, split payment, receipt header / footer, tax on receipt, copies | **Only `pos_type` has an effect** (engine, industry, vertical); everything else is served by `pos_settings.get` and **not wired yet**: no client calls it (*verified*: no caller in `desktop/zatgo-pos` or `packages/`), and server code enforces none of it (`services/resto_pos_service.py:711` caps a discount only at the subtotal; the warehouse and "Walk-in Customer" ignore the settings) |
 | **ZatGo AI** | `Chat AI Settings` (6 tabs) | Site | 89: 36 switches, 22 numbers, 15 text, 8 choose-one, 3 secrets, 3 decimals, 2 long text | **Enforced** (`chat_ai/core/quota.py:25`, local-only guard); Super-set of limits, tools, voice, files, costs |
 | **ZatGo Tracker** | `Tracker Settings` | Site; role flags per user | 2 links (`default_company`, `default_activity_type`) | Enforced |
 | **ZatGo Space** | `Space Settings` | Site | 2 numbers (`ram_pool_mb`, `disk_pool_mb`) | Informational (soft pools) |
-| **ZatGo MyBis** | `ZG MyBis Settings` | Site; user default Company wins | 2 (`default_company`, `default_preset`) | Read by client, but the app ignores `default_preset` (and `week_start`) today |
-| **ZatGo Desk Theme** | `ZG Theme Settings` | Site | 3 (brand name, logo, theme) | Informational: read by the Desk boot and `settings.get_system_settings` through `services/ui_settings.py` |
-| **ZatGo Language Switcher** | `ZG Language Settings` | Site | 1 (default language) | Informational; each user's language stays on Frappe's `User.language` |
+| **ZatGo MyBis** | `MyBis Settings` | Site; user default Company wins | 2 (`default_company`, `default_preset`) | Read by client, but the app ignores `default_preset` (and `week_start`) today |
+| **ZatGo Desk Theme** | `Theme Settings` | Site | 3 (brand name, logo, theme) | Informational: read by the Desk boot and `settings.get_system_settings` through `services/ui_settings.py` |
+| **ZatGo Language Switcher** | `Language Settings` | Site | 1 (default language) | Informational; each user's language stays on Frappe's `User.language` |
 | **ZatGo VanSaleX Web** | switch only | Site | none | Enforced (serves `/vansalex`); requires VanSaleX |
-| **Industries** (Restaurant, Gym, Jewellery, Textile, Supermarket) | rows of `ZG System Settings` | Site | one switch each | Enforced: API 404, permission hooks, Desk entries. Supermarket = the retail POS engine |
+| **Industries** (Restaurant, Gym, Jewellery, Textile, Supermarket) | rows of `ZatGo System Settings` | Site | one switch each | Enforced: API 404, permission hooks, Desk entries. Supermarket = the retail POS engine |
 
 ## 4. Client apps: on the device versus in the backend
 
@@ -80,10 +80,10 @@ autofill_payment_accounts, enable_ifrs_reports}`.
 
 | Client | Settings the user changes on the device | Backend settings it reads | No backend home yet |
 |---|---|---|---|
-| **flutter-vansalex** | language S; printers (name X, paper S, copies N 1-5, default T); site URL X | `vansalex.me.context`: company, warehouse, accounts, payment type, credit / bank / orders switches, warehouse + payment-type display, route-only collections, max discount, tax, print format, and the access matrix | default printer / paper / copies (ZG Printer Settings is not read), language, currency (SAR hard-coded in 29 files), 2-decimal rounding, week start |
+| **flutter-vansalex** | language S; printers (name X, paper S, copies N 1-5, default T); site URL X | `vansalex.me.context`: company, warehouse, accounts, payment type, credit / bank / orders switches, warehouse + payment-type display, route-only collections, max discount, tax, print format, and the access matrix | default printer / paper / copies (Printer Settings is not read), language, currency (SAR hard-coded in 29 files), 2-decimal rounding, week start |
 | **mybis** | theme S, date format S, decimals S, currency position S, default company S, default period S, auto-refresh S, alerts T + severity S, 9 KPI cards T, export format S, offline copy T, server X | `mybis.context.get_context` (companies, default company / preset, areas, presets, week start) | refresh interval and severity, hidden KPIs, export format, **offline copy (a security policy)**, display formats; insight thresholds are hard-coded server-side |
-| **zatgo-pos** | tables / orders / KDS toggles T (can only narrow what the site allows), receipt printer S, auto-print T, silent print T, open drawer T, site URL X, theme | `pos_profile.get` only (mode, vertical, industries, company, currency, tax, payment modes) | everything in `pos_settings.get`; per-terminal modules; printer settings of ZG Printer Settings; payment methods are hard-coded cash / card / wallet; receipts hard-code `$`, title, 80 mm |
-| **desktop-accounting** | theme | `ZG Company Settings.enable_negative_stock` (the one setting page) | tax, terms, accounts, currency; money shown with 2 decimals and no currency |
+| **zatgo-pos** | tables / orders / KDS toggles T (can only narrow what the site allows), receipt printer S, auto-print T, silent print T, open drawer T, site URL X, theme | `pos_profile.get` only (mode, vertical, industries, company, currency, tax, payment modes) | everything in `pos_settings.get`; per-terminal modules; printer settings of Printer Settings; payment methods are hard-coded cash / card / wallet; receipts hard-code `$`, title, 80 mm |
+| **desktop-accounting** | theme | `Company Settings.enable_negative_stock` (the one setting page) | tax, terms, accounts, currency; money shown with 2 decimals and no currency |
 | **web-accounting** | theme | none (no settings page; a dead `allowMockWithoutLogin` flag in the session) | same as desktop-accounting |
 | **zatgo-vansalex-native** | none (flutter-vansalex in a WebView) | — | the target site is fixed in `capacitor.config.json`; changing it needs a rebuild |
 
@@ -134,11 +134,11 @@ Not fixed by this audit (each is its own change); ordered by value.
 
 1. **Wire ZatGo POS to its settings.** Call `pos_settings.get` from `desktop/zatgo-pos` (and add `posSettings` / `posProfile` to `@zatgo/erpnext`), then **enforce** the discount cap, default warehouse / customer / payment mode and split payment in `services/resto_pos_service.py` and `services/retail_pos_service.py`.
 2. **Currency and precision from the backend** (`vansalex.me.context`, `pos_profile.get`, `mybis.context`) instead of SAR / `$` / 2 decimals in the clients.
-3. **MyBis:** the app must use `default_preset`, `week_start` and the currency; admin policy (refresh floor, severity floor, export formats, KPI cards, offline copy allowed) belongs in `ZG MyBis Settings`.
-4. **Per-user theme and language** into `ZG User Preferences` and read by the clients; printer settings from `ZG Printer Settings`.
+3. **MyBis:** the app must use `default_preset`, `week_start` and the currency; admin policy (refresh floor, severity floor, export formats, KPI cards, offline copy allowed) belongs in `MyBis Settings`.
+4. **Per-user theme and language** into `User Preferences` and read by the clients; printer settings from `Printer Settings`.
 5. **SDKs:** add the 57 missing methods that clients need (`mybis`, `pos_settings`, `app_hub`, `language`, `payment_methods`) to both SDKs, keep `code` / `request_id` in TS errors, add the first envelope + session tests, fix `pnpm-workspace.yaml` and the `@source` paths, retire `@zatgo/sdk` or make it the real one, and give Flutter a shared theme package.
 6. **Audit trail:** only the core settings controllers use `AuditableMixin`; VanSaleX, POS, Theme, Language, MyBis, Chat AI, Tracker, Space, Naming and the Van Sale Profile rely on `track_changes` versions.
-7. **Branch scope:** resolve a user's branch on the server; `ZG Branch Settings` is advisory until then. `ZG Security` floors are not wired to Frappe's password / session policy.
+7. **Branch scope:** resolve a user's branch on the server; `Branch Settings` is advisory until then. `ZatGo Security` floors are not wired to Frappe's password / session policy.
 
 ## 7a. Which default wins (company and warehouse)
 
@@ -148,10 +148,10 @@ The same default lives in several places (see `docs/duplication_audit.md`); this
 |---|---|---|
 | Company | accounting and POS services (`services/erpnext_writes.py::_default_company`, also used by the restaurant and retail POS) | the company passed in -> the user's default Company -> Global Defaults.default_company -> the first Company on the site -> error |
 | Company | VanSaleX (`services/vansalex_settings.py::_user_company`) | the van warehouse's company -> the target user's default Company -> Global Defaults.default_company -> none. Deliberately **no** "first company" fallback |
-| Company | MyBis (`api/v1/mybis/context.py`) | the user's default Company -> ZG MyBis Settings.default_company -> Global Defaults.default_company (only a company the user may read) |
-| Company | Desk boot payload | ZG System Settings.default_company (informational; posting never reads it) |
-| Warehouse | VanSaleX (`vansalex_settings.default_warehouse`) | the driver's van warehouse -> ZG Company Settings.default_warehouse -> Stock Settings.default_warehouse (only if it belongs to the company) -> none |
-| Warehouse | restaurant and retail POS (`services/resto_pos_service.py::_resolve_pos_warehouse`) | ZG Company Settings.default_warehouse -> **the first enabled, non-group Warehouse of the company** -> error. `ZG POS Settings.default_warehouse` is not read |
+| Company | MyBis (`api/v1/mybis/context.py`) | the user's default Company -> MyBis Settings.default_company -> Global Defaults.default_company (only a company the user may read) |
+| Company | Desk boot payload | ZatGo System Settings.default_company (informational; posting never reads it) |
+| Warehouse | VanSaleX (`vansalex_settings.default_warehouse`) | the driver's van warehouse -> Company Settings.default_warehouse -> Stock Settings.default_warehouse (only if it belongs to the company) -> none |
+| Warehouse | restaurant and retail POS (`services/resto_pos_service.py::_resolve_pos_warehouse`) | Company Settings.default_warehouse -> **the first enabled, non-group Warehouse of the company** -> error. `ZatGo POS Settings.default_warehouse` is not read |
 
 ## 8. Found while testing (2026-10-31)
 

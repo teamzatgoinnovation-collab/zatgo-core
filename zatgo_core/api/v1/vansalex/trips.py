@@ -1,4 +1,4 @@
-"""VanSaleX trips — ZG Trip DocType."""
+"""VanSaleX trips — Trip DocType."""
 
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ def _scope_filters(
     # `date` is the single-day form the app shipped with first; date_from/
     # date_to widen it to a window so the day-pager can page without a
     # round trip per day. A lone bound is treated as an open-ended range.
-    if frappe.db.has_column("ZG Trip", "planned_at"):
+    if frappe.db.has_column("Trip", "planned_at"):
         start = getdate(date_from or date) if (date_from or date) else None
         end = getdate(date_to or date) if (date_to or date) else None
         if start and end:
@@ -126,7 +126,7 @@ def list(
         "visit_notes",
         "no_sale_reason",
     ):
-        if frappe.db.has_column("ZG Trip", col):
+        if frappe.db.has_column("Trip", col):
             fields.append(col)
 
     filters = _scope_filters(
@@ -142,11 +142,11 @@ def list(
     filters = {
         k: v
         for k, v in filters.items()
-        if k == "planned_at" or frappe.db.has_column("ZG Trip", k)
+        if k == "planned_at" or frappe.db.has_column("Trip", k)
     }
 
     return list_zg(
-        "ZG Trip",
+        "Trip",
         fields=fields,
         page=page,
         page_size=page_size,
@@ -159,7 +159,7 @@ def list(
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
     require_access("route_plan")
-    doc_res = get_zg("ZG Trip", name, map_doc=lambda d: _map(d))
+    doc_res = get_zg("Trip", name, map_doc=lambda d: _map(d))
     if not is_vansale_admin():
         trip_data = doc_res.get("data") if isinstance(doc_res, dict) and "data" in doc_res else doc_res
         sales_u = trip_data.get("sales_user") if isinstance(trip_data, dict) else None

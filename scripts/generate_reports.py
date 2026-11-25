@@ -11,8 +11,8 @@ MODULE = "ZatGo Core"
 
 REPORTS = {
     "zg_installed_apps": {
-        "name": "ZG Installed Apps",
-        "ref_doctype": "ZG Application Registry",
+        "name": "ZatGo Installed Apps",
+        "ref_doctype": "Application Registry",
         "columns": [
             ("app_name", "Data", 160, "App Name"),
             ("module_name", "Data", 160, "Module"),
@@ -36,7 +36,7 @@ def execute(filters=None):
         {"label": "Last Update", "fieldname": "last_update", "fieldtype": "Datetime", "width": 160},
     ]
     data = frappe.get_all(
-        "ZG Application Registry",
+        "Application Registry",
         fields=[
             "app_name", "module_name", "version", "enabled",
             "app_status", "developer", "depends_on", "last_update",
@@ -48,8 +48,8 @@ def execute(filters=None):
 ''',
     },
     "zg_feature_flags": {
-        "name": "ZG Feature Flags",
-        "ref_doctype": "ZG Feature Flag",
+        "name": "Feature Flags",
+        "ref_doctype": "Feature Flag",
         "execute": '''\
 def execute(filters=None):
     columns = [
@@ -62,7 +62,7 @@ def execute(filters=None):
     ]
     filters = filters or {}
     data = frappe.get_all(
-        "ZG Feature Flag",
+        "Feature Flag",
         filters=filters,
         fields=["flag_key", "title", "status", "app_name", "company", "rollout_percent"],
         order_by="flag_key asc",
@@ -72,8 +72,8 @@ def execute(filters=None):
 ''',
     },
     "zg_audit_history": {
-        "name": "ZG Audit History",
-        "ref_doctype": "ZG Audit Log",
+        "name": "ZatGo Audit History",
+        "ref_doctype": "Audit Log",
         "execute": '''\
 def execute(filters=None):
     columns = [
@@ -90,7 +90,7 @@ def execute(filters=None):
     ]
     filters = filters or {}
     data = frappe.get_all(
-        "ZG Audit Log",
+        "Audit Log",
         filters=filters,
         fields=[
             "change_date", "change_time", "doctype_name", "document_name", "fieldname",
@@ -103,7 +103,7 @@ def execute(filters=None):
 ''',
     },
     "zg_login_activity": {
-        "name": "ZG Login Activity",
+        "name": "ZatGo Login Activity",
         "ref_doctype": "Activity Log",
         "execute": '''\
 def execute(filters=None):
@@ -127,8 +127,8 @@ def execute(filters=None):
 ''',
     },
     "zg_printer_usage": {
-        "name": "ZG Printer Usage",
-        "ref_doctype": "ZG Printer Settings",
+        "name": "ZatGo Printer Usage",
+        "ref_doctype": "Printer Settings",
         "execute": '''\
 def execute(filters=None):
     columns = [
@@ -136,9 +136,9 @@ def execute(filters=None):
         {"label": "Device", "fieldname": "device", "fieldtype": "Data", "width": 220},
         {"label": "Configured", "fieldname": "configured", "fieldtype": "Check", "width": 100},
     ]
-    if not frappe.db.exists("DocType", "ZG Printer Settings"):
+    if not frappe.db.exists("DocType", "Printer Settings"):
         return columns, []
-    doc = frappe.get_single("ZG Printer Settings")
+    doc = frappe.get_single("Printer Settings")
     rows = [
         ("Receipt Printer", doc.receipt_printer),
         ("Kitchen Printer", doc.kitchen_printer),
@@ -154,8 +154,8 @@ def execute(filters=None):
 ''',
     },
     "zg_api_usage": {
-        "name": "ZG API Usage",
-        "ref_doctype": "ZG Audit Log",
+        "name": "ZatGo API Usage",
+        "ref_doctype": "Audit Log",
         "execute": '''\
 def execute(filters=None):
     """Summarize recent API-oriented audit / error activity."""
@@ -163,10 +163,10 @@ def execute(filters=None):
         {"label": "Metric", "fieldname": "metric", "fieldtype": "Data", "width": 220},
         {"label": "Value", "fieldname": "value", "fieldtype": "Int", "width": 120},
     ]
-    audit_count = frappe.db.count("ZG Audit Log") if frappe.db.exists("DocType", "ZG Audit Log") else 0
+    audit_count = frappe.db.count("Audit Log") if frappe.db.exists("DocType", "Audit Log") else 0
     error_count = frappe.db.count("Error Log") if frappe.db.exists("DocType", "Error Log") else 0
     data = [
-        {"metric": "ZG Audit Log rows", "value": audit_count},
+        {"metric": "Audit Log rows", "value": audit_count},
         {"metric": "Error Log rows", "value": error_count},
         {"metric": "Installed apps", "value": len(frappe.get_installed_apps())},
     ]
@@ -174,8 +174,8 @@ def execute(filters=None):
 ''',
     },
     "zg_cache_statistics": {
-        "name": "ZG Cache Statistics",
-        "ref_doctype": "ZG System Settings",
+        "name": "ZatGo Cache Statistics",
+        "ref_doctype": "ZatGo System Settings",
         "execute": '''\
 def execute(filters=None):
     columns = [
@@ -225,9 +225,9 @@ def write_report(slug: str, meta: dict) -> None:
         "report_type": "Script Report",
         "roles": [
             {"role": "System Manager"},
-            {"role": "ZG Application Admin"},
-            {"role": "ZG Company Admin"},
-            {"role": "ZG Read Only"},
+            {"role": "ZatGo Application Admin"},
+            {"role": "ZatGo Company Admin"},
+            {"role": "ZatGo Read Only"},
         ],
     }
     (folder / f"{slug}.json").write_text(json.dumps(report_json, indent=2) + "\n", encoding="utf-8")

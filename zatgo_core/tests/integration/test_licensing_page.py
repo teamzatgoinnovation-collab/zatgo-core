@@ -150,7 +150,7 @@ class TestLicencePage(IntegrationTestCase):
         self.assertTrue(data["issuer"]["issued"])
         user = f"zg-lic-page-{random_string(6).lower()}@example.com"
         frappe.get_doc({"doctype": "User", "email": user, "first_name": "Licence page", "send_welcome_email": 0,
-                        "roles": [{"role": "ZG Read Only"}]}).insert(ignore_permissions=True)
+                        "roles": [{"role": "ZatGo Read Only"}]}).insert(ignore_permissions=True)
         frappe.set_user(user)
         data = api.get_page()["data"]
         self.assertFalse(data["can_manage"])

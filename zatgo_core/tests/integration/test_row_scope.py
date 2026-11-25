@@ -194,13 +194,13 @@ class TestRowScope(IntegrationTestCase):
 
 
 STAFF_ONLY = (
-	"ZG Delivery Boy",
-	"ZG Delivery Stop",
-	"ZG Vehicle",
-	"ZG Service Ticket",
-	"ZG Order",
-	"ZG Table",
-	"ZG KDS Ticket",
+	"Delivery Boy",
+	"ZatGo Delivery Stop",
+	"ZatGo Vehicle",
+	"Service Ticket",
+	"Order",
+	"Table",
+	"KDS Ticket",
 )
 
 

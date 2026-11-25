@@ -2,7 +2,7 @@
 
 The Supermarket industry reuses the restaurant POS back-office for catalog,
 stock and customers (`resto_pos_admin_service`) but never touches the
-restaurant-owned DocTypes (ZG Order / ZG Table / ZG KDS Ticket, hidden while
+restaurant-owned DocTypes (Order / Table / KDS Ticket, hidden while
 Restaurant is off). A sale is ONE submitted Sales Invoice (update_stock=1,
 server-owned tax via `vansalex_service._apply_sales_taxes`, cashier discount
 posted on the invoice) plus a Payment Entry for the chosen method -- both
@@ -267,13 +267,13 @@ def create_sale(
     and sends late. It keeps its own date and time, is posted even where stock, price, tax or the discount cap no longer fit,
     and those cases open a review entry (services/offline_sale.py); `meta.offline` lists them.
 
-    `method="credit"` (ZG POS Settings -> Allow Credit Sales) posts the invoice to a named customer and leaves it unpaid
+    `method="credit"` (ZatGo POS Settings -> Allow Credit Sales) posts the invoice to a named customer and leaves it unpaid
     -- or part-paid, `paid_now` taken by `paid_method` (cash / card / wallet) -- for `collect_payment` later. ERPNext's own
     customer credit limit applies when the invoice is submitted; a credit sale is never taken offline.
 
     `payments=[{method, amount, reference?}]` (instead of `method`) pays one invoice with several modes of payment: the
     amounts must add up to the invoice total, one Payment Entry is posted per row (idempotent, `<client_id>:pay`,
-    `:pay:2` ...), more than one row needs ZG POS Settings -> Allow Split Payment and a connection."""
+    `:pay:2` ...), more than one row needs ZatGo POS Settings -> Allow Split Payment and a connection."""
     from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
@@ -285,10 +285,10 @@ def create_sale(
     paid_now_amt = 0.0
     if plan:
         if len(plan) > 1 and not pos_settings.split_allowed():
-            frappe.throw("Split payment is not switched on for this site (ZG POS Settings -> Payments).", frappe.PermissionError)
+            frappe.throw("Split payment is not switched on for this site (ZatGo POS Settings -> Payments).", frappe.PermissionError)
     elif credit:
         if not pos_settings.credit_allowed():
-            frappe.throw("Credit sales are not switched on for this site (ZG POS Settings -> Payments).", frappe.PermissionError)
+            frappe.throw("Credit sales are not switched on for this site (ZatGo POS Settings -> Payments).", frappe.PermissionError)
         _require_credit_customer(customer_id)
         paid_now_amt = flt(paid_now)
         if paid_now_amt < 0:

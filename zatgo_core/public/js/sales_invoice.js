@@ -72,7 +72,7 @@ frappe.ui.form.on("Sales Invoice", {
 	},
 });
 
-// User-wise naming series (ZG Sales Invoice Naming Settings). The server sets
+// User-wise naming series (Sales Invoice Naming Settings). The server sets
 // naming_series on insert regardless (zatgo_core/events/sales_invoice_naming.py);
 // this only shows the user the series the invoice is actually going to get.
 function show_user_naming_series(frm) {
@@ -86,7 +86,7 @@ function show_user_naming_series(frm) {
 }
 
 // Print: ask A4 or 80mm, then open the print view with that paper's format.
-// A4 = the user's own A4 format (ZG Sales Invoice Naming Settings, print columns), else the site's
+// A4 = the user's own A4 format (Sales Invoice Naming Settings, print columns), else the site's
 // default Sales Invoice print format; 80mm = the user's 80mm format, else zatgo-core's
 // "VanSale Tax Invoice 80mm". A user restricted to some formats is only offered those; the server
 // enforces it (overrides/print_entry.py), this only pre-selects. Covers the Print button, the
@@ -148,7 +148,7 @@ function show_user_print_format(frm) {
 	};
 }
 
-// ZG System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).
+// ZatGo System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).
 function autofill_enabled() {
 	const system = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.system) || {};
 	return !!system.autofill_payment_accounts;

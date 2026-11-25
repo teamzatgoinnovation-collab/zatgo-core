@@ -8,12 +8,12 @@ every client and hook. Users should not meet "zatgo_core" in Desk — see *Brand
 |---|---|---|
 | User-facing product / app title | `ZatGo` | Desk app title, page titles, messages |
 | Backend package | `zatgo_core` (never renamed) | `bench --site X install-app zatgo_core` |
-| **New DocTypes** | `ZG <Name>` — prefix, never suffix | `ZG System Settings`, `ZG Metal Rate` |
+| **New DocTypes** | `ZG <Name>` — prefix, never suffix | `ZatGo System Settings`, `Metal Rate` |
 | Custom fields on ERPNext DocTypes | `zg_<name>` | `zg_vansalex_selectable` |
-| Roles ZatGo creates | `ZG <Role>` | `ZG Company Admin` |
+| Roles ZatGo creates | `ZG <Role>` | `ZatGo Company Admin` |
 | Desk workspace / rail icon of an app | `ZatGo <App>` | `ZatGo VanSaleX`, `ZatGo AI`, `ZatGo Tracker` |
 | Whitelisted API methods | `zatgo_core.api.v1.<product>.<module>.<fn>` | `zatgo_core.api.v1.vansalex.me.context` |
-| App switch (ZG System Settings Check field) | `enable_<app key>` | `enable_vansalex` |
+| App switch (ZatGo System Settings Check field) | `enable_<app key>` | `enable_vansalex` |
 | Python modules / functions | `snake_case`; settings access via `services/` | `services/app_state.py` |
 | Patches | `patches/v<major>_<minor>_<patch>/<verb>_<what>.py`, listed in `patches.txt` | `v0_4_7/enable_vansalex_default_on.py` |
 
@@ -58,3 +58,7 @@ and get a patch only for data.
 An app registers with a manifest (`<module>/app_manifest.py`, or an entry in `plugins/manifests/core_apps.py`);
 see `plugin_guide.md`. Its key is `snake_case`, its label carries the `ZatGo` prefix (`ZatGo Tracker`), and its
 switch field is `enable_<key>` unless it names another.
+
+## 2026-11-25 rename
+
+`ZG <Name>` DocTypes lost the prefix (patch `v0_6_0/rename_zg_to_zatgo`, pre_model_sync). Seven names already exist in ERPNext/Frappe and are `ZatGo <Name>`: System Settings, Notification Settings, Security Settings, POS Settings, Vehicle, Delivery Stop, Mode of Payment Account (to be merged into the ERPNext DocTypes later). Number Cards, Roles and the ERP Summary block became `ZatGo <Name>`. Custom fields (`zg_*`), page ids and API paths are unchanged.

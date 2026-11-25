@@ -27,7 +27,7 @@
       "is_query_report": 0,
       "label": "Theme Settings",
       "link_count": 0,
-      "link_to": "ZG Theme Settings",
+      "link_to": "Theme Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -48,10 +48,10 @@
       "role": "System Manager"
     },
     {
-      "role": "ZG Application Admin"
+      "role": "ZatGo Application Admin"
     },
     {
-      "role": "ZG Company Admin"
+      "role": "ZatGo Company Admin"
     }
   ],
   "sequence_id": 32.0,
@@ -60,7 +60,7 @@
       "color": "Blue",
       "doc_view": "",
       "label": "Theme Settings",
-      "link_to": "ZG Theme Settings",
+      "link_to": "Theme Settings",
       "type": "DocType"
     }
   ],

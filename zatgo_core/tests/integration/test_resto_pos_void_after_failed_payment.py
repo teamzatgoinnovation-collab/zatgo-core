@@ -38,10 +38,10 @@ class TestRestoPosFailedPayment(IntegrationTestCase):
             )
         cash_account = frappe.db.get_value("Account", {"account_type": "Cash", "company": cls.company, "is_group": 0}, "name")
         get_or_create_cash_mode_of_payment(cls.company, cash_account)
-        if frappe.db.exists("ZG Company Settings", cls.company):
-            frappe.db.set_value("ZG Company Settings", cls.company, "default_warehouse", cls.warehouse)
+        if frappe.db.exists("Company Settings", cls.company):
+            frappe.db.set_value("Company Settings", cls.company, "default_warehouse", cls.warehouse)
         else:
-            frappe.get_doc({"doctype": "ZG Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}).insert(
+            frappe.get_doc({"doctype": "Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}).insert(
                 ignore_permissions=True
             )
         frappe.db.commit()
@@ -82,7 +82,7 @@ class TestRestoPosFailedPayment(IntegrationTestCase):
             with self.assertRaises(frappe.ValidationError) as ctx:
                 svc.pay(self.order_id, "cash", client_id)
         self.assertIn("Retry the payment", str(ctx.exception))
-        invoice = frappe.db.get_value("ZG Order", self.order_id, "sales_invoice")
+        invoice = frappe.db.get_value("Order", self.order_id, "sales_invoice")
         self.assertTrue(invoice, "the order must remember the invoice that posted")
         self.assertEqual(frappe.db.get_value("Sales Invoice", invoice, "docstatus"), 1)
         return invoice
@@ -95,7 +95,7 @@ class TestRestoPosFailedPayment(IntegrationTestCase):
         with self.assertRaises(frappe.ValidationError) as ctx:
             svc.void_order(self.order_id)
         self.assertIn(invoice, str(ctx.exception))
-        self.assertNotEqual(frappe.db.get_value("ZG Order", self.order_id, "status"), "Void")
+        self.assertNotEqual(frappe.db.get_value("Order", self.order_id, "status"), "Void")
 
     def test_retry_under_a_new_client_id_pays_the_same_invoice(self) -> None:
         invoice = self._fail_payment(f"test-voidpay-{random_string(8)}")
@@ -104,7 +104,7 @@ class TestRestoPosFailedPayment(IntegrationTestCase):
         paid = svc.pay(self.order_id, "cash", f"test-voidpay-{random_string(8)}")
 
         self.assertEqual(paid["data"]["order"]["status"], "paid")
-        self.assertEqual(frappe.db.get_value("ZG Order", self.order_id, "sales_invoice"), invoice)
+        self.assertEqual(frappe.db.get_value("Order", self.order_id, "sales_invoice"), invoice)
         self.assertEqual(frappe.db.count("Sales Invoice Item", {"item_code": self.item, "docstatus": 1}), 1)
         self.assertEqual(self._bin_qty(), 9, "stock must go out once")
         self.assertEqual(flt(frappe.db.get_value("Sales Invoice", invoice, "outstanding_amount")), 0)

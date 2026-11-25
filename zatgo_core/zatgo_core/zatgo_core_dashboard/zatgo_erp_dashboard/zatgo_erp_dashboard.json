@@ -1,35 +1,35 @@
 {
  "cards": [
   {
-   "card": "ZG Sales Invoices",
+   "card": "ZatGo Sales Invoices",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Sales Invoice Total",
+   "card": "ZatGo Sales Invoice Total",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Purchase Invoices",
+   "card": "ZatGo Purchase Invoices",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Purchase Invoice Total",
+   "card": "ZatGo Purchase Invoice Total",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Sales Orders",
+   "card": "ZatGo Sales Orders",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Sales Order Total",
+   "card": "ZatGo Sales Order Total",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Purchase Orders",
+   "card": "ZatGo Purchase Orders",
    "doctype": "Number Card Link"
   },
   {
-   "card": "ZG Purchase Order Total",
+   "card": "ZatGo Purchase Order Total",
    "doctype": "Number Card Link"
   },
   {

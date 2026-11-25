@@ -23,7 +23,7 @@ class TestDeliveryStopAccess(IntegrationTestCase):
         self.manager = self._user("mgr", ROLES["COMPANY_ADMIN"], "Desk User", ROLES["VANSALE_USER"])
         stop = frappe.get_doc(
             {
-                "doctype": "ZG Delivery Stop",
+                "doctype": "ZatGo Delivery Stop",
                 "title": f"Stop {random_string(6)}",
                 "delivery_boy": self.own_boy,
                 "status": "Out For Delivery",
@@ -31,7 +31,7 @@ class TestDeliveryStopAccess(IntegrationTestCase):
             }
         ).insert(ignore_permissions=True)
         self.stop = stop.name
-        self.created.append(("ZG Delivery Stop", stop.name))
+        self.created.append(("ZatGo Delivery Stop", stop.name))
 
     def tearDown(self) -> None:
         frappe.set_user("Administrator")
@@ -55,20 +55,20 @@ class TestDeliveryStopAccess(IntegrationTestCase):
     def _boy(self, tag: str) -> tuple[str, str]:
         user = self._user(tag, ROLES["DELIVERY"])
         code = f"ZGD-{random_string(6).upper()}"
-        boy = frappe.get_doc({"doctype": "ZG Delivery Boy", "full_name": tag, "code": code, "user": user}).insert(
+        boy = frappe.get_doc({"doctype": "Delivery Boy", "full_name": tag, "code": code, "user": user}).insert(
             ignore_permissions=True
         )
-        self.created.append(("ZG Delivery Boy", boy.name))
+        self.created.append(("Delivery Boy", boy.name))
         return user, boy.name
 
     def _stop_value(self, field: str):
-        return frappe.db.get_value("ZG Delivery Stop", self.stop, field)
+        return frappe.db.get_value("ZatGo Delivery Stop", self.stop, field)
 
     def test_test_users_pass_the_doctype_check(self) -> None:
         """Guards the tests below: a refusal must come from the ownership check."""
         for user in (self.own_user, self.other_user, self.desk_user, self.manager):
             frappe.set_user(user)
-            self.assertTrue(frappe.has_permission("ZG Delivery Stop", "write", doc=self.stop), user)
+            self.assertTrue(frappe.has_permission("ZatGo Delivery Stop", "write", doc=self.stop), user)
 
     def test_another_courier_cannot_complete_the_stop(self) -> None:
         frappe.set_user(self.other_user)

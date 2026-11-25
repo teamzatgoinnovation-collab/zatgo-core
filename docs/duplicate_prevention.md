@@ -2,7 +2,7 @@
 
 One configurable engine that stops duplicate master records on **every** entry point (Desk, REST, Data Import, the POS / VanSaleX / accounting APIs, Flutter): a `validate` hook on the supported DocTypes, plus a live lookup in Desk and a smarter Link search. Matching is on **business identifiers**, not on the document name alone.
 
-Switch: `enable_duplicate_prevention` in ZG System Settings → Apps (on unless switched off). Global behaviour: **ZG Duplicate Prevention Settings**. Per-DocType behaviour: **ZG Duplicate Rule**. Audit trail of overrides: **ZG Duplicate Override Log**.
+Switch: `enable_duplicate_prevention` in ZatGo System Settings → Apps (on unless switched off). Global behaviour: **Duplicate Prevention Settings**. Per-DocType behaviour: **Duplicate Rule**. Audit trail of overrides: **Duplicate Override Log**.
 
 ## Behaviour
 
@@ -22,7 +22,7 @@ Transaction rules (`Rule Type = Transaction`) ignore cancelled documents. Seeded
 E-mail trimmed + lower-cased. Phone: digits with the country code kept (`+966 50…`, `00966…`, `050…`, `50…` agree; other countries' `+`/`00` numbers keep their code). Tax / registration numbers: separators dropped, Arabic-Indic digits → ASCII. Names: NFKC, case-folded, Arabic diacritics/tatweel removed, alef / ya / ta-marbuta unified. Codes / barcodes: **trimmed only**. Stored values are never rewritten.
 
 ## Authorized override
-Users holding one of the rule's override roles (else the Settings roles; default System Manager) can save over a *blocking* match, with a reason (configurable). Desk: the panel shows **Override (authorized)** → reason → save within 10 minutes. API: set `doc.flags.zg_duplicate_override` / `zg_duplicate_override_reason` in Python, or send `zg_duplicate_override=1` and `zg_duplicate_override_reason` as request parameters. Every override writes a ZG Duplicate Override Log row in the same transaction. A user without the role is refused whatever they send.
+Users holding one of the rule's override roles (else the Settings roles; default System Manager) can save over a *blocking* match, with a reason (configurable). Desk: the panel shows **Override (authorized)** → reason → save within 10 minutes. API: set `doc.flags.zg_duplicate_override` / `zg_duplicate_override_reason` in Python, or send `zg_duplicate_override=1` and `zg_duplicate_override_reason` as request parameters. Every override writes a Duplicate Override Log row in the same transaction. A user without the role is refused whatever they send.
 
 ## Concurrency
 For exact unique identifiers the check-then-insert is serialised by a MariaDB named lock per normalised identifier (`GET_LOCK`, 10 s, released at commit/rollback) and re-read with locking reads. MariaDB 11.8 (`innodb_snapshot_isolation`) answers such a read of a row committed after the transaction's snapshot with error 1020 — treated as "duplicate just created". **No new database UNIQUE constraints** are added: ERPNext's tax/mobile columns legitimately repeat in existing data; the only UNIQUE key involved remains `zatgo_client_id`.

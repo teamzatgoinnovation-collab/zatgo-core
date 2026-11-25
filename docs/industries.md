@@ -14,7 +14,7 @@ CORE (always)  +  industries this site switched on  =  what the site exposes
 | Registry (what exists, dependencies, roles, DocTypes, API prefixes) | `zatgo_core/industries/registry.py` |
 | Per-site state + enforcement | `zatgo_core/industries/gate.py` |
 | Roles / custom fields / Desk entries on switch | `zatgo_core/industries/sync.py`, `industries/<key>/setup.py` |
-| Site switch (stored in the site DB) | `ZG System Settings` → **Industries** (child table `ZG Enabled Industry`) |
+| Site switch (stored in the site DB) | `ZatGo System Settings` → **Industries** (child table `Enabled Industry`) |
 | Industry logic / API | `industries/<key>/service.py`, `api/v1/<key>/*.py` |
 
 State is in the site database (so it survives restart, migrate, update, backup/restore); no industry
@@ -22,8 +22,8 @@ is named in `site_config.json` or hard-coded in `hooks.py`.
 
 ## Enabling / disabling
 
-Desk → ZG System Settings → Industries → tick the industry → Save. Requires System Manager,
-ZG Application Admin or ZG Company Admin. Saving validates the combination (unknown or not-yet-available
+Desk → ZatGo System Settings → Industries → tick the industry → Save. Requires System Manager,
+ZatGo Application Admin or ZatGo Company Admin. Saving validates the combination (unknown or not-yet-available
 industry, missing core module, missing industry dependency are rejected), creates the industry's roles
 and custom fields, and adds its workspace / sidebar / desktop icon. Unticking removes the Desk entries,
 hides the custom fields and shuts the API; **data, DocTypes, roles and custom fields are never deleted**.
@@ -45,11 +45,11 @@ Effective access = **Frappe role permission AND industry enabled** (a user permi
 
 | Industry | Status |
 |---|---|
-| Restaurant | Ready — gates the existing Resto POS (`api/v1/resto_pos`, ZG Table / ZG Order / ZG KDS Ticket). On upgrade, sites that already hold Resto data get it switched on by `patches/v0_4_0/enable_restaurant_where_used`. |
-| Jewellery | Ready — Item fields (metal, purity, gross / stone / net weight, making charge, wastage, hallmark), `ZG Metal Rate`, price API. Barcodes, sale, purchase and return use the standard Item barcodes and invoices. |
-| Gym | Ready — `ZG Gym Plan`, `ZG Gym Membership` (members are Customers; end date, renewal, billing through Sales Invoice with an idempotent `zatgo_client_id`), `ZG Gym Attendance`. |
+| Restaurant | Ready — gates the existing Resto POS (`api/v1/resto_pos`, Table / Order / KDS Ticket). On upgrade, sites that already hold Resto data get it switched on by `patches/v0_4_0/enable_restaurant_where_used`. |
+| Jewellery | Ready — Item fields (metal, purity, gross / stone / net weight, making charge, wastage, hallmark), `Metal Rate`, price API. Barcodes, sale, purchase and return use the standard Item barcodes and invoices. |
+| Gym | Ready — `Gym Plan`, `Gym Membership` (members are Customers; end date, renewal, billing through Sales Invoice with an idempotent `zatgo_client_id`), `Gym Attendance`. |
 | Textile | Ready — Item fields (fabric, pattern, design no., GSM, sold-by-roll, roll length in m, width in cm), shown only while on. Brand, colour and size use ERPNext's Item Brand and variant attributes (Color / Size), so variants, barcodes, purchase, sale and stock are standard. No API or DocTypes of its own. |
-| Supermarket | Ready - the **retail POS mode** of ZatGo POS (`api/v1/retail_pos`, service `services/retail_pos_service.py`). No DocTypes of its own and it never touches the restaurant ones (ZG Order / ZG Table / ZG KDS Ticket). `catalog`, `stock` and `customers` reuse `resto_pos_admin_service` (Item, Bin / Stock Entry, Customer); `sale.create` posts ONE submitted Sales Invoice (`update_stock=1`, company warehouse, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment, idempotent on `client_id` (invoice) and `client_id:pay` (payment); `payments.list` and `dashboard.counts` are built from Sales Invoices / Payment Entries. API 404 while the industry (or the ZatGo POS app) is off. |
+| Supermarket | Ready - the **retail POS mode** of ZatGo POS (`api/v1/retail_pos`, service `services/retail_pos_service.py`). No DocTypes of its own and it never touches the restaurant ones (Order / Table / KDS Ticket). `catalog`, `stock` and `customers` reuse `resto_pos_admin_service` (Item, Bin / Stock Entry, Customer); `sale.create` posts ONE submitted Sales Invoice (`update_stock=1`, company warehouse, server-owned tax, cashier discount on the invoice) plus a Payment Entry for the chosen Mode of Payment, idempotent on `client_id` (invoice) and `client_id:pay` (payment); `payments.list` and `dashboard.counts` are built from Sales Invoices / Payment Entries. API 404 while the industry (or the ZatGo POS app) is off. |
 | Salon, Electrical, Retail, Wholesale, Distribution, Pharmacy, Electronics, Hardware, Mobile, Automobile, Service, Manufacturing | Registered, **not implemented** ("Coming soon"); cannot be switched on. |
 
 ### POS mode (`pos_profile.get`)
@@ -75,7 +75,7 @@ mode uses `resto_pos.*` (tables, orders, KDS), retail mode uses `retail_pos.*` (
 6. **API**: `api/v1/pharmacy/*.py` with `@frappe.whitelist()` + `@industry_api("pharmacy", roles)`.
 7. **Tests**: copy the patterns in `tests/integration/test_industries.py` (2×2 permission matrix, 404 while off, switch
    persistence); registry integrity is checked by `tests/unit/test_industry_registry.py`.
-8. **Enable** from ZG System Settings → Industries. After deploy run `bench --site X clear-cache` then `migrate`.
+8. **Enable** from ZatGo System Settings → Industries. After deploy run `bench --site X clear-cache` then `migrate`.
 
 ## Installation, migration, testing, deployment
 

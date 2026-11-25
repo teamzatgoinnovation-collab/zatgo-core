@@ -31,10 +31,10 @@ class DuplicateTestCase(IntegrationTestCase):
         super().setUpClass()
         frappe.set_user("Administrator")
         seed_defaults()
-        frappe.db.set_single_value("ZG System Settings", "enable_duplicate_prevention", 1)
-        frappe.clear_document_cache("ZG System Settings", "ZG System Settings")
-        if frappe.db.exists("ZG Duplicate Prevention Settings"):
-            frappe.db.set_single_value("ZG Duplicate Prevention Settings", "enabled", 1)
+        frappe.db.set_single_value("ZatGo System Settings", "enable_duplicate_prevention", 1)
+        frappe.clear_document_cache("ZatGo System Settings", "ZatGo System Settings")
+        if frappe.db.exists("Duplicate Prevention Settings"):
+            frappe.db.set_single_value("Duplicate Prevention Settings", "enabled", 1)
         config.clear_cache()
         cls.group = frappe.db.get_value("Customer Group", {"is_group": 0}) or "All Customer Groups"
         cls.territory = frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"
@@ -178,7 +178,7 @@ class TestEnforcement(DuplicateTestCase):
         doc.flags.zg_duplicate_override = True
         doc.flags.zg_duplicate_override_reason = "Same legal entity, second branch"
         doc.insert()
-        log = frappe.get_all("ZG Duplicate Override Log", filters={"ref_name": doc.name}, fields=["matched_records", "reason", "user"])
+        log = frappe.get_all("Duplicate Override Log", filters={"ref_name": doc.name}, fields=["matched_records", "reason", "user"])
         self.assertEqual(log[0]["matched_records"], existing.name)
         self.assertEqual(log[0]["user"], "Administrator")
 
@@ -214,12 +214,12 @@ class TestEnforcement(DuplicateTestCase):
     def test_switch_off_disables_everything(self):
         vat = _vat()
         self.customer(vat=vat).insert()
-        frappe.db.set_single_value("ZG Duplicate Prevention Settings", "enabled", 0)
+        frappe.db.set_single_value("Duplicate Prevention Settings", "enabled", 0)
         config.clear_cache()
         try:
             self.customer(vat=vat).insert()
         finally:
-            frappe.db.set_single_value("ZG Duplicate Prevention Settings", "enabled", 1)
+            frappe.db.set_single_value("Duplicate Prevention Settings", "enabled", 1)
             config.clear_cache()
 
 

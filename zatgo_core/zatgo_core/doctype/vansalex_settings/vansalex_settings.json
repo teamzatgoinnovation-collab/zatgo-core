@@ -111,7 +111,7 @@
    "fieldtype": "Check",
    "label": "Allow Changing Warehouse",
    "default": "0",
-   "description": "Lets drivers sell from another warehouse of the same company. The default warehouse comes from the user's VanSale Profile, then ZG Company Settings, then ERPNext Stock Settings."
+   "description": "Lets drivers sell from another warehouse of the same company. The default warehouse comes from the user's VanSale Profile, then Company Settings, then ERPNext Stock Settings."
   },
   {
    "fieldname": "sales_section",
@@ -141,7 +141,7 @@
    "fieldtype": "Check",
    "label": "Restrict Collections to Route",
    "default": "1",
-   "description": "When on, drivers can only collect from customers on their route (ZG Trip) or that they invoiced themselves. Turn off to let drivers collect from any customer."
+   "description": "When on, drivers can only collect from customers on their route (Trip) or that they invoiced themselves. Turn off to let drivers collect from any customer."
   },
   {
    "fieldname": "stock_section",
@@ -168,7 +168,7 @@
   {
    "fieldname": "access_help",
    "fieldtype": "HTML",
-   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site — one row per screen, in the app's order; \"Where in the app\" shows which tab or More-menu entry each row controls. Unticked entries disappear from the app and the server rejects them. A feature only works while its module is on. Settings (with Logout) is always shown. Orders, credit sales, bank payment, discount and warehouse change are controlled by the fields above. Per user: switch entries off on the user's ZG Van Sale Profile.</p>"
+   "options": "<p class=\"text-muted small\">What the VanSaleX app offers on this site — one row per screen, in the app's order; \"Where in the app\" shows which tab or More-menu entry each row controls. Unticked entries disappear from the app and the server rejects them. A feature only works while its module is on. Settings (with Logout) is always shown. Orders, credit sales, bank payment, discount and warehouse change are controlled by the fields above. Per user: switch entries off on the user's Van Sale Profile.</p>"
   },
   {
    "fieldname": "access",

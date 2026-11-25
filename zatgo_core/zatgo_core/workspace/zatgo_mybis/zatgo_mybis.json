@@ -27,7 +27,7 @@
       "is_query_report": 0,
       "label": "MyBis Settings",
       "link_count": 0,
-      "link_to": "ZG MyBis Settings",
+      "link_to": "MyBis Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -100,10 +100,10 @@
       "role": "System Manager"
     },
     {
-      "role": "ZG Application Admin"
+      "role": "ZatGo Application Admin"
     },
     {
-      "role": "ZG Company Admin"
+      "role": "ZatGo Company Admin"
     }
   ],
   "sequence_id": 34.0,
@@ -112,7 +112,7 @@
       "color": "Blue",
       "doc_view": "",
       "label": "MyBis Settings",
-      "link_to": "ZG MyBis Settings",
+      "link_to": "MyBis Settings",
       "type": "DocType"
     },
     {

@@ -1,4 +1,4 @@
-"""User-wise Sales Invoice naming series (ZG Sales Invoice Naming Settings).
+"""User-wise Sales Invoice naming series (Sales Invoice Naming Settings).
 
 Covers services/sales_invoice_naming.py through the Sales Invoice
 before_insert hook, the way each real entry point reaches it: plain
@@ -84,7 +84,7 @@ class TestSalesInvoiceNaming(IntegrationTestCase):
         cls.van_user = cls._make_user("van", ["VanSale User"])
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": cls.van_user,
                 "enabled": 1,
                 "user_type": "Field User",
@@ -93,7 +93,7 @@ class TestSalesInvoiceNaming(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         cls.unmapped_user = cls._make_user("unmapped", accounting)
         cls.multi_user = cls._make_user("multi", accounting)
-        cls.manager = cls._make_user("manager", ["ZG Invoice Naming Manager"])
+        cls.manager = cls._make_user("manager", ["ZatGo Invoice Naming Manager"])
         cls.sales_only = cls._make_user("salesonly", ["Sales User"])
         cls.test_users = {cls.web_user, cls.van_user, cls.unmapped_user, cls.multi_user, cls.manager}
 

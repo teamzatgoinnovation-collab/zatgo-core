@@ -1,5 +1,5 @@
 """Jewellery pricing: metal value + wastage + making charge, from the latest
-ZG Metal Rate. Sale/purchase/return use the standard invoices."""
+Metal Rate. Sale/purchase/return use the standard invoices."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from frappe.utils import flt, getdate
 
 def latest_rate(metal: str, purity: str, on_date=None) -> float:
     row = frappe.db.get_value(
-        "ZG Metal Rate",
+        "Metal Rate",
         {"metal": metal, "purity": purity, "rate_date": ("<=", getdate(on_date))},
         "rate_per_gram",
         order_by="rate_date desc, creation desc",

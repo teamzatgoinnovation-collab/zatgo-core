@@ -5,18 +5,18 @@ from __future__ import annotations
 ROLES = {
     "SYSTEM_MANAGER": "System Manager",
     "ADMINISTRATOR": "Administrator",
-    "COMPANY_ADMIN": "ZG Company Admin",
-    "BRANCH_ADMIN": "ZG Branch Admin",
-    "APPLICATION_ADMIN": "ZG Application Admin",
-    "READ_ONLY": "ZG Read Only",
+    "COMPANY_ADMIN": "ZatGo Company Admin",
+    "BRANCH_ADMIN": "ZatGo Branch Admin",
+    "APPLICATION_ADMIN": "ZatGo Application Admin",
+    "READ_ONLY": "ZatGo Read Only",
     "DELIVERY": "Delivery",
     "VANSALE_USER": "VanSale User",
     "VANSALE_ADMIN": "VanSale Admin",
-    # Manages ZG Sales Invoice Naming Settings (user-wise invoice series).
-    "INVOICE_NAMING_MANAGER": "ZG Invoice Naming Manager",
+    # Manages Sales Invoice Naming Settings (user-wise invoice series).
+    "INVOICE_NAMING_MANAGER": "ZatGo Invoice Naming Manager",
     # Owns the "ZatGo ERP" workspace and the rights its links need (setup/ensure_erp_perms.py). Same string as
     # services/erp_workspace.ROLE (kept import-free so the workspace generator script can run without bench).
-    "ACCOUNTS_INVENTORY": "ZG Accounts & Inventory",
+    "ACCOUNTS_INVENTORY": "ZatGo Accounts & Inventory",
 }
 
 # Which roles may write which settings categories.

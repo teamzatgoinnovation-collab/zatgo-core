@@ -1,6 +1,6 @@
 """User-wise Sales Invoice print format (A4 / 80mm).
 
-Extends the rule rows of `ZG Sales Invoice Naming Settings` (see
+Extends the rule rows of `Sales Invoice Naming Settings` (see
 services/sales_invoice_naming.py): a rule may name an A4 and an 80mm Print
 Format for its (user, company), a default paper, and a Restrict flag.
 
@@ -37,7 +37,7 @@ def _clean(value: str | None) -> str:
 
 
 def site_formats() -> tuple[str, str]:
-    """(A4, 80mm) print formats set for the whole site in ZG Sales Invoice Naming
+    """(A4, 80mm) print formats set for the whole site in ZatGo Sales Invoice Naming
     Settings; "" where unset. ERPNext's default Sales Invoice format can itself be an
     80mm one, so A4 is never guessed from it once this is set."""
     settings = get_settings()

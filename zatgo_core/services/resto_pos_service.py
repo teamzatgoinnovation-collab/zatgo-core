@@ -1,7 +1,7 @@
 """Resto POS: tables, orders, and checkout/payment.
 
 Orders and tables are plain state doctypes (no GL/stock impact) — same
-pattern as `ZG KDS Ticket`. Checkout is where this domain touches real
+pattern as `KDS Ticket`. Checkout is where this domain touches real
 money: `pay()` builds and submits a Sales Invoice (reusing
 `vansalex_service._apply_sales_taxes` and the same update_stock/
 set_warehouse pattern vansalex already uses in production) and a Payment
@@ -91,7 +91,7 @@ def _map_order_doc(doc: Any, items: list[Any] | None = None) -> dict[str, Any]:
 
 
 def _map_table_doc(doc: Any) -> dict[str, Any]:
-    """`doc` is either a `ZG Table` Document or a `frappe.get_all` row dict —
+    """`doc` is either a `Table` Document or a `frappe.get_all` row dict —
     both support `.get(fieldname)`."""
     return {
         "id": doc.get("table_code"),
@@ -108,16 +108,16 @@ def _map_table_doc(doc: Any) -> dict[str, Any]:
 
 
 def _resolve_pos_warehouse(company: str) -> str:
-    # ZG POS Settings -> Sale defaults -> Default Warehouse wins: it is what the cashier's own settings screen shows.
-    configured = frappe.db.get_single_value("ZG POS Settings", "default_warehouse") if frappe.db.exists("DocType", "ZG POS Settings") else None
+    # ZatGo POS Settings -> Sale defaults -> Default Warehouse wins: it is what the cashier's own settings screen shows.
+    configured = frappe.db.get_single_value("ZatGo POS Settings", "default_warehouse") if frappe.db.exists("DocType", "ZatGo POS Settings") else None
     if configured and frappe.db.get_value("Warehouse", configured, ["company", "disabled", "is_group"], as_dict=True) == {
         "company": company,
         "disabled": 0,
         "is_group": 0,
     }:
         return configured
-    if frappe.db.exists("DocType", "ZG Company Settings"):
-        wh = frappe.db.get_value("ZG Company Settings", {"company": company}, "default_warehouse")
+    if frappe.db.exists("DocType", "Company Settings"):
+        wh = frappe.db.get_value("Company Settings", {"company": company}, "default_warehouse")
         if wh and frappe.db.exists("Warehouse", wh):
             return wh
     wh = frappe.db.get_value(
@@ -127,7 +127,7 @@ def _resolve_pos_warehouse(company: str) -> str:
         return wh
     frappe.throw(
         f"No warehouse configured for company {company}. "
-        "Set ZG Company Settings.default_warehouse or create a Warehouse."
+        "Set Company Settings.default_warehouse or create a Warehouse."
     )
 
 
@@ -230,22 +230,22 @@ def create_order(
     require_login()
     cid = (client_id or "").strip() or None
     if cid:
-        existing = find_by_client_id("ZG Order", cid)
+        existing = find_by_client_id("Order", cid)
         if existing:
-            doc = frappe.get_doc("ZG Order", existing)
+            doc = frappe.get_doc("Order", existing)
             return ok(
                 _map_order_doc(doc),
-                meta={"stub": False, "idempotent": True, "source": "ZG Order"},
+                meta={"stub": False, "idempotent": True, "source": "Order"},
             )
 
-    frappe.has_permission("ZG Order", "create", throw=True)
+    frappe.has_permission("Order", "create", throw=True)
 
     table_doc = None
     table_name = ""
     if table:
-        if not frappe.db.exists("ZG Table", table):
-            frappe.throw(f"ZG Table {table} not found")
-        table_doc = frappe.get_doc("ZG Table", table)
+        if not frappe.db.exists("Table", table):
+            frappe.throw(f"Table {table} not found")
+        table_doc = frappe.get_doc("Table", table)
         table_name = table_doc.table_name
 
     comp = _default_company(company or (table_doc.company if table_doc else None))
@@ -256,7 +256,7 @@ def create_order(
 
     doc = frappe.get_doc(
         {
-            "doctype": "ZG Order",
+            "doctype": "Order",
             "order_number": _next_order_number(),
             "table": table_doc.name if table_doc else None,
             "table_name": table_name,
@@ -281,7 +281,7 @@ def create_order(
         }
     )
     if cid:
-        doc, created = insert_idempotent(doc, doctype="ZG Order", client_id=cid)
+        doc, created = insert_idempotent(doc, doctype="Order", client_id=cid)
     else:
         doc.insert()
         created = True
@@ -295,21 +295,21 @@ def create_order(
     frappe.db.commit()
     return ok(
         _map_order_doc(doc),
-        meta={"stub": False, "created": created, "idempotent": not created, "source": "ZG Order"},
+        meta={"stub": False, "created": created, "idempotent": not created, "source": "Order"},
     )
 
 
 def _load_order(order_id: str) -> Any:
-    if not frappe.db.exists("ZG Order", order_id):
-        frappe.throw(f"ZG Order {order_id} not found", frappe.DoesNotExistError)
-    return frappe.get_doc("ZG Order", order_id)
+    if not frappe.db.exists("Order", order_id):
+        frappe.throw(f"Order {order_id} not found", frappe.DoesNotExistError)
+    return frappe.get_doc("Order", order_id)
 
 
 def get_order(name: str) -> dict[str, Any]:
     require_login()
-    frappe.has_permission("ZG Order", "read", throw=True)
+    frappe.has_permission("Order", "read", throw=True)
     doc = _load_order(name)
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 def list_orders(page: int | str = 1, page_size: int | str = 50, status: str | None = None) -> dict[str, Any]:
@@ -317,14 +317,14 @@ def list_orders(page: int | str = 1, page_size: int | str = 50, status: str | No
     from zatgo_core.api.response import paginated
 
     require_login()
-    frappe.has_permission("ZG Order", "read", throw=True)
+    frappe.has_permission("Order", "read", throw=True)
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {}
     if status:
         filters["status"] = status.title()
-    total = frappe.db.count("ZG Order", filters)
+    total = frappe.db.count("Order", filters)
     headers = frappe.get_all(
-        "ZG Order",
+        "Order",
         filters=filters,
         fields=["name"],
         order_by="opened_at desc",
@@ -335,7 +335,7 @@ def list_orders(page: int | str = 1, page_size: int | str = 50, status: str | No
     items_by_parent: dict[str, list[dict[str, Any]]] = {n: [] for n in names}
     if names:
         rows = frappe.get_all(
-            "ZG Order Item",
+            "Order Item",
             filters={"parent": ["in", names]},
             fields=["parent", "name", "item_code", "item_name", "qty", "rate", "station", "status", "extras"],
             order_by="idx asc",
@@ -343,10 +343,10 @@ def list_orders(page: int | str = 1, page_size: int | str = 50, status: str | No
         for r in rows:
             items_by_parent.setdefault(r.parent, []).append(r)
 
-    docs = [frappe.get_doc("ZG Order", n) for n in names]
+    docs = [frappe.get_doc("Order", n) for n in names]
     data = [_map_order_doc(d, items=items_by_parent.get(d.name, [])) for d in docs]
     payload = paginated(data, page=page_i, page_size=size_i, total=total, sort="opened_at desc")
-    payload["meta"] = {**payload.get("meta", {}), "stub": False, "source": "ZG Order"}
+    payload["meta"] = {**payload.get("meta", {}), "stub": False, "source": "Order"}
     return payload
 
 
@@ -360,7 +360,7 @@ def add_item(
 ) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if doc.status in ("Paid", "Void"):
         frappe.throw(f"Order {doc.name} is {doc.status.lower()} and cannot be changed")
     row = _parse_order_items(
@@ -369,13 +369,13 @@ def add_item(
     doc.append("items", row)
     doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 def update_item_qty(order_id: str, item_row: str, qty: float | str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if doc.status in ("Paid", "Void"):
         frappe.throw(f"Order {doc.name} is {doc.status.lower()} and cannot be changed")
     q = flt(qty)
@@ -391,23 +391,23 @@ def update_item_qty(order_id: str, item_row: str, qty: float | str) -> dict[str,
         frappe.throw(f"Order item {item_row} not found")
     doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 def set_note(order_id: str, note: str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     doc.note = (note or "").strip() or None
     doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 def send_order(order_id: str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if doc.status in ("Paid", "Void"):
         frappe.throw(f"Order {doc.name} is {doc.status.lower()} and cannot be sent")
     if not doc.items:
@@ -418,7 +418,7 @@ def send_order(order_id: str) -> dict[str, Any]:
             continue
         frappe.get_doc(
             {
-                "doctype": "ZG KDS Ticket",
+                "doctype": "KDS Ticket",
                 "title": row.item_name or row.item_code,
                 "order_number": doc.order_number,
                 "table_name": doc.table_name,
@@ -438,20 +438,20 @@ def send_order(order_id: str) -> dict[str, Any]:
         doc.status = "Sent"
     doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "sent": True, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "sent": True, "source": "Order"})
 
 
 def void_order(order_id: str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if doc.status == "Paid":
         frappe.throw(
             f"Order {doc.name} is already paid (Sales Invoice {doc.sales_invoice}). "
             "Cancel the invoice through the accounting flow instead of voiding the order."
         )
     if doc.status == "Void":
-        return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+        return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
     # The invoice can be posted while the payment failed: the order is not Paid yet, but its stock and revenue are booked.
     if doc.sales_invoice and frappe.db.get_value("Sales Invoice", doc.sales_invoice, "docstatus") == 1:
         frappe.throw(
@@ -463,7 +463,7 @@ def void_order(order_id: str) -> dict[str, Any]:
     doc.save()
 
     if doc.table:
-        table_doc = frappe.get_doc("ZG Table", doc.table)
+        table_doc = frappe.get_doc("Table", doc.table)
         if table_doc.current_order == doc.name:
             table_doc.current_order = None
             table_doc.status = "Free"
@@ -471,13 +471,13 @@ def void_order(order_id: str) -> dict[str, Any]:
             table_doc.save()
 
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "voided": True, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "voided": True, "source": "Order"})
 
 
 def give_to_delivery(order_id: str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if not doc.delivery_boy:
         frappe.throw("Assign a delivery boy before handing this order to delivery")
 
@@ -505,7 +505,7 @@ def give_to_delivery(order_id: str) -> dict[str, Any]:
     doc.delivery_status = "Handed Off"
     doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 # --- tables ------------------------------------------------------------
@@ -516,11 +516,11 @@ def list_tables(page: int | str = 1, page_size: int | str = 100) -> dict[str, An
     from zatgo_core.api.response import paginated
 
     require_login()
-    frappe.has_permission("ZG Table", "read", throw=True)
+    frappe.has_permission("Table", "read", throw=True)
     page_i, size_i, start = parse_pagination(page, page_size)
-    total = frappe.db.count("ZG Table")
+    total = frappe.db.count("Table")
     rows = frappe.get_all(
-        "ZG Table",
+        "Table",
         fields=["table_code", "table_name", "zone", "seats", "status", "covers", "current_order"],
         order_by="table_name asc",
         start=start,
@@ -528,17 +528,17 @@ def list_tables(page: int | str = 1, page_size: int | str = 100) -> dict[str, An
     )
     data = [_map_table_doc(r) for r in rows]
     payload = paginated(data, page=page_i, page_size=size_i, total=total, sort="table_name asc")
-    payload["meta"] = {**payload.get("meta", {}), "stub": False, "source": "ZG Table"}
+    payload["meta"] = {**payload.get("meta", {}), "stub": False, "source": "Table"}
     return payload
 
 
 def get_table(name: str) -> dict[str, Any]:
     require_login()
-    frappe.has_permission("ZG Table", "read", throw=True)
-    if not frappe.db.exists("ZG Table", name):
-        frappe.throw(f"ZG Table {name} not found", frappe.DoesNotExistError)
-    doc = frappe.get_doc("ZG Table", name)
-    return ok(_map_table_doc(doc), meta={"stub": False, "source": "ZG Table"})
+    frappe.has_permission("Table", "read", throw=True)
+    if not frappe.db.exists("Table", name):
+        frappe.throw(f"Table {name} not found", frappe.DoesNotExistError)
+    doc = frappe.get_doc("Table", name)
+    return ok(_map_table_doc(doc), meta={"stub": False, "source": "Table"})
 
 
 def seat_table(table_id: str, covers: int | str = 1, client_id: str | None = None) -> dict[str, Any]:
@@ -553,32 +553,32 @@ def seat_table(table_id: str, covers: int | str = 1, client_id: str | None = Non
 
 def set_table_status(table_id: str, status: str) -> dict[str, Any]:
     require_login()
-    if not frappe.db.exists("ZG Table", table_id):
-        frappe.throw(f"ZG Table {table_id} not found", frappe.DoesNotExistError)
-    frappe.has_permission("ZG Table", "write", doc=table_id, throw=True)
+    if not frappe.db.exists("Table", table_id):
+        frappe.throw(f"Table {table_id} not found", frappe.DoesNotExistError)
+    frappe.has_permission("Table", "write", doc=table_id, throw=True)
     label = _TABLE_STATUS_MAP.get(str(status or "").lower())
     if not label:
         frappe.throw(f"Unknown table status: {status}")
-    doc = frappe.get_doc("ZG Table", table_id)
+    doc = frappe.get_doc("Table", table_id)
     doc.status = label
     if label == "Free":
         doc.current_order = None
         doc.covers = 0
     doc.save()
     frappe.db.commit()
-    return ok(_map_table_doc(doc), meta={"stub": False, "source": "ZG Table"})
+    return ok(_map_table_doc(doc), meta={"stub": False, "source": "Table"})
 
 
 def mark_billing(order_id: str) -> dict[str, Any]:
     require_login()
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     if doc.table:
-        table_doc = frappe.get_doc("ZG Table", doc.table)
+        table_doc = frappe.get_doc("Table", doc.table)
         table_doc.status = "Billing"
         table_doc.save()
     frappe.db.commit()
-    return ok(_map_order_doc(doc), meta={"stub": False, "source": "ZG Order"})
+    return ok(_map_order_doc(doc), meta={"stub": False, "source": "Order"})
 
 
 # --- payment / checkout --------------------------------------------------
@@ -609,10 +609,10 @@ def pay(
         frappe.throw(f"Unknown payment method: {method}")
 
     doc = _load_order(order_id)
-    frappe.has_permission("ZG Order", "write", doc=doc.name, throw=True)
+    frappe.has_permission("Order", "write", doc=doc.name, throw=True)
     # One checkout per order at a time. A locking read returns the latest committed row, so a request that waited here
     # sees the invoice the other one posted even under a client_id of its own.
-    locked = frappe.db.get_value("ZG Order", doc.name, ["sales_invoice", "payment_entry", "status"], as_dict=True, for_update=True)
+    locked = frappe.db.get_value("Order", doc.name, ["sales_invoice", "payment_entry", "status"], as_dict=True, for_update=True)
     doc.sales_invoice, doc.payment_entry, doc.status = locked.sales_invoice, locked.payment_entry, locked.status
 
     if doc.status == "Paid" and doc.sales_invoice:
@@ -623,7 +623,7 @@ def pay(
                 "order": _map_order_doc(doc),
                 "payment": _map_payment_record(doc, si, pe, method_key),
             },
-            meta={"stub": False, "idempotent": True, "source": "ZG Order"},
+            meta={"stub": False, "idempotent": True, "source": "Order"},
         )
     if doc.status == "Void":
         frappe.throw(f"Order {doc.name} is void and cannot be paid")
@@ -669,7 +669,7 @@ def pay(
         pos_settings.apply_tax_mode(si)
         si, si_created = insert_idempotent(si, doctype="Sales Invoice", client_id=cid)
         # In the invoice's own commit: a payment failure below must not leave a posted invoice the order doesn't know.
-        frappe.db.set_value("ZG Order", doc.name, "sales_invoice", si.name, update_modified=False)
+        frappe.db.set_value("Order", doc.name, "sales_invoice", si.name, update_modified=False)
         if int(si.docstatus or 0) != 1:
             # The insert above isn't committed either: the rollback removes the invoice too.
             submit_or_rollback(
@@ -724,7 +724,7 @@ def pay(
             "order": _map_order_doc(doc),
             "payment": _map_payment_record(doc, si, pe, method_key),
         },
-        meta={"stub": False, "created": si_created, "source": "ZG Order"},
+        meta={"stub": False, "created": si_created, "source": "Order"},
     )
 
 

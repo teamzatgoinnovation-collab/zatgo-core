@@ -46,14 +46,14 @@ EXEMPT_DOCTYPES = {
     "Email Queue", "Email Queue Recipient", "Notification Log", "Route History", "Console Log", "Error Snapshot",
     "Prepared Report", "RQ Job", "RQ Worker", "Deleted Document", "Document Share Log", "Log Setting",
     "Integration Request", "Webhook Request Log", "Submission Queue", "Scheduler Event", "Energy Point Log",
-    "ZG Audit Log", "Sessions", "Document Follow", "Notification Settings", "View Log", "Email Unsubscribe",
+    "Audit Log", "Sessions", "Document Follow", "Notification Settings", "View Log", "Email Unsubscribe",
     "Webhook", "OAuth Bearer Token", "OAuth Authorization Code", "Token Cache", "Data Import Log",
     "DocShare",
     # A site whose subscription lapsed must still be able to import the licence that reactivates it.
-    "ZG Licence",
+    "Licence",
 }
 # Writes to these are refused unless the person edits their own record (password, language, preferences).
-OWN_RECORD_DOCTYPES = {"User", "User Settings", "ZG User Preferences", "ZG Device Token"}
+OWN_RECORD_DOCTYPES = {"User", "User Settings", "User Preferences", "Device Token"}
 
 WRITE_PTYPES = {"write", "create", "delete", "submit", "cancel", "amend", "import", "rename", "mask"}
 

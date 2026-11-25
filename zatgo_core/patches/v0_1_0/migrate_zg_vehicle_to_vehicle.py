@@ -1,6 +1,6 @@
-"""Migrate ZG Vehicle records → ERPNext Vehicle DocType.
+"""Migrate ZatGo Vehicle records → ERPNext Vehicle DocType.
 
-Old ZG Vehicle fields:
+Old ZatGo Vehicle fields:
   title, plate, vehicle_type, status, driver_name
 
 ERPNext Vehicle fields:
@@ -13,16 +13,16 @@ import frappe
 
 
 def execute() -> None:
-    """Copy ZG Vehicle rows into ERPNext Vehicle; remap link fields."""
-    if not frappe.db.exists("DocType", "ZG Vehicle"):
+    """Copy ZatGo Vehicle rows into ERPNext Vehicle; remap link fields."""
+    if not frappe.db.exists("DocType", "ZatGo Vehicle"):
         return  # already removed, nothing to do
 
     zg_vehicles = frappe.get_all(
-        "ZG Vehicle",
+        "ZatGo Vehicle",
         fields=["name", "title", "plate", "vehicle_type", "status", "driver_name"],
     )
 
-    # Map old ZG Vehicle name → new ERPNext Vehicle name (license_plate)
+    # Map old ZatGo Vehicle name → new ERPNext Vehicle name (license_plate)
     name_map: dict[str, str] = {}
 
     for v in zg_vehicles:
@@ -54,18 +54,18 @@ def execute() -> None:
 
     frappe.db.commit()
 
-    # Remap links: ZG Van Sale Profile.vehicle
+    # Remap links: Van Sale Profile.vehicle
     for old, new in name_map.items():
         frappe.db.sql(
-            "UPDATE `tabZG Van Sale Profile` SET `vehicle` = %s WHERE `vehicle` = %s",
+            "UPDATE `tabVan Sale Profile` SET `vehicle` = %s WHERE `vehicle` = %s",
             (new, old),
         )
         frappe.db.sql(
-            "UPDATE `tabZG Delivery Boy` SET `vehicle` = %s WHERE `vehicle` = %s",
+            "UPDATE `tabDelivery Boy` SET `vehicle` = %s WHERE `vehicle` = %s",
             (new, old),
         )
         frappe.db.sql(
-            "UPDATE `tabZG Trip` SET `vehicle` = %s WHERE `vehicle` = %s",
+            "UPDATE `tabTrip` SET `vehicle` = %s WHERE `vehicle` = %s",
             (new, old),
         )
 

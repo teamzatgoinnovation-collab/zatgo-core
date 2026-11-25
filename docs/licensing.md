@@ -24,7 +24,7 @@ exists until one is generated (see *Keys* below). Audit and decisions: `licensin
 - `registry.py` — the model and the rules; pure Python (no database), like `services/app_catalog.py`.
 - `catalog/*.py` — one file per module (or a few small modules per file, `MODULES = [...]`).
 - `catalog/ids.lock` — every feature id ever shipped.
-- `sync.py` — projects the registry into `ZG Module` / `ZG Feature` on install and migrate.
+- `sync.py` — projects the registry into `Module` / `Feature` on install and migrate.
 
 **Module** — commercial grouping (Sales, Inventory, ...). **Feature** — what an edition includes and a licence
 signs. A feature carries:
@@ -64,10 +64,10 @@ discount" (a field, covered by VanSaleX keys and Phase 4 field rules if wanted),
 the print view itself (printing is each DocType's `print` action), the ZATCA Phase 1 QR on invoices (legal on
 every KSA invoice).
 
-## The projection: `ZG Module`, `ZG Feature`
+## The projection: `Module`, `Feature`
 
 Read-only DocTypes (core module) for the Desk and for Phase 3's edition builder to link to. Read for System
-Manager, ZG Application Admin, ZG Read Only; nobody can create, change or delete a row — the controller refuses
+Manager, ZatGo Application Admin, ZatGo Read Only; nobody can create, change or delete a row — the controller refuses
 any write outside the sync, `ignore_permissions` included. `sync_registry()` (from `install.after_migrate` and
 `after_install`) writes a row only when the code changed, so a re-run writes nothing; a feature that left the
 code is marked retired, never deleted. `available` = its source app is installed on this site.
@@ -81,7 +81,7 @@ code is marked retired, never deleted. `available` = its source app is installed
 
 ## Editions (Phase 3)
 
-An **edition** is a commercial product configuration (`ZG Edition` + child `ZG Edition Feature`): which
+An **edition** is a commercial product configuration (`Edition` + child `Edition Feature`): which
 registry features it includes — each optionally narrowed to fewer actions — on which platforms (Desk, desktop
 apps, mobile apps), with which licence defaults (type, duration, trial days, maximum users / companies, 0 = no
 limit) and suggested default roles. Foundation features are in every edition and are never listed.
@@ -91,7 +91,7 @@ an edition never changes a licence that was already issued.
 
 ### Issuer mode (decision D2)
 Editions are written only on the licence issuer site: `"zg_licence_issuer": 1` in its `site_config.json`
-(`licensing/issuer.py`), and only by a System Manager. The `ZG Edition` controller enforces it, so the form, REST
+(`licensing/issuer.py`), and only by a System Manager. The `Edition` controller enforces it, so the form, REST
 and the builder page are all bound; on every other site editions are read-only. The private signing key
 (Phase 5) will also live only there, outside `sites/`.
 
@@ -102,7 +102,7 @@ and the builder page are all bound; on every other site editions are read-only. 
 - The **version** goes up whenever what the edition grants changes (features, actions, platforms, licence
   defaults, default roles — `grant_hash`); renaming or a status change does not bump it.
 - **Archived** editions cannot change until set back to Draft. Only a **Draft** can be deleted.
-- Field changes and feature-table changes go to `ZG Audit Log` (derived fields are left out).
+- Field changes and feature-table changes go to `Audit Log` (derived fields are left out).
 
 ### Presets (`licensing/editions/*.json`)
 Sales, Accounting, Inventory, POS, Sales + Inventory, Accounting + Inventory, Retail, Distribution, Enterprise
@@ -125,10 +125,10 @@ features this site cannot run (app not installed) and features no edition platfo
 trusted). Import is previewed first (create / update / unchanged / refuse, a diff against the existing edition,
 the inspection); replacing an existing, different edition needs an explicit overwrite; an Active file with
 missing dependencies comes in as a Draft; a licence file (`zatgo.licence`) or a newer schema is refused. Every
-import is recorded in `ZG Audit Log` (`fieldname = import`, file hash).
+import is recorded in `Audit Log` (`fieldname = import`, file hash).
 
 ### The page: **ZatGo Editions** (`/desk/zg-edition-builder`)
-System Manager, ZG Application Admin, ZG Read Only may open it; only a System Manager on the issuer site can
+System Manager, ZatGo Application Admin, ZatGo Read Only may open it; only a System Manager on the issuer site can
 change anything (elsewhere it says so and is read-only). Left: editions by status. Middle: modules with feature
 checkboxes, search, per-feature action narrowing, availability and `requires` tags. Right: live summary,
 platforms, licence defaults, warnings with an **Add** button per missing feature (an explicit choice). Menu:
@@ -211,7 +211,7 @@ licence type, issue / start / expiry dates (no expiry for Lifetime / Perpetual),
 ### Issuing (issuer site, `licensing/issuing.py`)
 `issue(edition_id, customer_name, site_ids, ...)` — Active, dependency-complete editions only; dates and limits
 default from the edition's licence defaults; `replaces=<licence id>` issues the next version of an existing
-licence. The signed file is recorded in **ZG Licence History** (number series `ZGL-.YYYY.-.#####`) and audited.
+licence. The signed file is recorded in **Licence History** (number series `ZGL-.YYYY.-.#####`) and audited.
 `revocation_list([licence ids])` signs a revocation list. API: `zatgo_core.api.v1.licensing.licences.
 issue_licence / issued_licences / revoke_licences` (POST for writes; issuer + System Manager).
 
@@ -219,7 +219,7 @@ issue_licence / issued_licences / revoke_licences` (POST for writes; issuer + Sy
 `import_licence(file)`: signature with a trusted key → schema / product / dates / features → **site binding**
 (this site's `zg_site_id` from `site_config`, created the first time the identity is read — never on migrate —
 plus the site name when the licence lists names) → refuse a licence not started yet, expired, revoked, already
-imported, or older than the version in force → store the original signed file in **ZG Licence** (it becomes
+imported, or older than the version in force → store the original signed file in **Licence** (it becomes
 current) → audit. Refusals are audited with a reason code. `import_revocation(file)` marks listed licences
 Revoked. API: `site_identity_info` (the IDs to send to the issuer), `current_licence`, `import_licence`,
 `import_revocation`, `verify_licence` — System Manager for everything but reading.
@@ -228,7 +228,7 @@ Revoked. API: `site_identity_info` (the IDs to send to the issuer), `current_lic
 Only the signed file. The entitlement (`entitlement._load` → `licences.current_entitlement`) is rebuilt from
 the stored file — signature and site re-checked — and cached for an hour or until the next import / revocation.
 A record edited in the database no longer verifies and gives the **foundation only**; so does a revoked
-licence. `ZG Licence` and `ZG Licence History` cannot be written by hand (controller), and `ZG Licence` stays
+licence. `Licence` and `Licence History` cannot be written by hand (controller), and `Licence` stays
 writable on a read-only (lapsed subscription) site so a licence can reactivate it.
 
 ### Offline limits (stated, not hidden)
@@ -239,7 +239,7 @@ writable on a read-only (lapsed subscription) site so a licence can reactivate i
 ## The Licence page (Phase 6): **ZatGo Licence** (`/desk/zg-licence`)
 
 In the ZatGo sidebar under General Settings, next to **Editions** (both are shortcuts of
-`workspace/zatgo/zatgo.json`). Readers of ZG Licence (System Manager, ZG Application Admin, ZG Read Only) see it;
+`workspace/zatgo/zatgo.json`). Readers of Licence (System Manager, ZatGo Application Admin, ZatGo Read Only) see it;
 every action is a System Manager's, enforced on the server.
 
 - **Overview**: edition, status, customer, licence number and version, type, issue / start / import / expiry
@@ -252,7 +252,7 @@ every action is a System Manager's, enforced on the server.
 - **Module access**: every module with licensed / total features and, per feature, the actions it gets. With no
   licence it says *unrestricted*; a revoked or broken licence shows only the foundation.
 - **Activation history**: every imported licence (current one marked, download its signed file) and the licence
-  events of ZG Audit Log (imported, rejected with reason, revoked, verification failed).
+  events of Audit Log (imported, rejected with reason, revoked, verification failed).
 - **Actions** (menu): Import / Replace licence, Verify licence, Import revocation list, Export site identity
   (`zatgo.site_request` — the file to send ZatGo for a licence; creates the site ID the first time), Export
   licence information (`zatgo.licence_info`, a metadata backup — never importable), Download licence file.
@@ -279,7 +279,7 @@ All of this applies only while the enforcement switch is on.
 
 **Read-only** is the same gate a lapsed Space subscription uses (`services/subscription_gate.py`): `current()`
 merges the licence verdict, the most restrictive wins (D3). Viewing, reports, printing, exports, backups and
-importing a new licence (ZG Licence is exempt) keep working; every create / update / delete / submit / cancel /
+importing a new licence (Licence is exempt) keep working; every create / update / delete / submit / cancel /
 amend is refused with a licence message, and the Desk badge says why. Nothing is deleted.
 
 **Clock**: the highest time seen is stored in the `DefaultValue` row `zg_licence_clock_hwm`, moved forward at most
@@ -331,11 +331,11 @@ Desk-only licence; an app whose feature drops out is off, so its API answers 404
 
 ## Audit, coverage and hardening (Phase 9)
 
-**Audit trail** (`ZG Audit Log`, brief Part 17): edition field and feature changes, edition imports, licence
+**Audit trail** (`Audit Log`, brief Part 17): edition field and feature changes, edition imports, licence
 imported / replaced / rejected (with reason code) / verification failed / revoked, licences and revocation lists
 issued, site identity created, and **site_config changes** — enforcement switch, issuer mode, signing-key
 configured or not, site ID, clock tolerance — detected by `licensing/watch.py` (daily job and every Licence page
-load; `doctype_name` "ZG Licence Config"). App switch changes were already audited by ZG System Settings. Never a
+load; `doctype_name` "Licence Config"). App switch changes were already audited by ZatGo System Settings. Never a
 key or a licence file in a log. Role permission changes stay with Frappe's own history (not duplicated).
 
 The log is **append-only** (`zg_audit_log.py`): an existing entry cannot be changed by any route; an entry typed in

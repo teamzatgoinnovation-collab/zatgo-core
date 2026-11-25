@@ -1,4 +1,4 @@
-"""Validation for ZG Application Settings (client apps)."""
+"""Validation for Application Settings (client apps)."""
 
 from __future__ import annotations
 

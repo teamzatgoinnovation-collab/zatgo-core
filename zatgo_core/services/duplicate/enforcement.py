@@ -143,7 +143,7 @@ def _override_accepted(doc, rule, matches, level) -> bool:
         return False
     frappe.cache.delete_value(_override_key(doc.doctype))
     log = frappe.get_doc({
-        "doctype": "ZG Duplicate Override Log",
+        "doctype": "Duplicate Override Log",
         "ref_doctype": doc.doctype,
         "ref_name": doc.name,
         "user": frappe.session.user,

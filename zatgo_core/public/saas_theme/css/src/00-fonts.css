@@ -41,7 +41,7 @@
 /* Digits come from Inter (shipped with Frappe), not Poppins: Poppins has no tabular figures and the theme
    lines amounts up with `font-variant-numeric: tabular-nums`. unicode-range sends only 0-9 to this face. */
 @font-face {
-	font-family: "ZG Digits";
+	font-family: "ZatGo Digits";
 	font-style: normal;
 	font-weight: 100 900;
 	font-display: swap;

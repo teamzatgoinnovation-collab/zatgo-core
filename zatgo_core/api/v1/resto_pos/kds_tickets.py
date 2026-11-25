@@ -1,4 +1,4 @@
-"""Kitchen Display System tickets — ZG KDS Ticket DocType."""
+"""Kitchen Display System tickets — KDS Ticket DocType."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def list(
         elif status.lower() == "queued":
             filters["status"] = "Queued"
     return list_zg(
-        "ZG KDS Ticket",
+        "KDS Ticket",
         fields=[
             "name",
             "title",
@@ -94,17 +94,17 @@ def list(
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_zg("ZG KDS Ticket", name, map_doc=lambda d: _map(d))
+    return get_zg("KDS Ticket", name, map_doc=lambda d: _map(d))
 
 
 @frappe.whitelist()
 def advance(name: str) -> dict[str, Any]:
     """Advance ticket: Queued → Preparing → Ready → Served."""
     require_login()
-    if not frappe.db.exists("ZG KDS Ticket", name):
-        frappe.throw(f"ZG KDS Ticket {name} not found", frappe.DoesNotExistError)
-    frappe.has_permission("ZG KDS Ticket", "write", doc=name, throw=True)
-    doc = frappe.get_doc("ZG KDS Ticket", name)
+    if not frappe.db.exists("KDS Ticket", name):
+        frappe.throw(f"KDS Ticket {name} not found", frappe.DoesNotExistError)
+    frappe.has_permission("KDS Ticket", "write", doc=name, throw=True)
+    doc = frappe.get_doc("KDS Ticket", name)
     cur = doc.status or "Queued"
     try:
         idx = _STATUS_FLOW.index(cur)
@@ -122,10 +122,10 @@ def advance(name: str) -> dict[str, Any]:
 def recall(name: str) -> dict[str, Any]:
     """Recall one step back (not below Queued)."""
     require_login()
-    if not frappe.db.exists("ZG KDS Ticket", name):
-        frappe.throw(f"ZG KDS Ticket {name} not found", frappe.DoesNotExistError)
-    frappe.has_permission("ZG KDS Ticket", "write", doc=name, throw=True)
-    doc = frappe.get_doc("ZG KDS Ticket", name)
+    if not frappe.db.exists("KDS Ticket", name):
+        frappe.throw(f"KDS Ticket {name} not found", frappe.DoesNotExistError)
+    frappe.has_permission("KDS Ticket", "write", doc=name, throw=True)
+    doc = frappe.get_doc("KDS Ticket", name)
     cur = doc.status or "Queued"
     try:
         idx = _STATUS_FLOW.index(cur)
@@ -147,12 +147,12 @@ def bump_station(station: str) -> dict[str, Any]:
     if station not in _STATIONS:
         frappe.throw(f"Unknown station: {station}")
     names = frappe.get_all(
-        "ZG KDS Ticket",
+        "KDS Ticket",
         filters={"station": station, "status": "Ready"},
         pluck="name",
     )
     for n in names:
-        frappe.db.set_value("ZG KDS Ticket", n, "status", "Served")
+        frappe.db.set_value("KDS Ticket", n, "status", "Served")
     frappe.db.commit()
     return ok(
         {"station": station, "count": len(names)},

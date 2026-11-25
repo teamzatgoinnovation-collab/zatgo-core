@@ -120,7 +120,7 @@ def history(limit: int = 50) -> dict[str, list[dict[str, Any]]]:
         "name", "licence_number", "licence_version", "edition_name", "licence_type", "status", "is_current",
         "start_date", "expiry_date", "imported_on", "imported_by", "revoked_on"], order_by="imported_on desc",
         limit_page_length=limit)
-    events = frappe.get_all("ZG Audit Log", filters={"doctype_name": licences.DOCTYPE}, fields=[
+    events = frappe.get_all("Audit Log", filters={"doctype_name": licences.DOCTYPE}, fields=[
         "fieldname", "document_name", "new_value", "reason", "changed_by", "creation"],
         order_by="creation desc", limit_page_length=limit)
     for e in events:

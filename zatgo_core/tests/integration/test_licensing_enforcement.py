@@ -233,7 +233,7 @@ class TestLicensingEnforcement(IntegrationTestCase):
             self.assertTrue(gate.vansalex_key_licensed("inventory.transfer"))
 
     def test_switching_on_an_unlicensed_app_is_refused(self) -> None:
-        settings = frappe.get_doc("ZG System Settings")
+        settings = frappe.get_doc("ZatGo System Settings")
         before = frappe.get_doc(settings.as_dict())
         before.enable_mybis = 0
         after = frappe.get_doc(settings.as_dict())

@@ -1,4 +1,4 @@
-"""Brand / theme / language live in the app that owns them (ZG Theme Settings, ZG Language Settings) and every reader
+"""Brand / theme / language live in the app that owns them (Theme Settings, Language Settings) and every reader
 still gets the same keys (services/ui_settings.py, patches/v0_4_10)."""
 
 from __future__ import annotations
@@ -10,8 +10,8 @@ from zatgo_core.patches.v0_4_10 import move_brand_theme_language_to_apps as patc
 from zatgo_core.services import ui_settings
 from zatgo_core.services.settings_service import SettingsService
 
-THEME = "ZG Theme Settings"
-LANG = "ZG Language Settings"
+THEME = "Theme Settings"
+LANG = "Language Settings"
 
 
 def _stored(doctype: str, field: str):
@@ -27,7 +27,7 @@ def _put(doctype: str, field: str, value) -> None:
 
 
 class TestAppSettingsMove(IntegrationTestCase):
-    FIELDS = ((THEME, "brand_name"), (THEME, "theme"), (LANG, "language"), ("ZG System Settings", "brand_name"), ("ZG System Settings", "theme"), ("ZG System Settings", "language"))
+    FIELDS = ((THEME, "brand_name"), (THEME, "theme"), (LANG, "language"), ("ZatGo System Settings", "brand_name"), ("ZatGo System Settings", "theme"), ("ZatGo System Settings", "language"))
 
     def setUp(self) -> None:
         frappe.set_user("Administrator")
@@ -54,17 +54,17 @@ class TestAppSettingsMove(IntegrationTestCase):
     def test_the_patch_copies_what_a_site_had_and_keeps_what_the_app_already_has(self) -> None:
         for doctype, field in ((THEME, "brand_name"), (THEME, "theme"), (LANG, "language")):
             _put(doctype, field, None)
-        _put("ZG System Settings", "brand_name", "Kasib Asia")
-        _put("ZG System Settings", "theme", "Light")
+        _put("ZatGo System Settings", "brand_name", "Kasib Asia")
+        _put("ZatGo System Settings", "theme", "Light")
         _put(THEME, "theme", "Dark")  # already set in the app: kept
         patch.execute()
         self.assertEqual(_stored(THEME, "brand_name"), "Kasib Asia")
         self.assertEqual(_stored(THEME, "theme"), "Dark")
-        self.assertEqual(_stored("ZG System Settings", "brand_name"), "Kasib Asia", "the old field is left alone")
+        self.assertEqual(_stored("ZatGo System Settings", "brand_name"), "Kasib Asia", "the old field is left alone")
         patch.execute()  # idempotent
         self.assertEqual(_stored(THEME, "brand_name"), "Kasib Asia")
 
     def test_the_old_fields_are_hidden_on_system_settings(self) -> None:
-        meta = frappe.get_meta("ZG System Settings")
+        meta = frappe.get_meta("ZatGo System Settings")
         for field in ("brand_name", "company_logo", "theme", "language"):
             self.assertTrue(meta.get_field(field).hidden, field)

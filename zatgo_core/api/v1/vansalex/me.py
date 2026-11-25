@@ -46,7 +46,7 @@ def context() -> dict[str, Any]:
             "has_vansale_access": is_vansale_admin(user) or is_vansale_user(user),
             "profile": profile,
             # Effective VanSaleX settings (VanSaleX Settings + this user's
-            # ZG Van Sale Profile overrides) — the app renders from these
+            # Van Sale Profile overrides) — the app renders from these
             # and keeps none of its own; the server enforces them on write.
             "settings": resolve_settings(user),
             # Modules & features this client (site) gives this user — the

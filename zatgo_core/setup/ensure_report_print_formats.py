@@ -16,9 +16,9 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 # report -> Print Format name
 FORMATS = {
-    "Balance Sheet": "ZG Balance Sheet",
-    "Profit and Loss Statement": "ZG Profit and Loss Statement",
-    "Trial Balance": "ZG Trial Balance",
+    "Balance Sheet": "ZatGo Balance Sheet",
+    "Profit and Loss Statement": "ZatGo Profit and Loss Statement",
+    "Trial Balance": "ZatGo Trial Balance",
 }
 
 

@@ -1,5 +1,5 @@
 """Account Paid To / Paid From on Payment Entry follow the chart's Bank Accounts
-(services/payment_entry_accounts.py), switchable in ZG System Settings."""
+(services/payment_entry_accounts.py), switchable in ZatGo System Settings."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from zatgo_core.services import payment_entry_accounts as svc
 
 COMPANY = "ZatGo Core Test Co"
 GROUP = "Bank Accounts - ZCTC"
-SETTINGS, FIELD = "ZG System Settings", "autofill_payment_entry_account"
+SETTINGS, FIELD = "ZatGo System Settings", "autofill_payment_entry_account"
 BANK_MODE, CASH_MODE = "Wire Transfer", "Cash"
 
 
@@ -54,8 +54,8 @@ class TestPaymentEntryAccounts(IntegrationTestCase):
 
     # -- the chart definition ---------------------------------------------------------------------------
     def test_a_ledger_without_account_type_under_bank_accounts_is_listed_and_a_disabled_one_is_not(self) -> None:
-        untyped = _account("ZG PE Untyped Bank")
-        disabled = _account("ZG PE Disabled Bank", account_type="Bank", disabled=1)
+        untyped = _account("ZatGo PE Untyped Bank")
+        disabled = _account("ZatGo PE Disabled Bank", account_type="Bank", disabled=1)
         self.addCleanup(frappe.delete_doc, "Account", untyped, force=1)
         self.addCleanup(frappe.delete_doc, "Account", disabled, force=1)
         names = {n for n, _ in svc.chart_ledgers(COMPANY, "Bank")}

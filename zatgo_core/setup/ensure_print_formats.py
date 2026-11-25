@@ -49,9 +49,9 @@ _HTML = r"""
 </style>
 {%- set company = frappe.get_doc("Company", doc.company) -%}
 {%- set settings = None -%}
-{%- if frappe.db.exists("DocType", "ZG Company Settings") -%}
-  {%- set sname = frappe.db.get_value("ZG Company Settings", {"company": doc.company}, "name") -%}
-  {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
+{%- if frappe.db.exists("DocType", "Company Settings") -%}
+  {%- set sname = frappe.db.get_value("Company Settings", {"company": doc.company}, "name") -%}
+  {%- if sname -%}{%- set settings = frappe.get_doc("Company Settings", sname) -%}{%- endif -%}
 {%- endif -%}
 {%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
 {%- set phone = company.phone_no or "" -%}
@@ -232,9 +232,9 @@ _CSS_80MM = ""
 _HTML_80MM = r"""
 {%- set company = frappe.get_doc("Company", doc.company) -%}
 {%- set settings = None -%}
-{%- if frappe.db.exists("DocType", "ZG Company Settings") -%}
-  {%- set sname = frappe.db.get_value("ZG Company Settings", {"company": doc.company}, "name") -%}
-  {%- if sname -%}{%- set settings = frappe.get_doc("ZG Company Settings", sname) -%}{%- endif -%}
+{%- if frappe.db.exists("DocType", "Company Settings") -%}
+  {%- set sname = frappe.db.get_value("Company Settings", {"company": doc.company}, "name") -%}
+  {%- if sname -%}{%- set settings = frappe.get_doc("Company Settings", sname) -%}{%- endif -%}
 {%- endif -%}
 {%- set vat_no = (settings.tax_id if settings and settings.tax_id else company.tax_id) or "" -%}
 {%- set cr = company.get("company_registration") or company.get("registration_details") or "" -%}

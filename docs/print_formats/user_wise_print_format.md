@@ -1,6 +1,6 @@
 # User-wise Sales Invoice print format (A4 / 80mm)
 
-Configured per user + company in **ZG Sales Invoice Naming Settings → Rules → Printing**:
+Configured per user + company in **Sales Invoice Naming Settings → Rules → Printing**:
 `A4 Print Format`, `80mm Print Format`, `Default Paper`, `Restrict to these formats`.
 All optional; users without a rule (and Administrator) are unaffected.
 

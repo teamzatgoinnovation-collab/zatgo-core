@@ -1,4 +1,4 @@
-"""Field service tickets — ZG Service Ticket DocType."""
+"""Field service tickets — Service Ticket DocType."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def _map(row: Any) -> dict[str, Any]:
 @frappe.whitelist()
 def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
     return list_zg(
-        "ZG Service Ticket",
+        "Service Ticket",
         fields=["name", "title", "number", "customer", "address", "issue", "priority", "status", "scheduled_at"],
         page=page,
         page_size=page_size,
@@ -39,4 +39,4 @@ def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_zg("ZG Service Ticket", name, map_doc=lambda d: _map(d))
+    return get_zg("Service Ticket", name, map_doc=lambda d: _map(d))

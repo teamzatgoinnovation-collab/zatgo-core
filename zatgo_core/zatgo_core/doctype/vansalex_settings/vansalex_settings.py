@@ -1,5 +1,5 @@
 """VanSaleX Settings controller — company-wide defaults for the VanSaleX
-mobile app. Per-user overrides live on ZG Van Sale Profile; the effective
+mobile app. Per-user overrides live on Van Sale Profile; the effective
 values are resolved by zatgo_core.services.vansalex_settings.resolve() and,
 for Modules & Features, zatgo_core.services.vansalex_access.effective()."""
 

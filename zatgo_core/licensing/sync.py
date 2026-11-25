@@ -1,4 +1,4 @@
-"""Project the licensing registry (code) into `ZG Module` / `ZG Feature` (read-only DocTypes).
+"""Project the licensing registry (code) into `Module` / `Feature` (read-only DocTypes).
 
 One way, like plugins/discover.py: the code is the truth, the rows are what the Desk and (later) the edition
 builder show and link to. Idempotent -- a row is written only when what the code says changed, so a re-run
@@ -16,8 +16,8 @@ from frappe import _
 
 from zatgo_core.licensing import registry
 
-MODULE_DOCTYPE = "ZG Module"
-FEATURE_DOCTYPE = "ZG Feature"
+MODULE_DOCTYPE = "Module"
+FEATURE_DOCTYPE = "Feature"
 
 
 def refuse_manual_change(doc: Any) -> None:
@@ -102,7 +102,7 @@ def _upsert(doctype: str, name: str, row: dict[str, Any]) -> bool:
 
 
 def sync_registry() -> dict[str, int]:
-    """Bring ZG Module / ZG Feature in line with the code. Returns how many rows it wrote."""
+    """Bring Module / Feature in line with the code. Returns how many rows it wrote."""
     problems = registry.validate()
     if problems:
         # A broken registry is a code bug caught by the unit test; never half-project it.

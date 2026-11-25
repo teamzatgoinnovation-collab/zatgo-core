@@ -89,7 +89,7 @@ class TestLicences(IntegrationTestCase):
         self.assertEqual(result["edition_id"], "sales")
         self.assertIn(result["status"], ("Active", "Expiring"))
         self.assertEqual(licences.current_doc().licence_number, issued["licence_number"])
-        events = frappe.get_all("ZG Audit Log", filters={"fieldname": ["in", ["licence_issued", "licence_imported"]],
+        events = frappe.get_all("Audit Log", filters={"fieldname": ["in", ["licence_issued", "licence_imported"]],
                                                          "document_name": ["in", [issued["licence_number"],
                                                                                   licences.current_doc().name]]},
                                 pluck="fieldname")
@@ -130,7 +130,7 @@ class TestLicences(IntegrationTestCase):
             licences.import_licence(licence_format.seal(json.loads(crypto.b64d(json.loads(self._issue()["file"])["payload"])),
                                                         stranger))
         self.assertIn("does not trust", str(ctx.exception))
-        rejected = frappe.get_all("ZG Audit Log", filters={"fieldname": "licence_rejected"}, pluck="new_value")
+        rejected = frappe.get_all("Audit Log", filters={"fieldname": "licence_rejected"}, pluck="new_value")
         self.assertTrue(any("bad_signature" in r for r in rejected))
 
     def test_expired_and_not_yet_valid_are_refused(self) -> None:
@@ -234,7 +234,7 @@ class TestLicences(IntegrationTestCase):
         file = self._issue()["file"]
         user = f"zg-lic-api-{random_string(6).lower()}@example.com"
         frappe.get_doc({"doctype": "User", "email": user, "first_name": "Licence API", "send_welcome_email": 0,
-                        "roles": [{"role": "ZG Read Only"}]}).insert(ignore_permissions=True)
+                        "roles": [{"role": "ZatGo Read Only"}]}).insert(ignore_permissions=True)
         frappe.set_user(user)
         self.assertIn("present", api.current_licence()["data"])
         for call in (lambda: api.import_licence(file), lambda: api.site_identity_info(), lambda: api.verify_licence()):
@@ -246,4 +246,4 @@ class TestLicences(IntegrationTestCase):
         self.assertEqual(data["product_id"], "zatgo_erp")
 
     def test_a_read_only_subscription_still_takes_a_licence(self) -> None:
-        self.assertTrue(subscription_gate._exempt("ZG Licence"))
+        self.assertTrue(subscription_gate._exempt("Licence"))

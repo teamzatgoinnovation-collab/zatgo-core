@@ -43,14 +43,14 @@ _DOCTYPE_CATEGORY = {
 
 @frappe.whitelist()
 def get_system_settings() -> dict[str, Any]:
-    """Return global ZG System Settings."""
+    """Return global ZatGo System Settings."""
     log_api("get_system_settings", user=frappe.session.user)
     return ok(SettingsService.get_system_settings())
 
 
 @frappe.whitelist()
 def get_company_settings(company: str | None = None) -> dict[str, Any]:
-    """Return ZG Company Settings for a company (defaults to session/default company)."""
+    """Return Company Settings for a company (defaults to session/default company)."""
     from zatgo_core.constants.settings import DOCTYPES
     from zatgo_core.services.erpnext_writes import _default_company
 
@@ -78,7 +78,7 @@ def get_company_settings(company: str | None = None) -> dict[str, Any]:
 
 @frappe.whitelist()
 def get_branch_settings(branch: str) -> dict[str, Any]:
-    """Return ZG Branch Settings by name."""
+    """Return Branch Settings by name."""
     branch = require_str(branch, "branch")
     log_api("get_branch_settings", user=frappe.session.user, branch=branch)
     return ok(SettingsService.get_branch_settings(branch))

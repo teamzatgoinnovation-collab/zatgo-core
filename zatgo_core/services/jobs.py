@@ -11,13 +11,13 @@ def sync_application_registry() -> None:
     """No-op placeholder (client apps are site settings, not Frappe app sync)."""
     logger.info(
         "scheduler sync_application_registry skipped — "
-        "use ZG Application Settings for Electron/Flutter/Web clients"
+        "use Application Settings for Electron/Flutter/Web clients"
     )
 
 
 def daily() -> None:
     """Daily maintenance entrypoint."""
-    # Licensing config edited in site_config (switch, issuer, site ID) -> ZG Audit Log (licensing/watch.py).
+    # Licensing config edited in site_config (switch, issuer, site ID) -> Audit Log (licensing/watch.py).
     from zatgo_core.licensing import watch
 
     watch.daily()

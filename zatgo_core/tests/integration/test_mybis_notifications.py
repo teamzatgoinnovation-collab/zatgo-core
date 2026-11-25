@@ -127,7 +127,7 @@ class TestMyBisNotifications(IntegrationTestCase):
     def test_scheduled_report_is_sent_once_and_only_at_its_hour(self) -> None:
         _invoice(self.cust, self.item, 1, 10, getdate(today()))
         at_hour = datetime.combine(getdate(today()), datetime.min.time()).replace(hour=20)
-        with patch("zatgo_core.zatgo_core.doctype.zg_mybis_settings.zg_mybis_settings.policy") as pol:
+        with patch("zatgo_core.zatgo_core.doctype.mybis_settings.mybis_settings.policy") as pol:
             pol.return_value = {"notifications": {"invoice_alerts": True, "daily_report": True, "report_hour": 20, "report_email": False}}
             self.assertEqual(daily_report.send_due(at_hour.replace(hour=9)), 0)
             first = daily_report.send_due(at_hour)

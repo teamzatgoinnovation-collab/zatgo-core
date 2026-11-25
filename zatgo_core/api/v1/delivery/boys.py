@@ -1,4 +1,4 @@
-"""Delivery boys — ZG Delivery Boy DocType + linked ERPNext User (role: Delivery)."""
+"""Delivery boys — Delivery Boy DocType + linked ERPNext User (role: Delivery)."""
 
 from __future__ import annotations
 
@@ -45,12 +45,12 @@ def _map(row: Any) -> dict[str, Any]:
 
 
 def _require_doctype() -> None:
-    if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
+    if not frappe.db.exists("DocType", "Delivery Boy"):
+        frappe.throw("Delivery Boy DocType is not installed: run bench migrate")
 
 
 def _next_code() -> str:
-    existing = frappe.get_all("ZG Delivery Boy", fields=["code"], limit_page_length=500)
+    existing = frappe.get_all("Delivery Boy", fields=["code"], limit_page_length=500)
     max_n = 0
     for row in existing:
         code = (row.get("code") or "").strip().upper()
@@ -164,7 +164,7 @@ def _create_delivery_user(
 @frappe.whitelist()
 def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
     return list_zg(
-        "ZG Delivery Boy",
+        "Delivery Boy",
         fields=[
             "name",
             "full_name",
@@ -188,7 +188,7 @@ def list(page: int | str = 1, page_size: int | str = 20) -> dict[str, Any]:
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_zg("ZG Delivery Boy", name, map_doc=lambda d: _map(d))
+    return get_zg("Delivery Boy", name, map_doc=lambda d: _map(d))
 
 
 @frappe.whitelist()
@@ -201,9 +201,9 @@ def create(
     email: str | None = None,
     vehicle: str | None = None,
 ) -> dict[str, Any]:
-    """Create ZG Delivery Boy + ERPNext User with role Delivery."""
+    """Create Delivery Boy + ERPNext User with role Delivery."""
     require_login()
-    frappe.has_permission("ZG Delivery Boy", "create", throw=True)
+    frappe.has_permission("Delivery Boy", "create", throw=True)
     if not frappe.has_permission("User", "create"):
         frappe.throw(
             "Your ERPNext user cannot create Users — need permission to create delivery logins",
@@ -219,10 +219,10 @@ def create(
     boy_phone = (phone or "").strip() or None
     boy_vehicle = (vehicle or "").strip() or None
 
-    if frappe.db.exists("ZG Delivery Boy", {"code": boy_code}):
+    if frappe.db.exists("Delivery Boy", {"code": boy_code}):
         frappe.throw(f"Delivery boy code {boy_code} already exists")
 
-    # ZG Delivery Boy.vehicle links to ERPNext's Vehicle (ZG Vehicle's rows were migrated there).
+    # Delivery Boy.vehicle links to ERPNext's Vehicle (ZatGo Vehicle's rows were migrated there).
     if boy_vehicle and not frappe.db.exists("Vehicle", boy_vehicle):
         boy_vehicle = None
 
@@ -236,7 +236,7 @@ def create(
 
     doc = frappe.get_doc(
         {
-            "doctype": "ZG Delivery Boy",
+            "doctype": "Delivery Boy",
             "full_name": boy_name,
             "code": boy_code,
             "phone": boy_phone,
@@ -252,7 +252,7 @@ def create(
         meta={
             "stub": False,
             "created": True,
-            "source": "ZG Delivery Boy",
+            "source": "Delivery Boy",
             "role": DELIVERY_ROLE,
             "user": user_name,
         },
@@ -280,12 +280,12 @@ def ensure(
     boy_phone = (phone or "").strip() or None
 
     if boy_code:
-        existing = frappe.db.exists("ZG Delivery Boy", {"code": boy_code})
+        existing = frappe.db.exists("Delivery Boy", {"code": boy_code})
         if existing:
-            doc = frappe.get_doc("ZG Delivery Boy", existing)
+            doc = frappe.get_doc("Delivery Boy", existing)
             return ok(
                 _map(doc),
-                meta={"stub": False, "created": False, "source": "ZG Delivery Boy"},
+                meta={"stub": False, "created": False, "source": "Delivery Boy"},
             )
 
     if not boy_name:
@@ -296,16 +296,16 @@ def ensure(
             frappe.throw("Login required", frappe.PermissionError)
 
         linked = frappe.db.get_value(
-            "ZG Delivery Boy", {"user": session_user}, "name"
+            "Delivery Boy", {"user": session_user}, "name"
         )
         if linked:
-            doc = frappe.get_doc("ZG Delivery Boy", linked)
+            doc = frappe.get_doc("Delivery Boy", linked)
             return ok(
                 _map(doc),
                 meta={
                     "stub": False,
                     "created": False,
-                    "source": "ZG Delivery Boy",
+                    "source": "Delivery Boy",
                     "matched_by": "session_user",
                 },
             )
@@ -313,7 +313,7 @@ def ensure(
         frappe.throw(
             "No delivery boy linked to your login. "
             "Sign in with the courier email/password from POS → Couriers "
-            "(or open Desk and set User on the ZG Delivery Boy).",
+            "(or open Desk and set User on the Delivery Boy).",
             frappe.DoesNotExistError,
         )
 

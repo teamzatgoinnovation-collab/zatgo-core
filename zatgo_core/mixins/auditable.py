@@ -1,4 +1,4 @@
-"""Mixin that writes configuration changes to ZG Audit Log."""
+"""Mixin that writes configuration changes to Audit Log."""
 
 from __future__ import annotations
 

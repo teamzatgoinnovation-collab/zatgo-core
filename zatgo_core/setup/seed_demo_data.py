@@ -297,7 +297,7 @@ def seed() -> dict[str, Any]:
 
     vehicles = [
         _ensure_zg(
-            "ZG Vehicle",
+            "ZatGo Vehicle",
             {"plate": "VAN-204"},
             {
                 "title": "Delivery Van 204",
@@ -308,7 +308,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Vehicle",
+            "ZatGo Vehicle",
             {"plate": "VAN-07"},
             {
                 "title": "Go Van 07",
@@ -321,7 +321,7 @@ def seed() -> dict[str, Any]:
     ]
 
     delivery_boy = _ensure_zg(
-        "ZG Delivery Boy",
+        "Delivery Boy",
         {"code": "DB-001"},
         {
             "full_name": "Amina Hassan",
@@ -335,7 +335,7 @@ def seed() -> dict[str, Any]:
     now = now_datetime()
     trips = [
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 1 — Al Noor"},
             {
                 "title": "Stop 1 — Al Noor",
@@ -352,7 +352,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 2 — City Grocer"},
             {
                 "title": "Stop 2 — City Grocer",
@@ -369,7 +369,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 3 — Fresh Basket"},
             {
                 "title": "Stop 3 — Fresh Basket",
@@ -389,7 +389,7 @@ def seed() -> dict[str, Any]:
 
     stops = [
         _ensure_zg(
-            "ZG Delivery Stop",
+            "ZatGo Delivery Stop",
             {"order_number": "DL-10447"},
             {
                 "title": "DL-10447 Green Kitchen",
@@ -408,7 +408,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Delivery Stop",
+            "ZatGo Delivery Stop",
             {"order_number": "DL-10448"},
             {
                 "title": "DL-10448 City Grocer",
@@ -427,7 +427,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Delivery Stop",
+            "ZatGo Delivery Stop",
             {"order_number": "DL-10449"},
             {
                 "title": "DL-10449 Al Noor",
@@ -449,7 +449,7 @@ def seed() -> dict[str, Any]:
 
     tickets = [
         _ensure_zg(
-            "ZG Service Ticket",
+            "Service Ticket",
             {"number": "SRV-1001"},
             {
                 "title": "POS drawer jam",
@@ -463,7 +463,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Service Ticket",
+            "Service Ticket",
             {"number": "SRV-1002"},
             {
                 "title": "Cooler thermostat",
@@ -477,7 +477,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG Service Ticket",
+            "Service Ticket",
             {"number": "SRV-1003"},
             {
                 "title": "Scale calibration",
@@ -494,7 +494,7 @@ def seed() -> dict[str, Any]:
 
     kds_tickets = [
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1042", "item_name": "Beef Burger"},
             {
                 "title": "Beef Burger ×2",
@@ -511,7 +511,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1042", "item_name": "Fries"},
             {
                 "title": "Fries ×2",
@@ -528,7 +528,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1043", "item_name": "Espresso"},
             {
                 "title": "Espresso ×1",
@@ -545,7 +545,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1044", "item_name": "House Salad"},
             {
                 "title": "House Salad ×1",
@@ -562,7 +562,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1045", "item_name": "Beef Burger"},
             {
                 "title": "Beef Burger ×1",
@@ -579,7 +579,7 @@ def seed() -> dict[str, Any]:
             },
         ),
         _ensure_zg(
-            "ZG KDS Ticket",
+            "KDS Ticket",
             {"order_number": "POS-1046", "item_name": "Orange Juice 200ml"},
             {
                 "title": "Orange Juice ×3",
@@ -872,10 +872,10 @@ def _seed_van_sale_enrichment(
 
     # Van Sale Profile — upsert so warehouse is always set even if profile already exists
     if warehouse:
-        existing_profile = frappe.db.get_value("ZG Van Sale Profile", {"user": "Administrator"}, "name")
+        existing_profile = frappe.db.get_value("Van Sale Profile", {"user": "Administrator"}, "name")
         if existing_profile:
             # Update existing profile to ensure warehouse, vehicle, route_title are set
-            frappe.db.set_value("ZG Van Sale Profile", existing_profile, {
+            frappe.db.set_value("Van Sale Profile", existing_profile, {
                 "warehouse": warehouse,
                 "vehicle": v1 or "",
                 "route_title": "Riyadh Central Route",
@@ -885,7 +885,7 @@ def _seed_van_sale_enrichment(
             frappe.db.commit()
         else:
             _ensure_zg(
-                "ZG Van Sale Profile",
+                "Van Sale Profile",
                 {"user": "Administrator"},
                 {
                     "user": "Administrator",
@@ -902,7 +902,7 @@ def _seed_van_sale_enrichment(
     now = now_datetime()
     more_trips = [
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 4 — Najd Corner"},
             {
                 "title": "Stop 4 — Najd Corner",
@@ -920,7 +920,7 @@ def _seed_van_sale_enrichment(
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 5 — Wadi Superette"},
             {
                 "title": "Stop 5 — Wadi Superette",
@@ -938,7 +938,7 @@ def _seed_van_sale_enrichment(
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 6 — Souq Express"},
             {
                 "title": "Stop 6 — Souq Express",
@@ -956,7 +956,7 @@ def _seed_van_sale_enrichment(
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 7 — Palm Grove"},
             {
                 "title": "Stop 7 — Palm Grove",
@@ -974,7 +974,7 @@ def _seed_van_sale_enrichment(
             },
         ),
         _ensure_zg(
-            "ZG Trip",
+            "Trip",
             {"title": "Stop 8 — Highway Stop"},
             {
                 "title": "Stop 8 — Highway Stop",

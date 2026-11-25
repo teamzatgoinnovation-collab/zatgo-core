@@ -23,9 +23,9 @@ class TestIndustryRegistry(unittest.TestCase):
 
     def test_doctype_owner_is_unique_and_mapped(self) -> None:
         owner = registry.doctype_owner()
-        self.assertEqual(owner["ZG Gym Plan"], "gym")
-        self.assertEqual(owner["ZG Table"], "restaurant")
-        self.assertEqual(owner["ZG Metal Rate"], "jewellery")
+        self.assertEqual(owner["Gym Plan"], "gym")
+        self.assertEqual(owner["Table"], "restaurant")
+        self.assertEqual(owner["Metal Rate"], "jewellery")
         self.assertNotIn("Sales Invoice", owner)  # core is never industry-gated
 
     def test_broken_registry_is_reported(self) -> None:

@@ -1,4 +1,4 @@
-"""ZG POS Settings -> Pages: a site shows only the POS screen until its pages are ticked.
+"""ZatGo POS Settings -> Pages: a site shows only the POS screen until its pages are ticked.
 
 Sites that already run the Restaurant industry were using Floor, Orders, Kitchen, Billing and the rest, so they would
 lose them on this release. Tick every page once for those sites. A site where any page switch was ever stored (the admin
@@ -6,7 +6,7 @@ already chose) and every site without the Restaurant industry are left alone: PO
 
 import frappe
 
-SETTINGS = "ZG POS Settings"
+SETTINGS = "ZatGo POS Settings"
 PAGES = ("dashboard", "orders", "floor", "kds", "catalog", "billing", "delivery", "inventory", "reports")
 
 

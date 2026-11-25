@@ -13,7 +13,7 @@ from zatgo_core.industries import gate, registry
 from zatgo_core.industries.sync import ensure_rows, sync_industries
 from zatgo_core.tests.integration._fixtures import get_or_create_test_company
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 
 
 def _set_industries(*keys: str) -> None:
@@ -150,9 +150,9 @@ class TestIndustryAccess(IndustryTestBase):
 
         _set_industries("gym")
         plan = frappe.get_doc(
-            {"doctype": "ZG Gym Plan", "plan_name": f"Matrix {random_string(5)}", "duration_days": 30, "price": 10}
+            {"doctype": "Gym Plan", "plan_name": f"Matrix {random_string(5)}", "duration_days": 30, "price": 10}
         ).insert()
-        permitted = self._user("ZG Gym User")
+        permitted = self._user("ZatGo Gym User")
         other = self._user("Sales User")
         cases = [
             (True, permitted, True),
@@ -172,11 +172,11 @@ class TestIndustryAccess(IndustryTestBase):
             finally:
                 frappe.set_user("Administrator")
             # Documents: has_permission needs a doc for the controller hooks.
-            doc_allowed = frappe.has_permission("ZG Gym Plan", "read", doc=plan, user=user)
+            doc_allowed = frappe.has_permission("Gym Plan", "read", doc=plan, user=user)
             self.assertEqual(doc_allowed, expect, f"doc enabled={enabled} user={user}")
             frappe.set_user(user)
             try:
-                rows = frappe.get_list("ZG Gym Plan", limit_page_length=5)
+                rows = frappe.get_list("Gym Plan", limit_page_length=5)
             except frappe.PermissionError:
                 rows = []
             finally:
@@ -195,10 +195,10 @@ class TestIndustryAccess(IndustryTestBase):
             frappe.set_user("Administrator")
 
     def test_query_conditions_hide_disabled_industry_rows(self) -> None:
-        self.assertEqual(gate.industry_query_conditions("x", "ZG Gym Plan"), "1=0")
+        self.assertEqual(gate.industry_query_conditions("x", "Gym Plan"), "1=0")
         self.assertEqual(gate.industry_query_conditions("x", "Sales Invoice"), "")
         _set_industries("gym")
-        self.assertEqual(gate.industry_query_conditions("x", "ZG Gym Plan"), "")
+        self.assertEqual(gate.industry_query_conditions("x", "Gym Plan"), "")
 
     def test_core_doctypes_are_never_gated(self) -> None:
         # (Not asserting a role's Customer read: sites with VanSale Custom
@@ -224,7 +224,7 @@ class TestIndustryAccess(IndustryTestBase):
             self.assertFalse(self._gate_404(m), m)
 
     def test_permission_hook_returns_never_none(self) -> None:
-        for dt in ("ZG Gym Plan", "Sales Invoice"):
+        for dt in ("Gym Plan", "Sales Invoice"):
             self.assertIsNotNone(gate.industry_doc_has_permission(frappe._dict(doctype=dt)))
             self.assertIsNotNone(gate.industry_query_conditions("u", dt))
 
@@ -239,13 +239,13 @@ class TestGymIndustry(IndustryTestBase):
             {"doctype": "Customer", "customer_name": name, "customer_type": "Individual"}
         ).insert(ignore_permissions=True).name
         self.plan = frappe.get_doc(
-            {"doctype": "ZG Gym Plan", "plan_name": f"Monthly {random_string(5)}", "duration_days": 30, "price": 150}
+            {"doctype": "Gym Plan", "plan_name": f"Monthly {random_string(5)}", "duration_days": 30, "price": 150}
         ).insert()
 
     def _membership(self, start=None):
         return frappe.get_doc(
             {
-                "doctype": "ZG Gym Membership",
+                "doctype": "Gym Membership",
                 "member": self.customer,
                 "plan": self.plan.name,
                 "company": self.company,
@@ -263,7 +263,7 @@ class TestGymIndustry(IndustryTestBase):
 
     def test_invalid_plan_rejected(self) -> None:
         with self.assertRaises(frappe.ValidationError):
-            frappe.get_doc({"doctype": "ZG Gym Plan", "plan_name": f"Bad {random_string(4)}", "duration_days": 0, "price": 1}).insert()
+            frappe.get_doc({"doctype": "Gym Plan", "plan_name": f"Bad {random_string(4)}", "duration_days": 0, "price": 1}).insert()
 
     def test_renew_once(self) -> None:
         from zatgo_core.api.v1.gym import membership
@@ -322,7 +322,7 @@ class TestJewelleryIndustry(IndustryTestBase):
             }
         ).insert(ignore_permissions=True)
         frappe.get_doc(
-            {"doctype": "ZG Metal Rate", "metal": "Gold", "purity": "22K", "rate_date": add_days(today(), -1), "rate_per_gram": 100}
+            {"doctype": "Metal Rate", "metal": "Gold", "purity": "22K", "rate_date": add_days(today(), -1), "rate_per_gram": 100}
         ).insert()
         out = pricing.price(code)["data"]
         # net 10 g (gross - stone) x 100 = 1000; wastage 5% = 50; making 10 x 10 = 100
@@ -356,9 +356,9 @@ class TestRestaurantIndustry(IndustryTestBase):
         self.assertFalse(gate.is_enabled("gym"))
 
     def test_resto_documents_nobodys_where_off(self) -> None:
-        self.assertEqual(gate.industry_query_conditions("u", "ZG Table"), "1=0")
+        self.assertEqual(gate.industry_query_conditions("u", "Table"), "1=0")
         _set_industries("restaurant")
-        self.assertEqual(gate.industry_query_conditions("u", "ZG Table"), "")
+        self.assertEqual(gate.industry_query_conditions("u", "Table"), "")
 
     def test_sync_is_idempotent(self) -> None:
         _set_industries("restaurant")
@@ -378,7 +378,7 @@ class TestZatGoDeskEntry(IndustryTestBase):
         icon = frappe.db.get_value("Desktop Icon", "ZatGo", ["icon_type", "hidden"], as_dict=True)
         self.assertEqual((icon.icon_type, icon.hidden), ("Folder", 0))
         items = frappe.get_doc("Workspace Sidebar", "ZatGo").items
-        self.assertIn("ZG System Settings", [i.link_to for i in items])
+        self.assertIn("ZatGo System Settings", [i.link_to for i in items])
 
     def test_zatgo_entry_is_rebuilt_from_nothing(self) -> None:
         # Fresh install: the synced Workspace may be missing (its roles do not

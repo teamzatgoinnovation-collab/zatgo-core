@@ -53,7 +53,7 @@ def permissions_admin_write_readonly() -> list[dict]:
             "export": 1,
         },
         {
-            "role": "ZG Application Admin",
+            "role": "ZatGo Application Admin",
             "read": 1,
             "write": 1,
             "create": 1,
@@ -64,7 +64,7 @@ def permissions_admin_write_readonly() -> list[dict]:
             "export": 1,
         },
         {
-            "role": "ZG Company Admin",
+            "role": "ZatGo Company Admin",
             "read": 1,
             "write": 1,
             "create": 1,
@@ -75,7 +75,7 @@ def permissions_admin_write_readonly() -> list[dict]:
             "export": 1,
         },
         {
-            "role": "ZG Branch Admin",
+            "role": "ZatGo Branch Admin",
             "read": 1,
             "write": 0,
             "create": 0,
@@ -84,7 +84,7 @@ def permissions_admin_write_readonly() -> list[dict]:
             "export": 0,
         },
         {
-            "role": "ZG Read Only",
+            "role": "ZatGo Read Only",
             "read": 1,
             "write": 0,
             "create": 0,
@@ -220,7 +220,7 @@ def build_all() -> None:
     write_doctype(
         "zg_system_settings",
         base_doctype(
-            "ZG System Settings",
+            "ZatGo System Settings",
             [
                 section("general_section", "General"),
                 field("brand_name", "Data", "Brand Name", default="ZatGo"),
@@ -251,7 +251,7 @@ def build_all() -> None:
             ],
             issingle=1,
         ),
-        single_controller("ZGSystemSettings", "self._validate_defaults()"),
+        single_controller("ZatGoSystemSettings", "self._validate_defaults()"),
     )
     # Patch validate helper into system settings file after write — handled in hand-edited file later
 
@@ -259,7 +259,7 @@ def build_all() -> None:
     write_doctype(
         "zg_company_settings",
         base_doctype(
-            "ZG Company Settings",
+            "Company Settings",
             [
                 section("identity_section", "Identity"),
                 field("company", "Link", "Company", options="Company", reqd=1, unique=1,
@@ -312,7 +312,7 @@ def build_all() -> None:
             title_field="company",
         ),
         list_controller(
-            "ZGCompanySettings",
+            "CompanySettings",
             "from zatgo_core.validation.company_settings import validate_company_settings\n"
             "                validate_company_settings(self)",
         ),
@@ -322,7 +322,7 @@ def build_all() -> None:
     write_doctype(
         "zg_branch_settings",
         base_doctype(
-            "ZG Branch Settings",
+            "Branch Settings",
             [
                 section("identity_section", "Identity"),
                 field("branch_name", "Data", "Branch Name", reqd=1, in_list_view=1),
@@ -351,7 +351,7 @@ def build_all() -> None:
             title_field="branch_name",
         ),
         list_controller(
-            "ZGBranchSettings",
+            "BranchSettings",
             "from zatgo_core.validation.branch_settings import validate_branch_settings\n"
             "                validate_branch_settings(self)",
         ),
@@ -361,7 +361,7 @@ def build_all() -> None:
     write_doctype(
         "zg_application_registry",
         base_doctype(
-            "ZG Application Registry",
+            "Application Registry",
             [
                 section("app_section", "Application"),
                 field("app_name", "Data", "App Name", reqd=1, unique=1, in_list_view=1),
@@ -391,7 +391,7 @@ def build_all() -> None:
             title_field="app_name",
         ),
         list_controller(
-            "ZGApplicationRegistry",
+            "ApplicationRegistry",
             "from zatgo_core.validation.app_registry import validate_app_registry\n"
             "                validate_app_registry(self)",
         ),
@@ -401,7 +401,7 @@ def build_all() -> None:
     write_doctype(
         "zg_feature_flag",
         base_doctype(
-            "ZG Feature Flag",
+            "Feature Flag",
             [
                 section("flag_section", "Feature Flag"),
                 field("flag_key", "Data", "Flag Key", reqd=1, unique=1, in_list_view=1),
@@ -415,7 +415,7 @@ def build_all() -> None:
                 field("description", "Small Text", "Description"),
                 section("scope_section", "Scope"),
                 field("company", "Link", "Company", options="Company"),
-                field("branch", "Link", "Branch", options="ZG Branch Settings"),
+                field("branch", "Link", "Branch", options="Branch Settings"),
                 field("rollout_percent", "Int", "Rollout Percent", default=100),
                 field("is_permanent", "Check", "Is Permanent", default=0),
             ],
@@ -424,7 +424,7 @@ def build_all() -> None:
             title_field="title",
         ),
         list_controller(
-            "ZGFeatureFlag",
+            "FeatureFlag",
             "from zatgo_core.validation.feature_flags import validate_feature_flag\n"
             "                validate_feature_flag(self)",
         ),
@@ -434,7 +434,7 @@ def build_all() -> None:
     write_doctype(
         "zg_integration_settings",
         base_doctype(
-            "ZG Integration Settings",
+            "Integration Settings",
             [
                 section("messaging_section", "Messaging"),
                 field("whatsapp_enabled", "Check", "WhatsApp Enabled", default=0),
@@ -478,11 +478,11 @@ def build_all() -> None:
             issingle=1,
             permissions=[
                 p for p in permissions_admin_write_readonly()
-                if p["role"] in ("System Manager", "ZG Application Admin", "ZG Read Only")
+                if p["role"] in ("System Manager", "ZatGo Application Admin", "ZatGo Read Only")
             ],
         ),
         single_controller(
-            "ZGIntegrationSettings",
+            "IntegrationSettings",
             "from zatgo_core.validation.integrations import validate_integration_settings\n"
             "                validate_integration_settings(self)",
         ),
@@ -492,7 +492,7 @@ def build_all() -> None:
     write_doctype(
         "zg_printer_settings",
         base_doctype(
-            "ZG Printer Settings",
+            "Printer Settings",
             [
                 section("devices_section", "Devices"),
                 field("receipt_printer", "Data", "Receipt Printer"),
@@ -514,14 +514,14 @@ def build_all() -> None:
             ],
             issingle=1,
         ),
-        single_controller("ZGPrinterSettings"),
+        single_controller("PrinterSettings"),
     )
 
     # 8. Payment Settings
     write_doctype(
         "zg_payment_settings",
         base_doctype(
-            "ZG Payment Settings",
+            "Payment Settings",
             [
                 section("methods_section", "Payment Methods"),
                 field("cash_enabled", "Check", "Cash", default=1),
@@ -541,14 +541,14 @@ def build_all() -> None:
             ],
             issingle=1,
         ),
-        single_controller("ZGPaymentSettings"),
+        single_controller("PaymentSettings"),
     )
 
     # 9. Notification Settings
     write_doctype(
         "zg_notification_settings",
         base_doctype(
-            "ZG Notification Settings",
+            "ZatGo Notification Settings",
             [
                 section("channels_section", "Channels"),
                 field("desktop_enabled", "Check", "Desktop", default=1),
@@ -567,14 +567,14 @@ def build_all() -> None:
             ],
             issingle=1,
         ),
-        single_controller("ZGNotificationSettings"),
+        single_controller("ZatGoNotificationSettings"),
     )
 
     # 10. Storage Settings
     write_doctype(
         "zg_storage_settings",
         base_doctype(
-            "ZG Storage Settings",
+            "Storage Settings",
             [
                 section("local_section", "Local Files"),
                 field("public_files_path", "Data", "Public Files Path"),
@@ -604,17 +604,17 @@ def build_all() -> None:
             issingle=1,
             permissions=[
                 p for p in permissions_admin_write_readonly()
-                if p["role"] in ("System Manager", "ZG Application Admin", "ZG Read Only")
+                if p["role"] in ("System Manager", "ZatGo Application Admin", "ZatGo Read Only")
             ],
         ),
-        single_controller("ZGStorageSettings"),
+        single_controller("StorageSettings"),
     )
 
     # 11. Security Settings
     write_doctype(
         "zg_security_settings",
         base_doctype(
-            "ZG Security Settings",
+            "ZatGo Security Settings",
             [
                 section("password_section", "Password Policy"),
                 field("min_password_length", "Int", "Min Password Length", default=10),
@@ -638,11 +638,11 @@ def build_all() -> None:
             issingle=1,
             permissions=[
                 p for p in permissions_admin_write_readonly()
-                if p["role"] in ("System Manager", "ZG Read Only")
+                if p["role"] in ("System Manager", "ZatGo Read Only")
             ],
         ),
         single_controller(
-            "ZGSecuritySettings",
+            "ZatGoSecuritySettings",
             "from zatgo_core.validation.security import validate_security_settings\n"
             "                validate_security_settings(self)",
         ),
@@ -652,7 +652,7 @@ def build_all() -> None:
     write_doctype(
         "zg_sync_settings",
         base_doctype(
-            "ZG Sync Settings",
+            "Sync Settings",
             [
                 section("offline_section", "Offline / Sync"),
                 field("offline_mode_enabled", "Check", "Offline Mode", default=0),
@@ -667,14 +667,14 @@ def build_all() -> None:
             ],
             issingle=1,
         ),
-        single_controller("ZGSyncSettings"),
+        single_controller("SyncSettings"),
     )
 
     # 13a. Number Series Item (child)
     write_doctype(
         "zg_number_series_item",
         base_doctype(
-            "ZG Number Series Item",
+            "Number Series Item",
             [
                 field("document_type", "Data", "Document Type", reqd=1, in_list_view=1),
                 field("prefix", "Data", "Prefix", reqd=1, in_list_view=1),
@@ -686,27 +686,27 @@ def build_all() -> None:
             ],
             istable=1,
         ),
-        child_controller("ZGNumberSeriesItem"),
+        child_controller("NumberSeriesItem"),
     )
 
     # 13b. Number Series Settings
     write_doctype(
         "zg_number_series_settings",
         base_doctype(
-            "ZG Number Series Settings",
+            "Number Series Settings",
             [
                 section("series_section", "Number Series"),
                 field(
                     "series_items",
                     "Table",
                     "Series Items",
-                    options="ZG Number Series Item",
+                    options="Number Series Item",
                 ),
             ],
             issingle=1,
         ),
         single_controller(
-            "ZGNumberSeriesSettings",
+            "NumberSeriesSettings",
             "from zatgo_core.validation.number_series import validate_number_series\n"
             "                validate_number_series(self)",
         ),
@@ -716,7 +716,7 @@ def build_all() -> None:
     write_doctype(
         "zg_audit_log",
         base_doctype(
-            "ZG Audit Log",
+            "Audit Log",
             [
                 section("change_section", "Change"),
                 field("doctype_name", "Data", "DocType Name", in_list_view=1),
@@ -747,7 +747,7 @@ def build_all() -> None:
                     "print": 1,
                 },
                 {
-                    "role": "ZG Application Admin",
+                    "role": "ZatGo Application Admin",
                     "read": 1,
                     "write": 0,
                     "create": 0,
@@ -756,7 +756,7 @@ def build_all() -> None:
                     "print": 1,
                 },
                 {
-                    "role": "ZG Company Admin",
+                    "role": "ZatGo Company Admin",
                     "read": 1,
                     "write": 0,
                     "create": 0,
@@ -765,7 +765,7 @@ def build_all() -> None:
                     "print": 1,
                 },
                 {
-                    "role": "ZG Read Only",
+                    "role": "ZatGo Read Only",
                     "read": 1,
                     "write": 0,
                     "create": 0,
@@ -780,7 +780,7 @@ def build_all() -> None:
             from frappe.model.document import Document
 
 
-            class ZGAuditLog(Document):
+            class AuditLog(Document):
                 """Immutable audit trail entry (no client edits expected)."""
 
                 def on_trash(self) -> None:
@@ -796,7 +796,7 @@ def build_all() -> None:
     write_doctype(
         "zg_user_preferences",
         base_doctype(
-            "ZG User Preferences",
+            "User Preferences",
             [
                 section("user_section", "User"),
                 field("user", "Link", "User", options="User", reqd=1, unique=1, in_list_view=1),
@@ -834,7 +834,7 @@ def build_all() -> None:
                 },
             ],
         ),
-        list_controller("ZGUserPreferences"),
+        list_controller("UserPreferences"),
     )
 
     # Fix system settings controller with helper
@@ -842,7 +842,7 @@ def build_all() -> None:
     sys_py.write_text(
         textwrap.dedent(
             '''\
-            """ZG System Settings controller."""
+            """ZatGo System Settings controller."""
 
             from __future__ import annotations
 
@@ -853,7 +853,7 @@ def build_all() -> None:
             from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-            class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
+            class ZatGoSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
                 """Global ERP foundation settings for the ZatGo ecosystem."""
 
                 def validate(self) -> None:

@@ -2,7 +2,7 @@
 
 Platform hub: whitelist RPC, settings DocTypes, registry, ERPNext
 extensions. Also carries what used to be separate apps, each switched per
-site in ZG System Settings: the SaaS Desk theme + login page, the language
+site in ZatGo System Settings: the SaaS Desk theme + login page, the language
 switcher and the VanSaleX web page (services/ui_apps.py), and the Chat AI,
 Tracker and ZatGo Space modules (services/bundled_apps.py).
 Keep invasive overrides rare.
@@ -28,7 +28,7 @@ before_uninstall = "zatgo_core.install.before_uninstall"
 
 boot_session = "zatgo_core.events.boot.boot_session"
 
-# SaaS theme / language switcher, switched on per site in ZG System Settings
+# SaaS theme / language switcher, switched on per site in ZatGo System Settings
 # (services/ui_apps.py) -- deliberately not app_include_css/js, which would
 # load them on every site.
 before_request = [
@@ -219,10 +219,10 @@ scheduler_events = {
 }
 
 permission_query_conditions = {
-    "ZG Company Settings": "zatgo_core.permissions.company_scope.company_permission_query",
+    "Company Settings": "zatgo_core.permissions.company_scope.company_permission_query",
     # Push tokens and preferences belong to their user (permissions/owner_scope.py).
-    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_query",
-    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_query",
+    "Device Token": "zatgo_core.permissions.owner_scope.device_token_query",
+    "User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_query",
     # Tracker (bundled module): no extra condition where it is switched off.
     "Project": "zatgo_core.services.bundled_apps.tracker_project_query",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_query",
@@ -250,8 +250,8 @@ permission_query_conditions = {
 # Tracker (bundled module): no objection (True) where it is switched off --
 # never None, which Frappe reads as a denial.
 has_permission = {
-    "ZG Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
-    "ZG User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
+    "Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
+    "User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
     "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",
     "Task": "zatgo_core.services.bundled_apps.tracker_task_has_permission",
     "Issue": "zatgo_core.services.bundled_apps.tracker_issue_has_permission",
@@ -305,14 +305,14 @@ fixtures = [
                 "name",
                 "in",
                 [
-                    "ZG Company Admin",
-                    "ZG Branch Admin",
-                    "ZG Application Admin",
-                    "ZG Read Only",
+                    "ZatGo Company Admin",
+                    "ZatGo Branch Admin",
+                    "ZatGo Application Admin",
+                    "ZatGo Read Only",
                     "VanSale User",
                     "VanSale Admin",
-                    "ZG Invoice Naming Manager",
-                    "ZG Accounts & Inventory",
+                    "ZatGo Invoice Naming Manager",
+                    "ZatGo Accounts & Inventory",
                 ],
             ]
         ],

@@ -1,4 +1,4 @@
-"""Seed DocPerm for VanSale roles on ERPNext + ZG DocTypes (once per pair)."""
+"""Seed DocPerm for VanSale roles on ERPNext + ZatGo DocTypes (once per pair)."""
 
 from __future__ import annotations
 
@@ -57,16 +57,16 @@ _PERMS: list[tuple[str, str, dict]] = [
     # every order/collection a non-admin VanSale User makes fails.
     ("Account", ROLE_USER, {"read": 1}),
     ("Account", ROLE_ADMIN, {"read": 1}),
-    ("ZG Vehicle", ROLE_USER, {"read": 1}),
-    ("ZG Vehicle", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1}),
-    # ZG Trip — vansalex/trips.py, vansalex_service.update_visit() require read/write
+    ("ZatGo Vehicle", ROLE_USER, {"read": 1}),
+    ("ZatGo Vehicle", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1}),
+    # Trip — vansalex/trips.py, vansalex_service.update_visit() require read/write
     # via require_doc_permission/has_permission; without these, VanSale User and
     # VanSale Admin accounts (non System Manager) get PermissionError on the
     # core trip/visit flow.
-    ("ZG Trip", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
-    ("ZG Trip", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
-    ("ZG Delivery Stop", ROLE_USER, {"read": 1, "write": 1}),
-    ("ZG Delivery Stop", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
+    ("Trip", ROLE_USER, {"read": 1, "write": 1, "create": 1}),
+    ("Trip", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
+    ("ZatGo Delivery Stop", ROLE_USER, {"read": 1, "write": 1}),
+    ("ZatGo Delivery Stop", ROLE_ADMIN, {"read": 1, "write": 1, "create": 1, "delete": 1}),
 ]
 
 
@@ -85,7 +85,7 @@ def _standard_kept_key(doctype: str) -> str:
 
 def _opens_to_all_staff(row: dict) -> bool:
     """A standard row that lets every staff member change other people's records. Never in effect on a seeded site, and
-    VanSale roles are least-privilege (VanSale User holds Desk User too, and is read-only on ZG Vehicle), so it stays out."""
+    VanSale roles are least-privilege (VanSale User holds Desk User too, and is read-only on ZatGo Vehicle), so it stays out."""
     return row.role in _BROAD_ROLES and not row.if_owner and any(row.get(flag) for flag in _WRITE_FLAGS)
 
 

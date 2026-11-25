@@ -2,7 +2,7 @@
 
 zatgo_core is CORE (accounting, stock, sales, purchase, ...) plus optional
 INDUSTRY modules. Which industries a site exposes is chosen per site in
-ZG System Settings -> Industries (stored in that site's database, see
+ZatGo System Settings -> Industries (stored in that site's database, see
 industries/gate.py); this file only says what exists.
 
 Adding an industry = one `Industry(...)` entry below plus, once it has
@@ -66,10 +66,10 @@ INDUSTRIES: dict[str, Industry] = {
             description="Metal, purity, weights, making charge, wastage, hallmark and daily metal rates on Items.",
             icon="gem",
             requires=("accounting", "sales", "purchase", "stock", "item"),
-            roles=("ZG Jewellery User", "ZG Jewellery Manager"),
-            doctypes=("ZG Metal Rate",),
+            roles=("ZatGo Jewellery User", "ZatGo Jewellery Manager"),
+            doctypes=("Metal Rate",),
             api_prefixes=("zatgo_core.api.v1.jewellery.",),
-            workspace_links=(("Metal Rate", "ZG Metal Rate"), ("Item", "Item")),
+            workspace_links=(("Metal Rate", "Metal Rate"), ("Item", "Item")),
             features=("item_fields", "metal_rates", "price_calculation"),
             implemented=True,
         ),
@@ -79,13 +79,13 @@ INDUSTRIES: dict[str, Industry] = {
             description="Members, membership plans, start/end dates, renewals, trainers, attendance and payments.",
             icon="activity",
             requires=("accounting", "sales", "customer"),
-            roles=("ZG Gym User", "ZG Gym Manager"),
-            doctypes=("ZG Gym Plan", "ZG Gym Membership", "ZG Gym Attendance"),
+            roles=("ZatGo Gym User", "ZatGo Gym Manager"),
+            doctypes=("Gym Plan", "Gym Membership", "Gym Attendance"),
             api_prefixes=("zatgo_core.api.v1.gym.",),
             workspace_links=(
-                ("Membership Plan", "ZG Gym Plan"),
-                ("Membership", "ZG Gym Membership"),
-                ("Attendance", "ZG Gym Attendance"),
+                ("Membership Plan", "Gym Plan"),
+                ("Membership", "Gym Membership"),
+                ("Attendance", "Gym Attendance"),
                 ("Customer", "Customer"),
             ),
             features=("plans", "memberships", "renewal", "attendance", "billing"),
@@ -98,12 +98,12 @@ INDUSTRIES: dict[str, Industry] = {
             icon="utensils",
             requires=("accounting", "sales", "item", "stock"),
             roles=(),
-            doctypes=("ZG Table", "ZG Order", "ZG Order Item", "ZG KDS Ticket"),
+            doctypes=("Table", "Order", "Order Item", "KDS Ticket"),
             api_prefixes=("zatgo_core.api.v1.resto_pos.",),
             workspace_links=(
-                ("Tables", "ZG Table"),
-                ("Orders", "ZG Order"),
-                ("Kitchen Tickets", "ZG KDS Ticket"),
+                ("Tables", "Table"),
+                ("Orders", "Order"),
+                ("Kitchen Tickets", "KDS Ticket"),
             ),
             features=("tables", "orders", "kds", "billing"),
             implemented=True,

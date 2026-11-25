@@ -46,9 +46,9 @@ def build_zatca_tlv_base64(
 
 
 def _seller_vat(company: str) -> str:
-    if frappe.db.exists("DocType", "ZG Company Settings"):
+    if frappe.db.exists("DocType", "Company Settings"):
         row = frappe.db.get_value(
-            "ZG Company Settings",
+            "Company Settings",
             {"company": company},
             ["tax_id"],
             as_dict=True,

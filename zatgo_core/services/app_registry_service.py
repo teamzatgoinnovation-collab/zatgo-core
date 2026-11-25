@@ -1,7 +1,7 @@
 """Site-scoped client application settings (Electron / Flutter / Web).
 
 This is NOT the Frappe/ERPNext custom-app list. Each ERPNext site has one
-ZG Application Settings document that enables and configures product clients.
+Application Settings document that enables and configures product clients.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from zatgo_core.utils.logging import get_logger
 
 logger = get_logger("system")
 
-APPLICATION_SETTINGS = "ZG Application Settings"
+APPLICATION_SETTINGS = "Application Settings"
 
 
 class AppRegistryService:
@@ -68,7 +68,7 @@ class AppRegistryService:
         """Seed default Electron/Flutter/Web clients for this site."""
         assert_can_write_settings("apps")
         if not frappe.db.exists("DocType", APPLICATION_SETTINGS):
-            frappe.throw(frappe._("ZG Application Settings DocType is not available"))
+            frappe.throw(frappe._("Application Settings DocType is not available"))
 
         doc = SettingsRepository.get_single(APPLICATION_SETTINGS)
         existing_keys = {row.app_key for row in (doc.client_apps or [])}

@@ -86,7 +86,7 @@ def get_hub() -> dict[str, Any]:
 
 @frappe.whitelist()
 def set_switch(key: str, enabled: Any) -> dict[str, Any]:
-    """Turn an app on / off for this site. Goes through ZG System Settings' own save, so its controller
+    """Turn an app on / off for this site. Goes through ZatGo System Settings' own save, so its controller
     enforces who may do it, runs the set-up / Desk-entry sync and records the audit entry -- the same path
     as ticking the box there. Data is never deleted."""
     if not app_authority.can_switch():

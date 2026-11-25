@@ -27,16 +27,16 @@
    "role": "System Manager"
   },
   {
-   "role": "ZG Application Admin"
+   "role": "ZatGo Application Admin"
   },
   {
-   "role": "ZG Company Admin"
+   "role": "ZatGo Company Admin"
   },
   {
-   "role": "ZG Branch Admin"
+   "role": "ZatGo Branch Admin"
   },
   {
-   "role": "ZG Read Only"
+   "role": "ZatGo Read Only"
   }
  ],
  "sequence_id": 1.0,
@@ -68,7 +68,7 @@
    "color": "Blue",
    "doc_view": "",
    "label": "System Settings & Industries",
-   "link_to": "ZG System Settings",
+   "link_to": "ZatGo System Settings",
    "type": "DocType"
   },
   {
@@ -82,77 +82,77 @@
    "color": "Green",
    "doc_view": "List",
    "label": "Company Settings",
-   "link_to": "ZG Company Settings",
+   "link_to": "Company Settings",
    "type": "DocType"
   },
   {
    "color": "Green",
    "doc_view": "List",
    "label": "Branch Settings",
-   "link_to": "ZG Branch Settings",
+   "link_to": "Branch Settings",
    "type": "DocType"
   },
   {
    "color": "Orange",
    "doc_view": "",
    "label": "Invoice Naming",
-   "link_to": "ZG Sales Invoice Naming Settings",
+   "link_to": "Sales Invoice Naming Settings",
    "type": "DocType"
   },
   {
    "color": "Orange",
    "doc_view": "",
    "label": "Payment Settings",
-   "link_to": "ZG Payment Settings",
+   "link_to": "Payment Settings",
    "type": "DocType"
   },
   {
    "color": "Red",
    "doc_view": "",
    "label": "Security",
-   "link_to": "ZG Security Settings",
+   "link_to": "ZatGo Security Settings",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "",
    "label": "Applications",
-   "link_to": "ZG Application Settings",
+   "link_to": "Application Settings",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
    "label": "Duplicate Prevention",
-   "link_to": "ZG Duplicate Prevention Settings",
+   "link_to": "Duplicate Prevention Settings",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
    "label": "Duplicate Rules",
-   "link_to": "ZG Duplicate Rule",
+   "link_to": "Duplicate Rule",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
    "label": "Duplicate Override Log",
-   "link_to": "ZG Duplicate Override Log",
+   "link_to": "Duplicate Override Log",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
    "label": "Feature Flags",
-   "link_to": "ZG Feature Flag",
+   "link_to": "Feature Flag",
    "type": "DocType"
   },
   {
    "color": "Grey",
    "doc_view": "List",
    "label": "Audit Log",
-   "link_to": "ZG Audit Log",
+   "link_to": "Audit Log",
    "type": "DocType"
   }
  ],

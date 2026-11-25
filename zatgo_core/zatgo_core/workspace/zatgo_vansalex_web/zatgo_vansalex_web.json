@@ -59,10 +59,10 @@
       "role": "System Manager"
     },
     {
-      "role": "ZG Application Admin"
+      "role": "ZatGo Application Admin"
     },
     {
-      "role": "ZG Company Admin"
+      "role": "ZatGo Company Admin"
     }
   ],
   "sequence_id": 35.0,

@@ -1,8 +1,8 @@
 """Edition operations on the issuer site: save, duplicate, archive, compare, export / import, preset seeding.
 
-Every write goes through the ZG Edition document (its controller holds the rules: issuer site, System Manager,
+Every write goes through the Edition document (its controller holds the rules: issuer site, System Manager,
 valid features, no missing dependency when Active, version bump). Reads work everywhere for those who may read
-ZG Edition. Imports are previewed first and recorded in ZG Audit Log.
+Edition. Imports are previewed first and recorded in Audit Log.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from frappe import _
 
 from zatgo_core.licensing import edition_config, inspector, issuer, registry
 
-DOCTYPE = "ZG Edition"
+DOCTYPE = "Edition"
 
 
 def _is_single(doctype: str) -> bool:
@@ -185,7 +185,7 @@ def import_config(payload: Any, overwrite: bool = False) -> dict[str, Any]:
 
 def _log_import(preview: Mapping[str, Any], file_hash: str) -> None:
     frappe.get_doc({
-        "doctype": "ZG Audit Log", "doctype_name": DOCTYPE, "document_name": preview["edition_id"],
+        "doctype": "Audit Log", "doctype_name": DOCTYPE, "document_name": preview["edition_id"],
         "fieldname": "import", "old_value": None,
         "new_value": json.dumps({"action": preview["action"], "file_hash": file_hash}),
         "changed_by": frappe.session.user, "change_date": frappe.utils.today(), "change_time": frappe.utils.nowtime(),
@@ -195,7 +195,7 @@ def _log_import(preview: Mapping[str, Any], file_hash: str) -> None:
 
 def import_history(limit: int = 50) -> list[dict[str, Any]]:
     return frappe.get_all(
-        "ZG Audit Log",
+        "Audit Log",
         filters={"doctype_name": DOCTYPE, "fieldname": "import"},
         fields=["document_name", "new_value", "changed_by", "creation"],
         order_by="creation desc", limit_page_length=limit,

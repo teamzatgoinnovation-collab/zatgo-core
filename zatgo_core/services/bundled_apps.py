@@ -1,6 +1,6 @@
 """Chat AI, Tracker and ZatGo Space -- formerly separate apps, now modules of
 zatgo_core (zatgo_core/chat_ai, /tracker, /zatgo_space) switched per site
-in ZG System Settings -> Bundled Apps.
+in ZatGo System Settings -> Bundled Apps.
 
 zatgo_core runs on every accounting / van-sale site, so nothing of these
 modules may act on a site that hasn't switched it on:
@@ -233,7 +233,7 @@ DESK_ASSETS = {
 
 
 def sync_bundled_apps() -> None:
-    """after_migrate and on ZG System Settings save: set up what's switched
+    """after_migrate and on ZatGo System Settings save: set up what's switched
     on, take the Desk entries away from what's switched off."""
     for key in BUNDLED:
         try:

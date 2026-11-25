@@ -190,7 +190,7 @@ class TestPOSSettings(IntegrationTestCase):
 
 
 class TestPOSType(IndustryTestBase):
-    """POS Type (Restaurant / Supermarket) of ZG POS Settings: decides the POS mode, switches its industry on."""
+    """POS Type (Restaurant / Supermarket) of ZatGo POS Settings: decides the POS mode, switches its industry on."""
 
     def setUp(self) -> None:
         super().setUp()  # every industry off

@@ -116,7 +116,7 @@ class TestVansalexPrintFormats(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": "Field User",

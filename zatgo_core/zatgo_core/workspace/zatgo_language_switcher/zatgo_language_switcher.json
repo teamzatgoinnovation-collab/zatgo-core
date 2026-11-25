@@ -27,7 +27,7 @@
       "is_query_report": 0,
       "label": "Language Settings",
       "link_count": 0,
-      "link_to": "ZG Language Settings",
+      "link_to": "Language Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -59,10 +59,10 @@
       "role": "System Manager"
     },
     {
-      "role": "ZG Application Admin"
+      "role": "ZatGo Application Admin"
     },
     {
-      "role": "ZG Company Admin"
+      "role": "ZatGo Company Admin"
     }
   ],
   "sequence_id": 33.0,
@@ -71,7 +71,7 @@
       "color": "Blue",
       "doc_view": "",
       "label": "Language Settings",
-      "link_to": "ZG Language Settings",
+      "link_to": "Language Settings",
       "type": "DocType"
     }
   ],

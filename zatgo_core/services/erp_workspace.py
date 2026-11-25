@@ -9,7 +9,7 @@ What this module holds are the **defaults** a site starts with: SECTIONS (cards 
 synced files. A later release that adds a default item reaches existing sites through `ensure_default_items()`: added once,
 never removed, never overwriting what the site changed (an item an administrator deleted stays deleted).
 
-The role ROLE ("ZG Accounts & Inventory", setup/ensure_erp_perms.py gives it the document rights the links need) and ERPNext's
+The role ROLE ("ZatGo Accounts & Inventory", setup/ensure_erp_perms.py gives it the document rights the links need) and ERPNext's
 working roles see the workspace. `sync_erp_desk()` (called from setup/ensure_core_desk.py) runs on install and every migrate.
 This is separate from the "ZatGo" entry, which stays the platform-settings place (services/core_sidebar.py).
 """
@@ -21,7 +21,7 @@ TITLE = "Accounts & Inventory"  # heading of the workspace page
 ICON = "home"
 MODULE = "ZatGo Core"
 APP = "zatgo_core"
-ROLE = "ZG Accounts & Inventory"
+ROLE = "ZatGo Accounts & Inventory"
 # The sidebar's "Dashboard" entry opens this Dashboard (shipped as zatgo_core_dashboard/zatgo_erp_dashboard/zatgo_erp_dashboard.json).
 # It has its own name on purpose: Frappe picks the sidebar from the last part of the route, and "dashboard-view/Accounts"
 # would switch to ERPNext's own "Accounts" sidebar and leave this one.
@@ -41,14 +41,14 @@ DASHBOARD_CHARTS = (
 # Our own Number Cards (zatgo_core/zatgo_core/number_card/): count and Grand Total of the submitted documents.
 # (label, DocType, function, field summed)
 NUMBER_CARDS = (
-    ("ZG Sales Invoices", "Sales Invoice", "Count", None),
-    ("ZG Sales Invoice Total", "Sales Invoice", "Sum", "base_grand_total"),
-    ("ZG Purchase Invoices", "Purchase Invoice", "Count", None),
-    ("ZG Purchase Invoice Total", "Purchase Invoice", "Sum", "base_grand_total"),
-    ("ZG Sales Orders", "Sales Order", "Count", None),
-    ("ZG Sales Order Total", "Sales Order", "Sum", "base_grand_total"),
-    ("ZG Purchase Orders", "Purchase Order", "Count", None),
-    ("ZG Purchase Order Total", "Purchase Order", "Sum", "base_grand_total"),
+    ("ZatGo Sales Invoices", "Sales Invoice", "Count", None),
+    ("ZatGo Sales Invoice Total", "Sales Invoice", "Sum", "base_grand_total"),
+    ("ZatGo Purchase Invoices", "Purchase Invoice", "Count", None),
+    ("ZatGo Purchase Invoice Total", "Purchase Invoice", "Sum", "base_grand_total"),
+    ("ZatGo Sales Orders", "Sales Order", "Count", None),
+    ("ZatGo Sales Order Total", "Sales Order", "Sum", "base_grand_total"),
+    ("ZatGo Purchase Orders", "Purchase Order", "Count", None),
+    ("ZatGo Purchase Order Total", "Purchase Order", "Sum", "base_grand_total"),
 )
 DASHBOARD_CARDS = tuple(c[0] for c in NUMBER_CARDS) + (
     "Total Outgoing Bills",
@@ -144,7 +144,7 @@ SHORTCUTS = ("Sales Invoice", "Purchase Invoice", "Sales Order", "Purchase Order
 
 # The Custom HTML Block drawing those tiles, the top selling product and the top category. Its source is
 # templates/erp_summary/block.{html,js,css}; ensure_block() copies it into the site on migrate.
-BLOCK_NAME = "ZG ERP Summary"
+BLOCK_NAME = "ZatGo ERP Summary"
 
 
 # The "Dashboard" tile on the page and entry in the sidebar: a Workspace shortcut of type Dashboard. It must be in the page content

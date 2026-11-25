@@ -1,4 +1,4 @@
-"""Licence events in ZG Audit Log (brief Part 17): imported, replaced, verification failed, revoked, issued.
+"""Licence events in Audit Log (brief Part 17): imported, replaced, verification failed, revoked, issued.
 
 One row per event: `doctype_name` = the DocType concerned, `fieldname` = the event, `new_value` = a JSON
 summary. Never a key, never a whole licence file -- ids, numbers, hashes and reasons only.
@@ -19,7 +19,7 @@ def log(event: str, doctype: str, name: str | None, details: Mapping[str, Any], 
     request = getattr(frappe.local, "request", None)
     try:
         frappe.get_doc({
-            "doctype": "ZG Audit Log",
+            "doctype": "Audit Log",
             "doctype_name": doctype,
             "document_name": name or "",
             "fieldname": event,

@@ -1,9 +1,9 @@
-"""Give ZG Trip.zatgo_client_id the DB-level UNIQUE constraint it was
+"""Give Trip.zatgo_client_id the DB-level UNIQUE constraint it was
 missing.
 
 `v0_1_0.add_zatgo_client_id_fields` declared this one field with
 `unique: 0` while every other doctype in the same patch got `unique: 1`.
-That was harmless while ZG Trip was read-only to the client, but the
+That was harmless while Trip was read-only to the client, but the
 mobile app now *creates* stops with a client-generated id, and
 `services/idempotency.py::insert_idempotent` is explicitly built on the
 constraint existing: without it, two concurrent creates can both pass the
@@ -32,13 +32,13 @@ from zatgo_core.utils.logging import get_logger
 logger = get_logger("system")
 
 INDEX_NAME = "zatgo_client_id"
-TABLE = "tabZG Trip"
+TABLE = "tabTrip"
 
 
 def execute() -> None:
-    if not frappe.db.exists("DocType", "ZG Trip"):
+    if not frappe.db.exists("DocType", "Trip"):
         return
-    if not frappe.db.has_column("ZG Trip", "zatgo_client_id"):
+    if not frappe.db.has_column("Trip", "zatgo_client_id"):
         # Field itself never materialized; add_zatgo_client_id_fields (now
         # declaring unique: 1) will create it correctly, including the index.
         from zatgo_core.patches.v0_1_0.add_zatgo_client_id_fields import execute as add_fields
@@ -57,7 +57,7 @@ def _null_out_duplicates() -> None:
     dupes = frappe.db.sql(
         """
         SELECT zatgo_client_id
-        FROM `tabZG Trip`
+        FROM `tabTrip`
         WHERE zatgo_client_id IS NOT NULL AND zatgo_client_id != ''
         GROUP BY zatgo_client_id
         HAVING COUNT(*) > 1
@@ -67,14 +67,14 @@ def _null_out_duplicates() -> None:
     for row in dupes:
         cid = row["zatgo_client_id"]
         names = frappe.get_all(
-            "ZG Trip",
+            "Trip",
             filters={"zatgo_client_id": cid},
             fields=["name"],
             order_by="creation asc",
             pluck="name",
         )
         for name in names[1:]:
-            frappe.db.set_value("ZG Trip", name, "zatgo_client_id", None, update_modified=False)
+            frappe.db.set_value("Trip", name, "zatgo_client_id", None, update_modified=False)
         logger.info(
             "make_zg_trip_client_id_unique: cleared %s duplicate client_id(s) for %s",
             len(names) - 1,
@@ -109,12 +109,12 @@ def _ensure_unique_index() -> None:
     if _unique_index_exists():
         return
     try:
-        frappe.db.add_unique("ZG Trip", ["zatgo_client_id"], constraint_name=INDEX_NAME)
+        frappe.db.add_unique("Trip", ["zatgo_client_id"], constraint_name=INDEX_NAME)
     except Exception:
         logger.exception("make_zg_trip_client_id_unique: add_unique failed")
 
     if not _unique_index_exists():
         raise frappe.ValidationError(
-            "ZG Trip.zatgo_client_id UNIQUE index was not created — "
+            "Trip.zatgo_client_id UNIQUE index was not created — "
             "idempotent trip creation is unsafe until it exists."
         )

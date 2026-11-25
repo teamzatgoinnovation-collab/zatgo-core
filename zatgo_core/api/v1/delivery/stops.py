@@ -1,4 +1,4 @@
-"""Delivery stops — ZG Delivery Stop DocType."""
+"""Delivery stops — ZatGo Delivery Stop DocType."""
 
 from __future__ import annotations
 
@@ -155,18 +155,18 @@ def _map(row: Any) -> dict[str, Any]:
 
 
 def _require_stop_doctype() -> None:
-    if not frappe.db.exists("DocType", "ZG Delivery Stop"):
-        frappe.throw("ZG Delivery Stop DocType is not installed: run bench migrate")
+    if not frappe.db.exists("DocType", "ZatGo Delivery Stop"):
+        frappe.throw("ZatGo Delivery Stop DocType is not installed: run bench migrate")
 
 
 def _resolve_boy(delivery_boy: str | None) -> str | None:
     boy = (delivery_boy or "").strip()
     if not boy:
         return None
-    if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
-    if not frappe.db.exists("ZG Delivery Boy", boy):
-        by_code = frappe.db.exists("ZG Delivery Boy", {"code": boy})
+    if not frappe.db.exists("DocType", "Delivery Boy"):
+        frappe.throw("Delivery Boy DocType is not installed: run bench migrate")
+    if not frappe.db.exists("Delivery Boy", boy):
+        by_code = frappe.db.exists("Delivery Boy", {"code": boy})
         if by_code:
             return str(by_code)
         frappe.throw(f"Delivery boy {boy} not found", frappe.DoesNotExistError)
@@ -180,28 +180,28 @@ def _is_stop_manager() -> bool:
 def _assert_own_stop(doc: Any) -> None:
     if _is_stop_manager():
         return
-    user = doc.delivery_boy and frappe.db.get_value("ZG Delivery Boy", doc.delivery_boy, "user")
+    user = doc.delivery_boy and frappe.db.get_value("Delivery Boy", doc.delivery_boy, "user")
     if user != frappe.session.user:
         frappe.throw("This delivery stop is not assigned to you.", frappe.PermissionError)
 
 
 def _set_boy_on_route(boy: str | None) -> None:
-    if not boy or not frappe.db.exists("DocType", "ZG Delivery Boy"):
+    if not boy or not frappe.db.exists("DocType", "Delivery Boy"):
         return
-    current = frappe.db.get_value("ZG Delivery Boy", boy, "status")
+    current = frappe.db.get_value("Delivery Boy", boy, "status")
     if current == "Available":
-        frappe.db.set_value("ZG Delivery Boy", boy, "status", "On Route")
+        frappe.db.set_value("Delivery Boy", boy, "status", "On Route")
 
 
 def _maybe_free_boy(boy: str | None) -> None:
-    if not boy or not frappe.db.exists("DocType", "ZG Delivery Boy"):
+    if not boy or not frappe.db.exists("DocType", "Delivery Boy"):
         return
     active = frappe.db.count(
-        "ZG Delivery Stop",
+        "ZatGo Delivery Stop",
         {"delivery_boy": boy, "status": ("in", sorted(_ACTIVE_STATUS))},  # not list(): this module's list is the endpoint
     )
     if active == 0:
-        frappe.db.set_value("ZG Delivery Boy", boy, "status", "Available")
+        frappe.db.set_value("Delivery Boy", boy, "status", "Available")
 
 
 def _normalize_status(status: str | None) -> str:
@@ -247,17 +247,17 @@ def _assert_transition(current: str, nxt: str) -> None:
 
 
 def _award_delivery_points(boy: str | None) -> None:
-    if not boy or not frappe.db.exists("DocType", "ZG Delivery Boy"):
+    if not boy or not frappe.db.exists("DocType", "Delivery Boy"):
         return
-    if not frappe.db.exists("ZG Delivery Boy", boy):
+    if not frappe.db.exists("Delivery Boy", boy):
         return
-    meta = frappe.get_meta("ZG Delivery Boy")
+    meta = frappe.get_meta("Delivery Boy")
     if not meta.has_field("points"):
         return
-    points = int(frappe.db.get_value("ZG Delivery Boy", boy, "points") or 0)
-    done = int(frappe.db.get_value("ZG Delivery Boy", boy, "deliveries_done") or 0)
+    points = int(frappe.db.get_value("Delivery Boy", boy, "points") or 0)
+    done = int(frappe.db.get_value("Delivery Boy", boy, "deliveries_done") or 0)
     frappe.db.set_value(
-        "ZG Delivery Boy",
+        "Delivery Boy",
         boy,
         {"points": points + POINTS_PER_DELIVERY, "deliveries_done": done + 1},
         update_modified=False,
@@ -287,12 +287,12 @@ def _apply_status(
 ) -> dict[str, Any]:
     require_login()
     _require_stop_doctype()
-    if not frappe.db.exists("ZG Delivery Stop", name):
-        frappe.throw(f"ZG Delivery Stop {name} not found", frappe.DoesNotExistError)
+    if not frappe.db.exists("ZatGo Delivery Stop", name):
+        frappe.throw(f"ZatGo Delivery Stop {name} not found", frappe.DoesNotExistError)
 
-    frappe.has_permission("ZG Delivery Stop", "write", doc=name, throw=True)
+    frappe.has_permission("ZatGo Delivery Stop", "write", doc=name, throw=True)
 
-    doc = frappe.get_doc("ZG Delivery Stop", name)
+    doc = frappe.get_doc("ZatGo Delivery Stop", name)
     _assert_own_stop(doc)
     current = (doc.status or "Assigned").strip()
     if current in _LEGACY_STATUS:
@@ -355,7 +355,7 @@ def _apply_status(
     frappe.db.commit()
     return ok(
         _map(doc),
-        meta={"stub": False, "updated": True, "source": "ZG Delivery Stop"},
+        meta={"stub": False, "updated": True, "source": "ZatGo Delivery Stop"},
     )
 
 
@@ -380,11 +380,11 @@ def list(
     if (priority or "").strip():
         filters["priority"] = priority.strip()
 
-    meta = frappe.get_meta("ZG Delivery Stop") if frappe.db.exists("DocType", "ZG Delivery Stop") else None
+    meta = frappe.get_meta("ZatGo Delivery Stop") if frappe.db.exists("DocType", "ZatGo Delivery Stop") else None
     fields = [f for f in _LIST_FIELDS if not meta or meta.has_field(f) or f == "name"]
 
     return list_zg(
-        "ZG Delivery Stop",
+        "ZatGo Delivery Stop",
         fields=fields,
         page=page,
         page_size=page_size,
@@ -395,7 +395,7 @@ def list(
 
 @frappe.whitelist()
 def get(name: str) -> dict[str, Any]:
-    return get_zg("ZG Delivery Stop", name, map_doc=lambda d: _map(d))
+    return get_zg("ZatGo Delivery Stop", name, map_doc=lambda d: _map(d))
 
 
 @frappe.whitelist()
@@ -425,7 +425,7 @@ def create(
 ) -> dict[str, Any]:
     """Create a delivery stop (POS invoice handoff). Default status: Assigned."""
     require_login()
-    frappe.has_permission("ZG Delivery Stop", "create", throw=True)
+    frappe.has_permission("ZatGo Delivery Stop", "create", throw=True)
     _require_stop_doctype()
 
     order_no = (order_number or "").strip()
@@ -449,14 +449,14 @@ def create(
     except (TypeError, ValueError):
         seq = None
     if seq is None:
-        seq = (frappe.db.count("ZG Delivery Stop", {"delivery_boy": boy} if boy else {}) or 0) + 1
+        seq = (frappe.db.count("ZatGo Delivery Stop", {"delivery_boy": boy} if boy else {}) or 0) + 1
 
     cod = _float(cod_amount) or 0
     paid = _float(paid_amount) or 0
     charges = _float(delivery_charges) or 0
 
     payload: dict[str, Any] = {
-        "doctype": "ZG Delivery Stop",
+        "doctype": "ZatGo Delivery Stop",
         "title": stop_title,
         "order_number": order_no or None,
         "customer": cust,
@@ -472,7 +472,7 @@ def create(
         "lng": _float(lng),
     }
 
-    meta = frappe.get_meta("ZG Delivery Stop")
+    meta = frappe.get_meta("ZatGo Delivery Stop")
     optional = {
         "invoice_number": (invoice_number or order_no or "").strip() or None,
         "area": (area or "").strip() or None,
@@ -497,7 +497,7 @@ def create(
         _set_boy_on_route(boy)
 
     frappe.db.commit()
-    return ok(_map(doc), meta={"stub": False, "created": True, "source": "ZG Delivery Stop"})
+    return ok(_map(doc), meta={"stub": False, "created": True, "source": "ZatGo Delivery Stop"})
 
 
 @frappe.whitelist()
@@ -505,19 +505,19 @@ def assign(name: str, delivery_boy: str) -> dict[str, Any]:
     """Assign (or reassign) a delivery boy on an existing stop."""
     require_login()
     _require_stop_doctype()
-    if not frappe.db.exists("ZG Delivery Stop", name):
-        frappe.throw(f"ZG Delivery Stop {name} not found", frappe.DoesNotExistError)
+    if not frappe.db.exists("ZatGo Delivery Stop", name):
+        frappe.throw(f"ZatGo Delivery Stop {name} not found", frappe.DoesNotExistError)
 
-    frappe.has_permission("ZG Delivery Stop", "write", doc=name, throw=True)
+    frappe.has_permission("ZatGo Delivery Stop", "write", doc=name, throw=True)
     # A courier must not be able to move another courier's stop to themselves and then complete it.
-    if not _is_stop_manager() and frappe.db.exists("ZG Delivery Boy", {"user": frappe.session.user}):
+    if not _is_stop_manager() and frappe.db.exists("Delivery Boy", {"user": frappe.session.user}):
         frappe.throw("A delivery boy cannot reassign delivery stops.", frappe.PermissionError)
 
     boy = _resolve_boy(delivery_boy)
     if not boy:
         frappe.throw("delivery_boy is required")
 
-    doc = frappe.get_doc("ZG Delivery Stop", name)
+    doc = frappe.get_doc("ZatGo Delivery Stop", name)
     doc.delivery_boy = boy
     current = (doc.status or "Assigned").strip()
     if current in ("Pending", "Assigned") or current in _LEGACY_STATUS:
@@ -529,7 +529,7 @@ def assign(name: str, delivery_boy: str) -> dict[str, Any]:
     _set_boy_on_route(boy)
 
     frappe.db.commit()
-    return ok(_map(doc), meta={"stub": False, "assigned": True, "source": "ZG Delivery Stop"})
+    return ok(_map(doc), meta={"stub": False, "assigned": True, "source": "ZatGo Delivery Stop"})
 
 
 @frappe.whitelist()

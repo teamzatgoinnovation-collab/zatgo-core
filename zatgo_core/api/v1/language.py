@@ -1,5 +1,5 @@
 """Whitelisted API for the Language Switcher Desk widget
-(public/language_switcher/, switched on per site by ZG System Settings ->
+(public/language_switcher/, switched on per site by ZatGo System Settings ->
 Enable Language Switcher; formerly the separate language_switcher / modifyme app).
 
 The source of truth for a user's language stays the native Frappe `User.language`

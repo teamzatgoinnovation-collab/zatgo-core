@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def on_company_update(doc: Document, method: str | None = None) -> None:
-    """Ensure a ZG Company Settings row exists for every Company."""
+    """Ensure a Company Settings row exists for every Company."""
     if not frappe.db.exists("DocType", DOCTYPES["COMPANY_SETTINGS"]):
         return
     if frappe.db.exists(DOCTYPES["COMPANY_SETTINGS"], {"company": doc.name}):

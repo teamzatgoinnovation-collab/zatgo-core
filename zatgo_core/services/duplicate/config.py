@@ -12,8 +12,8 @@ import frappe
 from frappe.utils import cint, flt
 
 APP_KEY = "duplicate_prevention"
-SETTINGS = "ZG Duplicate Prevention Settings"
-RULE = "ZG Duplicate Rule"
+SETTINGS = "Duplicate Prevention Settings"
+RULE = "Duplicate Rule"
 _RULES_KEY = "zg_duplicate_rules"
 _SETTINGS_KEY = "zg_duplicate_settings"
 

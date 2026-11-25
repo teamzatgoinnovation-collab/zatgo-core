@@ -1,6 +1,6 @@
 """Offline counter sales: a sale the POS made without a connection reaches the server late and is posted on its own date and time;
 what no longer matches (price, tax, stock, item, discount cap) is posted at the server's figures and listed for review
-(ZG Offline Sale Issue); a replay posts nothing twice; an unsafe sale is refused. Also the delta feeds the offline POS refreshes
+(Offline Sale Issue); a replay posts nothing twice; an unsafe sale is refused. Also the delta feeds the offline POS refreshes
 its copy of the catalog from, and the settings that govern it."""
 
 from __future__ import annotations
@@ -55,11 +55,11 @@ class TestOfflineSale(IndustryTestBase):
             "Account", {"account_type": "Cash", "company": cls.company, "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cash_account)
-        if frappe.db.exists("ZG Company Settings", cls.company):
-            frappe.db.set_value("ZG Company Settings", cls.company, "default_warehouse", cls.warehouse)
+        if frappe.db.exists("Company Settings", cls.company):
+            frappe.db.set_value("Company Settings", cls.company, "default_warehouse", cls.warehouse)
         else:
             frappe.get_doc(
-                {"doctype": "ZG Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
+                {"doctype": "Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
             ).insert(ignore_permissions=True)
         frappe.db.commit()
 
@@ -116,8 +116,8 @@ class TestOfflineSale(IndustryTestBase):
         )
 
     def _issue(self, cid: str):
-        name = frappe.db.get_value("ZG Offline Sale Issue", {"client_id": cid}, "name")
-        return frappe.get_doc("ZG Offline Sale Issue", name) if name else None
+        name = frappe.db.get_value("Offline Sale Issue", {"client_id": cid}, "name")
+        return frappe.get_doc("Offline Sale Issue", name) if name else None
 
     # -- posting a late sale ------------------------------------------------
 
@@ -212,7 +212,7 @@ class TestOfflineSale(IndustryTestBase):
         self.assertEqual(issue.device_id, "terminal-1")
         # a replay does not open a second entry and reports the same issues
         again = self._offline(code, cid=cid, expected_total=999.0)
-        self.assertEqual(frappe.db.count("ZG Offline Sale Issue", {"client_id": cid}), 1)
+        self.assertEqual(frappe.db.count("Offline Sale Issue", {"client_id": cid}), 1)
         self.assertEqual(again["meta"]["offline"]["issues"], res["meta"]["offline"]["issues"])
 
     def test_a_price_that_is_not_todays_price_is_posted_and_listed(self) -> None:

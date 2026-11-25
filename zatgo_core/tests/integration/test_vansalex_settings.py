@@ -2,13 +2,13 @@
 
 Covers services/vansalex_settings.py and its use by create_order:
 - defaults come from ERPNext records first (Mode of Payment "Cash" account)
-  and zatgo_core's second (ZG Company Settings default warehouse);
+  and zatgo_core's second (Company Settings default warehouse);
 - a Cash invoice gets its Payment Entry auto-created (existing
   invoice_cash_payment_service hook), a Credit invoice stays outstanding;
 - Bank (when allowed) pays into the Bank account, Cash into the Cash
   account -- the default, or one the driver picks with "Choose payment
   account";
-- per-user ZG Van Sale Profile overrides are enforced on the server — the
+- per-user Van Sale Profile overrides are enforced on the server — the
   app hiding a toggle is not the control.
 
 Per-user rules are exercised through each test's own profile, never by
@@ -49,8 +49,8 @@ class TestVansalexSettings(IntegrationTestCase):
             "Account", {"company": cls.company, "account_type": "Cash", "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cls.cash_account)
-        cls.bank_account = cls._make_account("ZG Test Bank", "Bank")
-        cls.other_bank_account = cls._make_account("ZG Test Bank 2", "Bank")
+        cls.bank_account = cls._make_account("ZatGo Test Bank", "Bank")
+        cls.other_bank_account = cls._make_account("ZatGo Test Bank 2", "Bank")
         cls.till_account = cls._make_account("Van Till", "Cash")
         cls.warehouse = cls._make_warehouse("VanSaleSettingsTest")
         cls.other_warehouse = cls._make_warehouse("VanSaleSettingsOther")
@@ -153,7 +153,7 @@ class TestVansalexSettings(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": "Field User",
@@ -164,8 +164,8 @@ class TestVansalexSettings(IntegrationTestCase):
         return email
 
     def _set_profile(self, **values) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        doc = frappe.get_doc("ZG Van Sale Profile", name)
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        doc = frappe.get_doc("Van Sale Profile", name)
         doc.update(values)
         doc.save(ignore_permissions=True)
 
@@ -247,8 +247,8 @@ class TestVansalexSettings(IntegrationTestCase):
             }
         ).insert(ignore_permissions=True)
         try:
-            if frappe.db.get_value("ZG Company Settings", {"company": self.company}, "default_tax_template"):
-                self.skipTest("ZG Company Settings pins a tax template on the test company")
+            if frappe.db.get_value("Company Settings", {"company": self.company}, "default_tax_template"):
+                self.skipTest("Company Settings pins a tax template on the test company")
             summary = tax_summary(self.company)
             self.assertEqual(summary["tax_template"], tpl.name)
             self.assertEqual(summary["tax_rate"], 15)
@@ -344,13 +344,13 @@ class TestVansalexSettings(IntegrationTestCase):
             allowed_warehouse(self.other_warehouse)
 
     def test_profile_without_warehouse_uses_company_default(self) -> None:
-        if not frappe.db.exists("ZG Company Settings", {"company": self.company}):
-            self.skipTest("no ZG Company Settings row for the test company")
+        if not frappe.db.exists("Company Settings", {"company": self.company}):
+            self.skipTest("no Company Settings row for the test company")
         company_wh = frappe.db.get_value(
-            "ZG Company Settings", {"company": self.company}, "default_warehouse"
+            "Company Settings", {"company": self.company}, "default_warehouse"
         )
         if not company_wh:
-            self.skipTest("test company has no default warehouse in ZG Company Settings")
+            self.skipTest("test company has no default warehouse in Company Settings")
         user = self._make_van_user(None)
         frappe.defaults.set_user_default("company", self.company, user)
         self.assertEqual(resolve(user)["warehouse"], company_wh)
@@ -504,8 +504,8 @@ class TestVansalexSettings(IntegrationTestCase):
         self.assertEqual(self._pe_for(si.name).paid_to, self.till_account)
 
     def test_account_choice_needs_the_feature(self) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        doc = frappe.get_doc("ZG Van Sale Profile", name)
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        doc = frappe.get_doc("Van Sale Profile", name)
         doc.append(
             "access_overrides", {"access_key": "sales_invoice.multiple_payment_accounts", "disabled": 1}
         )

@@ -70,7 +70,7 @@ _SHARED_STEPS = (
     ("financial statement print formats", ensure_report_print_formats),
     ("Mode of Payment", ensure_mode_of_payment),
     ("VanSale DocPerms", ensure_vansale_perms),
-    ("ZG Accounts & Inventory rights", ensure_erp_perms),
+    ("ZatGo Accounts & Inventory rights", ensure_erp_perms),
     ("VanSaleX modules and features", ensure_vansalex_access),
     ("Desk UI leftover purge", lambda: purge_desk_ui_leftovers()),
     ("theme / language switcher", ensure_ui_apps),
@@ -79,7 +79,7 @@ _SHARED_STEPS = (
     ("plugin manifest registration", discover_and_register_manifests),
     # After the industry sync: the sidebar lists the enabled industries' workspaces.
     ("ZatGo Desk entry", ensure_core_desk),
-    # Edition / licensing vocabulary (licensing/registry.py) -> read-only ZG Module / ZG Feature rows.
+    # Edition / licensing vocabulary (licensing/registry.py) -> read-only Module / Feature rows.
     ("licensing registry sync", sync_registry),
     # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
     ("preset edition seed", seed_presets),

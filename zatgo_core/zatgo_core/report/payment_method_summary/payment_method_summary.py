@@ -7,7 +7,7 @@ currency, for submitted documents only:
 1. Sales Invoice payment rows (`tabSales Invoice Payment`) on `is_pos`
    invoices -- paid on the invoice itself; posted by ERPNext's
    make_pos_gl_entries(). A return's (negative) refund rows count as paid out.
-2. Payment Entry `custom_payment_details` rows (ZG Payment Allocation) --
+2. Payment Entry `custom_payment_details` rows (Payment Allocation) --
    the split posted by zatgo_core.overrides.payment_entry.
 3. Payment Entries *without* such rows -- ERPNext's own single account:
    paid_to on Receive, paid_from on Pay (header mode_of_payment).
@@ -94,7 +94,7 @@ def _invoice_payment_rows(filters):
 
 
 def _allocation_rows(filters):
-    if not frappe.db.has_table("ZG Payment Allocation"):
+    if not frappe.db.has_table("Payment Allocation"):
         return []
     cond, values = _conditions(filters, "pa.mode_of_payment", "pa.account")
     return frappe.db.sql(
@@ -103,7 +103,7 @@ def _allocation_rows(filters):
             sum(case when pe.payment_type = 'Receive' then pa.base_amount else 0 end) as received,
             sum(case when pe.payment_type = 'Pay' then pa.base_amount else 0 end) as paid,
             count(*) as row_count
-        from `tabZG Payment Allocation` pa
+        from `tabPayment Allocation` pa
         inner join `tabPayment Entry` pe on pe.name = pa.parent
         where pa.parenttype = 'Payment Entry' and pe.docstatus = 1
             and pe.payment_type in ('Receive', 'Pay')
@@ -120,9 +120,9 @@ def _plain_payment_entry_rows(filters):
     account_expr = "(case when pe.payment_type = 'Receive' then pe.paid_to else pe.paid_from end)"
     cond, values = _conditions(filters, "pe.mode_of_payment", account_expr)
     no_rows = (
-        "and not exists (select 1 from `tabZG Payment Allocation` pa "
+        "and not exists (select 1 from `tabPayment Allocation` pa "
         "where pa.parent = pe.name and pa.parenttype = 'Payment Entry')"
-        if frappe.db.has_table("ZG Payment Allocation")
+        if frappe.db.has_table("Payment Allocation")
         else ""
     )
     return frappe.db.sql(

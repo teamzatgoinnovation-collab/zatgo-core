@@ -1,6 +1,6 @@
 """Where a VanSaleX field user may move stock or write it off.
 
-A field user is an enabled `ZG Van Sale Profile` that isn't an Admin one
+A field user is an enabled `Van Sale Profile` that isn't an Admin one
 (`vansalex_access.is_field_user`); admins and users without a van profile are
 not limited by anything here (their ERPNext permissions still apply).
 

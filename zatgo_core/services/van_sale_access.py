@@ -33,16 +33,16 @@ def is_vansale_user(user: str | None = None) -> bool:
 
 def get_profile(user: str | None = None) -> dict[str, Any] | None:
     uid = user or frappe.session.user
-    if not frappe.db.exists("DocType", "ZG Van Sale Profile"):
+    if not frappe.db.exists("DocType", "Van Sale Profile"):
         return None
     name = frappe.db.get_value(
-        "ZG Van Sale Profile",
+        "Van Sale Profile",
         {"user": uid, "enabled": 1},
         "name",
     )
     if not name:
         return None
-    doc = frappe.get_doc("ZG Van Sale Profile", name)
+    doc = frappe.get_doc("Van Sale Profile", name)
     return {
         "id": doc.name,
         "user": doc.user,
@@ -70,7 +70,7 @@ def require_own_warehouse(requested: str | None = None) -> str:
     user_wh = (profile.get("warehouse") if profile else "") or ""
     if not user_wh:
         # No warehouse on the profile: the company default applies
-        # (ZG Company Settings, then ERPNext Stock Settings).
+        # (Company Settings, then ERPNext Stock Settings).
         from zatgo_core.services.vansalex_settings import resolve
 
         user_wh = resolve().get("warehouse") or ""
@@ -87,13 +87,13 @@ def require_own_warehouse(requested: str | None = None) -> str:
 def field_user_customers(user: str | None = None) -> set[str]:
     """Customers a non-admin VanSale user may see receivables for.
 
-    Their own route (ZG Trip rows assigned to them — the same rule that
+    Their own route (Trip rows assigned to them — the same rule that
     gates create_collection) plus anyone they have invoiced themselves.
     Receivables for every other customer on the site stay admin-only.
     """
     uid = user or frappe.session.user
     on_route = frappe.get_all(
-        "ZG Trip", filters={"sales_user": uid}, pluck="customer", distinct=True
+        "Trip", filters={"sales_user": uid}, pluck="customer", distinct=True
     )
     invoiced = frappe.get_all(
         "Sales Invoice",

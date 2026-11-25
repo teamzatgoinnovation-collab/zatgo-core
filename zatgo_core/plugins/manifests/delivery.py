@@ -11,7 +11,7 @@ MANIFEST = {
     "menu_order": 20,
     "enabled": 1,
     "visible": 1,
-    "roles": "System Manager,ZG Application Admin,ZG Company Admin,ZG Branch Admin",
+    "roles": "System Manager,ZatGo Application Admin,ZatGo Company Admin,ZatGo Branch Admin",
     "depends_on": "",
     "description": "Delivery zones, drivers, and notifications",
     "settings_route": "",
@@ -21,7 +21,7 @@ MANIFEST = {
             "label": "General",
             "icon": "setting",
             "sort_order": 10,
-            "link_doctype": "ZG Branch Settings",
+            "link_doctype": "Branch Settings",
             "component": "",
         },
         {
@@ -37,7 +37,7 @@ MANIFEST = {
             "label": "Drivers",
             "icon": "user",
             "sort_order": 30,
-            "link_doctype": "ZG Delivery Boy",
+            "link_doctype": "Delivery Boy",
             "component": "",
         },
         {
@@ -45,7 +45,7 @@ MANIFEST = {
             "label": "Delivery Stops",
             "icon": "list",
             "sort_order": 40,
-            "link_doctype": "ZG Delivery Stop",
+            "link_doctype": "ZatGo Delivery Stop",
             "component": "",
         },
         {
@@ -53,7 +53,7 @@ MANIFEST = {
             "label": "Notifications",
             "icon": "notification",
             "sort_order": 50,
-            "link_doctype": "ZG Notification Settings",
+            "link_doctype": "ZatGo Notification Settings",
             "component": "",
         },
         {

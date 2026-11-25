@@ -20,7 +20,7 @@ Page or Report). `sync_for_workspace()` re-syncs one sidebar when its Workspace 
 at once.
 
 `sync_app_sidebars()` is an upsert like core_sidebar.sync_core_sidebar(): rows are replaced only when they drift, so
-it is cheap to call from migrate and from ZG System Settings' on_update.
+it is cheap to call from migrate and from ZatGo System Settings' on_update.
 """
 
 from __future__ import annotations

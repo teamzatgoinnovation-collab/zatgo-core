@@ -46,11 +46,11 @@ class TestVanSalePermSeeding(IntegrationTestCase):
         self.assertTrue(self._can(self._user("Sales User"), "Customer", "read"))
 
     def test_a_courier_with_only_the_delivery_role_can_work_stops(self) -> None:
-        self.assertTrue(self._can(self._user("Delivery"), "ZG Delivery Stop", "write"))
+        self.assertTrue(self._can(self._user("Delivery"), "ZatGo Delivery Stop", "write"))
 
     def test_system_manager_keeps_address_contact_and_trips(self) -> None:
         manager = self._user("System Manager")
-        for doctype in ("Address", "Contact", "ZG Trip", "ZG Delivery Stop", "ZG Vehicle"):
+        for doctype in ("Address", "Contact", "Trip", "ZatGo Delivery Stop", "ZatGo Vehicle"):
             self.assertTrue(self._can(manager, doctype, "write"), doctype)
 
     def test_standard_rows_keep_their_exact_flags(self) -> None:
@@ -61,17 +61,17 @@ class TestVanSalePermSeeding(IntegrationTestCase):
 
     def test_rows_opening_records_to_all_staff_stay_out(self) -> None:
         staff = self._user("Desk User")
-        for doctype in ("ZG Vehicle", "ZG Delivery Stop"):
+        for doctype in ("ZatGo Vehicle", "ZatGo Delivery Stop"):
             self.assertFalse(self._can(staff, doctype, "write"), doctype)
 
     def test_field_users_gain_nothing_on_money_documents_or_vehicles(self) -> None:
         field = self._user("VanSale User")
-        self.assertFalse(self._can(field, "ZG Vehicle", "write"))
+        self.assertFalse(self._can(field, "ZatGo Vehicle", "write"))
         self.assertFalse(self._can(field, "Sales Invoice", "cancel"))
         self.assertFalse(self._can(field, "Payment Entry", "cancel"))
         self.assertFalse(self._can(field, "Stock Entry", "cancel"))
         self.assertFalse(self._can(field, "Account", "write"))
-        self.assertFalse(self._can(field, "ZG Delivery Stop", "create"))
+        self.assertFalse(self._can(field, "ZatGo Delivery Stop", "create"))
 
     def test_seeded_grants_are_still_there(self) -> None:
         self.assertTrue(self._can(self._user("VanSale User"), "Sales Invoice", "submit"))

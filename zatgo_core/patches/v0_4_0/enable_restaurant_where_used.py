@@ -1,5 +1,5 @@
 """Resto POS was ungated before the Restaurant industry existed: keep it on
-for sites that already use it (any ZG Table / ZG Order); new sites start with
+for sites that already use it (any Table / Order); new sites start with
 every industry off."""
 
 from __future__ import annotations
@@ -10,9 +10,9 @@ from zatgo_core.industries.sync import ensure_rows
 
 
 def execute() -> None:
-    if not any(frappe.db.table_exists(dt) and frappe.db.count(dt) for dt in ("ZG Table", "ZG Order")):
+    if not any(frappe.db.table_exists(dt) and frappe.db.count(dt) for dt in ("Table", "Order")):
         return
-    settings = frappe.get_doc("ZG System Settings")
+    settings = frappe.get_doc("ZatGo System Settings")
     ensure_rows(settings)
     for row in settings.enabled_industries:
         if row.industry == "restaurant":

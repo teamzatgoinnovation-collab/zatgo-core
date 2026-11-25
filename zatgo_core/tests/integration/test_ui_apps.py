@@ -1,5 +1,5 @@
 """The theme, language switcher and VanSaleX web page that used to be
-separate apps, now switched per site in ZG System Settings
+separate apps, now switched per site in ZatGo System Settings
 (services/ui_apps.py, patches/v0_2_9/carry_over_ui_apps.py)."""
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from frappe.tests.classes.integration_test_case import IntegrationTestCase
 
 from zatgo_core.services import ui_apps
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELDS = ("enable_saas_theme", "enable_language_switcher", "enable_vansalex_web")
 # The bundled modules add their own Desk JS/CSS: this class checks the three above, so it switches
 # them off for the duration (a site may have them on) and restores them.

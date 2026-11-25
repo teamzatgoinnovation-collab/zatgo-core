@@ -23,17 +23,17 @@ It already has an **app platform** that answers most of "what is this site allow
 | Concern | Where | What it does |
 |---|---|---|
 | Catalog of switchable apps | `services/app_catalog.py` + `<module>/app_manifest.py` + `plugins/manifests/core_apps.py` | One normalised list: key, group, switch field, `default_on`, `requires`, `api_prefixes`, workspaces, settings DocTypes, version. 11 apps today (core_settings, vansalex, saas_theme, language_switcher, vansalex_web, zatgo_pos, duplicate_prevention, industries, chat_ai, mybis, tracker, zatgo_space). |
-| Is app X on | `services/app_state.py` | Only reader of the ZG System Settings switches (handles the Single-Check "0 vs unset" trap). |
+| Is app X on | `services/app_state.py` | Only reader of the ZatGo System Settings switches (handles the Single-Check "0 vs unset" trap). |
 | Server gate | `services/app_gate.py` | `before_request`: whitelisted methods under an off app's prefixes → 404; `@app_api`, `require_app`. |
 | DocType gate | `services/bundled_apps.py` | `has_permission "*"` + `permission_query_conditions "*"`: documents of a switched-off *bundled module* are nobody's / `1=0`. |
-| Who may switch | `services/app_authority.py` | System Manager only, enforced in the ZG System Settings controller (form, REST and hub all bound). |
+| Who may switch | `services/app_authority.py` | System Manager only, enforced in the ZatGo System Settings controller (form, REST and hub all bound). |
 | Desk visibility | `services/app_desk.py`, `app_sidebar.py`, `core_sidebar.py`, `events/boot.py` | Hides workspaces / sidebars / rail icons of off apps; never deletes. |
 | Industries | `industries/registry.py`, `industries/gate.py` | Second registry (jewellery, gym, restaurant, textile, supermarket) with capabilities + `requires_industries`, same three-layer gate. |
 | Feature catalog (one app) | `services/vansalex_access.py` | VanSaleX's own module/feature keys (`VanSaleX Settings.access` rows + per-user switch-offs), enforced in every `api/v1/vansalex/*` endpoint and by a DocType backstop for field users. |
-| POS pages | `ZG POS Settings → Pages` | Which POS app pages a site shows. |
-| Feature flags | `ZG Feature Flag` + `services/feature_flag_service.py` | Rollout flags (status, company/branch, rollout %). Not a licensing mechanism; little used. |
-| Plugin registry | `ZG Registered Application`, `ZG Setting Section`, `plugins/discover.py` | Projection of the catalog for client apps; `enabled` always follows the switch. |
-| Audit | `ZG Audit Log` + audit mixin | Every settings mutation logged (passwords redacted); delete restricted to System Manager. |
+| POS pages | `ZatGo POS Settings → Pages` | Which POS app pages a site shows. |
+| Feature flags | `Feature Flag` + `services/feature_flag_service.py` | Rollout flags (status, company/branch, rollout %). Not a licensing mechanism; little used. |
+| Plugin registry | `Registered Application`, `Setting Section`, `plugins/discover.py` | Projection of the catalog for client apps; `enabled` always follows the switch. |
+| Audit | `Audit Log` + audit mixin | Every settings mutation logged (passwords redacted); delete restricted to System Manager. |
 
 Design rules already established and documented (and which this project must keep): *one rule per concern*
 (no parallel registries), *off is not uninstalled*, *fail-open for unmanaged sites*, *site-optional Desk assets via
@@ -44,13 +44,13 @@ Design rules already established and documented (and which this project must kee
 Nothing named Product / Edition / Module / Feature / Licence / Subscription / Site Registration exists in
 zatgo_core. Closest existing pieces, which the new design must reuse or absorb rather than duplicate:
 
-- `ZG System Settings` (Single): app switches, industries table (`ZG Enabled Industry`).
-- `ZG Registered Application`, `ZG Setting Section`, `ZG Application Registry`, `ZG Client Application`,
-  `ZG Application Settings` (`client_apps`: which front-ends may talk to the site — advisory only).
-- `ZG Feature Flag`.
-- `VanSaleX Settings` + `VanSaleX Access` / `ZG Van Sale Profile Access`.
-- `ZG Config Profile`, `ZG Config History` (settings versioning/history).
-- `ZG Audit Log`.
+- `ZatGo System Settings` (Single): app switches, industries table (`Enabled Industry`).
+- `Registered Application`, `Setting Section`, `Application Registry`, `Client Application`,
+  `Application Settings` (`client_apps`: which front-ends may talk to the site — advisory only).
+- `Feature Flag`.
+- `VanSaleX Settings` + `VanSaleX Access` / `Van Sale Profile Access`.
+- `Config Profile`, `Config History` (settings versioning/history).
+- `Audit Log`.
 
 Outside zatgo_core: the **`space` app** (Space platform, separate repo, zatgoportal site) owns `Space Plan`
 (with `allowed_apps`), tenants, subscriptions, payments and the lifecycle (trial / read-only / inactivity
@@ -94,7 +94,7 @@ warnings and dry-run events. What is missing is the **offline** path (self-hoste
 | `before_request` | all | subscription write gate, app API gate (404), industry API gate, Desk includes |
 | `has_permission "*"` | all DocTypes | subscription (writes), bundled-module DocTypes, industry DocTypes |
 | `permission_query_conditions "*"` | all DocTypes | bundled-module rows, industry rows |
-| `has_permission` / query per DocType | ZG Device Token, ZG User Preferences (owner), Tracker (Project/Task/Issue/Timesheet), 9 AI DocTypes | owner / module scoping |
+| `has_permission` / query per DocType | Device Token, User Preferences (owner), Tracker (Project/Task/Issue/Timesheet), 9 AI DocTypes | owner / module scoping |
 | `doc_events "*"` | all | subscription write gate (7 events), Chat AI hooks |
 | DocType backstop | Sales Invoice/Order, Stock Entry, Payment Entry (field users) | VanSaleX feature switches |
 | `services/row_scope.py` | API reads using SQL | Company User Permission applied in SQL, portal party scope |
@@ -117,7 +117,7 @@ check), and be exempt during install/migrate.
 | Workspace / sidebar / Desktop Icon visibility | already driven by `app_desk` / `app_sidebar` | Extend, don't rebuild. |
 | Report permissions | Report `roles`, `frappe.desk.query_report.run` (already overridden) | Report-level gate goes in the existing override. |
 | Print | printview / download_pdf (already overridden) | Print gate goes in the existing override. |
-| Audit | Version, Activity Log, `ZG Audit Log` | `ZG Audit Log` for licence/edition events. |
+| Audit | Version, Activity Log, `Audit Log` | `Audit Log` for licence/edition events. |
 
 What ERPNext does **not** provide: a commercial edition/licence concept. There is also no Gate Entry / Gate Pass
 DocType anywhere on the bench, and no India-GST app (india_compliance) installed — so brief modules **L (Gate
@@ -149,7 +149,7 @@ customer. Therefore:
   **vendor-side** artefact; on a customer site the only trusted input is the **signed licence payload** (which
   embeds the resolved module/feature/action set of its edition at issue time — this also satisfies "changing an
   edition template must not silently change active licences").
-- Customer-side DocTypes (ZG Licence etc.) hold the original signed bytes; every enforcement read re-derives
+- Customer-side DocTypes (Licence etc.) hold the original signed bytes; every enforcement read re-derives
   from a verified payload (cached by payload hash), never from editable fields.
 - The brief's "authorized ZatGo administrator" has no meaning on a customer site unless we make it one. Proposal:
   editing editions happens only where the issuer runs (C5).
@@ -214,7 +214,7 @@ licensable feature needs either an API prefix or an explicit `@feature_api("..."
 `tests/integration/test_mybis_security.py`) should fail when a whitelisted endpoint has no declared feature.
 
 **C12 — Three overlapping registries already.** `app_catalog`, `industries/registry`, `vansalex_access.CATALOG`
-(+ POS Pages, + `ZG Feature Flag`). The new Module/Feature registry must sit **above** them and reference them
+(+ POS Pages, + `Feature Flag`). The new Module/Feature registry must sit **above** them and reference them
 (e.g. feature `vansalex.sales.credit_sale` → existing VanSaleX key), not copy them. Editions then *license* apps;
 the site switch still decides whether a licensed app is *on* (`app_state` becomes "licensed AND switched on").
 
@@ -238,10 +238,10 @@ the workspace's active scope.
             VENDOR SIDE (issuer host, key file outside sites/)                CUSTOMER SITE
  ┌────────────────────────────────────────────────────┐        ┌──────────────────────────────────────────┐
  │ Module/Feature registry  (code, shipped in core)   │        │ same registry (code)                     │
- │ Editions (ZG Edition + presets, editable here)     │        │ ZG Licence (signed bytes, read-only)     │
+ │ Editions (Edition + presets, editable here)     │        │ Licence (signed bytes, read-only)     │
  │ Edition builder + dependency inspector             │  .zgl  │ licence_service.verify() -> capabilities │
  │ Issuer: canonical JSON -> Ed25519 sign -> .zgl     │ ─────► │ capability_gate: request / has_permission│
- │ ZG Licence History (issuer's own record)           │        │   / doc_events / report / print / API    │
+ │ Licence History (issuer's own record)           │        │   / doc_events / report / print / API    │
  └────────────────────────────────────────────────────┘        │ app_state = licensed AND switched on     │
                                                                │ subscription_gate = min(Space, licence)  │
                                                                └──────────────────────────────────────────┘
@@ -250,16 +250,16 @@ the workspace's active scope.
 - **Registry in code**, like `app_catalog`: `zatgo_core/licensing/registry/*.py` declaring modules → features →
   `{doctypes: {name: [actions]}, reports, pages, workspaces, api_prefixes, platforms, requires}` with stable ids
   (`sales.invoice.create`). Code because it describes code that ships; versioned with the app; testable (every
-  DocType/report/page it names must exist — a unit test). DocTypes `ZG Module` / `ZG Feature` become read-only
-  projections for the UI (like `ZG Registered Application`), not authority.
-- **Editions** (`ZG Edition`, `ZG Edition Feature`): data, editable only where issuer mode is on; 9 presets
+  DocType/report/page it names must exist — a unit test). DocTypes `Module` / `Feature` become read-only
+  projections for the UI (like `Registered Application`), not authority.
+- **Editions** (`Edition`, `Edition Feature`): data, editable only where issuer mode is on; 9 presets
   shipped as JSON fixtures; import/export as `edition.json` (unsigned, never trusted as a licence).
 - **Licence** (`.zgl`): `{schema_version, product_id, licence_id, licence_number, licence_version, customer,
   site_ids[], edition_id, edition_version, features{id: [actions]}, limits{users, companies, sites}, type,
   issue/start/expiry, grace_days, platforms}` canonical JSON (sorted keys, UTF-8, no floats) + Ed25519
   signature, base64 envelope. Public key(s) in code with a key id, so keys can rotate.
-- **Customer side**: `ZG Licence` (the imported envelope, status, verification result; write only through the
-  import service, System Manager), `ZG Licence Activation` (history), events in `ZG Audit Log`. Enforcement switch
+- **Customer side**: `Licence` (the imported envelope, status, verification result; write only through the
+  import service, System Manager), `Licence Activation` (history), events in `Audit Log`. Enforcement switch
   + site UUID in `site_config` (bench user only).
 - **One capability gate** (`services/capability_gate.py`) implementing the brief's `is_feature_enabled`,
   `can_access_doctype`, `can_access_report`, `get_effective_permissions`, `validate_feature_access`, wired into the
@@ -293,8 +293,8 @@ the workspace's active scope.
 
 | Phase | Deliverable | Touches production behaviour? |
 |---|---|---|
-| 2 | Registry in code (modules/features/DocType+action maps, never-gate list, existence test); read-only `ZG Module`/`ZG Feature` projection | No |
-| 3 | `ZG Edition` + presets + dependency inspector (resolves required DocTypes/reports/settings, warns, never auto-adds paid modules) | No (issuer side only) |
+| 2 | Registry in code (modules/features/DocType+action maps, never-gate list, existence test); read-only `Module`/`Feature` projection | No |
+| 3 | `Edition` + presets + dependency inspector (resolves required DocTypes/reports/settings, warns, never auto-adds paid modules) | No (issuer side only) |
 | 4 | Capability gate wired into existing hooks, behind the per-site enforcement switch (off) | No until switched on |
 | 5 | Licence format, Ed25519 sign/verify, issuer (per D2), tamper/wrong-site/expiry tests | No |
 | 6 | Customer licence workspace: import, verify, overview, history, warnings (real actions only) | UI only |

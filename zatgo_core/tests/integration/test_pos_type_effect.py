@@ -1,4 +1,4 @@
-"""POS Type (ZG POS Settings) really changes what the ZatGo POS does: the profile and settings the POS reads, which
+"""POS Type (ZatGo POS Settings) really changes what the ZatGo POS does: the profile and settings the POS reads, which
 engine answers (restaurant or retail), and a real sale through that engine -- Sales Invoice, Payment Entry and stock.
 
 Restaurant and Cafe run the restaurant engine, Supermarket and General Retail the retail one; Pharmacy and Electrical
@@ -65,11 +65,11 @@ class TestPosTypeEffect(IndustryTestBase):
             "Account", {"account_type": "Cash", "company": cls.company, "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cash_account)
-        if frappe.db.exists("ZG Company Settings", cls.company):
-            frappe.db.set_value("ZG Company Settings", cls.company, "default_warehouse", cls.warehouse)
+        if frappe.db.exists("Company Settings", cls.company):
+            frappe.db.set_value("Company Settings", cls.company, "default_warehouse", cls.warehouse)
         else:
             frappe.get_doc(
-                {"doctype": "ZG Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
+                {"doctype": "Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
             ).insert(ignore_permissions=True)
         frappe.db.commit()
 
@@ -129,7 +129,7 @@ class TestPosTypeEffect(IndustryTestBase):
         paid = resto.pay(order_id, "cash", f"ty-pay-{random_string(8)}")
         self.assertTrue(paid["success"], paid.get("error"))
         self.assertEqual(paid["data"]["order"]["status"], "paid")
-        return frappe.db.get_value("ZG Order", order_id, "sales_invoice"), item
+        return frappe.db.get_value("Order", order_id, "sales_invoice"), item
 
     def _counter_sale(self) -> tuple[str, str, str]:
         """One-step counter sale through the retail engine. Returns (invoice, payment, item)."""
@@ -239,7 +239,7 @@ class TestPosTypeEffect(IndustryTestBase):
 
     def test_only_a_system_manager_can_change_the_type(self) -> None:
         self._choose("Restaurant")
-        user = self._user("ZG Company Admin")  # may write the settings form, may not switch industries
+        user = self._user("ZatGo Company Admin")  # may write the settings form, may not switch industries
         frappe.set_user(user)
         try:
             doc = frappe.get_doc(pos_settings.SETTINGS)

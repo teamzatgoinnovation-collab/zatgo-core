@@ -11,7 +11,7 @@ MANIFEST = {
     "menu_order": 10,
     "enabled": 1,
     "visible": 1,
-    "roles": "System Manager,ZG Application Admin,ZG Company Admin",
+    "roles": "System Manager,ZatGo Application Admin,ZatGo Company Admin",
     "depends_on": "",
     "description": "Point of sale configuration",
     "settings_route": "",
@@ -21,7 +21,7 @@ MANIFEST = {
             "label": "General",
             "icon": "setting",
             "sort_order": 10,
-            "link_doctype": "ZG System Settings",
+            "link_doctype": "ZatGo System Settings",
             "component": "",
         },
         {
@@ -49,7 +49,7 @@ MANIFEST = {
             "label": "Receipt Settings",
             "icon": "printer",
             "sort_order": 30,
-            "link_doctype": "ZG Printer Settings",
+            "link_doctype": "Printer Settings",
             "component": "",
         },
         {
@@ -57,7 +57,7 @@ MANIFEST = {
             "label": "Printer Settings",
             "icon": "printer",
             "sort_order": 40,
-            "link_doctype": "ZG Printer Settings",
+            "link_doctype": "Printer Settings",
             "component": "",
         },
         {
@@ -65,7 +65,7 @@ MANIFEST = {
             "label": "Payment Methods",
             "icon": "money",
             "sort_order": 50,
-            "link_doctype": "ZG Payment Settings",
+            "link_doctype": "Payment Settings",
             "component": "",
         },
         {
@@ -73,7 +73,7 @@ MANIFEST = {
             "label": "Offline Sync",
             "icon": "refresh",
             "sort_order": 60,
-            "link_doctype": "ZG Sync Settings",
+            "link_doctype": "Sync Settings",
             "component": "",
         },
         {

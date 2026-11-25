@@ -15,10 +15,10 @@
    "role": "System Manager"
   },
   {
-   "role": "ZG Application Admin"
+   "role": "ZatGo Application Admin"
   },
   {
-   "role": "ZG Read Only"
+   "role": "ZatGo Read Only"
   }
  ],
  "standard": "Yes",

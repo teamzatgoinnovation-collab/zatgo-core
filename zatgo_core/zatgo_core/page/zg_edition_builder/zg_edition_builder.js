@@ -1,5 +1,5 @@
 // ZatGo Editions: build and inspect commercial editions (docs/licensing.md).
-// Data and every rule come from zatgo_core.api.v1.licensing.editions; the ZG Edition controller decides who may
+// Data and every rule come from zatgo_core.api.v1.licensing.editions; the Edition controller decides who may
 // change what (licence issuer site + System Manager). Elsewhere this page is read-only.
 frappe.pages["zg-edition-builder"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({ parent: wrapper, title: __("ZatGo Editions"), single_column: true });

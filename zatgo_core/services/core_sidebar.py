@@ -11,7 +11,7 @@ a Section Break and the `child` links after it, so every row after a section is 
 the last section at top level (it would look like one of its items).
 
 `sync_core_sidebar()` is an upsert: rows are replaced only when they drift, so it is cheap to call
-from migrate and from ZG System Settings' on_update (when a switch is flipped).
+from migrate and from ZatGo System Settings' on_update (when a switch is flipped).
 """
 
 from __future__ import annotations

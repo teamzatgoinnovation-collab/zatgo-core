@@ -29,9 +29,9 @@ def ensure_custom_fields() -> None:
     Each field group is independent and wrapped separately so one failure
     (e.g. a DocType not yet installed) doesn't block the others.
     """
-    # Must precede the generic client_id pass: it dedupes ZG Trip rows that
+    # Must precede the generic client_id pass: it dedupes Trip rows that
     # would otherwise make the (now UNIQUE) zatgo_client_id index unbuildable.
-    _run("ZG Trip client_id uniqueness", _ensure_zg_trip_client_id_unique)
+    _run("Trip client_id uniqueness", _ensure_zg_trip_client_id_unique)
     _run("zatgo_client_id fields", _ensure_zatgo_client_id_fields)
     _run("customer sync fields", _ensure_customer_sync_fields)
     _run("item sync fields", _ensure_item_sync_fields)

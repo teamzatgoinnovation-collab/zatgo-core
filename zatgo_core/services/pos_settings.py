@@ -1,4 +1,4 @@
-"""What the ZatGo POS app is told about this site: `ZG POS Settings` as one flat dict.
+"""What the ZatGo POS app is told about this site: `ZatGo POS Settings` as one flat dict.
 
 Read by api/v1/pos_settings.py. Defaults are the ones in the DocType JSON, so a site that never saved the form
 gets the same answer as one that saved it untouched."""
@@ -10,7 +10,7 @@ from typing import Any
 import frappe
 from frappe.utils import cint, flt
 
-SETTINGS = "ZG POS Settings"
+SETTINGS = "ZatGo POS Settings"
 
 # POS Type -> (pos_mode the POS app gets, industry that must be on for it, vertical the POS app labels itself with).
 # The industry gate stays the access rule. Cafe and General Retail are variants that run on the Restaurant and
@@ -86,7 +86,7 @@ def switch_industry_on(chosen: str) -> bool:
     for row in settings.enabled_industries:
         if row.industry == industry:
             row.enabled = 1
-    # ZG System Settings' own validate checks the industry's requirements and who may switch.
+    # ZatGo System Settings' own validate checks the industry's requirements and who may switch.
     settings.save(ignore_permissions=True)
     return True
 
@@ -95,7 +95,7 @@ OFFLINE_DEFAULTS = {"max_offline_hours": 72, "max_pending_sales": 500, "snapshot
 
 
 def offline_policy(doc=None) -> dict[str, Any]:
-    """What the POS may do without a connection (ZG POS Settings -> Offline). Off unless the site switched it on."""
+    """What the POS may do without a connection (ZatGo POS Settings -> Offline). Off unless the site switched it on."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     return {
         "enabled": cint(doc.get("offline_enabled")),
@@ -115,19 +115,19 @@ def _stored(doc, field: str, default):
 
 
 def credit_allowed(doc=None) -> bool:
-    """Credit (pay later) sales at the counter: off unless a manager ticked it in ZG POS Settings -> Payments."""
+    """Credit (pay later) sales at the counter: off unless a manager ticked it in ZatGo POS Settings -> Payments."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     return bool(cint(_stored(doc, "allow_credit_sales", 0)))
 
 
 def split_allowed(doc=None) -> bool:
-    """One sale paid with more than one mode of payment (ZG POS Settings -> Payments), on unless switched off."""
+    """One sale paid with more than one mode of payment (ZatGo POS Settings -> Payments), on unless switched off."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     return bool(cint(_stored(doc, "allow_split_payment", 1)))
 
 
 def discount_policy(doc=None) -> tuple[int, float]:
-    """(allow_discounts, max_discount_percent) as ZG POS Settings stores them, with the DocType defaults when never saved."""
+    """(allow_discounts, max_discount_percent) as ZatGo POS Settings stores them, with the DocType defaults when never saved."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     allow = cint(_stored(doc, "allow_discounts", 1))
     cap = flt(_stored(doc, "max_discount_percent", 100))
@@ -136,7 +136,7 @@ def discount_policy(doc=None) -> tuple[int, float]:
 
 
 def counter_policy(doc=None) -> dict[str, Any]:
-    """Counter screen and invoice print defaults (ZG POS Settings), with the DocType defaults when never saved."""
+    """Counter screen and invoice print defaults (ZatGo POS Settings), with the DocType defaults when never saved."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     paper = _stored(doc, "paper_size", "80mm")
     view = _stored(doc, "product_view", "Grid")
@@ -153,7 +153,7 @@ TAX_MODES = {"Prices include tax": True, "Prices exclude tax": False}
 
 
 def tax_inclusive_override(doc=None) -> bool | None:
-    """ZG POS Settings -> Prices and Tax: True = prices include tax, False = tax is added on top, None = follow the company's
+    """ZatGo POS Settings -> Prices and Tax: True = prices include tax, False = tax is added on top, None = follow the company's
     Sales Taxes template (the default, and what a site that never chose gets)."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     return TAX_MODES.get(_stored(doc, "tax_mode", "Follow tax template"))
@@ -175,7 +175,7 @@ PAGE_KEYS = ("dashboard", "orders", "floor", "kds", "catalog", "billing", "deliv
 
 
 def pages_policy(doc=None) -> dict[str, int]:
-    """Which POS app pages the site switched on (ZG POS Settings -> Pages). The POS screen itself is always on and not listed.
+    """Which POS app pages the site switched on (ZatGo POS Settings -> Pages). The POS screen itself is always on and not listed.
     Unticked or never saved means off: a site shows only the POS screen until an admin ticks more."""
     doc = doc or frappe.get_cached_doc(SETTINGS)
     return {key: cint(doc.get(f"page_{key}")) for key in PAGE_KEYS}

@@ -2,11 +2,11 @@
 Order / Delivery Note, and 'Set Accepted Warehouse' on Purchase Receipt, with
 the user's default warehouse (Rejected Warehouse is never defaulted).
 
-Switchable in ZG System Settings -> "Auto-fill Source Warehouse on Documents"
+Switchable in ZatGo System Settings -> "Auto-fill Source Warehouse on Documents"
 (default on): off leaves the field blank, in the form and on save alike.
 
 The default is the one rule in services/vansalex_settings.py (profile ->
-ZG Company Settings -> Stock Settings). It is only used when it belongs to
+Company Settings -> Stock Settings). It is only used when it belongs to
 the document's company; a warehouse the user already chose is never touched.
 """
 
@@ -19,12 +19,12 @@ from zatgo_core.services.vansalex_settings import resolve
 
 
 def autofill_enabled() -> bool:
-    """ZG System Settings -> 'Auto-fill Source Warehouse on Documents' (default on).
+    """ZatGo System Settings -> 'Auto-fill Source Warehouse on Documents' (default on).
     get_single_value can't tell "never saved" from "unticked" (both 0), so read the
     row: no row yet means the field default, on -- existing sites keep filling."""
     rows = frappe.db.sql(
         "SELECT value FROM `tabSingles` WHERE doctype = %s AND field = %s",
-        ("ZG System Settings", "autofill_source_warehouse"),
+        ("ZatGo System Settings", "autofill_source_warehouse"),
     )
     return True if not rows else bool(cint(rows[0][0]))
 

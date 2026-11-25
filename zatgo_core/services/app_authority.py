@@ -1,7 +1,7 @@
 """Who may switch ZatGo apps (and industries) on or off.
 
-The App Settings Hub only lets a System Manager do it, but the switches are plain fields of ZG System
-Settings -- and that DocType is also writable by ZG Application Admin and ZG Company Admin (Desk form, REST
+The App Settings Hub only lets a System Manager do it, but the switches are plain fields of ZatGo System
+Settings -- and that DocType is also writable by ZatGo Application Admin and ZatGo Company Admin (Desk form, REST
 API). A UI-only rule is not security, so the DocType controller asks here on every save: changing an app's
 switch or the Industries table is a System Manager's call, whatever route the save took.
 
@@ -29,7 +29,7 @@ def is_system_context() -> bool:
 
 
 def changed_switches(before: Any | None, after: Any) -> set[str]:
-    """Keys of the apps whose switch differs between two ZG System Settings documents. With no `before`
+    """Keys of the apps whose switch differs between two ZatGo System Settings documents. With no `before`
     (first save) every switchable app counts as changed."""
     if before is None:
         return {a["key"] for a in app_catalog.catalog() if a["switch_field"]}

@@ -45,11 +45,11 @@ class TestDefaultSourceWarehouse(IntegrationTestCase):
         self.assertIsNone(default_source_warehouse("No Such Company"))
 
 
-SETTINGS, FIELD = "ZG System Settings", "autofill_source_warehouse"
+SETTINGS, FIELD = "ZatGo System Settings", "autofill_source_warehouse"
 
 
 class TestAutofillSwitch(IntegrationTestCase):
-    """ZG System Settings -> Auto-fill Source Warehouse on Documents: on by default (and where never saved),
+    """ZatGo System Settings -> Auto-fill Source Warehouse on Documents: on by default (and where never saved),
     off leaves the field blank in the form and on save."""
 
     def setUp(self) -> None:

@@ -88,8 +88,8 @@ class TestRestoPosAdmin(IntegrationTestCase):
         admin.upsert_item(item_code=code, item_name=code, price=10)
         frappe.db.set_value("Item", code, "valuation_rate", 5)
         admin.adjust_stock(code, 10, f"adj-{random_string(8)}", warehouse=self.warehouse, company=self.company)
-        if frappe.db.exists("ZG Company Settings", self.company):
-            frappe.db.set_value("ZG Company Settings", self.company, "default_warehouse", self.warehouse)
+        if frappe.db.exists("Company Settings", self.company):
+            frappe.db.set_value("Company Settings", self.company, "default_warehouse", self.warehouse)
         order = svc.create_order(
             company=self.company,
             channel="counter",
@@ -110,8 +110,8 @@ class TestRestoPosAdmin(IntegrationTestCase):
         admin.upsert_item(item_code=code, item_name=code, price=10)
         frappe.db.set_value("Item", code, "valuation_rate", 5)
         admin.adjust_stock(code, 10, f"adj-{random_string(8)}", warehouse=self.warehouse, company=self.company)
-        if frappe.db.exists("ZG Company Settings", self.company):
-            frappe.db.set_value("ZG Company Settings", self.company, "default_warehouse", self.warehouse)
+        if frappe.db.exists("Company Settings", self.company):
+            frappe.db.set_value("Company Settings", self.company, "default_warehouse", self.warehouse)
         order = svc.create_order(
             company=self.company,
             channel="counter",
@@ -123,6 +123,6 @@ class TestRestoPosAdmin(IntegrationTestCase):
             svc.pay(order_id, "cash", f"disc-bad-{random_string(8)}", "fixed", 999)
         paid = svc.pay(order_id, "cash", f"disc-pay-{random_string(8)}", "percent", 10)
         self.assertTrue(paid["success"], paid.get("error"))
-        si = frappe.get_doc("Sales Invoice", frappe.db.get_value("ZG Order", order_id, "sales_invoice"))
+        si = frappe.get_doc("Sales Invoice", frappe.db.get_value("Order", order_id, "sales_invoice"))
         self.assertEqual(si.net_total, 18)  # 20 less 10%
         self.assertEqual(paid["data"]["payment"]["amount"], si.grand_total)

@@ -7,7 +7,7 @@ the app shows only what the site enables, and the server rejects the rest.
 ```
 VanSaleX app ──me.context──▶ zatgo_core (control plane) ──▶ ERPNext (books, stock)
               ◀── access ───  VanSaleX Settings → Modules & Features
-                               ZG Van Sale Profile → switch-offs per user
+                               Van Sale Profile → switch-offs per user
 ```
 
 Code: `zatgo_core/services/vansalex_access.py` (catalog, evaluation,
@@ -66,7 +66,7 @@ Modules & Features table. Settings and Logout are always available.
 
 ```
 effective(key) = client on   (row in VanSaleX Settings, or the derived setting)
-             AND not switched off on the user's ZG Van Sale Profile
+             AND not switched off on the user's Van Sale Profile
              AND parent module on          (features only)
 ```
 
@@ -96,7 +96,7 @@ Hiding a screen in the app is not the control:
    choice and card collections are checked where the payment rows are parsed
    (`services/vansalex_service.py`).
 2. **DocType backstop** — `check_doc_access` in `doc_events`, for **field
-   users** (enabled ZG Van Sale Profile, type Field User) on any entry point
+   users** (enabled Van Sale Profile, type Field User) on any entry point
    — `/api/resource`, the shared `accounting.customers.*` /
    `warehouse.items.*` endpoints, Desk:
    - Sales Invoice / return, Sales Order, Purchase Invoice / Order, Payment
@@ -161,7 +161,7 @@ DocPerm, so before the first seed of a DocType the standard rows are copied in
 a row an admin later removes stays removed. Left out: a row giving `All` or
 `Desk User` write on other people's records. Every staff user holds `Desk User`,
 VanSale User included, so copying it would make field users writers of
-`ZG Vehicle` and creators of `ZG Delivery Stop`. Such a DocType needs an explicit
+`ZatGo Vehicle` and creators of `ZatGo Delivery Stop`. Such a DocType needs an explicit
 role to be written (System Manager, Delivery, a VanSale role).
 
 **Upgrading a site restores access**: roles such as Accounts User, Sales User and
@@ -185,7 +185,7 @@ on their next app launch or dashboard refresh — no new app build.
 
 **Enable more modules** — tick them in the same table.
 
-**One driver gets less** — their ZG Van Sale Profile → Modules & Features:
+**One driver gets less** — their Van Sale Profile → Modules & Features:
 add a row per key to switch off.
 
 Every change is in the document's Version history (who, when, old → new).
@@ -193,7 +193,7 @@ Every change is in the document's Version history (who, when, old → new).
 ## Adding a new key
 
 1. Add it to `CATALOG` in `services/vansalex_access.py` (default `0` for new
-   functionality) and to the `ZG Van Sale Profile Access.access_key` options.
+   functionality) and to the `Van Sale Profile Access.access_key` options.
 2. Gate the endpoint(s) with `require(...)`; add a DocType backstop branch if
    it creates documents.
 3. Mirror the key in the app's `feature_registry.dart` and gate the UI.
@@ -202,7 +202,7 @@ Every change is in the document's Version history (who, when, old → new).
 ## Cash / Bank accounts
 
 Cash and Bank sales pay into one ledger account (ERPNext's auto Payment
-Entry). Default, first match wins: the driver's `ZG Van Sale Profile`
+Entry). Default, first match wins: the driver's `Van Sale Profile`
 Cash / Bank Account → `VanSaleX Settings` Default Cash / Bank Account (if it
 belongs to the driver's company) → ERPNext (Mode of Payment "Cash" default;
 the company's Bank-type Mode of Payment default, "Bank" first). The app

@@ -20,13 +20,13 @@ def ping() -> dict[str, Any]:
 def status() -> dict[str, Any]:
     require_login()
     stop_count = (
-        frappe.db.count("ZG Delivery Stop")
-        if frappe.db.exists("DocType", "ZG Delivery Stop")
+        frappe.db.count("ZatGo Delivery Stop")
+        if frappe.db.exists("DocType", "ZatGo Delivery Stop")
         else 0
     )
     boy_count = (
-        frappe.db.count("ZG Delivery Boy")
-        if frappe.db.exists("DocType", "ZG Delivery Boy")
+        frappe.db.count("Delivery Boy")
+        if frappe.db.exists("DocType", "Delivery Boy")
         else 0
     )
     return ok(

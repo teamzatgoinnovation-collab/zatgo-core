@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1] / "zatgo_core" / "zatgo_core" / "doct
 
 CONTROLLERS: dict[str, str] = {
     "zg_system_settings": '''\
-"""ZG System Settings controller."""
+"""ZatGo System Settings controller."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class ZatGoSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Global ERP foundation settings for the ZatGo ecosystem."""
 
     def validate(self) -> None:
@@ -37,7 +37,7 @@ class ZGSystemSettings(AuditableMixin, CacheableSettingsMixin, Document):
                 )
 ''',
     "zg_company_settings": '''\
-"""ZG Company Settings controller."""
+"""Company Settings controller."""
 
 from __future__ import annotations
 
@@ -48,14 +48,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.company_settings import validate_company_settings
 
 
-class ZGCompanySettings(AuditableMixin, CacheableSettingsMixin, Document):
+class CompanySettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Company-scoped configuration for ZatGo apps."""
 
     def validate(self) -> None:
         validate_company_settings(self)
 ''',
     "zg_branch_settings": '''\
-"""ZG Branch Settings controller."""
+"""Branch Settings controller."""
 
 from __future__ import annotations
 
@@ -66,14 +66,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.branch_settings import validate_branch_settings
 
 
-class ZGBranchSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class BranchSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Branch-scoped operational configuration."""
 
     def validate(self) -> None:
         validate_branch_settings(self)
 ''',
     "zg_application_registry": '''\
-"""ZG Application Registry controller."""
+"""Application Registry controller."""
 
 from __future__ import annotations
 
@@ -84,14 +84,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.app_registry import validate_app_registry
 
 
-class ZGApplicationRegistry(AuditableMixin, CacheableSettingsMixin, Document):
+class ApplicationRegistry(AuditableMixin, CacheableSettingsMixin, Document):
     """Installed ZatGo application registry row."""
 
     def validate(self) -> None:
         validate_app_registry(self)
 ''',
     "zg_feature_flag": '''\
-"""ZG Feature Flag controller."""
+"""Feature Flag controller."""
 
 from __future__ import annotations
 
@@ -102,14 +102,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.feature_flags import validate_feature_flag
 
 
-class ZGFeatureFlag(AuditableMixin, CacheableSettingsMixin, Document):
+class FeatureFlag(AuditableMixin, CacheableSettingsMixin, Document):
     """Runtime feature toggle without code changes."""
 
     def validate(self) -> None:
         validate_feature_flag(self)
 ''',
     "zg_integration_settings": '''\
-"""ZG Integration Settings controller."""
+"""Integration Settings controller."""
 
 from __future__ import annotations
 
@@ -120,14 +120,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.integrations import validate_integration_settings
 
 
-class ZGIntegrationSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class IntegrationSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """External integration credentials and toggles."""
 
     def validate(self) -> None:
         validate_integration_settings(self)
 ''',
     "zg_printer_settings": '''\
-"""ZG Printer Settings controller."""
+"""Printer Settings controller."""
 
 from __future__ import annotations
 
@@ -137,13 +137,13 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGPrinterSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class PrinterSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Global printer defaults for POS / kitchen / labels."""
 
     pass
 ''',
     "zg_payment_settings": '''\
-"""ZG Payment Settings controller."""
+"""Payment Settings controller."""
 
 from __future__ import annotations
 
@@ -153,13 +153,13 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGPaymentSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class PaymentSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Payment method and surcharge configuration."""
 
     pass
 ''',
     "zg_notification_settings": '''\
-"""ZG Notification Settings controller."""
+"""ZatGo Notification Settings controller."""
 
 from __future__ import annotations
 
@@ -169,13 +169,13 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGNotificationSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class ZatGoNotificationSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Notification channel configuration."""
 
     pass
 ''',
     "zg_storage_settings": '''\
-"""ZG Storage Settings controller."""
+"""Storage Settings controller."""
 
 from __future__ import annotations
 
@@ -185,13 +185,13 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGStorageSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class StorageSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """File storage and backup provider configuration."""
 
     pass
 ''',
     "zg_security_settings": '''\
-"""ZG Security Settings controller."""
+"""ZatGo Security Settings controller."""
 
 from __future__ import annotations
 
@@ -202,14 +202,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.security import validate_security_settings
 
 
-class ZGSecuritySettings(AuditableMixin, CacheableSettingsMixin, Document):
+class ZatGoSecuritySettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Password, session, and access-control policy."""
 
     def validate(self) -> None:
         validate_security_settings(self)
 ''',
     "zg_sync_settings": '''\
-"""ZG Sync Settings controller."""
+"""Sync Settings controller."""
 
 from __future__ import annotations
 
@@ -219,26 +219,26 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGSyncSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class SyncSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Offline sync and queue configuration."""
 
     pass
 ''',
     "zg_number_series_item": '''\
-"""ZG Number Series Item child table controller."""
+"""Number Series Item child table controller."""
 
 from __future__ import annotations
 
 from frappe.model.document import Document
 
 
-class ZGNumberSeriesItem(Document):
+class NumberSeriesItem(Document):
     """Child row defining a document numbering series."""
 
     pass
 ''',
     "zg_number_series_settings": '''\
-"""ZG Number Series Settings controller."""
+"""Number Series Settings controller."""
 
 from __future__ import annotations
 
@@ -249,14 +249,14 @@ from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 from zatgo_core.validation.number_series import validate_number_series
 
 
-class ZGNumberSeriesSettings(AuditableMixin, CacheableSettingsMixin, Document):
+class NumberSeriesSettings(AuditableMixin, CacheableSettingsMixin, Document):
     """Central numbering series registry for all ZatGo documents."""
 
     def validate(self) -> None:
         validate_number_series(self)
 ''',
     "zg_audit_log": '''\
-"""ZG Audit Log controller."""
+"""Audit Log controller."""
 
 from __future__ import annotations
 
@@ -264,7 +264,7 @@ import frappe
 from frappe.model.document import Document
 
 
-class ZGAuditLog(Document):
+class AuditLog(Document):
     """Immutable audit trail entry (no client edits expected)."""
 
     def on_trash(self) -> None:
@@ -272,7 +272,7 @@ class ZGAuditLog(Document):
             frappe.throw(frappe._("Only System Manager can delete audit logs"))
 ''',
     "zg_user_preferences": '''\
-"""ZG User Preferences controller."""
+"""User Preferences controller."""
 
 from __future__ import annotations
 
@@ -282,7 +282,7 @@ from zatgo_core.mixins.auditable import AuditableMixin
 from zatgo_core.mixins.cacheable_settings import CacheableSettingsMixin
 
 
-class ZGUserPreferences(AuditableMixin, CacheableSettingsMixin, Document):
+class UserPreferences(AuditableMixin, CacheableSettingsMixin, Document):
     """Per-user desk preferences for ZatGo applications."""
 
     pass

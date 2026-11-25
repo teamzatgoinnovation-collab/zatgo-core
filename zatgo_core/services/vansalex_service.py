@@ -331,7 +331,7 @@ def _build_direct_invoice(
     _apply_line_discounts(rows, line_discounts)
 
     # No naming_series here: the Sales Invoice before_insert hook picks it from
-    # the caller's rule in ZG Sales Invoice Naming Settings (or ERPNext's default).
+    # the caller's rule in Sales Invoice Naming Settings (or ERPNext's default).
     doc_payload: dict[str, Any] = {
         "doctype": "Sales Invoice",
         "customer": party,
@@ -471,9 +471,9 @@ def create_order(
         frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
 
     trip = (trip_id or "").strip()
-    if trip and frappe.db.exists("ZG Trip", trip) and frappe.db.has_column("ZG Trip", "sales_invoice"):
+    if trip and frappe.db.exists("Trip", trip) and frappe.db.has_column("Trip", "sales_invoice"):
         try:
-            frappe.db.set_value("ZG Trip", trip, "sales_invoice", doc.name, update_modified=False)
+            frappe.db.set_value("Trip", trip, "sales_invoice", doc.name, update_modified=False)
             frappe.db.commit()
         except Exception:
             frappe.log_error(title="VanSale trip-SI link failed", message=frappe.get_traceback())
@@ -577,7 +577,7 @@ def create_sales_order(
     wh = require_own_warehouse(None)
     if not wh:
         frappe.throw(
-            "Van warehouse is required. Set warehouse on ZG Van Sale Profile.",
+            "Van warehouse is required. Set warehouse on Van Sale Profile.",
             frappe.ValidationError,
         )
     for row in rows:
@@ -754,9 +754,9 @@ def confirm_order(
         frappe.log_error(title="VanSale ZATCA QR generation failed", message=frappe.get_traceback())
 
     trip = (trip_id or "").strip()
-    if trip and frappe.db.exists("ZG Trip", trip) and frappe.db.has_column("ZG Trip", "sales_invoice"):
+    if trip and frappe.db.exists("Trip", trip) and frappe.db.has_column("Trip", "sales_invoice"):
         try:
-            frappe.db.set_value("ZG Trip", trip, "sales_invoice", doc.name, update_modified=False)
+            frappe.db.set_value("Trip", trip, "sales_invoice", doc.name, update_modified=False)
             frappe.db.commit()
         except Exception:
             frappe.log_error(title="VanSale trip-SI link failed", message=frappe.get_traceback())
@@ -922,7 +922,7 @@ def create_sales_return(
         doc.remarks = (f"{doc.remarks}\n" if doc.remarks else "") + f"Return reason: {reason}"
 
     # naming_series is left to the Sales Invoice before_insert hook
-    # (events/sales_invoice_naming.py): the caller's return series from ZG Sales
+    # (events/sales_invoice_naming.py): the caller's return series from ZatGo Sales
     # Invoice Naming Settings, else the site's configured "-RET-" counterpart.
     # Never the original's number: the return is a new document in its own series.
 
@@ -986,7 +986,7 @@ def create_collection(
         from zatgo_core.services.vansalex_settings import resolve
 
         # VanSaleX Settings / the driver's profile decide whether collections
-        # are limited to the driver's own customers: their route (ZG Trip)
+        # are limited to the driver's own customers: their route (Trip)
         # plus anyone they invoiced — the same set whose balances the app
         # shows them (aging is scoped the same way).
         if resolve()["restrict_collections_to_route"] and party not in field_user_customers():
@@ -1372,8 +1372,8 @@ def update_visit(
     if not status:
         frappe.throw(f"Invalid visit_status: {visit_status}")
 
-    frappe.has_permission("ZG Trip", "write", doc=name, throw=True)
-    doc = frappe.get_doc("ZG Trip", name)
+    frappe.has_permission("Trip", "write", doc=name, throw=True)
+    doc = frappe.get_doc("Trip", name)
     doc.status = status
     # Deliberately does NOT write cid onto doc.zatgo_client_id. That field is
     # the *create* idempotency key (UNIQUE as of
@@ -1381,17 +1381,17 @@ def update_visit(
     # visit's client_id would orphan the trip from its create id, so a retried
     # create would no longer find it and would insert a duplicate stop.
     # A status set is idempotent on its own; it needs no key of its own.
-    if lat is not None and str(lat) != "" and frappe.db.has_column("ZG Trip", "check_in_lat"):
+    if lat is not None and str(lat) != "" and frappe.db.has_column("Trip", "check_in_lat"):
         doc.check_in_lat = flt(lat)
-    if lng is not None and str(lng) != "" and frappe.db.has_column("ZG Trip", "check_in_lng"):
+    if lng is not None and str(lng) != "" and frappe.db.has_column("Trip", "check_in_lng"):
         doc.check_in_lng = flt(lng)
-    if status == "Checked In" and frappe.db.has_column("ZG Trip", "check_in_at"):
+    if status == "Checked In" and frappe.db.has_column("Trip", "check_in_at"):
         from frappe.utils import now_datetime
 
         doc.check_in_at = now_datetime()
-    if notes is not None and frappe.db.has_column("ZG Trip", "visit_notes"):
+    if notes is not None and frappe.db.has_column("Trip", "visit_notes"):
         doc.visit_notes = notes
-    if no_sale_reason is not None and frappe.db.has_column("ZG Trip", "no_sale_reason"):
+    if no_sale_reason is not None and frappe.db.has_column("Trip", "no_sale_reason"):
         doc.no_sale_reason = no_sale_reason
     doc.save()
     frappe.db.commit()
@@ -1411,7 +1411,7 @@ def update_visit(
             "check_in_lng": getattr(doc, "check_in_lng", None),
             "sales_invoice": getattr(doc, "sales_invoice", None),
         },
-        meta={"stub": False, "updated": True, "source": "ZG Trip"},
+        meta={"stub": False, "updated": True, "source": "Trip"},
     )
 
 
@@ -1436,18 +1436,18 @@ _TRIP_OPTIONAL_COLUMNS = (
 def assert_trip_access(name: str) -> str:
     """Row-level guard: a field user may only touch their own trips.
 
-    `frappe.has_permission("ZG Trip", ...)` is role-level only — now that
+    `frappe.has_permission("Trip", ...)` is role-level only — now that
     VanSale User holds create/write on the DocType, every write path has to
     check the assignment itself or one salesperson could edit another's route.
     """
-    if not frappe.db.exists("ZG Trip", name):
-        frappe.throw(f"ZG Trip {name} not found")
+    if not frappe.db.exists("Trip", name):
+        frappe.throw(f"Trip {name} not found")
     if is_vansale_admin():
         return name
     owner = None
-    if frappe.db.has_column("ZG Trip", "sales_user"):
-        owner = frappe.db.get_value("ZG Trip", name, "sales_user")
-    owner = owner or frappe.db.get_value("ZG Trip", name, "owner")
+    if frappe.db.has_column("Trip", "sales_user"):
+        owner = frappe.db.get_value("Trip", name, "sales_user")
+    owner = owner or frappe.db.get_value("Trip", name, "owner")
     if owner and owner != frappe.session.user:
         frappe.throw(
             "Access denied: You can only change stops on your own route.",
@@ -1478,13 +1478,13 @@ def _trip_payload(doc: Any) -> dict[str, Any]:
 def _next_trip_sequence(sales_user: str | None, planned_at: Any) -> int:
     """One more than the highest sequence already planned for that day."""
     filters: dict[str, Any] = {}
-    if sales_user and frappe.db.has_column("ZG Trip", "sales_user"):
+    if sales_user and frappe.db.has_column("Trip", "sales_user"):
         filters["sales_user"] = sales_user
     if planned_at:
         day = getdate(planned_at)
         filters["planned_at"] = ["between", [f"{day} 00:00:00", f"{day} 23:59:59"]]
     rows = frappe.get_all(
-        "ZG Trip",
+        "Trip",
         filters=filters or None,
         fields=["sequence"],
         order_by="sequence desc",
@@ -1515,15 +1515,15 @@ def create_trip(
     """
     require_login()
     cid = require_str(client_id, "client_id")
-    existing = _find_by_client_id("ZG Trip", cid)
+    existing = _find_by_client_id("Trip", cid)
     if existing:
-        doc = frappe.get_doc("ZG Trip", existing)
+        doc = frappe.get_doc("Trip", existing)
         return ok(
             {**_trip_payload(doc), "client_id": cid},
-            meta={"stub": False, "idempotent": True, "source": "ZG Trip"},
+            meta={"stub": False, "idempotent": True, "source": "Trip"},
         )
 
-    frappe.has_permission("ZG Trip", "create", throw=True)
+    frappe.has_permission("Trip", "create", throw=True)
     party = _resolve_customer(customer)
 
     admin = is_vansale_admin()
@@ -1537,7 +1537,7 @@ def create_trip(
     profile = get_profile(owner_user or frappe.session.user)
     when = getdate(planned_at) if planned_at else getdate(nowdate())
 
-    doc = frappe.new_doc("ZG Trip")
+    doc = frappe.new_doc("Trip")
     doc.title = (title or "").strip() or frappe.db.get_value(
         "Customer", party, "customer_name"
     ) or party
@@ -1555,23 +1555,23 @@ def create_trip(
     if lng not in (None, ""):
         doc.lng = flt(lng)
 
-    if owner_user and frappe.db.has_column("ZG Trip", "sales_user"):
+    if owner_user and frappe.db.has_column("Trip", "sales_user"):
         doc.sales_user = owner_user
     if profile:
-        if frappe.db.has_column("ZG Trip", "warehouse") and profile.get("warehouse"):
+        if frappe.db.has_column("Trip", "warehouse") and profile.get("warehouse"):
             doc.warehouse = profile["warehouse"]
-        if frappe.db.has_column("ZG Trip", "vehicle") and profile.get("vehicle"):
+        if frappe.db.has_column("Trip", "vehicle") and profile.get("vehicle"):
             doc.vehicle = profile["vehicle"]
-    if frappe.db.has_column("ZG Trip", "route_title"):
+    if frappe.db.has_column("Trip", "route_title"):
         resolved_route = (route_title or "").strip() or (
             (profile or {}).get("route_title") or ""
         )
         if resolved_route:
             doc.route_title = resolved_route
-    if frappe.db.has_column("ZG Trip", "zatgo_client_id"):
+    if frappe.db.has_column("Trip", "zatgo_client_id"):
         doc.zatgo_client_id = cid
 
-    doc, created = insert_idempotent(doc, doctype="ZG Trip", client_id=cid)
+    doc, created = insert_idempotent(doc, doctype="Trip", client_id=cid)
     frappe.db.commit()
     return ok(
         {**_trip_payload(doc), "client_id": cid},
@@ -1579,7 +1579,7 @@ def create_trip(
             "stub": False,
             "created": created,
             "idempotent": not created,
-            "source": "ZG Trip",
+            "source": "Trip",
         },
     )
 
@@ -1614,7 +1614,7 @@ def update_trip(
 ) -> dict[str, Any]:
     require_login()
     trip = assert_trip_access(require_str(name, "name"))
-    doc = frappe.get_doc("ZG Trip", trip)
+    doc = frappe.get_doc("Trip", trip)
     if planned_at not in (None, ""):
         doc.planned_at = planned_at if _has_time(planned_at) else f"{getdate(planned_at)} 00:00:00"
     if address is not None:
@@ -1631,14 +1631,14 @@ def update_trip(
     frappe.db.commit()
     return ok(
         _trip_payload(doc),
-        meta={"stub": False, "updated": True, "source": "ZG Trip"},
+        meta={"stub": False, "updated": True, "source": "Trip"},
     )
 
 
 def reorder_trips(stops: Any) -> dict[str, Any]:
     """Apply new sequence numbers to a set of stops in one shot.
 
-    `stops` is a list of {"name": <ZG Trip>, "sequence": <int>} — the output
+    `stops` is a list of {"name": <Trip>, "sequence": <int>} — the output
     of the client's route optimizer. Only `sequence` is written, so this can
     never disturb a visit already in progress.
     """
@@ -1650,12 +1650,12 @@ def reorder_trips(stops: Any) -> dict[str, Any]:
     updated = []
     for row in rows:
         trip = assert_trip_access(row["name"])
-        frappe.db.set_value("ZG Trip", trip, "sequence", row["sequence"])
+        frappe.db.set_value("Trip", trip, "sequence", row["sequence"])
         updated.append({"name": trip, "sequence": row["sequence"]})
     frappe.db.commit()
     return ok(
         {"name": updated[0]["name"], "erp_name": updated[0]["name"], "stops": updated},
-        meta={"stub": False, "updated": len(updated), "source": "ZG Trip"},
+        meta={"stub": False, "updated": len(updated), "source": "Trip"},
     )
 
 

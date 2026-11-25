@@ -16,8 +16,8 @@ class TestAppImport(unittest.TestCase):
     def test_constants_export(self) -> None:
         from zatgo_core.constants import DOCTYPES, ROLES
 
-        self.assertEqual(DOCTYPES["SYSTEM_SETTINGS"], "ZG System Settings")
-        self.assertIn("ZG Company Admin", ROLES.values())
+        self.assertEqual(DOCTYPES["SYSTEM_SETTINGS"], "ZatGo System Settings")
+        self.assertIn("ZatGo Company Admin", ROLES.values())
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
 
 Paths: zatgo_core.api.v1.licensing.editions.<method>
 
-Reads need read access to ZG Edition (System Manager, ZG Application Admin, ZG Read Only). Writes are POST only and
-go through the ZG Edition controller, which allows them on the licence issuer site and for a System Manager only
+Reads need read access to Edition (System Manager, ZatGo Application Admin, ZatGo Read Only). Writes are POST only and
+go through the Edition controller, which allows them on the licence issuer site and for a System Manager only
 (licensing/issuer.py) -- the page's own checks are courtesy. Server errors are raised (Frappe returns them with
 the right HTTP status); success answers use the standard envelope.
 """

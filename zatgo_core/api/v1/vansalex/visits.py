@@ -1,4 +1,4 @@
-"""VanSaleX visits — ZG Trip status updates with optional GPS."""
+"""VanSaleX visits — Trip status updates with optional GPS."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def update(
     require_access("route_plan")
     # Row-level ownership is enforced inside update_visit via
     # assert_trip_access — an earlier version tried to check it here by
-    # resolving stop_id as a ZG Delivery Stop and walking to its parent,
+    # resolving stop_id as a ZatGo Delivery Stop and walking to its parent,
     # which never matched a real caller, so the check silently never ran.
     return update_visit(
         client_id=client_id,

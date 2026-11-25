@@ -6,7 +6,7 @@ import frappe
 
 
 def company_permission_query(user: str | None = None) -> str:
-    """Restrict ZG Company Settings to companies the user can access."""
+    """Restrict Company Settings to companies the user can access."""
     user = user or frappe.session.user
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
         return ""
@@ -19,4 +19,4 @@ def company_permission_query(user: str | None = None) -> str:
         # Safe default: no company User Permissions ⇒ no rows (not unrestricted).
         return "1=0"
     escaped = ", ".join(frappe.db.escape(c) for c in companies)
-    return f"`tabZG Company Settings`.company in ({escaped})"
+    return f"`tabCompany Settings`.company in ({escaped})"

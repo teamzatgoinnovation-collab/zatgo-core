@@ -1,4 +1,4 @@
-"""Resto POS orders — ZG Order DocType. Thin wrappers over resto_pos_service."""
+"""Resto POS orders — Order DocType. Thin wrappers over resto_pos_service."""
 
 from __future__ import annotations
 

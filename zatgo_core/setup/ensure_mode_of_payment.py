@@ -9,7 +9,7 @@ from zatgo_core.utils.logging import get_logger
 logger = get_logger("system")
 
 # (name, ERPNext "type") — matches the naming already used by
-# `ZG Delivery Stop.payment_method` (Cash/COD/Card/Online/Wallet).
+# `ZatGo Delivery Stop.payment_method` (Cash/COD/Card/Online/Wallet).
 _MODES = (
     ("Cash", "Cash"),
     ("Card", "Bank"),

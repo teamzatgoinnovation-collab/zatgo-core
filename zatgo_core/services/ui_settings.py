@@ -1,6 +1,6 @@
 """Brand, theme and default language: the settings of the Desk Theme and Language Switcher apps.
 
-They used to be fields of ZG System Settings; each app owns its own now (ZG Theme Settings, ZG Language Settings,
+They used to be fields of ZatGo System Settings; each app owns its own now (Theme Settings, Language Settings,
 patches/v0_4_10). `values()` is what the rest of the code reads: the app's own settings, and -- on a site whose
 database is not migrated yet (the new DocTypes have no table) -- the old fields, so a deploy that copies the code
 before the migrate keeps working.
@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import frappe
 
-LEGACY = "ZG System Settings"
+LEGACY = "ZatGo System Settings"
 OWNERS = {
-    "ZG Theme Settings": ("brand_name", "company_logo", "theme"),
-    "ZG Language Settings": ("language",),
+    "Theme Settings": ("brand_name", "company_logo", "theme"),
+    "Language Settings": ("language",),
 }
 
 

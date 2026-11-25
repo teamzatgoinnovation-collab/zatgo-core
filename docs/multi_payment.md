@@ -40,7 +40,7 @@ mode's single default (Petty Cash would have been booked to Cash). The
 `ZatGoSalesInvoice` mixin keeps an account that is allowed for the row's
 mode, and otherwise falls back to exactly what ERPNext did.
 
-**Payment Entry.** Rows go in `custom_payment_details` (ZG Payment Allocation).
+**Payment Entry.** Rows go in `custom_payment_details` (Payment Allocation).
 ERPNext's `build_gl_map()` runs unchanged except `add_bank_gl_entries()`:
 the single `paid_to` (Receive) / `paid_from` (Pay) line becomes one line per
 row, same direction, company-currency amounts summing exactly to the amount
@@ -175,7 +175,7 @@ bench --site <site> clear-cache      # REQUIRED: extend_doctype_class + form scr
 bench --site <site> run-tests --app zatgo_core --module zatgo_core.tests.integration.test_multi_payment
 ```
 
-Verify the schema rather than trusting Patch Log: `tabZG Payment Allocation`
-and `tabZG Mode of Payment Account` exist, `tabSales Invoice Payment` has
+Verify the schema rather than trusting Patch Log: `tabPayment Allocation`
+and `tabZatGo Mode of Payment Account` exist, `tabSales Invoice Payment` has
 `custom_remarks`, and Custom Field rows exist for `Payment Entry.custom_payment_details`
 and `Mode of Payment.custom_zg_accounts`.

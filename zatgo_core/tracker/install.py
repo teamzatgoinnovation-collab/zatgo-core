@@ -1,5 +1,5 @@
 """Setup for Tracker (formerly the tracker app) — run by
-services/bundled_apps.py where ZG System Settings -> Enable Tracker is on,
+services/bundled_apps.py where ZatGo System Settings -> Enable Tracker is on,
 never on other sites (it adds an Employee custom field and role
 permissions on Project / Task / Issue / Timesheet). Desk entries are tagged
 app "zatgo_core" and found by the sidebar they link to, never by app."""

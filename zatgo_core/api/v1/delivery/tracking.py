@@ -12,8 +12,8 @@ from zatgo_core.api.validators import require_login
 
 
 def _require_boy_doctype() -> None:
-    if not frappe.db.exists("DocType", "ZG Delivery Boy"):
-        frappe.throw("ZG Delivery Boy DocType is not installed: run bench migrate")
+    if not frappe.db.exists("DocType", "Delivery Boy"):
+        frappe.throw("Delivery Boy DocType is not installed: run bench migrate")
 
 
 def _boy_for_session() -> str:
@@ -22,7 +22,7 @@ def _boy_for_session() -> str:
     user = (frappe.session.user or "").strip()
     if not user or user == "Guest":
         frappe.throw("Login required", frappe.PermissionError)
-    boy = frappe.db.get_value("ZG Delivery Boy", {"user": user}, "name")
+    boy = frappe.db.get_value("Delivery Boy", {"user": user}, "name")
     if not boy:
         frappe.throw(
             "No delivery boy linked to your login",
@@ -32,7 +32,7 @@ def _boy_for_session() -> str:
 
 
 def _snapshot(boy_name: str) -> dict[str, Any]:
-    doc = frappe.get_doc("ZG Delivery Boy", boy_name)
+    doc = frappe.get_doc("Delivery Boy", boy_name)
     points = int(getattr(doc, "points", 0) or 0)
     return {
         "id": doc.name,
@@ -51,7 +51,7 @@ def _snapshot(boy_name: str) -> dict[str, Any]:
 def me() -> dict[str, Any]:
     """Performance + last location for the signed-in courier."""
     boy = _boy_for_session()
-    return ok(_snapshot(boy), meta={"source": "ZG Delivery Boy"})
+    return ok(_snapshot(boy), meta={"source": "Delivery Boy"})
 
 
 @frappe.whitelist()
@@ -69,9 +69,9 @@ def ping(lat: float | str, lng: float | str, speed_kmh: float | str | None = Non
         "last_lng": lng_f,
         "last_seen_at": now_datetime(),
     }
-    meta = frappe.get_meta("ZG Delivery Boy")
+    meta = frappe.get_meta("Delivery Boy")
     if meta.has_field("last_lat"):
-        frappe.db.set_value("ZG Delivery Boy", boy, values, update_modified=False)
+        frappe.db.set_value("Delivery Boy", boy, values, update_modified=False)
         frappe.db.commit()
 
     data = _snapshot(boy)
@@ -81,4 +81,4 @@ def ping(lat: float | str, lng: float | str, speed_kmh: float | str | None = Non
             data["speed_kmh"] = float(speed_kmh)
         except (TypeError, ValueError):
             data["speed_kmh"] = None
-    return ok(data, meta={"source": "ZG Delivery Boy", "pinged": True})
+    return ok(data, meta={"source": "Delivery Boy", "pinged": True})

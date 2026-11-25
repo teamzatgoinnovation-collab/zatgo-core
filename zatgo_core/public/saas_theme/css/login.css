@@ -40,7 +40,7 @@
 /* Digits come from Inter (shipped with Frappe), not Poppins: Poppins has no tabular figures and the theme
    lines amounts up with `font-variant-numeric: tabular-nums`. unicode-range sends only 0-9 to this face. */
 @font-face {
-	font-family: "ZG Digits";
+	font-family: "ZatGo Digits";
 	font-style: normal;
 	font-weight: 100 900;
 	font-display: swap;
@@ -102,7 +102,7 @@
 	--st-login-primary-rgb: 41, 82, 227;
 	--st-login-danger: #DF1B41;
 	--st-login-danger-rgb: 223, 27, 65;
-	--font-sans: "ZG Digits", "Poppins", "Cairo", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
+	--font-sans: "ZatGo Digits", "Poppins", "Cairo", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
 		Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

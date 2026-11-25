@@ -1,6 +1,6 @@
 """Per-user DocTypes: a user sees and changes only their own rows.
 
-`ZG Device Token` (push tokens) and `ZG User Preferences` grant every logged-in user read/write/create in
+`Device Token` (push tokens) and `User Preferences` grant every logged-in user read/write/create in
 their DocType permissions, and the hub's own API checks ownership by hand -- but the generic REST API and
 Desk list/form do not go through that API: any user could list, edit or register a token under someone
 else (hijacking their notifications). These hooks make the rule hold on every route. System Manager and
@@ -15,8 +15,8 @@ import frappe
 
 # DocType -> the field holding the owning user
 OWNER_FIELD = {
-    "ZG Device Token": "user",
-    "ZG User Preferences": "user",
+    "Device Token": "user",
+    "User Preferences": "user",
 }
 
 
@@ -39,16 +39,16 @@ def _allowed(doctype: str, doc, user: str | None) -> bool:
 
 
 def device_token_query(user=None):
-    return _conditions("ZG Device Token", user)
+    return _conditions("Device Token", user)
 
 
 def device_token_has_permission(doc, ptype=None, user=None):
-    return _allowed("ZG Device Token", doc, user)
+    return _allowed("Device Token", doc, user)
 
 
 def user_preferences_query(user=None):
-    return _conditions("ZG User Preferences", user)
+    return _conditions("User Preferences", user)
 
 
 def user_preferences_has_permission(doc, ptype=None, user=None):
-    return _allowed("ZG User Preferences", doc, user)
+    return _allowed("User Preferences", doc, user)

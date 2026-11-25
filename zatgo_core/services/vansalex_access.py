@@ -12,7 +12,7 @@ only renders it (`vansalex.me.context` → `access`):
   migrate without touching existing ones. A key with no row uses its
   catalog `default` (on for what VanSaleX already did before this existed,
   off for anything new — fail-closed).
-- `ZG Van Sale Profile.access_overrides` can switch a row key OFF for one
+- `Van Sale Profile.access_overrides` can switch a row key OFF for one
   driver, never on beyond the client. Derived keys keep their existing
   per-driver controls (e.g. the profile's Allow Credit Sales override).
 - A few keys mirror an existing setting rather than a row (`derived`), so
@@ -36,7 +36,7 @@ import frappe
 from frappe.utils import cint, flt
 
 SETTINGS_DOCTYPE = "VanSaleX Settings"
-PROFILE_DOCTYPE = "ZG Van Sale Profile"
+PROFILE_DOCTYPE = "Van Sale Profile"
 
 MODULE = "Module"
 FEATURE = "Feature"
@@ -173,13 +173,13 @@ def _client_rows() -> dict[str, int]:
 
 
 def _profile_disabled(user: str) -> set[str]:
-    if not frappe.db.exists("DocType", "ZG Van Sale Profile Access"):
+    if not frappe.db.exists("DocType", "Van Sale Profile Access"):
         return set()
     profile = frappe.db.get_value(PROFILE_DOCTYPE, {"user": user, "enabled": 1}, "name")
     if not profile:
         return set()
     rows = frappe.get_all(
-        "ZG Van Sale Profile Access",
+        "Van Sale Profile Access",
         filters={"parenttype": PROFILE_DOCTYPE, "parent": profile, "disabled": 1},
         pluck="access_key",
     )
@@ -355,7 +355,7 @@ def _is_field_user(user: str) -> bool:
 
 
 def is_field_user(user: str | None = None) -> bool:
-    """An enabled, non-Admin ZG Van Sale Profile that is not also a VanSale
+    """An enabled, non-Admin Van Sale Profile that is not also a VanSale
     Admin / System Manager: the users the stock and money limits bind."""
     from zatgo_core.services.van_sale_access import is_vansale_admin
 
@@ -446,7 +446,7 @@ def check_doc_access(doc, method=None) -> None:
     """before_insert on Sales Invoice / Sales Order / Purchase Invoice / Purchase
     Order / Payment Entry, before_save (create and edit) on Customer / Item,
     validate + before_submit on Stock Entry, validate on Payment Entry / Sales
-    Invoice / Sales Order. Only for field users (enabled ZG Van Sale Profile,
+    Invoice / Sales Order. Only for field users (enabled Van Sale Profile,
     not Admin): covers the shared accounting/warehouse endpoints,
     /api/resource and Desk, which the vansalex endpoint checks don't.
 

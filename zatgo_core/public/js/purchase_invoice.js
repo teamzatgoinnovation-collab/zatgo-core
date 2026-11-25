@@ -45,7 +45,7 @@ frappe.ui.form.on("Purchase Invoice", {
 	},
 });
 
-// ZG System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).
+// ZatGo System Settings > "Auto-fill Cash / Bank Account on Invoices" (off = leave empty).
 function autofill_enabled() {
 	const system = (frappe.boot.zatgo_core && frappe.boot.zatgo_core.system) || {};
 	return !!system.autofill_payment_accounts;

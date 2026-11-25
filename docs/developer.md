@@ -16,13 +16,13 @@ Prefer services over direct `frappe.get_single` so caching and permission guards
 
 ## Adding a feature flag
 
-1. Create `ZG Feature Flag` row (`flag_key` like `zatgo.delivery.tracking`).
+1. Create `Feature Flag` row (`flag_key` like `zatgo.delivery.tracking`).
 2. Read via `FeatureFlagService.is_enabled(...)` or boot payload / client API.
 3. Never hardcode enablement in product apps.
 
 ## Adding a number series
 
-Edit **ZG Number Series Settings** child table, or seed in a patch under
+Edit **Number Series Settings** child table, or seed in a patch under
 `zatgo_core/patches/`.
 
 ## Extending settings

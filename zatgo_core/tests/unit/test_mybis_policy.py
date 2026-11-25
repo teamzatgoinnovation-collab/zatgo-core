@@ -1,4 +1,4 @@
-"""MyBis administrator limits (ZG MyBis Settings): what `sanitize` makes of stored values, and that the DocType and the code
+"""MyBis administrator limits (MyBis Settings): what `sanitize` makes of stored values, and that the DocType and the code
 agree on the keys they share. No database rows are read or written."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from zatgo_core.services.mybis import insights, period, reports
-from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings as settings
+from zatgo_core.zatgo_core.doctype.mybis_settings import mybis_settings as settings
 
 DOCTYPE_JSON = Path(settings.__file__).with_suffix(".json")
 OPEN = {

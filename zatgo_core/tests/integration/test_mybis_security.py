@@ -113,19 +113,19 @@ class TestMyBisSecurity(IntegrationTestCase):
 
     def test_the_switch_is_off_by_default_and_the_gate_follows_the_stored_value(self) -> None:
         self.assertIn("mybis", {a["key"] for a in __import__("zatgo_core.services.app_catalog", fromlist=["catalog"]).catalog()})
-        was = frappe.db.get_single_value("ZG System Settings", "enable_mybis")
+        was = frappe.db.get_single_value("ZatGo System Settings", "enable_mybis")
         try:
-            frappe.db.set_single_value("ZG System Settings", "enable_mybis", 0)
-            frappe.clear_document_cache("ZG System Settings")
+            frappe.db.set_single_value("ZatGo System Settings", "enable_mybis", 0)
+            frappe.clear_document_cache("ZatGo System Settings")
             self.assertFalse(app_state.is_on("mybis"))
             frappe.local.form_dict = frappe._dict(cmd=f"{PREFIX}dashboard.kpis")
             with self.assertRaises(frappe.DoesNotExistError):
                 app_gate.gate_api()
-            frappe.db.set_single_value("ZG System Settings", "enable_mybis", 1)
-            frappe.clear_document_cache("ZG System Settings")
+            frappe.db.set_single_value("ZatGo System Settings", "enable_mybis", 1)
+            frappe.clear_document_cache("ZatGo System Settings")
             self.assertTrue(app_state.is_on("mybis"))
             app_gate.gate_api()  # on: passes through
         finally:
-            frappe.db.set_single_value("ZG System Settings", "enable_mybis", was or 0)
-            frappe.clear_document_cache("ZG System Settings")
+            frappe.db.set_single_value("ZatGo System Settings", "enable_mybis", was or 0)
+            frappe.clear_document_cache("ZatGo System Settings")
             frappe.local.form_dict = frappe._dict()

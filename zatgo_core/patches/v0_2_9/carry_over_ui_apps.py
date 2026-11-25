@@ -1,5 +1,5 @@
 """Carry the old saas_theme / language_switcher (modifyme) / vansalex_web installs over to
-the ZG System Settings switches that replace them (services/ui_apps.py).
+the ZatGo System Settings switches that replace them (services/ui_apps.py).
 
 Runs while the old apps are still installed -- they are uninstalled only
 after this migrate -- so a site keeps exactly the look it had: the theme
@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import frappe
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 
 
 def execute() -> None:
     if not frappe.db.exists("DocType", SETTINGS):
         return
-    frappe.reload_doc("zatgo_core", "doctype", "zg_system_settings")
+    frappe.reload_doc("zatgo_core", "doctype", "zatgo_system_settings")
     installed = set(frappe.get_installed_apps())
     if "saas_theme" in installed:
         frappe.db.set_single_value(SETTINGS, "enable_saas_theme", 1)

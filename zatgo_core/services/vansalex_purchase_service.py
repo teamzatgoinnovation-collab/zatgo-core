@@ -285,7 +285,7 @@ def create_order(client_id: str, supplier: str, items: Any) -> dict[str, Any]:
     rows = _rows(items)
     wh = require_own_warehouse(None)
     if not wh:
-        frappe.throw("Van warehouse is required. Set warehouse on ZG Van Sale Profile.", frappe.ValidationError)
+        frappe.throw("Van warehouse is required. Set warehouse on Van Sale Profile.", frappe.ValidationError)
     company = frappe.db.get_value("Warehouse", wh, "company") or _default_company(None)
     for row in rows:
         row["warehouse"] = wh

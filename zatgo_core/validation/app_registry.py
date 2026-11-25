@@ -1,4 +1,4 @@
-"""Validation for ZG Application Registry."""
+"""Validation for Application Registry."""
 
 from __future__ import annotations
 
@@ -26,9 +26,9 @@ def validate_app_registry(doc: Document) -> None:
     for dep in depends:
         if dep == doc.app_name:
             frappe.throw(frappe._("App cannot depend on itself"))
-        if not frappe.db.exists("ZG Application Registry", dep):
+        if not frappe.db.exists("Application Registry", dep):
             # Soft warning via message — hard fail only when dependency is marked installed.
-            status = frappe.db.get_value("ZG Application Registry", dep, "app_status")
+            status = frappe.db.get_value("Application Registry", dep, "app_status")
             if status == "Installed":
                 continue
             frappe.msgprint(

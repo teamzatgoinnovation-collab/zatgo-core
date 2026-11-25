@@ -1,13 +1,13 @@
 """Counter sales the POS made without a connection, as the server sees them when they finally arrive.
 
 The customer has already paid and left, so a late sale is **posted** -- at the server's own figures, on its original date and
-time -- and, where reality moved on (price, tax, stock, item, discount), a review entry (ZG Offline Sale Issue) is opened for a
+time -- and, where reality moved on (price, tax, stock, item, discount), a review entry (Offline Sale Issue) is opened for a
 manager. Only a sale that cannot be posted safely is refused: an item that was disabled meanwhile (ERPNext itself refuses to
 sell one), an unknown item, a closed fiscal period, a time in the future or older than the site's limit, a payment method not
 allowed offline. Idempotency is untouched: the sale is still keyed on its
 `zatgo_client_id` (services/idempotency.py), so a replay returns the first result.
 
-Settings: ZG POS Settings -> Offline (services/pos_settings.py::offline_policy). Used by services/retail_pos_service.py.
+Settings: ZatGo POS Settings -> Offline (services/pos_settings.py::offline_policy). Used by services/retail_pos_service.py.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from frappe.utils.data import get_system_timezone
 
 from zatgo_core.services import pos_settings
 
-ISSUE_DOCTYPE = "ZG Offline Sale Issue"
+ISSUE_DOCTYPE = "Offline Sale Issue"
 SKEW_MINUTES = 10  # a device clock may run this far ahead of the server
 GRACE_HOURS = 24  # on top of the site's offline limit: a sale made at the limit still has to reach the server
 LATE_HOURS = 24  # a sale posted later than this after it was made is listed for review
@@ -79,7 +79,7 @@ def parse(
         return None
     policy = pos_settings.offline_policy()
     if not policy["enabled"]:
-        frappe.throw("Offline sales are not enabled on this site (ZG POS Settings -> Offline).")
+        frappe.throw("Offline sales are not enabled on this site (ZatGo POS Settings -> Offline).")
     if not (sale_datetime or "").strip():
         frappe.throw("An offline sale needs sale_datetime: the time it was paid.")
     try:
@@ -106,7 +106,7 @@ def parse(
 def check_method(sale: OfflineSale, method_key: str) -> None:
     """Cash is always allowed offline; card and wallet only when the site allows them (a card cannot be checked offline)."""
     if method_key != "cash" and not pos_settings.offline_policy()["allow_card_offline"]:
-        frappe.throw("Only cash can be taken offline on this site (ZG POS Settings -> Offline).")
+        frappe.throw("Only cash can be taken offline on this site (ZatGo POS Settings -> Offline).")
 
 
 def apply_to_invoice(si: Any, sale: OfflineSale) -> None:
@@ -132,15 +132,15 @@ def discount_percent(rows: list[dict[str, Any]], discount_type: str | None, disc
 
 
 def discount_problem(rows: list[dict[str, Any]], discount_type: str | None, discount_value: Any) -> str | None:
-    """Why the discount is not allowed by ZG POS Settings (allow_discounts / max_discount_percent), or None."""
+    """Why the discount is not allowed by ZatGo POS Settings (allow_discounts / max_discount_percent), or None."""
     percent = discount_percent(rows, discount_type, discount_value)
     if percent <= 0:
         return None
     allow, cap = pos_settings.discount_policy()
     if not allow:
-        return "Discounts are switched off for the POS (ZG POS Settings)."
+        return "Discounts are switched off for the POS (ZatGo POS Settings)."
     if percent > cap + 0.005:
-        return f"A discount of {percent:.2f}% is above the cap of {cap:g}% (ZG POS Settings)."
+        return f"A discount of {percent:.2f}% is above the cap of {cap:g}% (ZatGo POS Settings)."
     return None
 
 

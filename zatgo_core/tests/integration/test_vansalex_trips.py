@@ -1,6 +1,6 @@
 """Route-plan stop creation, idempotency, reordering and row-level access.
 
-The mobile client creates ZG Trip stops offline and retries on reconnect, so
+The mobile client creates Trip stops offline and retries on reconnect, so
 `create_trip` has to behave exactly like the other client-generated writes:
 the same `client_id` twice must resolve to one document, never two stops on
 the salesperson's route.
@@ -55,7 +55,7 @@ class TestVanSaleXTrips(IntegrationTestCase):
         self.assertEqual(res["data"]["customer"], self.customer)
         self.assertEqual(res["data"]["status"], "Planned")
         self.assertEqual(res["data"]["sequence"], 1)
-        self.assertTrue(frappe.db.exists("ZG Trip", res["data"]["name"]))
+        self.assertTrue(frappe.db.exists("Trip", res["data"]["name"]))
 
     def test_duplicate_client_id_is_idempotent(self) -> None:
         cid = f"trip-{random_string(10)}"
@@ -68,10 +68,10 @@ class TestVanSaleXTrips(IntegrationTestCase):
         # it False, matching every other create_* function in this codebase.
         self.assertFalse(second["meta"].get("created"))
         # The retry must not have created a second stop, nor moved the first.
-        rows = frappe.get_all("ZG Trip", filters={"zatgo_client_id": cid}, pluck="name")
+        rows = frappe.get_all("Trip", filters={"zatgo_client_id": cid}, pluck="name")
         self.assertEqual(len(rows), 1)
         self.assertEqual(
-            frappe.db.get_value("ZG Trip", first["data"]["name"], "sequence"), 1
+            frappe.db.get_value("Trip", first["data"]["name"], "sequence"), 1
         )
 
     def test_visit_update_preserves_create_client_id(self) -> None:
@@ -88,8 +88,8 @@ class TestVanSaleXTrips(IntegrationTestCase):
             lng=46.6753,
         )
 
-        self.assertEqual(frappe.db.get_value("ZG Trip", name, "zatgo_client_id"), cid)
-        self.assertEqual(frappe.db.get_value("ZG Trip", name, "status"), "Checked In")
+        self.assertEqual(frappe.db.get_value("Trip", name, "zatgo_client_id"), cid)
+        self.assertEqual(frappe.db.get_value("Trip", name, "status"), "Checked In")
         # And the create is still idempotent afterwards.
         again = self._create(cid)
         self.assertEqual(again["data"]["name"], name)
@@ -103,8 +103,8 @@ class TestVanSaleXTrips(IntegrationTestCase):
 
         self.assertTrue(res["success"])
         self.assertEqual(res["meta"]["updated"], 2)
-        self.assertEqual(frappe.db.get_value("ZG Trip", b, "sequence"), 1)
-        self.assertEqual(frappe.db.get_value("ZG Trip", a, "sequence"), 2)
+        self.assertEqual(frappe.db.get_value("Trip", b, "sequence"), 1)
+        self.assertEqual(frappe.db.get_value("Trip", a, "sequence"), 2)
 
     def test_client_id_column_is_unique(self) -> None:
         """The DB constraint insert_idempotent relies on must really exist."""
@@ -113,10 +113,10 @@ class TestVanSaleXTrips(IntegrationTestCase):
             SELECT INDEX_NAME
             FROM information_schema.STATISTICS
             WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'tabZG Trip'
+              AND TABLE_NAME = 'tabTrip'
               AND COLUMN_NAME = 'zatgo_client_id'
               AND NON_UNIQUE = 0
             """,
             as_dict=True,
         )
-        self.assertTrue(rows, "ZG Trip.zatgo_client_id has no UNIQUE index")
+        self.assertTrue(rows, "Trip.zatgo_client_id has no UNIQUE index")

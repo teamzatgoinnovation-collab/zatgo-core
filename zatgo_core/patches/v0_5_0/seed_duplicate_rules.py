@@ -5,7 +5,7 @@ import frappe
 
 
 def execute() -> None:
-    if not frappe.db.exists("DocType", "ZG Duplicate Rule"):
+    if not frappe.db.exists("DocType", "Duplicate Rule"):
         return
     from zatgo_core.services.duplicate import config
     from zatgo_core.services.duplicate.defaults import seed_defaults

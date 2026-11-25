@@ -128,7 +128,7 @@ class TestVansalexOrderToPayment(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": "Field User",
@@ -141,7 +141,7 @@ class TestVansalexOrderToPayment(IntegrationTestCase):
     def _make_trip(cls, user: str, customer: str, warehouse: str) -> None:
         frappe.get_doc(
             {
-                "doctype": "ZG Trip",
+                "doctype": "Trip",
                 "title": "Audit Test Route",
                 "customer": customer,
                 "sequence": 1,

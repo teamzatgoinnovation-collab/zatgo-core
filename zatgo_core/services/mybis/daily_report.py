@@ -17,7 +17,7 @@ from frappe.utils import fmt_money, getdate
 
 from zatgo_core.services import app_state
 from zatgo_core.services.mybis import dashboard, delivery, finance, metrics, notify_prefs, queries, scope as scopes
-from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings
+from zatgo_core.zatgo_core.doctype.mybis_settings import mybis_settings as zg_mybis_settings
 
 UNAVAILABLE = {"available": False}
 

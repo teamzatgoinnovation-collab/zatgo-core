@@ -11,7 +11,7 @@ from frappe.tests.classes.integration_test_case import IntegrationTestCase
 
 from zatgo_core.services import bundled_apps
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELDS = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space")
 
 

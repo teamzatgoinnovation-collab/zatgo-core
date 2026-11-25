@@ -337,7 +337,7 @@ frappe.pages["zg-licence"].on_page_load = function (wrapper) {
 											"td",
 											{ class: "zg-lic__row-actions" },
 											h("button", { type: "button", class: "btn btn-xs btn-default", onclick: () => call("download_issued", { licence_number: r.licence_number }).then((x) => download(x.filename, x.file)).catch(fail) }, __("Download")),
-											r.revoked_on ? null : h("button", { type: "button", class: "btn btn-xs btn-default", onclick: () => frappe.db.get_value("ZG Licence History", r.licence_number, ["site_ids", "customer_name", "edition_id"]).then((x) => issueDialog({ ...r, ...(x.message || {}) })) }, __("Replace")),
+											r.revoked_on ? null : h("button", { type: "button", class: "btn btn-xs btn-default", onclick: () => frappe.db.get_value("Licence History", r.licence_number, ["site_ids", "customer_name", "edition_id"]).then((x) => issueDialog({ ...r, ...(x.message || {}) })) }, __("Replace")),
 											r.revoked_on ? null : h("button", { type: "button", class: "btn btn-xs btn-danger", onclick: () => revoke(r) }, __("Revoke"))
 										)
 									)

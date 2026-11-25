@@ -1,6 +1,6 @@
 """Which apps are on for this site -- the one place that answers "is app X on here?".
 
-State lives in ZG System Settings (one Check field per switchable app, see services/app_catalog.py); an app
+State lives in ZatGo System Settings (one Check field per switchable app, see services/app_catalog.py); an app
 with no switch is always on. Everything that gates on an app -- hooks, API prefixes, the sidebar, the hub --
 asks here, so there is exactly one rule.
 
@@ -22,7 +22,7 @@ from frappe.utils import cint
 
 from zatgo_core.services import app_catalog
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 
 
 def _settings_doc() -> Any | None:
@@ -43,7 +43,7 @@ def switch_state(doc: Any | None, app: dict[str, Any]) -> bool:
 
 
 def switches_of(doc: Any | None) -> dict[str, bool]:
-    """key -> on/off for every app that has a switch, as `doc` (a ZG System Settings document or a
+    """key -> on/off for every app that has a switch, as `doc` (a ZatGo System Settings document or a
     before-save copy of it) has them."""
     return {a["key"]: switch_state(doc, a) for a in app_catalog.catalog() if a["switch_field"]}
 

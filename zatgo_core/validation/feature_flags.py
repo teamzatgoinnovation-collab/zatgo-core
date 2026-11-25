@@ -1,4 +1,4 @@
-"""Validation for ZG Feature Flag."""
+"""Validation for Feature Flag."""
 
 from __future__ import annotations
 

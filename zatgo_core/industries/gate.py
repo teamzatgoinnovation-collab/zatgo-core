@@ -1,7 +1,7 @@
 """Per-site industry activation and its enforcement.
 
-State lives in the site's own database: ZG System Settings -> Industries
-(`enabled_industries`, child DocType ZG Enabled Industry). Nothing is on by
+State lives in the site's own database: ZatGo System Settings -> Industries
+(`enabled_industries`, child DocType Enabled Industry). Nothing is on by
 default and nothing is hard-coded per site.
 
 Effective access = Frappe role permission AND industry switched on:
@@ -24,7 +24,7 @@ from frappe import _
 
 from zatgo_core.industries import registry
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 TABLE_FIELD = "enabled_industries"
 
 

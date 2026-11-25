@@ -130,7 +130,7 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": user_type,
@@ -142,8 +142,8 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         return email
 
     def _disable_for_user(self, *keys: str) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        doc = frappe.get_doc("ZG Van Sale Profile", name)
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        doc = frappe.get_doc("Van Sale Profile", name)
         for key in keys:
             doc.append("access_overrides", {"access_key": key, "disabled": 1})
         doc.save(ignore_permissions=True)
@@ -282,8 +282,8 @@ class TestVansalexModuleAccess(IntegrationTestCase):
             self.assertFalse(access.effective(self.user)["modules"]["reports"])
 
     def test_derived_keys_follow_existing_settings(self) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        frappe.db.set_value("ZG Van Sale Profile", name, "allow_credit_sales", "No")
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        frappe.db.set_value("Van Sale Profile", name, "allow_credit_sales", "No")
         eff = access.effective(self.user)
         self.assertFalse(eff["features"]["sales_invoice.credit_sale"])
         from zatgo_core.services.vansalex_settings import resolve
@@ -291,8 +291,8 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         self.assertEqual(eff["modules"]["sales_order"], bool(cint(resolve(self.user)["allow_orders"])))
 
     def test_profile_rejects_duplicate_and_unknown_keys(self) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        doc = frappe.get_doc("ZG Van Sale Profile", name)
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        doc = frappe.get_doc("Van Sale Profile", name)
         doc.append("access_overrides", {"access_key": "customers"})
         doc.append("access_overrides", {"access_key": "customers"})
         self.assertRaises(frappe.ValidationError, doc.save, ignore_permissions=True)
@@ -344,8 +344,8 @@ class TestVansalexModuleAccess(IntegrationTestCase):
         self.assertIn("data", returns_api.list())
 
     def test_orders_off_rejects_order_even_for_admin_profile(self) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        frappe.db.set_value("ZG Van Sale Profile", name, "user_type", "Admin")
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        frappe.db.set_value("Van Sale Profile", name, "user_type", "Admin")
         settings = frappe.get_single("VanSaleX Settings")
         old = cint(settings.allow_orders)
         try:

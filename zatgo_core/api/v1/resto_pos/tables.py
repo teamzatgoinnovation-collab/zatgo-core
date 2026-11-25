@@ -1,4 +1,4 @@
-"""Resto POS floor tables — ZG Table DocType. Thin wrappers over resto_pos_service."""
+"""Resto POS floor tables — Table DocType. Thin wrappers over resto_pos_service."""
 
 from __future__ import annotations
 

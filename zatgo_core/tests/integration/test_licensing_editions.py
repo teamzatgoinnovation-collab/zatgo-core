@@ -1,4 +1,4 @@
-"""ZG Edition on a real site: issuer gate, controller rules, versioning, duplicate / archive, import / export, API."""
+"""Edition on a real site: issuer gate, controller rules, versioning, duplicate / archive, import / export, API."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from zatgo_core.api.v1.licensing import editions as api
 from zatgo_core.licensing import edition_config, editions, issuer
 from zatgo_core.licensing.sync import sync_registry
 
-DOCTYPE = "ZG Edition"
+DOCTYPE = "Edition"
 
 
 def _id(prefix: str = "t") -> str:
@@ -64,7 +64,7 @@ class TestEditions(IntegrationTestCase):
 
     def test_only_a_system_manager_writes_on_the_issuer(self) -> None:
         with _Issuer():
-            frappe.set_user(self._user("ZG Application Admin"))
+            frappe.set_user(self._user("ZatGo Application Admin"))
             with self.assertRaises(frappe.PermissionError):
                 editions.save(self._config())
 
@@ -118,11 +118,11 @@ class TestEditions(IntegrationTestCase):
         with _Issuer():
             cfg = editions.save(self._config())
             editions.save({**cfg, "features": {"sales.invoice": []}})
-            rows = frappe.get_all("ZG Audit Log", filters={"doctype_name": DOCTYPE, "document_name": cfg["edition_id"],
+            rows = frappe.get_all("Audit Log", filters={"doctype_name": DOCTYPE, "document_name": cfg["edition_id"],
                                                            "fieldname": "features"}, pluck="new_value")
             self.assertEqual(len(rows), 2)
             self.assertIn(json.dumps({"sales.invoice": []}), rows)
-            noisy = frappe.get_all("ZG Audit Log", filters={"doctype_name": DOCTYPE, "document_name": cfg["edition_id"],
+            noisy = frappe.get_all("Audit Log", filters={"doctype_name": DOCTYPE, "document_name": cfg["edition_id"],
                                                             "fieldname": "dependency_report"})
             self.assertEqual(noisy, [])
 
@@ -200,7 +200,7 @@ class TestEditions(IntegrationTestCase):
     def test_api_reads_for_read_only_role_and_refuses_its_writes(self) -> None:
         with _Issuer():
             eid = editions.save(self._config())["edition_id"]
-            frappe.set_user(self._user("ZG Read Only"))
+            frappe.set_user(self._user("ZatGo Read Only"))
             builder = api.get_builder()["data"]
             self.assertFalse(builder["can_edit"])
             self.assertTrue(builder["is_issuer"])

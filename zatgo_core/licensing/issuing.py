@@ -5,7 +5,7 @@
 3. give it a new licence id -- or, for a replacement, the same id with the next `licence_version`;
 4. sign it with the issuer's Ed25519 key (`site_config` `zg_licence_issuer_key` = path to a PEM file outside the
    bench's `sites/` folder, owner-readable only);
-5. record it in `ZG Licence History` (the file, never the key) and return the file text.
+5. record it in `Licence History` (the file, never the key) and return the file text.
 
 The signing key must be one this app version trusts (`licensing/keys/public_keys.json`), or customers could
 not verify the licence: issuing with any other key is refused.
@@ -27,7 +27,7 @@ from zatgo_core.licensing import audit, crypto, editions, issuer, licence_format
 from zatgo_core.licensing.licence_format import LicenceError
 from zatgo_core.licensing.licences import _write
 
-HISTORY = "ZG Licence History"
+HISTORY = "Licence History"
 KEY_CONF = "zg_licence_issuer_key"
 NUMBER_SERIES = "ZGL-.YYYY.-.#####"
 

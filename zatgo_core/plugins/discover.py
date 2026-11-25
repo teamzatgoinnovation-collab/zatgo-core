@@ -1,7 +1,7 @@
 """Register the app catalog (and the hand-written manifests) into the plugin registry.
 
 The app catalog (services/app_catalog.py) is the source of truth for the apps zatgo_core ships; the plugin
-registry (`ZG Registered Application` + `ZG Setting Section`) is a one-way projection of it for config-center
+registry (`Registered Application` + `Setting Section`) is a one-way projection of it for config-center
 clients, carrying the site's REAL switch state and the app's real version. Hand-written manifests
 (plugins/manifests/*.py) describe apps the catalog does not know (POS, Delivery, Kitchen); one the catalog
 also lists (VanSaleX) keeps its hand-written sections but takes its title, version and enabled state from the
@@ -19,7 +19,7 @@ from zatgo_core.utils.logging import get_logger
 
 logger = get_logger("system")
 
-# `ZG Registered Application.category` is a Select; catalog groups map onto its options.
+# `Registered Application.category` is a Select; catalog groups map onto its options.
 PLATFORM_GROUPS = ("core", "industries")
 CATEGORY_PLATFORM = "Platform"
 CATEGORY_OTHER = "Other"

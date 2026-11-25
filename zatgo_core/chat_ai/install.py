@@ -1,5 +1,5 @@
 """Setup for Chat AI (formerly the chat_ai app) — run by
-services/bundled_apps.py where ZG System Settings -> Enable Chat AI is on,
+services/bundled_apps.py where ZatGo System Settings -> Enable Chat AI is on,
 never on other sites. Desk entries are tagged app "zatgo_core" and found by
 the sidebar they link to, never by app (that would match all of zatgo_core)."""
 

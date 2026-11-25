@@ -30,11 +30,11 @@ class TestPosSession(IndustryTestBase):
             "Account", {"account_type": "Cash", "company": cls.company, "is_group": 0}, "name"
         )
         get_or_create_cash_mode_of_payment(cls.company, cash_account)
-        if frappe.db.exists("ZG Company Settings", cls.company):
-            frappe.db.set_value("ZG Company Settings", cls.company, "default_warehouse", cls.warehouse)
+        if frappe.db.exists("Company Settings", cls.company):
+            frappe.db.set_value("Company Settings", cls.company, "default_warehouse", cls.warehouse)
         else:
             frappe.get_doc(
-                {"doctype": "ZG Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
+                {"doctype": "Company Settings", "company": cls.company, "default_warehouse": cls.warehouse}
             ).insert(ignore_permissions=True)
         frappe.db.commit()
 

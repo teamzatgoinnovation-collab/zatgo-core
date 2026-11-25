@@ -1,12 +1,12 @@
 """Multi-method / multi-account payment allocation fields.
 
-- Mode of Payment `custom_zg_accounts` (ZG Mode of Payment Account): every
+- Mode of Payment `custom_zg_accounts` (ZatGo Mode of Payment Account): every
   ledger account a payment method may post to, per company. The native
   Mode of Payment Account table allows exactly one account per company.
 - Sales Invoice Payment `custom_remarks`: per-row note. The rest of a Sales
   Invoice's payment rows (mode, account, amount, reference) are ERPNext's
   own `payments` table, posted by ERPNext's own make_pos_gl_entries().
-- Payment Entry `custom_payment_details` (ZG Payment Allocation): where a
+- Payment Entry `custom_payment_details` (Payment Allocation): where a
   Payment Entry's money actually went, split across accounts. Posted by
   zatgo_core.overrides.payment_entry.
 
@@ -21,7 +21,7 @@ from frappe.custom.doctype.property_setter.property_setter import make_property_
 
 
 def execute() -> None:
-    for doctype in ("ZG Mode of Payment Account", "ZG Payment Allocation"):
+    for doctype in ("ZatGo Mode of Payment Account", "Payment Allocation"):
         if not frappe.db.exists("DocType", doctype):
             frappe.reload_doc("zatgo_core", "doctype", frappe.scrub(doctype))
 
@@ -44,7 +44,7 @@ def execute() -> None:
                     "fieldname": "custom_zg_accounts",
                     "label": "Allowed Accounts",
                     "fieldtype": "Table",
-                    "options": "ZG Mode of Payment Account",
+                    "options": "ZatGo Mode of Payment Account",
                     "insert_after": "custom_zg_accounts_section",
                 },
             ],
@@ -73,7 +73,7 @@ def execute() -> None:
                     "fieldname": "custom_payment_details",
                     "label": "Payment Details",
                     "fieldtype": "Table",
-                    "options": "ZG Payment Allocation",
+                    "options": "Payment Allocation",
                     "insert_after": "custom_payment_details_section",
                     "depends_on": "eval:doc.payment_type != 'Internal Transfer'",
                 },

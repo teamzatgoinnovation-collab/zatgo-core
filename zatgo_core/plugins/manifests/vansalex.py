@@ -11,7 +11,7 @@ MANIFEST = {
     "menu_order": 15,
     "enabled": 1,
     "visible": 1,
-    "roles": "System Manager,ZG Application Admin,ZG Company Admin,VanSale Admin",
+    "roles": "System Manager,ZatGo Application Admin,ZatGo Company Admin,VanSale Admin",
     "depends_on": "",
     "description": "Van sales mobile app — cash/credit, warehouses, per-driver profiles",
     "settings_route": "/desk/zatgo-vansalex",
@@ -29,7 +29,7 @@ MANIFEST = {
             "label": "Driver Profiles",
             "icon": "users",
             "sort_order": 20,
-            "link_doctype": "ZG Van Sale Profile",
+            "link_doctype": "Van Sale Profile",
             "component": "",
         },
         {
@@ -37,7 +37,7 @@ MANIFEST = {
             "label": "Company Defaults",
             "icon": "organization",
             "sort_order": 30,
-            "link_doctype": "ZG Company Settings",
+            "link_doctype": "Company Settings",
             "component": "",
         },
         {
@@ -45,7 +45,7 @@ MANIFEST = {
             "label": "Payment Methods",
             "icon": "money",
             "sort_order": 40,
-            "link_doctype": "ZG Payment Settings",
+            "link_doctype": "Payment Settings",
             "component": "",
         },
         {

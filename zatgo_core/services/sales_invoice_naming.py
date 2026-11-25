@@ -1,6 +1,6 @@
 """User-wise Sales Invoice naming series.
 
-`ZG Sales Invoice Naming Settings` maps (user, company) to the naming series
+`Sales Invoice Naming Settings` maps (user, company) to the naming series
 that user's Sales Invoices and Sales Returns must use. This module is the one
 place that rule is resolved and enforced. It runs from the Sales Invoice
 `before_insert` hook (events/sales_invoice_naming.py), so the desk, REST
@@ -25,8 +25,8 @@ from frappe.utils import cint
 
 from zatgo_core.services.naming_series import counter_collision, get_naming_series_options
 
-SETTINGS_DOCTYPE = "ZG Sales Invoice Naming Settings"
-RULE_DOCTYPE = "ZG Sales Invoice Naming Rule"
+SETTINGS_DOCTYPE = "Sales Invoice Naming Settings"
+RULE_DOCTYPE = "Sales Invoice Naming Rule"
 
 UNMAPPED_USE_DEFAULT = "Use ERPNext default series"
 UNMAPPED_BLOCK = "Block Sales Invoice creation"
@@ -84,7 +84,7 @@ def enforce_user_series(doc: Any) -> bool:
         if user not in EXEMPT_USERS and blocks_unmapped_users():
             frappe.throw(
                 f"{NOT_CONFIGURED_MESSAGE} (User: {user}, Company: {company or '-'}). "
-                "Ask an administrator to add a rule in ZG Sales Invoice Naming Settings.",
+                "Ask an administrator to add a rule in Sales Invoice Naming Settings.",
                 frappe.ValidationError,
                 title="Naming Series Not Configured",
             )
@@ -93,7 +93,7 @@ def enforce_user_series(doc: Any) -> bool:
     if series not in get_naming_series_options("Sales Invoice"):
         frappe.throw(
             f"The naming series '{series}' configured for {user} is no longer a Sales Invoice "
-            "naming series. Ask an administrator to update ZG Sales Invoice Naming Settings.",
+            "naming series. Ask an administrator to update Sales Invoice Naming Settings.",
             frappe.ValidationError,
             title="Invalid Naming Series",
         )
@@ -116,7 +116,7 @@ def get_session_user_series() -> dict[str, dict[str, str]]:
     }
 
 
-# -- configuration validation (ZG Sales Invoice Naming Settings.validate) -----
+# -- configuration validation (Sales Invoice Naming Settings.validate) -----
 
 
 def series_prefix(series: str) -> str | None:

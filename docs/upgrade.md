@@ -18,7 +18,7 @@ bench --site <site> clear-cache
 
 ## Notes by version
 
-- **0.4.7 (unreleased):** ZG System Settings gets `enable_vansalex` ("Enable ZatGo VanSaleX", default on). A site
+- **0.4.7 (unreleased):** ZatGo System Settings gets `enable_vansalex` ("Enable ZatGo VanSaleX", default on). A site
   with no stored value counts as ON, so nothing changes before or after migrate; patch `v0_4_7` stores the 1 so
   the form shows what is enforced. Switching apps or industries is now System Manager only on every route.
   After deploying, `bench --site <site> clear-cache` (the new permission hooks are cached with the hooks).

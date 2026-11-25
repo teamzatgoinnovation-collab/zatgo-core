@@ -1,0 +1,142 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:module_id",
+ "creation": "2026-11-17 00:00:00.000000",
+ "description": "A module of the edition / licensing registry (zatgo_core/licensing). Read-only: rebuilt from code on every migrate.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "module_id",
+  "label",
+  "category",
+  "available",
+  "column_break_1",
+  "display_order",
+  "icon",
+  "source_app",
+  "feature_count",
+  "details_section",
+  "description",
+  "registry_hash"
+ ],
+ "fields": [
+  {
+   "fieldname": "module_id",
+   "fieldtype": "Data",
+   "label": "Module ID",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Data",
+   "label": "Category",
+   "read_only": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "available",
+   "fieldtype": "Check",
+   "label": "Available on this site",
+   "read_only": 1,
+   "in_list_view": 1,
+   "description": "Every app it builds on is installed on this site."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "Display Order",
+   "read_only": 1
+  },
+  {
+   "fieldname": "icon",
+   "fieldtype": "Data",
+   "label": "Icon",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_app",
+   "fieldtype": "Data",
+   "label": "Source App",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feature_count",
+   "fieldtype": "Int",
+   "label": "Features",
+   "read_only": 1
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "registry_hash",
+   "fieldtype": "Data",
+   "label": "Registry Hash",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "Module",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "ZatGo Application Admin"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "ZatGo Read Only"
+  }
+ ],
+ "read_only": 1,
+ "sort_field": "display_order",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "label",
+ "track_changes": 0
+}

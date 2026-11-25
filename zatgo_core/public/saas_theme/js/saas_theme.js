@@ -979,9 +979,9 @@ saas_theme.attachments = {
 // (setup/ensure_report_print_formats.py) unless the user picks another in the Print / PDF dialog or a Report Template is selected.
 (function () {
 	const FORMATS = {
-		"Balance Sheet": "ZG Balance Sheet",
-		"Profit and Loss Statement": "ZG Profit and Loss Statement",
-		"Trial Balance": "ZG Trial Balance",
+		"Balance Sheet": "ZatGo Balance Sheet",
+		"Profit and Loss Statement": "ZatGo Profit and Loss Statement",
+		"Trial Balance": "ZatGo Trial Balance",
 	};
 
 	function patch() {

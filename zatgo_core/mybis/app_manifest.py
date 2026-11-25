@@ -8,7 +8,7 @@ APP = {
     "description": "Management dashboards and business intelligence for the MyBis app (read-only API).",
     "switch_field": "enable_mybis",
     "workspaces": ("ZatGo MyBis",),
-    "settings": (("ZG MyBis Settings", "MyBis Settings"),),
+    "settings": (("MyBis Settings", "MyBis Settings"),),
     # Off by default: a site opts in. Off = every zatgo_core.api.v1.mybis.* method answers 404.
     "api_prefixes": ("zatgo_core.api.v1.mybis.",),
 }

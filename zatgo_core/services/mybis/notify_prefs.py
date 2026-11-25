@@ -1,7 +1,7 @@
 """Which MyBis notifications a user asked for. Opt-in: nothing stored means off.
 
 A user's choices are kept as User Defaults (`tabDefaultValue`, one row per key), which already exist on every site, need no
-migration and are cleaned up with the user. The admin's limits (`ZG MyBis Settings`) decide which of them can be on at all.
+migration and are cleaned up with the user. The admin's limits (`MyBis Settings`) decide which of them can be on at all.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from typing import Any
 import frappe
 from frappe.utils import cint
 
-from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings as settings
+from zatgo_core.zatgo_core.doctype.mybis_settings import mybis_settings as settings
 
 # pref key -> (label for the app, the admin switch that must be on, or None)
 PREFS: dict[str, tuple[str, str | None]] = {

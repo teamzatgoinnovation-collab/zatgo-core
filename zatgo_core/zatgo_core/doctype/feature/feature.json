@@ -1,0 +1,217 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:feature_id",
+ "creation": "2026-11-17 00:00:00.000000",
+ "description": "A feature of the edition / licensing registry (zatgo_core/licensing). Read-only: rebuilt from code on every migrate.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "feature_id",
+  "label",
+  "module",
+  "available",
+  "foundation",
+  "retired",
+  "column_break_1",
+  "source_app",
+  "platforms",
+  "app_key",
+  "industry",
+  "vansalex_keys",
+  "details_section",
+  "description",
+  "doctype_map",
+  "requires",
+  "column_break_2",
+  "reports",
+  "pages",
+  "workspaces",
+  "api_prefixes",
+  "fingerprint"
+ ],
+ "fields": [
+  {
+   "fieldname": "feature_id",
+   "fieldtype": "Data",
+   "label": "Feature ID",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1,
+   "description": "Stable id that editions and signed licences refer to. Never renamed."
+  },
+  {
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "label": "Label",
+   "read_only": 1,
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "module",
+   "fieldtype": "Link",
+   "label": "Module",
+   "read_only": 1,
+   "options": "Module",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "available",
+   "fieldtype": "Check",
+   "label": "Available on this site",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "foundation",
+   "fieldtype": "Check",
+   "label": "Foundation",
+   "read_only": 1,
+   "description": "Part of every edition."
+  },
+  {
+   "fieldname": "retired",
+   "fieldtype": "Check",
+   "label": "Retired",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_app",
+   "fieldtype": "Data",
+   "label": "Source App",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "platforms",
+   "fieldtype": "Data",
+   "label": "Platforms",
+   "read_only": 1
+  },
+  {
+   "fieldname": "app_key",
+   "fieldtype": "Data",
+   "label": "ZatGo App",
+   "read_only": 1
+  },
+  {
+   "fieldname": "industry",
+   "fieldtype": "Data",
+   "label": "Industry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vansalex_keys",
+   "fieldtype": "Small Text",
+   "label": "VanSaleX Keys",
+   "read_only": 1
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "read_only": 1
+  },
+  {
+   "fieldname": "doctype_map",
+   "fieldtype": "Code",
+   "label": "DocTypes and Actions",
+   "read_only": 1,
+   "options": "JSON"
+  },
+  {
+   "fieldname": "requires",
+   "fieldtype": "Code",
+   "label": "Requires",
+   "read_only": 1,
+   "options": "JSON",
+   "description": "Features this one needs (with the actions), beyond the foundation. Never added automatically."
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reports",
+   "fieldtype": "Small Text",
+   "label": "Reports",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pages",
+   "fieldtype": "Small Text",
+   "label": "Pages",
+   "read_only": 1
+  },
+  {
+   "fieldname": "workspaces",
+   "fieldtype": "Small Text",
+   "label": "Workspaces",
+   "read_only": 1
+  },
+  {
+   "fieldname": "api_prefixes",
+   "fieldtype": "Small Text",
+   "label": "API Prefixes",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fingerprint",
+   "fieldtype": "Data",
+   "label": "Fingerprint",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "Feature",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "System Manager"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "ZatGo Application Admin"
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "ZatGo Read Only"
+  }
+ ],
+ "read_only": 1,
+ "sort_field": "feature_id",
+ "sort_order": "ASC",
+ "states": [],
+ "title_field": "label",
+ "track_changes": 0
+}

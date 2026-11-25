@@ -23,7 +23,7 @@ def run():
     print(f"SI.update_stock: {frappe.db.has_column('Sales Invoice', 'update_stock')}")
 
     # 4. Van warehouse
-    wh = frappe.db.get_value("ZG Van Sale Profile", {"user": "Administrator"}, "warehouse")
+    wh = frappe.db.get_value("Van Sale Profile", {"user": "Administrator"}, "warehouse")
     print(f"Van warehouse: {wh}")
 
     # 5. Stock in van

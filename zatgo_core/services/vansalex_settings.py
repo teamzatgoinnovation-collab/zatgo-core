@@ -1,16 +1,16 @@
 """Effective VanSaleX settings for a user.
 
 Company-wide defaults live in the `VanSaleX Settings` single; a user's
-`ZG Van Sale Profile` may override them (blank / "Inherit" = use the
+`Van Sale Profile` may override them (blank / "Inherit" = use the
 default). Account and warehouse defaults come from ERPNext's own records
 first and zatgo_core's second:
 
-- warehouse:    Profile.warehouse → ZG Company Settings.default_warehouse
+- warehouse:    Profile.warehouse → Company Settings.default_warehouse
                 → ERPNext Stock Settings.default_warehouse
 - cash account: Profile.cash_account → VanSaleX Settings
                 .default_cash_account (if it is the company's) → ERPNext
                 Mode of Payment "Cash" default account for the company →
-                ZG Company Settings.default_cash_account
+                Company Settings.default_cash_account
 - bank account: Profile.bank_account → VanSaleX Settings
                 .default_bank_account (if it is the company's) → the
                 company's default account on a Bank-type Mode of Payment
@@ -18,7 +18,7 @@ first and zatgo_core's second:
                 ERPNext Company.default_bank_account
   A driver may sell into another Cash / Bank account of the company only
   with the "Choose payment account" feature (vansalex_access).
-- sales taxes:  ZG Company Settings.default_tax_template → the company's
+- sales taxes:  Company Settings.default_tax_template → the company's
                 default ERPNext Sales Taxes and Charges Template
                 (is_default) → its first enabled one
 - print format: ERPNext's default print format for Sales Invoice (the
@@ -37,7 +37,7 @@ import frappe
 from frappe.utils import cint, flt
 
 SETTINGS_DOCTYPE = "VanSaleX Settings"
-PROFILE_DOCTYPE = "ZG Van Sale Profile"
+PROFILE_DOCTYPE = "Van Sale Profile"
 CASH_MODE_OF_PAYMENT = "Cash"
 PAYMENT_TYPES = ("Cash", "Bank", "Credit")
 # Payment type -> the Sales Invoice field its account goes in, and the
@@ -92,9 +92,9 @@ def _override(profile: dict[str, Any], key: str, default: Any) -> int:
 
 
 def _zg_company_setting(company: str | None, field: str) -> str | None:
-    if not company or not frappe.db.exists("DocType", "ZG Company Settings"):
+    if not company or not frappe.db.exists("DocType", "Company Settings"):
         return None
-    return frappe.db.get_value("ZG Company Settings", {"company": company}, field) or None
+    return frappe.db.get_value("Company Settings", {"company": company}, field) or None
 
 
 def _user_company(user: str, profile_warehouse: str | None) -> str | None:
@@ -160,7 +160,7 @@ def _usable_account(account: str | None, company: str | None, account_type: str)
 def default_cash_account(company: str | None) -> str | None:
     """VanSaleX Settings' Default Cash Account (when it is this company's),
     ERPNext's Mode of Payment "Cash" default account for the company, then
-    zatgo_core's ZG Company Settings.default_cash_account."""
+    zatgo_core's Company Settings.default_cash_account."""
     account = _usable_account(_global_settings()["default_cash_account"], company, "Cash")
     if account:
         return account
@@ -215,7 +215,7 @@ def _sales_tax_choice(company: str | None) -> tuple[str | None, bool, str | None
             return template, inclusive, None
         return None, inclusive, (
             f"The Default Tax Template of company {company} ({template}) no longer exists. "
-            "Choose another in ZG Company Settings."
+            "Choose another in Company Settings."
         )
     filters = {"company": company, "disabled": 0}
     template = frappe.db.get_value("Sales Taxes and Charges Template", {**filters, "is_default": 1}, "name")
@@ -225,7 +225,7 @@ def _sales_tax_choice(company: str | None) -> tuple[str | None, bool, str | None
     if len(candidates) > 1:
         return None, inclusive, (
             f"Company {company} has several Sales Taxes and Charges Templates and none is the default. "
-            "Mark one as Default, or choose one in ZG Company Settings."
+            "Mark one as Default, or choose one in Company Settings."
         )
     return (candidates[0] if candidates else None), inclusive, None
 

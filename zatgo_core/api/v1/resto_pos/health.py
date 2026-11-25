@@ -21,8 +21,8 @@ def status() -> dict[str, Any]:
     require_login()
     items = frappe.db.count("Item", {"disabled": 0})
     kds = (
-        frappe.db.count("ZG KDS Ticket", {"status": ("!=", "Served")})
-        if frappe.db.exists("DocType", "ZG KDS Ticket")
+        frappe.db.count("KDS Ticket", {"status": ("!=", "Served")})
+        if frappe.db.exists("DocType", "KDS Ticket")
         else 0
     )
     count = items + kds

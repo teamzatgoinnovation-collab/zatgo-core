@@ -42,7 +42,7 @@
 /* Digits come from Inter (shipped with Frappe), not Poppins: Poppins has no tabular figures and the theme
    lines amounts up with `font-variant-numeric: tabular-nums`. unicode-range sends only 0-9 to this face. */
 @font-face {
-	font-family: "ZG Digits";
+	font-family: "ZatGo Digits";
 	font-style: normal;
 	font-weight: 100 900;
 	font-display: swap;
@@ -275,7 +275,7 @@
    ============================================ */
 
 :root {
-	--font-sans: "ZG Digits", "Poppins", "Cairo", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
+	--font-sans: "ZatGo Digits", "Poppins", "Cairo", -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui,
 		Roboto, "Helvetica Neue", Arial, sans-serif;
 	--font-stack: var(--font-sans);  /* Frappe's own font variable: inputs, buttons, tables and editors follow too */
 }
@@ -7455,7 +7455,7 @@ a.badge:focus-visible {
 }
 
 /* --------------------------------------------
-   6. TYPE — Inter (Frappe ships it; the same file already feeds "ZG Digits"), Cairo for Arabic.
+   6. TYPE — Inter (Frappe ships it; the same file already feeds "ZatGo Digits"), Cairo for Arabic.
    Poppins stays defined in 00-fonts for login.css and as a fallback, but no longer leads the stack.
    -------------------------------------------- */
 @font-face {

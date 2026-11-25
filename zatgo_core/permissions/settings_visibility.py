@@ -35,7 +35,7 @@ def can_see_roles(allowed_csv: str | None, roles: set[str] | None = None) -> boo
     roles = roles or user_roles()
     if is_superuser(roles):
         return True
-    if ROLES["APPLICATION_ADMIN"] in roles or "ZG Application Admin" in roles:
+    if ROLES["APPLICATION_ADMIN"] in roles or "ZatGo Application Admin" in roles:
         return True
     allowed = _parse_roles(allowed_csv)
     if not allowed:

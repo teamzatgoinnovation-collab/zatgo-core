@@ -27,7 +27,7 @@
       "is_query_report": 0,
       "label": "POS Settings",
       "link_count": 0,
-      "link_to": "ZG POS Settings",
+      "link_to": "ZatGo POS Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -38,7 +38,7 @@
       "is_query_report": 0,
       "label": "Printer Settings",
       "link_count": 0,
-      "link_to": "ZG Printer Settings",
+      "link_to": "Printer Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -49,7 +49,7 @@
       "is_query_report": 0,
       "label": "Payment Settings",
       "link_count": 0,
-      "link_to": "ZG Payment Settings",
+      "link_to": "Payment Settings",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -112,7 +112,7 @@
       "is_query_report": 0,
       "label": "Offline Sale Issues",
       "link_count": 0,
-      "link_to": "ZG Offline Sale Issue",
+      "link_to": "Offline Sale Issue",
       "link_type": "DocType",
       "onboard": 0,
       "type": "Link"
@@ -133,10 +133,10 @@
       "role": "System Manager"
     },
     {
-      "role": "ZG Application Admin"
+      "role": "ZatGo Application Admin"
     },
     {
-      "role": "ZG Company Admin"
+      "role": "ZatGo Company Admin"
     }
   ],
   "sequence_id": 31.0,
@@ -145,7 +145,7 @@
       "color": "Blue",
       "doc_view": "",
       "label": "POS Settings",
-      "link_to": "ZG POS Settings",
+      "link_to": "ZatGo POS Settings",
       "type": "DocType"
     },
     {
@@ -166,7 +166,7 @@
       "color": "Orange",
       "doc_view": "List",
       "label": "Offline Sale Issues",
-      "link_to": "ZG Offline Sale Issue",
+      "link_to": "Offline Sale Issue",
       "type": "DocType"
     }
   ],

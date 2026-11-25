@@ -32,14 +32,14 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         # Pin the warehouse this test's checkouts resolve to — the test
         # company is shared across integration test files, so "first
         # warehouse for this company" would otherwise be nondeterministic.
-        if frappe.db.exists("ZG Company Settings", cls.company):
-            settings = frappe.get_doc("ZG Company Settings", cls.company)
+        if frappe.db.exists("Company Settings", cls.company):
+            settings = frappe.get_doc("Company Settings", cls.company)
             settings.default_warehouse = cls.warehouse
             settings.save(ignore_permissions=True)
         else:
             frappe.get_doc(
                 {
-                    "doctype": "ZG Company Settings",
+                    "doctype": "Company Settings",
                     "company": cls.company,
                     "default_warehouse": cls.warehouse,
                 }
@@ -91,7 +91,7 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         code = f"T-{random_string(4).upper()}"
         frappe.get_doc(
             {
-                "doctype": "ZG Table",
+                "doctype": "Table",
                 "table_code": code,
                 "table_name": label,
                 "company": cls.company,
@@ -109,7 +109,7 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         self.assertTrue(seated["success"], seated.get("error"))
         order_id = seated["data"]["id"]
         self.assertEqual(seated["data"]["status"], "open")
-        self.assertEqual(frappe.db.get_value("ZG Table", table, "status"), "Occupied")
+        self.assertEqual(frappe.db.get_value("Table", table, "status"), "Occupied")
 
         added = svc.add_item(order_id, item, qty=2, rate=10)
         self.assertTrue(added["success"], added.get("error"))
@@ -118,18 +118,18 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         sent = svc.send_order(order_id)
         self.assertTrue(sent["success"], sent.get("error"))
         self.assertEqual(sent["data"]["status"], "sent")
-        self.assertEqual(frappe.db.count("ZG KDS Ticket", {"order_number": sent["data"]["number"]}), 1)
+        self.assertEqual(frappe.db.count("KDS Ticket", {"order_number": sent["data"]["number"]}), 1)
 
         billed = svc.mark_billing(order_id)
         self.assertTrue(billed["success"], billed.get("error"))
-        self.assertEqual(frappe.db.get_value("ZG Table", table, "status"), "Billing")
+        self.assertEqual(frappe.db.get_value("Table", table, "status"), "Billing")
 
         paid = svc.pay(order_id, "cash", f"test-pay-{random_string(8)}")
         self.assertTrue(paid["success"], paid.get("error"))
         self.assertEqual(paid["data"]["order"]["status"], "paid")
 
-        si_name = frappe.db.get_value("ZG Order", order_id, "sales_invoice")
-        pe_name = frappe.db.get_value("ZG Order", order_id, "payment_entry")
+        si_name = frappe.db.get_value("Order", order_id, "sales_invoice")
+        pe_name = frappe.db.get_value("Order", order_id, "payment_entry")
         self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "docstatus"), 1)
         self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "update_stock"), 1)
         self.assertEqual(frappe.db.get_value("Sales Invoice", si_name, "outstanding_amount"), 0)
@@ -177,7 +177,7 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         self.assertTrue(second["success"], second.get("error"))
         self.assertTrue(second["meta"]["idempotent"])
 
-        si_name = frappe.db.get_value("ZG Order", order_id, "sales_invoice")
+        si_name = frappe.db.get_value("Order", order_id, "sales_invoice")
         self.assertEqual(
             frappe.db.count("Sales Invoice", {"zatgo_client_id": client_id}), 1
         )
@@ -206,9 +206,9 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         voided = svc.void_order(order_id)
         self.assertTrue(voided["success"], voided.get("error"))
         self.assertEqual(voided["data"]["status"], "void")
-        self.assertIsNone(frappe.db.get_value("ZG Order", order_id, "sales_invoice"))
-        self.assertEqual(frappe.db.get_value("ZG Table", table, "status"), "Free")
-        self.assertIsNone(frappe.db.get_value("ZG Table", table, "current_order"))
+        self.assertIsNone(frappe.db.get_value("Order", order_id, "sales_invoice"))
+        self.assertEqual(frappe.db.get_value("Table", table, "status"), "Free")
+        self.assertIsNone(frappe.db.get_value("Table", table, "current_order"))
 
     def test_walk_in_customer_auto_created(self) -> None:
         if frappe.db.exists("Customer", "Walk-in Customer"):
@@ -228,7 +228,7 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         self.assertTrue(paid["success"], paid.get("error"))
 
         self.assertTrue(frappe.db.exists("Customer", "Walk-in Customer"))
-        si_name = frappe.db.get_value("ZG Order", order_id, "sales_invoice")
+        si_name = frappe.db.get_value("Order", order_id, "sales_invoice")
         self.assertEqual(
             frappe.db.get_value("Sales Invoice", si_name, "customer"), "Walk-in Customer"
         )
@@ -254,4 +254,4 @@ class TestRestoPosOrderToPayment(IntegrationTestCase):
         self.assertIn("Nothing was recorded", message)
         self.assertIn(item, message)
         self.assertFalse(frappe.db.exists("Sales Invoice", {"zatgo_client_id": pay_cid}))
-        self.assertFalse(frappe.db.get_value("ZG Order", order_id, "sales_invoice"))
+        self.assertFalse(frappe.db.get_value("Order", order_id, "sales_invoice"))

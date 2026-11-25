@@ -14,7 +14,7 @@ from zatgo_core.api.v1 import app_hub
 from zatgo_core.plugins.discover import discover_and_register_manifests
 from zatgo_core.services import app_catalog, app_gate, app_sidebar, app_state, core_sidebar
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 SWITCH_FIELDS = ("enable_vansalex", "enable_vansalex_web", "enable_tracker", "enable_language_switcher")
 VANSALEX_WORKSPACE = "ZatGo VanSaleX"
 VANSALEX_METHOD = "/api/method/zatgo_core.api.v1.vansalex.me.context"
@@ -35,7 +35,7 @@ def _make_user(*roles: str) -> str:
 
 
 def _store(field: str, value) -> None:
-    """Write (or, with None, remove) the stored value of a ZG System Settings field."""
+    """Write (or, with None, remove) the stored value of a ZatGo System Settings field."""
     if value is None:
         frappe.db.delete("Singles", {"doctype": SETTINGS, "field": field})
     else:
@@ -169,8 +169,8 @@ class TestSwitchAuthority(AppSwitchTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.company_admin = _make_user("ZG Company Admin")
-        cls.app_admin = _make_user("ZG Application Admin")
+        cls.company_admin = _make_user("ZatGo Company Admin")
+        cls.app_admin = _make_user("ZatGo Application Admin")
         cls.manager = _make_user("System Manager")
 
     def _flip_as(self, user: str, field: str = "enable_tracker"):
@@ -276,7 +276,7 @@ class TestHubPayload(AppSwitchTestCase):
 
 class TestRegistryMirrorsSwitches(AppSwitchTestCase):
     def _row(self, key: str):
-        return frappe.get_doc("ZG Registered Application", key)
+        return frappe.get_doc("Registered Application", key)
 
     def test_catalog_entries_register_with_valid_values_and_the_real_state(self) -> None:
         _store("enable_tracker", 1)
@@ -296,30 +296,30 @@ class TestRegistryMirrorsSwitches(AppSwitchTestCase):
         row = self._row("vansalex")
         self.assertEqual(row.title, "ZatGo VanSaleX")
         self.assertEqual(row.version, __version__)
-        sections = {s.section_key for s in frappe.get_all("ZG Setting Section", filters={"application": "vansalex"}, fields=["section_key"])}
+        sections = {s.section_key for s in frappe.get_all("Setting Section", filters={"application": "vansalex"}, fields=["section_key"])}
         self.assertTrue({"general", "profiles", "payments"} <= sections)
 
     def test_a_second_run_changes_nothing_and_writes_no_history(self) -> None:
         discover_and_register_manifests()
-        history = frappe.db.count("ZG Config History", {"action": "Register"})
+        history = frappe.db.count("Config History", {"action": "Register"})
         again = discover_and_register_manifests()
         self.assertEqual(again["changed"], 0)
-        self.assertEqual(frappe.db.count("ZG Config History", {"action": "Register"}), history)
+        self.assertEqual(frappe.db.count("Config History", {"action": "Register"}), history)
 
     def test_an_admins_edit_survives_a_migrate_but_the_switch_stays_the_truth(self) -> None:
         discover_and_register_manifests()
         original_visible = self._row("delivery").visible
         original_enabled = self._row("tracker").enabled
         try:
-            frappe.db.set_value("ZG Registered Application", "delivery", "visible", 0 if original_visible else 1)
+            frappe.db.set_value("Registered Application", "delivery", "visible", 0 if original_visible else 1)
             _store("enable_tracker", 1)
-            frappe.db.set_value("ZG Registered Application", "tracker", "enabled", 0)
+            frappe.db.set_value("Registered Application", "tracker", "enabled", 0)
             discover_and_register_manifests()
             self.assertEqual(self._row("delivery").visible, 0 if original_visible else 1, "the admin's choice is kept")
             self.assertEqual(self._row("tracker").enabled, 1, "the site's switch wins over a stray edit")
         finally:
-            frappe.db.set_value("ZG Registered Application", "delivery", "visible", original_visible)
-            frappe.db.set_value("ZG Registered Application", "tracker", "enabled", original_enabled)
+            frappe.db.set_value("Registered Application", "delivery", "visible", original_visible)
+            frappe.db.set_value("Registered Application", "tracker", "enabled", original_enabled)
 
 
 class TestAppApiDecorator(AppSwitchTestCase):

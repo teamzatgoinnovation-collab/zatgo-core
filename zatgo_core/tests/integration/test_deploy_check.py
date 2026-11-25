@@ -16,7 +16,7 @@ class TestDeployCheck(IntegrationTestCase):
         self.assertTrue(deploy_check.verdict(checks), frappe.as_json(checks))
 
     def test_the_check_only_reads(self) -> None:
-        tables = ("tabPatch Log", "tabSingles", "tabZG Registered Application", "tabCustom Field")
+        tables = ("tabPatch Log", "tabSingles", "tabRegistered Application", "tabCustom Field")
         before = {t: frappe.db.sql(f"select count(*) from `{t}`")[0][0] for t in tables}
         deploy_check.collect()
         self.assertEqual({t: frappe.db.sql(f"select count(*) from `{t}`")[0][0] for t in tables}, before)
@@ -29,7 +29,7 @@ class TestDeployCheck(IntegrationTestCase):
             "warehouse_transfer_point_column": False,
             "vansalex_settings_has_max_adjust_qty": False,
             "patches_logged": {**good["patches_logged"], deploy_check.RELEASE_PATCHES[0]: False},
-            "missing_indexes": ["tabZG Trip.status"],
+            "missing_indexes": ["tabTrip.status"],
             "enable_vansalex_stored": None,
             "app_manifest_errors": ["x/app_manifest.py: boom"],
             "registry_bad_category": ["tracker"],
@@ -39,7 +39,7 @@ class TestDeployCheck(IntegrationTestCase):
             "sidebar_sections": ["Apps", "General Settings"],
             "settings_not_tabbed": ["VanSaleX Settings"],
             "app_rail_icons_visible": ["ZatGo VanSaleX"],
-            "staff_only_doctypes_grant_all": ["ZG Order"],
+            "staff_only_doctypes_grant_all": ["Order"],
         }
         for key, value in broken.items():
             bad = copy.deepcopy(good)
@@ -47,5 +47,5 @@ class TestDeployCheck(IntegrationTestCase):
             self.assertFalse(deploy_check.verdict(bad), key)
         # informational only
         info = copy.deepcopy(good)
-        info["staff_only_doctypes_with_custom_docperm"] = ["ZG Delivery Stop"]
+        info["staff_only_doctypes_with_custom_docperm"] = ["ZatGo Delivery Stop"]
         self.assertTrue(deploy_check.verdict(info))

@@ -1,4 +1,4 @@
-# ZatGo ERP workspace and the "ZG Accounts & Inventory" role
+# ZatGo ERP workspace and the "ZatGo Accounts & Inventory" role
 
 **What it is.** One workspace, **ZatGo ERP** (heading *Accounts & Inventory*), for everyday accounting and stock work.
 Every link opens ERPNext's own screen; nothing is duplicated.
@@ -19,11 +19,11 @@ Settings      Accounts, Stock, Buying, Selling, Print, System
    way as every other ZatGo app: *Home*, *Dashboard*, then one group per card. Removing a link removes it from the sidebar.
 
 A link only shows for a user who may open it. If the new DocType / Report is not listed for people who hold only the role
-**ZG Accounts & Inventory**, give that role the right (Role Permission Manager). Staff with ERPNext's own roles already have
+**ZatGo Accounts & Inventory**, give that role the right (Role Permission Manager). Staff with ERPNext's own roles already have
 theirs.
 
 To add a **Number Card** or chart: Edit the workspace (or the **ZatGo ERP Dashboard**) and add a card / chart widget;
-Frappe's Number Card is the editable standard one. Shipped cards (`ZG Sales Invoices`, `ZG Sales Invoice Total`, and the same
+Frappe's Number Card is the editable standard one. Shipped cards (`ZatGo Sales Invoices`, `ZatGo Sales Invoice Total`, and the same
 for Purchase Invoice, Sales Order, Purchase Order = 8) count submitted documents and sum their Grand Total, and sit on the
 Dashboard. They follow header-level User Permissions (company, customer, warehouse...); item-group limits are applied only by
 the summary block on the home page.
@@ -38,7 +38,7 @@ their Grand Total** (click to open the list), with a period switch (All time / T
 browser). Below: the **top selling product** and the **top category** (net amount over submitted Sales Invoices, the next four
 listed underneath). **User Permissions are respected:** a user restricted to Item Groups / Items (or to customers, warehouses...)
 sees only those documents and items; their totals are then the net amount of the lines they may see. Source:
-`services/erp_summary.py`, API `zatgo_core.api.v1.erp_summary.get`, drawn by the Custom HTML Block "ZG ERP Summary"
+`services/erp_summary.py`, API `zatgo_core.api.v1.erp_summary.get`, drawn by the Custom HTML Block "ZatGo ERP Summary"
 (`templates/erp_summary/`, refreshed on every migrate).
 
 The Dashboard has its own name on purpose: Frappe chooses the sidebar from the last part of the page address, and
@@ -47,9 +47,9 @@ workspace (it must stay a block on the page, or Frappe's editor drops it) and sh
 `zatgo_core/zatgo_core_dashboard/zatgo_erp_dashboard/`.
 
 ## Who sees it
-The workspace and its Apps-screen icon are open to **ZG Accounts & Inventory**, System Manager and ERPNext's working roles
+The workspace and its Apps-screen icon are open to **ZatGo Accounts & Inventory**, System Manager and ERPNext's working roles
 (Accounts, Sales, Purchase, Stock and Manufacturing users and managers), so existing staff see it without any change. Each person
-still sees only the links their own document rights allow. **ZG Accounts & Inventory** is the role that *grants* the rights below:
+still sees only the links their own document rights allow. **ZatGo Accounts & Inventory** is the role that *grants* the rights below:
 give it to a user who has none of the ERPNext roles. A user whose **Default Workspace** (User form → Settings) is ZatGo ERP
 opens it from a bare `/desk`.
 

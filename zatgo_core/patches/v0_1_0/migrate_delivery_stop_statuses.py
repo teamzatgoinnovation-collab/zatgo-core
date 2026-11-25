@@ -12,12 +12,12 @@ _MAP = {
 
 
 def execute() -> None:
-    if not frappe.db.exists("DocType", "ZG Delivery Stop"):
+    if not frappe.db.exists("DocType", "ZatGo Delivery Stop"):
         return
     for old, new in _MAP.items():
         frappe.db.sql(
             """
-            UPDATE `tabZG Delivery Stop`
+            UPDATE `tabZatGo Delivery Stop`
             SET status = %s
             WHERE status = %s
             """,

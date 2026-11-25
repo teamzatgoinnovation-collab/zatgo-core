@@ -9,7 +9,7 @@ from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from zatgo_core.services import core_sidebar
 from zatgo_core.setup.ensure_core_desk import ensure_core_desk
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELDS = ("enable_chat_ai", "enable_tracker", "enable_zatgo_space", "enable_saas_theme", "enable_language_switcher", "enable_vansalex_web")
 APP_SETTINGS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings")
 
@@ -90,7 +90,7 @@ class TestCoreSidebar(IntegrationTestCase):
         rows = _general()
         self.assertTrue(any(r["link_type"] == "Page" and r["link_to"] == core_sidebar.HUB_PAGE for r in rows))
         linked = {r["link_to"] for r in rows}
-        for doctype in ("ZG System Settings", "ZG Company Settings", "ZG Security Settings", "ZG Audit Log"):
+        for doctype in ("ZatGo System Settings", "Company Settings", "ZatGo Security Settings", "Audit Log"):
             self.assertIn(doctype, linked)
 
     def test_sync_is_idempotent(self) -> None:
@@ -107,7 +107,7 @@ class TestCoreSidebar(IntegrationTestCase):
         """The sidebar used to be frozen at first creation: a leftover old list must be replaced."""
         sb = frappe.get_doc("Workspace Sidebar", core_sidebar.NAME)
         sb.set("items", [])
-        sb.append("items", {"type": "Link", "label": "Old", "link_type": "DocType", "link_to": "ZG System Settings"})
+        sb.append("items", {"type": "Link", "label": "Old", "link_type": "DocType", "link_to": "ZatGo System Settings"})
         sb.flags.ignore_links = True
         sb.save(ignore_permissions=True)
         self.assertTrue(core_sidebar.sync_core_sidebar())

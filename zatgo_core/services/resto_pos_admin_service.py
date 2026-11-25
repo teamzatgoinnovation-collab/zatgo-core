@@ -41,7 +41,7 @@ def _address_text(row: Any) -> str:
 
 
 def _seller_vat(company: str) -> str:
-    """The VAT number the ZATCA QR carries (ZG Company Settings first, then the Company), so the invoice and its QR agree."""
+    """The VAT number the ZATCA QR carries (Company Settings first, then the Company), so the invoice and its QR agree."""
     from zatgo_core.services.zatca_qr import _seller_vat as vat
 
     return vat(company)
@@ -118,7 +118,7 @@ def get_profile() -> dict[str, Any]:
     restaurant = registry.get("restaurant")
     restaurant_on = "restaurant" in enabled
     retail_on = "supermarket" in enabled
-    # The POS Type of ZG POS Settings decides; with none chosen the industries do (Restaurant wins when both are on).
+    # The POS Type of ZatGo POS Settings decides; with none chosen the industries do (Restaurant wins when both are on).
     pos_mode = pos_settings.pos_mode(set(enabled))
     try:
         company = _company()
@@ -135,7 +135,7 @@ def get_profile() -> dict[str, Any]:
         tax = tax_summary(company)
         override = pos_settings.tax_inclusive_override()
         if override is not None:
-            tax = {**tax, "tax_inclusive": int(override)}  # ZG POS Settings -> Prices and Tax wins over the template
+            tax = {**tax, "tax_inclusive": int(override)}  # ZatGo POS Settings -> Prices and Tax wins over the template
     tax_rows: list[dict[str, Any]] = []
     if tax.get("tax_template"):
         # The template's rows, for the till's tax breakdown only (the invoice's own figures stay authoritative).
@@ -171,7 +171,7 @@ def get_profile() -> dict[str, Any]:
             "bank_mode": _bank_mode_or_none(company),
             "user": frappe.session.user,
         },
-        meta={"stub": False, "source": "ZG System Settings"},
+        meta={"stub": False, "source": "ZatGo System Settings"},
     )
 
 
@@ -393,11 +393,11 @@ def list_payments(
     from zatgo_core.services.resto_pos_service import _map_payment_record
 
     require_login()
-    frappe.has_permission("ZG Order", "read", throw=True)
+    frappe.has_permission("Order", "read", throw=True)
     page_i, size_i, start = parse_pagination(page, page_size)
     filters: dict[str, Any] = {"status": "Paid", "sales_invoice": ("is", "set")}
     orders = frappe.get_all(
-        "ZG Order",
+        "Order",
         filters=filters,
         fields=["name", "order_number", "channel", "sales_invoice", "payment_entry"],
         order_by="modified desc",
@@ -540,11 +540,11 @@ def upsert_customer(
 
 def dashboard_counts() -> dict[str, Any]:
     require_login()
-    frappe.has_permission("ZG Order", "read", throw=True)
+    frappe.has_permission("Order", "read", throw=True)
     tables = {"Free": 0, "Occupied": 0, "Billing": 0}
     for status in tables:
-        tables[status] = frappe.db.count("ZG Table", {"status": status})
-    open_orders = frappe.db.count("ZG Order", {"status": ("in", _OPEN_ORDER_STATUSES)})
+        tables[status] = frappe.db.count("Table", {"status": status})
+    open_orders = frappe.db.count("Order", {"status": ("in", _OPEN_ORDER_STATUSES)})
 
     low = 0
     try:
@@ -557,7 +557,7 @@ def dashboard_counts() -> dict[str, Any]:
     sales = 0.0
     n = 0
     for o in frappe.get_all(
-        "ZG Order",
+        "Order",
         filters={"status": "Paid", "sales_invoice": ("is", "set")},
         fields=["sales_invoice"],
     ):
@@ -577,5 +577,5 @@ def dashboard_counts() -> dict[str, Any]:
             "paymentsToday": n,
             "revenueToday": sales,
         },
-        meta={"stub": False, "source": "ZG Order"},
+        meta={"stub": False, "source": "Order"},
     )

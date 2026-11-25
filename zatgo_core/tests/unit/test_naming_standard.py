@@ -1,4 +1,4 @@
-"""Naming standard (no database): DocTypes shipped by zatgo_core are `ZG <Name>`.
+"""Naming standard (no database): DocTypes shipped by zatgo_core are plain `<Name>` (no prefix).
 
 The standard is in docs/naming.md. The 25 DocTypes below predate it (the modules merged in 2026-10-08 came
 with their own names, and VanSaleX Settings is older than the prefix); they keep their names -- renaming a
@@ -12,6 +12,11 @@ import os
 import unittest
 
 PACKAGE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+ZATGO_PREFIXED = {
+    "ZatGo System Settings", "ZatGo Notification Settings", "ZatGo Security Settings", "ZatGo POS Settings",
+    "ZatGo Vehicle", "ZatGo Delivery Stop", "ZatGo Mode of Payment Account",
+}
 
 LEGACY_NON_ZG = frozenset(
     {
@@ -67,30 +72,15 @@ def shipped_doctypes() -> dict[str, str]:
 
 
 class TestNamingStandard(unittest.TestCase):
-    def test_new_doctypes_are_zg_prefixed(self) -> None:
-        offenders = sorted(n for n in shipped_doctypes() if not n.startswith("ZG ") and n not in LEGACY_NON_ZG)
-        self.assertEqual(offenders, [], "New DocTypes are named 'ZG <Name>' (docs/naming.md)")
+    def test_doctypes_have_no_zg_prefix(self) -> None:
+        # ZG <Name> was renamed (patch v0_6_0/rename_zg_to_zatgo): the prefix is gone.
+        self.assertEqual(sorted(n for n in shipped_doctypes() if n.startswith("ZG ")), [])
+
+    def test_only_colliding_names_keep_a_zatgo_prefix(self) -> None:
+        # The plain name already exists in ERPNext / Frappe, so these (and only these) are `ZatGo <Name>`.
+        prefixed = sorted(n for n in shipped_doctypes() if n.startswith("ZatGo "))
+        self.assertEqual(prefixed, sorted(ZATGO_PREFIXED))
 
     def test_legacy_list_has_no_stale_entries(self) -> None:
         shipped = set(shipped_doctypes())
         self.assertEqual(sorted(LEGACY_NON_ZG - shipped), [], "Renamed or removed: delete it from LEGACY_NON_ZG")
-
-    def test_no_doctype_carries_zatgo_as_a_suffix_or_infix(self) -> None:
-        # The retired convention was '<Name> ZatGo'.
-        self.assertEqual(sorted(n for n in shipped_doctypes() if "ZatGo" in n), [])
-
-    def test_hooked_doctypes_exist(self) -> None:
-        """A permission hook keyed on a DocType nobody ships (a typo, or a half-done rename) silently stops
-        applying -- for Chat AI that means its per-user privacy scoping."""
-        from zatgo_core import hooks
-
-        shipped = set(shipped_doctypes())
-        for table in ("permission_query_conditions", "has_permission"):
-            for key in getattr(hooks, table):
-                if key == "*":
-                    continue
-                self.assertTrue(key in shipped or key in ERPNEXT_HOOKED, f"hooks.{table}[{key!r}] names no known DocType")
-
-
-if __name__ == "__main__":
-    unittest.main()

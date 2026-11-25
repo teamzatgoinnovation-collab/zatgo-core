@@ -4,7 +4,7 @@
 // the user can see what is actually owed before entering an amount.
 
 // Account Paid To (Receive) / Account Paid From (Pay) from the chart of accounts
-// (ZG System Settings -> "Auto-fill Account Paid To / Paid From on Payment Entry",
+// (ZatGo System Settings -> "Auto-fill Account Paid To / Paid From on Payment Entry",
 // services/payment_entry_accounts.py). ERPNext fills the field from the Mode of Payment's
 // default account through erpnext.accounts.pos.get_payment_mode_account (shared with POS rows), so
 // that one function is wrapped -- for Payment Entry only -- and the field has a single source:
@@ -96,14 +96,14 @@ frappe.ui.form.on("Payment Entry", {
 	},
 });
 
-// Payment Details (ZG Payment Allocation): split the money across payment
+// Payment Details (Payment Allocation): split the money across payment
 // methods / accounts. Picking a method pre-fills its default account; the
 // first row's account becomes Account Paid To (Receive) / Paid From (Pay) --
 // mandatory on the form, and ERPNext's own handlers then fetch its currency --
 // and the rows' total drives Received Amount / Paid Amount. The server
 // re-does all of this and posts the GL split
 // (services/payment_allocation.py, overrides/payment_entry.py).
-frappe.ui.form.on("ZG Payment Allocation", {
+frappe.ui.form.on("Payment Allocation", {
 	mode_of_payment: function (frm, cdt, cdn) {
 		const row = locals[cdt][cdn];
 		if (!row.mode_of_payment || !frm.doc.company) return;

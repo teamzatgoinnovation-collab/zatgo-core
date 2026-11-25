@@ -1,4 +1,4 @@
-"""Seed the rights of the "ZG Accounts & Inventory" role (once per DocType / report).
+"""Seed the rights of the "ZatGo Accounts & Inventory" role (once per DocType / report).
 
 The role owns the "ZatGo ERP" workspace (services/erp_workspace.py). Rights are least-privilege: the documents the
 workspace links to, plus read access to what those documents look up while they are saved or printed (accounts, price
@@ -91,7 +91,7 @@ def _ensure_report_role(report: str) -> None:
 
 
 def ensure_erp_perms() -> None:
-    """Rights of the ZG Accounts & Inventory role: DocPerms and report roles, once per DocType / report."""
+    """Rights of the ZatGo Accounts & Inventory role: DocPerms and report roles, once per DocType / report."""
     if not frappe.db.exists("Role", ROLE):
         return
     for doctype, flags in _PERMS:
@@ -105,4 +105,4 @@ def ensure_erp_perms() -> None:
         except Exception:
             logger.exception("Failed to ensure report role %s / %s", report, ROLE)
     frappe.clear_cache()
-    logger.info("ZG Accounts & Inventory rights ensured")
+    logger.info("ZatGo Accounts & Inventory rights ensured")

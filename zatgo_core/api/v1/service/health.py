@@ -19,7 +19,7 @@ def ping() -> dict[str, Any]:
 @frappe.whitelist()
 def status() -> dict[str, Any]:
     require_login()
-    count = frappe.db.count("ZG Service Ticket") if frappe.db.exists("DocType", "ZG Service Ticket") else 0
+    count = frappe.db.count("Service Ticket") if frappe.db.exists("DocType", "Service Ticket") else 0
     return ok(
         {
             "product": "service",

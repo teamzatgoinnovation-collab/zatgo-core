@@ -96,7 +96,7 @@ def seed_feature_flags() -> None:
 def seed_application_settings() -> None:
     """Ensure site Application Settings exist with default Electron/Flutter/Web clients."""
     if not frappe.db.exists("DocType", DOCTYPES["APPLICATION_SETTINGS"]):
-        logger.warning("ZG Application Settings missing; skip seed")
+        logger.warning("Application Settings missing; skip seed")
         return
     SettingsRepository.get_single(DOCTYPES["APPLICATION_SETTINGS"])
     from zatgo_core.services.app_registry_service import AppRegistryService

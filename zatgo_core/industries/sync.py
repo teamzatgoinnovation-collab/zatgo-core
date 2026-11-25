@@ -1,7 +1,7 @@
 """Apply a site's industry selection: settings rows, roles, custom fields and
 Desk entries (workspace, sidebar, desktop icon).
 
-Run by ZG System Settings on save and by after_migrate. Switching an
+Run by ZatGo System Settings on save and by after_migrate. Switching an
 industry off removes its Desk entries and hides its custom fields; it never
 deletes data, DocTypes, roles or custom fields.
 """

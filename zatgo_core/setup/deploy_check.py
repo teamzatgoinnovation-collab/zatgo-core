@@ -13,16 +13,16 @@ import json
 
 import frappe
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 RELEASE_PATCHES = (
     "zatgo_core.patches.v0_4_7.enable_vansalex_default_on",
     "zatgo_core.patches.v0_4_8.add_warehouse_transfer_point_field",
 )
 # (table, column) pairs that must carry an index since this release's `search_index` additions
 INDEXED = (
-    ("tabZG Trip", "sales_user"),
-    ("tabZG Trip", "status"),
-    ("tabZG Trip", "planned_at"),
+    ("tabTrip", "sales_user"),
+    ("tabTrip", "status"),
+    ("tabTrip", "planned_at"),
     ("tabAI Usage Daily", "user"),
     ("tabAI Usage Daily", "usage_date"),
     ("tabAI Chat Message", "session"),
@@ -32,15 +32,15 @@ INDEXED = (
     ("tabAI Attachment", "session"),
 )
 # Settings forms that must start with a Tab Break (the Settings items of an app's sidebar, services/app_sidebar.py)
-TABBED_FORMS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings", "ZG System Settings")
+TABBED_FORMS = ("VanSaleX Settings", "Chat AI Settings", "Tracker Settings", "Space Settings", "ZatGo System Settings")
 STAFF_ONLY = (
-    "ZG Delivery Boy",
-    "ZG Delivery Stop",
-    "ZG Vehicle",
-    "ZG Service Ticket",
-    "ZG Order",
-    "ZG Table",
-    "ZG KDS Ticket",
+    "Delivery Boy",
+    "ZatGo Delivery Stop",
+    "ZatGo Vehicle",
+    "Service Ticket",
+    "Order",
+    "Table",
+    "KDS Ticket",
 )
 
 
@@ -80,10 +80,10 @@ def collect() -> dict:
     checks["vansalex_on"] = app_state.is_on("vansalex")
     checks["app_manifest_errors"] = app_catalog.load_errors()
     bad_category = frappe.db.sql(
-        "select name from `tabZG Registered Application` where category not in "
+        "select name from `tabRegistered Application` where category not in "
         "('Operations','Sales','Inventory','HR','Finance','Platform','Other')"
     )
-    checks["registry_rows"] = frappe.db.count("ZG Registered Application")
+    checks["registry_rows"] = frappe.db.count("Registered Application")
     checks["registry_bad_category"] = [r[0] for r in bad_category]
     checks["zatgo_sidebar_exists"] = bool(frappe.db.exists("Workspace Sidebar", "ZatGo"))
     checks["hub_page_exists"] = bool(frappe.db.exists("Page", "zg-app-hub"))

@@ -3,7 +3,7 @@
 aging.summary / aging.detail used to apply no caller scoping at all — a
 Field User's dashboard received every open Sales Invoice on the site,
 across every customer and company. Confirms a non-admin now only sees
-customers on their own route (ZG Trip, the same rule create_collection
+customers on their own route (Trip, the same rule create_collection
 enforces) plus customers they invoiced themselves, is refused an explicit
 out-of-scope customer, and that admins are unaffected.
 """
@@ -117,7 +117,7 @@ class TestVansalexAgingScope(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": "Field User",
@@ -130,7 +130,7 @@ class TestVansalexAgingScope(IntegrationTestCase):
     def _make_trip(cls, user: str, customer: str) -> None:
         frappe.get_doc(
             {
-                "doctype": "ZG Trip",
+                "doctype": "Trip",
                 "title": "Aging Test Route",
                 "customer": customer,
                 "sequence": 1,

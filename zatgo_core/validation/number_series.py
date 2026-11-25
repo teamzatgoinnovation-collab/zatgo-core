@@ -1,4 +1,4 @@
-"""Validation for ZG Number Series Settings."""
+"""Validation for Number Series Settings."""
 
 from __future__ import annotations
 

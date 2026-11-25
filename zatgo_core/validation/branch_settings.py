@@ -1,4 +1,4 @@
-"""Validation for ZG Branch Settings."""
+"""Validation for Branch Settings."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ def validate_branch_settings(doc: Document) -> None:
         frappe.throw(frappe._("Company is required"))
 
     duplicates = frappe.db.exists(
-        "ZG Branch Settings",
+        "Branch Settings",
         {
             "branch_name": doc.branch_name,
             "company": doc.company,

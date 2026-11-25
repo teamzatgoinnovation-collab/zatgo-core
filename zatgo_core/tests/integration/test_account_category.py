@@ -25,7 +25,7 @@ class TestAccountCategory(IntegrationTestCase):
         doc = frappe.get_doc(
             {
                 "doctype": "Account",
-                "account_name": f"ZG Cat {random_string(5)}",
+                "account_name": f"ZatGo Cat {random_string(5)}",
                 "company": self.company,
                 "parent_account": self.parent,
                 "account_currency": "SAR",

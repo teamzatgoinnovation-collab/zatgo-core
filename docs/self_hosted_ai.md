@@ -24,7 +24,7 @@ bench --site <site> execute zatgo_core.chat_ai.setup_self_hosted.check     # rea
 `configure` sets Chat AI Settings: provider *Custom OpenAI-compatible*, the chat endpoint and model,
 the embedding provider/endpoint/model, SearXNG as the web search provider, a context window that
 suits a small model (8192) and a 300 s request timeout (CPU inference is slow). It never touches API
-keys. Then switch the module on for the site (ZG System Settings → Enable Chat AI).
+keys. Then switch the module on for the site (ZatGo System Settings → Enable Chat AI).
 
 Other servers work the same way (Ollama, vLLM, LM Studio): pass their URL as `llm_url` and the model
 name as `model`. Another model: set `LLM_FILE` / `LLM_ALIAS` in `.env` and place the GGUF in `models/`.

@@ -2,8 +2,8 @@
 
 The enforcement switch, issuer mode, the signing-key path and the site ID are `site_config.json` keys a bench user
 edits by hand -- no document event sees that. `check()` compares them with what it saw last (DefaultValue row
-`zg_licence_config_seen`, written directly like the clock mark) and writes one ZG Audit Log entry per change
-(`doctype_name` "ZG Licence Config"). It runs daily (services/jobs.py) and whenever the Licence page loads.
+`zg_licence_config_seen`, written directly like the clock mark) and writes one Audit Log entry per change
+(`doctype_name` "Licence Config"). It runs daily (services/jobs.py) and whenever the Licence page loads.
 Values are recorded, except the key path, which is recorded only as set / not set.
 """
 
@@ -15,7 +15,7 @@ from typing import Any
 import frappe
 
 SEEN_KEY = "zg_licence_config_seen"
-AUDIT_DOCTYPE = "ZG Licence Config"
+AUDIT_DOCTYPE = "Licence Config"
 
 
 def snapshot() -> dict[str, Any]:

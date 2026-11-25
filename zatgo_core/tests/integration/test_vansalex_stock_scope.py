@@ -133,7 +133,7 @@ class TestVansalexStockScope(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": user_type,
@@ -148,9 +148,9 @@ class TestVansalexStockScope(IntegrationTestCase):
         frappe.set_user(self.user)
 
     def _set_profile(self, **values) -> None:
-        name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-        frappe.db.set_value("ZG Van Sale Profile", name, values)
-        frappe.clear_document_cache("ZG Van Sale Profile", name)
+        name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+        frappe.db.set_value("Van Sale Profile", name, values)
+        frappe.clear_document_cache("Van Sale Profile", name)
 
     @contextmanager
     def _client(self, **switches: int):
@@ -241,7 +241,7 @@ class TestVansalexStockScope(IntegrationTestCase):
         )
         self.assertEqual(len(rows), 2)
         self.assertTrue(frappe.get_meta("Warehouse").has_field("zg_vansalex_transfer_point"))
-        options = frappe.get_meta("ZG Van Sale Profile Access").get_field("access_key").options.split("\n")
+        options = frappe.get_meta("Van Sale Profile Access").get_field("access_key").options.split("\n")
         self.assertTrue({"inventory.transfer", "inventory.adjust"} <= set(options))
         self.assertTrue(frappe.get_meta(SETTINGS).has_field("max_adjust_qty"))
 

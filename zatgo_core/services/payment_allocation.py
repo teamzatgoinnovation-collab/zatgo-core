@@ -14,7 +14,7 @@ Where the rows live, and who posts them -- nothing here writes GL rows:
   from double-posting. The only core behaviour we change is that
   before_save would otherwise overwrite every row's account with the
   mode's single default (see overrides/sales_invoice.py).
-- Payment Entry: `custom_payment_details` (ZG Payment Allocation). The
+- Payment Entry: `custom_payment_details` (Payment Allocation). The
   single bank-side GL line ERPNext builds (paid_to on Receive, paid_from on
   Pay) is split into one line per row by overrides/payment_entry.py; the
   party line, references, outstanding updates, deductions, taxes and
@@ -23,7 +23,7 @@ Where the rows live, and who posts them -- nothing here writes GL rows:
   runs on a real account.
 
 Which accounts a Mode of Payment may use, per company: Mode of Payment
-`custom_zg_accounts` (ZG Mode of Payment Account) rows plus the native
+`custom_zg_accounts` (ZatGo Mode of Payment Account) rows plus the native
 Mode of Payment Account default. Nothing else -- an API caller can't route
 money to an arbitrary ledger.
 """
@@ -58,9 +58,9 @@ def allowed_accounts(mode_of_payment: str, company: str) -> list[dict[str, Any]]
         return []
 
     rows: list[dict[str, Any]] = []
-    if frappe.db.has_table("ZG Mode of Payment Account"):
+    if frappe.db.has_table("ZatGo Mode of Payment Account"):
         rows = frappe.get_all(
-            "ZG Mode of Payment Account",
+            "ZatGo Mode of Payment Account",
             filters={
                 "parent": mode_of_payment,
                 "parenttype": "Mode of Payment",

@@ -20,11 +20,11 @@ zatgo_core is installed on every accounting / van-sale site, so everything optio
 switched on**. That is one mechanism, driven by one catalog:
 
 ```text
-app manifest ──► app_catalog ──┬─► app_state   is app X on? (ZG System Settings switches)
+app manifest ──► app_catalog ──┬─► app_state   is app X on? (ZatGo System Settings switches)
  (per app)       (normalised)  ├─► app_gate    API of an app that is off answers 404; @app_api; require_app
                                ├─► hub page    "ZatGo Apps": state, version, warnings, settings links, switch
                                ├─► sidebar     the generated "ZatGo" Desk sidebar
-                               └─► registry    ZG Registered Application (client apps) — a one-way projection
+                               └─► registry    Registered Application (client apps) — a one-way projection
 ```
 
 - **Manifest** — `<module>/app_manifest.py` (`APP = {...}`) for a module folder, or an entry of
@@ -39,14 +39,14 @@ app manifest ──► app_catalog ──┬─► app_state   is app X on? (ZG 
   the user's permissions, and a feature that is off is off for admins too.
 - **Off is not uninstalled.** Switching an app off hides it and makes its API answer 404; its tables, records,
   roles and settings stay untouched, and switching on again restores everything.
-- **Who may switch.** A System Manager only — enforced in the ZG System Settings controller
+- **Who may switch.** A System Manager only — enforced in the ZatGo System Settings controller
   (`services/app_authority.py`), so the Desk form and the REST API are bound as well as the hub page. Every
   switch change is in the audit log.
 - **Registry vs catalog.** The catalog is the truth for the apps this package ships. The plugin registry
-  (`ZG Registered Application` + `ZG Setting Section`) is rebuilt from it (and from the hand-written manifests
+  (`Registered Application` + `Setting Section`) is rebuilt from it (and from the hand-written manifests
   of apps the catalog does not own) with the site's real enabled state and version; an admin's edit of
   `visible` / `roles` / `menu_order` survives a migrate, the switch always wins for `enabled`.
-- **Client apps** (`ZG Application Settings.client_apps`, Electron/Flutter/Web products) are a different thing:
+- **Client apps** (`Application Settings.client_apps`, Electron/Flutter/Web products) are a different thing:
   which front-ends may talk to this site. Their flags are advisory for the client; the server-side gate above
   is what enforces an app being off.
 
@@ -71,7 +71,7 @@ See `plugin_guide.md` for adding an app, `naming.md` for names, `permissions.md`
 
 1. **ZG prefix** — avoids clashes with Frappe `System Settings` and similar (`naming.md`).
 2. **Singles vs lists** — truly global config is Single; company/branch/user/registry/flags/audit are lists.
-3. **Audit mixin** — every settings mutation writes `ZG Audit Log` (passwords redacted).
+3. **Audit mixin** — every settings mutation writes `Audit Log` (passwords redacted).
 4. **Cache-first reads** — services use Redis via `CacheManager` + `frappe.get_cached_doc`.
 5. **One rule per concern** — app state in `app_state`, gating in `app_gate`, switch authority in
    `app_authority`; hooks and endpoints ask there instead of re-deriving.

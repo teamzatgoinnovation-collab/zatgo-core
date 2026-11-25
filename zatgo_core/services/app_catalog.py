@@ -16,7 +16,7 @@ APP keys (only key, label and group are required):
   group          "bundled" (module folder with its own DocTypes), "app" (an app that lives in the
                  core module, e.g. VanSaleX), "ui" (Desk appearance add-on), "core" (always-on
                  core settings), "industries"
-  switch_field   ZG System Settings Check field that turns it on. A bundled app that names none
+  switch_field   ZatGo System Settings Check field that turns it on. A bundled app that names none
                  gets `enable_<key>`; an app with no switch is always on.
   default_on     True: a site that has no stored value yet counts the app as ON (an app that was
                  always on before it got a switch -- VanSaleX); the field's JSON default must be 1
@@ -145,7 +145,7 @@ def get(key: str) -> dict[str, Any] | None:
 
 
 def switch_fields() -> dict[str, str]:
-    """switch key -> ZG System Settings field (the old SWITCH_FIELDS)."""
+    """switch key -> ZatGo System Settings field (the old SWITCH_FIELDS)."""
     return {a["key"]: a["switch_field"] for a in catalog() if a["switch_field"]}
 
 
@@ -192,13 +192,13 @@ def dependency_problems(on: dict[str, bool]) -> list[str]:
 
 
 def ensure_switch_fields() -> None:
-    """Make sure every switch has its Check field on ZG System Settings.
+    """Make sure every switch has its Check field on ZatGo System Settings.
     The six original switches are in the DocType JSON; a NEW module's field
     is created here as a hidden Custom Field -- the App Settings Hub is where
     it is flipped, so no one has to edit the DocType for a new sub-app."""
     import frappe
 
-    settings = "ZG System Settings"
+    settings = "ZatGo System Settings"
     meta = frappe.get_meta(settings)
     created = False
     for key, field in switch_fields().items():

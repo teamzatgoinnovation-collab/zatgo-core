@@ -2,7 +2,7 @@
 
 All three used to be separate apps (saas_theme, language_switcher a.k.a.
 modifyme, vansalex_web) installed on some sites only. They now ship inside zatgo_core and
-are switched on per site in ZG System Settings -> Desk Appearance, so a
+are switched on per site in ZatGo System Settings -> Desk Appearance, so a
 site keeps exactly the look it had (patches/v0_2_9/carry_over_ui_apps.py).
 
 Desk assets: a hooks.py `app_include_css/js` would load them on every site
@@ -43,7 +43,7 @@ MOBILE_FORMS_JS = "js/zg_mobile_forms.js"
 
 LOGIN_TEMPLATE = "templates/saas_theme/login.html"
 
-# switch key -> ZG System Settings field
+# switch key -> ZatGo System Settings field
 # Derived from the app catalog (services/app_catalog.py): a module's own
 # app_manifest.py declares its switch -- nothing to add here for a new sub-app.
 SWITCH_FIELDS = app_catalog.switch_fields()

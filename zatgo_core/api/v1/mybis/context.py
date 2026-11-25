@@ -10,7 +10,7 @@ from frappe.utils import cint, getdate, today
 from zatgo_core.api.response import ok
 from zatgo_core.api.validators import require_login
 from zatgo_core.services.mybis import period, scope
-from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings
+from zatgo_core.zatgo_core.doctype.mybis_settings import mybis_settings as zg_mybis_settings
 
 # MyBis area -> the DocType whose read permission opens it. ERPNext permissions are the final authority; the app
 # only hides what the server would refuse anyway.
@@ -59,7 +59,7 @@ def get_context() -> dict[str, Any]:
 
     Besides who and what (user, companies, areas) it carries the site's own settings, so the app assumes none: the period it opens
     on (`default_preset`), the first day of the week (`week_start`), the currency and decimals of amounts (`currency`,
-    `currency_precision`, and `precision` per company) and the administrator's limits (`policy`, see ZG MyBis Settings)."""
+    `currency_precision`, and `precision` per company) and the administrator's limits (`policy`, see MyBis Settings)."""
     require_login()
     user = frappe.session.user
     companies = scope.readable_companies()

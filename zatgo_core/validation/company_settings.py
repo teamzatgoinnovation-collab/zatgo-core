@@ -1,4 +1,4 @@
-"""Validation for ZG Company Settings."""
+"""Validation for Company Settings."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ def validate_company_settings(doc: Document) -> None:
     if not doc.company:
         frappe.throw(frappe._("Company is required"))
 
-    if frappe.db.exists("ZG Company Settings", {"company": doc.company, "name": ("!=", doc.name)}):
+    if frappe.db.exists("Company Settings", {"company": doc.company, "name": ("!=", doc.name)}):
         frappe.throw(
             frappe._("Company Settings already exist for {0}").format(doc.company)
         )

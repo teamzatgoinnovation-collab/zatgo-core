@@ -103,7 +103,7 @@ class TestLicencePolicy(IntegrationTestCase):
             frappe.set_user(self.manager)
             with self.assertRaises(frappe.PermissionError):
                 frappe.get_doc({"doctype": "ToDo", "description": "after expiry"}).insert(ignore_permissions=True)
-            self.assertTrue(subscription_gate._exempt("ZG Licence"))
+            self.assertTrue(subscription_gate._exempt("Licence"))
             if not subscription_gate.raw_state():
                 payload = subscription_gate.boot_payload()
                 self.assertTrue(payload["read_only"])

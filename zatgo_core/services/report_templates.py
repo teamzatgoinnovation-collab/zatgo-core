@@ -3,7 +3,7 @@
 ERPNext's Balance Sheet / Profit and Loss Statement / Cash Flow run the classic account-tree report,
 or -- when the `report_template` filter is set -- a Financial Report Template (e.g. "Standard Balance
 Sheet (IFRS)"). That engine picks accounts by Account.account_category, so a site whose chart is not
-categorised gets a different (and unbalanced) statement. ZG System Settings > "Enable IFRS Report
+categorised gets a different (and unbalanced) statement. ZatGo System Settings > "Enable IFRS Report
 Templates" decides: off (default) = always the classic report, the filter is dropped here and hidden
 in the Desk (public/js/ifrs_toggle.js); on = templates available as in ERPNext.
 """
@@ -14,7 +14,7 @@ import json
 
 import frappe
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELD = "enable_ifrs_reports"
 REPORTS = ("Balance Sheet", "Profit and Loss Statement", "Cash Flow")
 

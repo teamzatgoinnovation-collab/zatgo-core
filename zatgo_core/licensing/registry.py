@@ -8,7 +8,7 @@ zatca_integration's and zatgo_core's own; it never creates any.
 
 Code, not data: it describes code that ships with this app, so it is versioned with it and the same on every
 site. Pure Python -- no database, safe at import and in the middle of a migrate (like services/app_catalog.py).
-`ZG Module` / `ZG Feature` are a read-only projection of it (licensing/sync.py).
+`Module` / `Feature` are a read-only projection of it (licensing/sync.py).
 
 Rules (tests/unit/test_licensing_registry.py enforces them):
 - Ids are stable: `<module>.<feature>`, lower snake case. A licence signed today names them, so an id is never
@@ -66,8 +66,8 @@ NEVER_GATE = frozenset(
         # e-invoicing records made on submit (zatca_integration)
         "ZATCA Invoice", "ZATCA Submission Log",
         # system / platform records zatgo_core itself needs
-        "ZG System Settings", "ZG Registered Application", "ZG Setting Section", "ZG Module", "ZG Feature",
-        "ZG Licence", "ZG Licence History", "ZG Edition",
+        "ZatGo System Settings", "Registered Application", "Setting Section", "Module", "Feature",
+        "Licence", "Licence History", "Edition",
         "User", "Role", "Has Role", "DocType", "Custom Field", "Property Setter", "Custom DocPerm", "DocPerm",
         "Module Def", "Workspace", "Workspace Sidebar", "Desktop Icon", "Page", "File", "Session Default Settings",
     }
@@ -79,7 +79,7 @@ NEVER_GATE = frozenset(
             "Email Queue", "Email Queue Recipient", "Notification Log", "Route History", "Console Log",
             "Error Snapshot", "Prepared Report", "RQ Job", "RQ Worker", "Deleted Document", "Document Share Log",
             "Log Setting", "Integration Request", "Webhook Request Log", "Submission Queue", "Scheduler Event",
-            "Energy Point Log", "ZG Audit Log", "Sessions", "Document Follow", "Notification Settings", "View Log",
+            "Energy Point Log", "Audit Log", "Sessions", "Document Follow", "Notification Settings", "View Log",
             "Email Unsubscribe", "Webhook", "OAuth Bearer Token", "OAuth Authorization Code", "Token Cache",
             "Data Import Log", "DocShare",
         }

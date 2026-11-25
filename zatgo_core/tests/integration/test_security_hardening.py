@@ -122,8 +122,8 @@ class TestDeviceTokenTakeover(IntegrationTestCase):
 
     def tearDown(self) -> None:
         frappe.set_user("Administrator")
-        for name in frappe.get_all("ZG Device Token", filters={"token": self.token}, pluck="name"):
-            frappe.delete_doc("ZG Device Token", name, force=True, ignore_permissions=True)
+        for name in frappe.get_all("Device Token", filters={"token": self.token}, pluck="name"):
+            frappe.delete_doc("Device Token", name, force=True, ignore_permissions=True)
         for email in (self.owner, self.other):
             frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 
@@ -134,7 +134,7 @@ class TestDeviceTokenTakeover(IntegrationTestCase):
         result = devices.register_token(self.token, "android")
         self.assertFalse(result["success"])
         frappe.set_user("Administrator")
-        self.assertEqual(frappe.db.get_value("ZG Device Token", {"token": self.token}, "user"), self.owner)
+        self.assertEqual(frappe.db.get_value("Device Token", {"token": self.token}, "user"), self.owner)
 
     def test_owner_can_re_register_and_manager_can_reassign(self) -> None:
         frappe.set_user(self.owner)
@@ -142,7 +142,7 @@ class TestDeviceTokenTakeover(IntegrationTestCase):
         self.assertTrue(devices.register_token(self.token, "ios")["success"])
         frappe.set_user("Administrator")
         self.assertTrue(devices.register_token(self.token, "web")["success"])
-        self.assertEqual(frappe.db.get_value("ZG Device Token", {"token": self.token}, "user"), "Administrator")
+        self.assertEqual(frappe.db.get_value("Device Token", {"token": self.token}, "user"), "Administrator")
 
 
 class TestTrackerAuditAccess(IntegrationTestCase):

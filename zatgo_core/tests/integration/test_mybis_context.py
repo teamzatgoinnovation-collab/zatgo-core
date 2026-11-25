@@ -11,11 +11,11 @@ from frappe.utils import getdate, random_string
 from zatgo_core.api.v1.mybis import context
 from zatgo_core.services import app_catalog, app_gate, app_state
 from zatgo_core.services.mybis import cache, dashboard, scope
-from zatgo_core.zatgo_core.doctype.zg_mybis_settings import zg_mybis_settings
+from zatgo_core.zatgo_core.doctype.mybis_settings import mybis_settings as zg_mybis_settings
 
 from ._fixtures import get_or_create_test_company
 
-SETTINGS = "ZG System Settings"
+SETTINGS = "ZatGo System Settings"
 FIELD = "enable_mybis"
 METHOD = "/api/method/zatgo_core.api.v1.mybis.context.get_context"
 OTHER_COMPANY = "ZatGo MyBis Test Co 2"
@@ -161,7 +161,7 @@ class TestMyBisContext(IntegrationTestCase):
 
 class TestMyBisSiteSettings(IntegrationTestCase):
     """What `get_context` hands the app besides who and what: the site's own defaults, currency, decimals and the
-    administrator's limits (ZG MyBis Settings). Everything is rolled back."""
+    administrator's limits (MyBis Settings). Everything is rolled back."""
 
     def setUp(self) -> None:
         frappe.set_user("Administrator")
@@ -173,7 +173,7 @@ class TestMyBisSiteSettings(IntegrationTestCase):
 
     def _settings(self, **values):
         """Edit through the controller, so its validation runs as it does for an administrator."""
-        doc = frappe.get_doc("ZG MyBis Settings")
+        doc = frappe.get_doc("MyBis Settings")
         doc.update(values)
         doc.save()
         return doc
@@ -222,9 +222,9 @@ class TestMyBisSiteSettings(IntegrationTestCase):
     def test_default_period_follows_the_setting_and_falls_back(self) -> None:
         self._settings(default_preset="last_quarter")
         self.assertEqual(context.get_context()["data"]["default_preset"], "last_quarter")
-        frappe.db.set_single_value("ZG MyBis Settings", "default_preset", "custom")  # not a period a dashboard opens on
+        frappe.db.set_single_value("MyBis Settings", "default_preset", "custom")  # not a period a dashboard opens on
         self.assertEqual(context.get_context()["data"]["default_preset"], "this_month")
-        frappe.db.set_single_value("ZG MyBis Settings", "default_preset", "bogus")
+        frappe.db.set_single_value("MyBis Settings", "default_preset", "bogus")
         self.assertEqual(context.get_context()["data"]["default_preset"], "this_month")
 
     def test_week_start_follows_the_system_setting(self) -> None:

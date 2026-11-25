@@ -39,13 +39,13 @@ class TestMultiPayment(IntegrationTestCase):
         # account" of this shared test company, and the collection service
         # commits mid-test, so these ledgers outlive the class rollback.
         # (Bank-type ledgers would also make ERPNext demand a Reference No.)
-        cls.petty = cls._account("ZG Test Petty Cash")
-        cls.hdfc_pos = cls._account("ZG Test HDFC POS")
-        cls.sbi_pos = cls._account("ZG Test SBI POS")
-        cls.hdfc_upi = cls._account("ZG Test HDFC UPI")
-        cls.sbi_upi = cls._account("ZG Test SBI UPI")
-        cls.disabled_till = cls._account("ZG Test Disabled Till", disabled=1)
-        cls.usd_till = cls._account("ZG Test USD Till", currency="USD")
+        cls.petty = cls._account("ZatGo Test Petty Cash")
+        cls.hdfc_pos = cls._account("ZatGo Test HDFC POS")
+        cls.sbi_pos = cls._account("ZatGo Test SBI POS")
+        cls.hdfc_upi = cls._account("ZatGo Test HDFC UPI")
+        cls.sbi_upi = cls._account("ZatGo Test SBI UPI")
+        cls.disabled_till = cls._account("ZatGo Test Disabled Till", disabled=1)
+        cls.usd_till = cls._account("ZatGo Test USD Till", currency="USD")
 
         cls._configure_mode("Cash", "Cash", [(cls.cash, 1), (cls.petty, 0)])
         cls._configure_mode("Card", "Bank", [(cls.hdfc_pos, 1), (cls.sbi_pos, 0)])

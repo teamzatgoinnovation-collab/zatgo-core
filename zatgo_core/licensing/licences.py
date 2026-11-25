@@ -4,11 +4,11 @@ Import (brief Part 8):
   parse -> verify the Ed25519 signature with a key this app version trusts -> validate schema / product /
   dates / features -> check the site binding (this site's `zg_site_id`, and its name when the licence lists
   names) -> refuse a licence that has not started, has expired, was revoked, or is older than the one in force
-  -> store the original signed file in `ZG Licence` (the new one becomes current) -> drop the cached
+  -> store the original signed file in `Licence` (the new one becomes current) -> drop the cached
   entitlement -> audit. Every refusal is audited too, with its reason code.
 
 Trust: only the stored signed file counts. The current licence is re-verified (signature, site) whenever the
-cached entitlement is rebuilt, so editing a `ZG Licence` row in the database grants nothing; a row that no longer
+cached entitlement is rebuilt, so editing a `Licence` row in the database grants nothing; a row that no longer
 verifies gives the foundation only.
 
 Offline limits, documented rather than hidden: there is no central revocation -- a signed revocation list or a
@@ -30,12 +30,12 @@ from zatgo_core.licensing import audit, licence_format, site_identity
 from zatgo_core.licensing.entitlement import Entitlement
 from zatgo_core.licensing.licence_format import LicenceError
 
-DOCTYPE = "ZG Licence"
+DOCTYPE = "Licence"
 CACHE_KEY = "zg_licence_entitlement"
 
 
 def refuse_manual_change(doc: Any) -> None:
-    """Controller guard of ZG Licence / ZG Licence History: only the licensing services write them."""
+    """Controller guard of Licence / Licence History: only the licensing services write them."""
     flags = frappe.flags
     if flags.in_licence_write or flags.in_install or flags.in_migrate or flags.in_patch:
         return

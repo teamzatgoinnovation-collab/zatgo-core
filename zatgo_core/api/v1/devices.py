@@ -18,8 +18,8 @@ from zatgo_core.api.response import fail, ok
 from zatgo_core.api.validators import parse_json_dict, require_str
 from zatgo_core.utils.logging import log_api
 
-DOCTYPE = "ZG Device Token"
-SETTINGS = "ZG Notification Settings"
+DOCTYPE = "Device Token"
+SETTINGS = "ZatGo Notification Settings"
 
 
 @frappe.whitelist()

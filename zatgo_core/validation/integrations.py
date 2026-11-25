@@ -1,4 +1,4 @@
-"""Validation for ZG Integration Settings."""
+"""Validation for Integration Settings."""
 
 from __future__ import annotations
 

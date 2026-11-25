@@ -75,7 +75,7 @@ class TestRenameHelpers(IntegrationTestCase):
     def setUp(self) -> None:
         frappe.set_user("Administrator")
         tag = random_string(6)
-        self.new, self.old1, self.old2 = f"ZG New {tag}", f"ZG Old {tag}", f"ZG Older {tag}"
+        self.new, self.old1, self.old2 = f"ZatGo New {tag}", f"ZatGo Old {tag}", f"ZatGo Older {tag}"
         self.addCleanup(_drop, "Workspace", self.new, self.old1, self.old2)
 
     def test_tracker_helper_renames_a_legacy_record(self) -> None:
@@ -102,7 +102,7 @@ class TestRenameHelpers(IntegrationTestCase):
         _make_workspace(self.old1, module="Chat AI")
         side = frappe.get_doc(
             {
-                "doctype": "Workspace Sidebar", "title": f"ZG Side {self.new}", "module": "Chat AI",
+                "doctype": "Workspace Sidebar", "title": f"ZatGo Side {self.new}", "module": "Chat AI",
                 "items": [{"type": "Link", "label": "Home", "link_type": "Workspace", "link_to": self.old1}],
             }
         )
@@ -143,7 +143,7 @@ class TestLegacyRailEntry(IntegrationTestCase):
     def setUp(self) -> None:
         frappe.set_user("Administrator")
         tag = random_string(6)
-        self.new, self.old = f"ZG New {tag}", f"ZG Old {tag}"
+        self.new, self.old = f"ZatGo New {tag}", f"ZatGo Old {tag}"
         self.addCleanup(_drop, "Desktop Icon", self.old, self.new)
         self.addCleanup(_drop, "Workspace Sidebar", self.old, self.new)
         self.addCleanup(_drop, "Workspace", self.old, self.new)

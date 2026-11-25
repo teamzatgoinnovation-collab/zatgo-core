@@ -234,7 +234,7 @@
 }
 
 /* --------------------------------------------
-   6. TYPE — Inter (Frappe ships it; the same file already feeds "ZG Digits"), Cairo for Arabic.
+   6. TYPE — Inter (Frappe ships it; the same file already feeds "ZatGo Digits"), Cairo for Arabic.
    Poppins stays defined in 00-fonts for login.css and as a fallback, but no longer leads the stack.
    -------------------------------------------- */
 @font-face {

@@ -28,11 +28,11 @@ bench --site <site> clear-cache
 
 ZatGo Core has **no Desk module**. Use AwesomeBar / List, or client APIs:
 
-1. Switch on the apps and industries this site needs in **ZatGo -> Apps (on / off)** (they are fields of ZG System Settings). Brand, logo and theme are in **ZG Theme Settings**. The default company, timezone, country, currency and fiscal year are ERPNext's own: **Global Defaults** and **System Settings** (the same-named fields of ZG System Settings, where they still exist, are not read; see `duplication_audit.md`)
-2. Open **ZG Application Settings** → Seed Default Clients (or call apps API)
-3. Review **ZG Feature Flag** defaults
-4. Set the password and session policy in Frappe's **System Settings**. **ZG Security Settings** is only validated, nothing applies it yet
-5. Assign roles: ZG Company Admin / Branch Admin / Application Admin / Read Only
+1. Switch on the apps and industries this site needs in **ZatGo -> Apps (on / off)** (they are fields of ZatGo System Settings). Brand, logo and theme are in **Theme Settings**. The default company, timezone, country, currency and fiscal year are ERPNext's own: **Global Defaults** and **System Settings** (the same-named fields of ZatGo System Settings, where they still exist, are not read; see `duplication_audit.md`)
+2. Open **Application Settings** → Seed Default Clients (or call apps API)
+3. Review **Feature Flag** defaults
+4. Set the password and session policy in Frappe's **System Settings**. **ZatGo Security Settings** is only validated, nothing applies it yet
+5. Assign roles: ZatGo Company Admin / Branch Admin / Application Admin / Read Only
 6. Confirm `bench --site <site> list-apps` includes `zatgo_core`; hard-refresh Desk if an old Core icon remains
 
 ## Install order for dependent apps

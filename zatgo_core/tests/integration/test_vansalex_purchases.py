@@ -58,7 +58,7 @@ class TestVansalexPurchases(IntegrationTestCase):
     @classmethod
     def _make_bank_account(cls) -> str:
         name = frappe.db.get_value(
-            "Account", {"company": cls.company, "account_name": "ZG Test Bank", "is_group": 0}, "name"
+            "Account", {"company": cls.company, "account_name": "ZatGo Test Bank", "is_group": 0}, "name"
         )
         if name:
             return name
@@ -68,7 +68,7 @@ class TestVansalexPurchases(IntegrationTestCase):
         return frappe.get_doc(
             {
                 "doctype": "Account",
-                "account_name": "ZG Test Bank",
+                "account_name": "ZatGo Test Bank",
                 "company": cls.company,
                 "parent_account": parent,
                 "account_type": "Bank",
@@ -127,7 +127,7 @@ class TestVansalexPurchases(IntegrationTestCase):
         ).insert(ignore_permissions=True)
         frappe.get_doc(
             {
-                "doctype": "ZG Van Sale Profile",
+                "doctype": "Van Sale Profile",
                 "user": email,
                 "enabled": 1,
                 "user_type": "Field User",
@@ -290,8 +290,8 @@ class TestVansalexPurchases(IntegrationTestCase):
 
     def test_bank_refused_when_not_allowed(self) -> None:
         with self._on():
-            name = frappe.db.get_value("ZG Van Sale Profile", {"user": self.user}, "name")
-            frappe.db.set_value("ZG Van Sale Profile", name, "allow_bank_payment", "No")
+            name = frappe.db.get_value("Van Sale Profile", {"user": self.user}, "name")
+            frappe.db.set_value("Van Sale Profile", name, "allow_bank_payment", "No")
             with self.assertRaises(frappe.PermissionError):
                 self._buy(payment_type="Bank")
 

@@ -2,7 +2,7 @@
 patches (add_zatgo_client_id_fields, add_customer_sync_fields,
 add_item_sync_fields) recorded as run in Patch Log without the fields
 actually materializing on the DB (Item, Customer, Address, Contact,
-Sales Invoice, Payment Entry, Stock Entry, ZG Trip all missing them in
+Sales Invoice, Payment Entry, Stock Entry, Trip all missing them in
 production). Patches are gated run-once by name, so simply fixing the
 original files doesn't re-trigger on sites that already "ran" them —
 this patch re-invokes them directly; create_custom_fields(update=True)

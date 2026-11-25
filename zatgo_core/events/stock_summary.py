@@ -1,5 +1,5 @@
 """Stock Summary (stock-balance page): Warehouse dropdown lists only
-warehouses that currently hold stock (switchable in ZG System Settings),
+warehouses that currently hold stock (switchable in ZatGo System Settings),
 optionally scoped to a company."""
 
 from __future__ import annotations
@@ -9,12 +9,12 @@ from frappe.utils import cint
 
 
 def _live_only() -> bool:
-    """ZG System Settings -> 'only warehouses with stock' (default on).
+    """ZatGo System Settings -> 'only warehouses with stock' (default on).
     get_single_value can't tell "never saved" from "unticked" (both 0), so
     read the row: no row yet means the field default, on."""
     rows = frappe.db.sql(
         "SELECT value FROM `tabSingles` WHERE doctype = %s AND field = %s",
-        ("ZG System Settings", "stock_summary_live_only"),
+        ("ZatGo System Settings", "stock_summary_live_only"),
     )
     return True if not rows else bool(cint(rows[0][0]))
 

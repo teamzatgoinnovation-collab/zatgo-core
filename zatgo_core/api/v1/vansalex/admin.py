@@ -24,10 +24,10 @@ def _require_admin() -> None:
 
 @frappe.whitelist()
 def users(page: int | str = 1, page_size: int | str = 50) -> dict[str, Any]:
-    """List enabled ZG Van Sale Profile rows for filter chips."""
+    """List enabled Van Sale Profile rows for filter chips."""
     _require_admin()
     return list_zg(
-        "ZG Van Sale Profile",
+        "Van Sale Profile",
         fields=["name", "user", "warehouse", "vehicle", "route_title", "enabled"],
         page=page,
         page_size=page_size,
@@ -61,9 +61,9 @@ def summary(
         trip_filters["route_title"] = route_title
 
     trips = []
-    if frappe.db.exists("DocType", "ZG Trip"):
+    if frappe.db.exists("DocType", "Trip"):
         trips = frappe.get_all(
-            "ZG Trip",
+            "Trip",
             filters=trip_filters,
             fields=[
                 "name",

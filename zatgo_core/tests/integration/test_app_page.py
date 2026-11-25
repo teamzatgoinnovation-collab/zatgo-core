@@ -20,11 +20,11 @@ APP_FORMS = {
     "Chat AI Settings": ["provider_tab", "conversation_tab", "safety_tab", "features_tab", "voice_files_tab", "costs_tab"],
     "Tracker Settings": ["settings_tab"],
     "Space Settings": ["settings_tab"],
-    "ZG System Settings": ["general_tab", "erp_tab", "apps_tab", "industries_tab"],
-    "ZG Theme Settings": ["brand_tab", "appearance_tab"],
-    "ZG Language Settings": ["general_tab"],
-    "ZG MyBis Settings": ["general_tab"],
-    "ZG POS Settings": ["general_tab", "payments_tab", "receipt_tab", "offline_tab"],
+    "ZatGo System Settings": ["general_tab", "erp_tab", "apps_tab", "industries_tab"],
+    "Theme Settings": ["brand_tab", "appearance_tab"],
+    "Language Settings": ["general_tab"],
+    "MyBis Settings": ["general_tab"],
+    "ZatGo POS Settings": ["general_tab", "payments_tab", "receipt_tab", "offline_tab"],
 }
 
 
@@ -152,9 +152,9 @@ class TestAppPage(IntegrationTestCase):
     def test_every_switchable_app_gets_a_sidebar_with_its_settings_once_on(self) -> None:
         """Desk theme, language switcher, MyBis and VanSaleX web are apps like the rest: Overview + their settings."""
         wanted = {
-            "ZatGo Desk Theme": "ZG Theme Settings",
-            "ZatGo Language Switcher": "ZG Language Settings",
-            "ZatGo MyBis": "ZG MyBis Settings",
+            "ZatGo Desk Theme": "Theme Settings",
+            "ZatGo Language Switcher": "Language Settings",
+            "ZatGo MyBis": "MyBis Settings",
             "ZatGo VanSaleX Web": None,
         }
         for label, settings in wanted.items():

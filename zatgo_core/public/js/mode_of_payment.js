@@ -1,4 +1,4 @@
-// Allowed Accounts (custom_zg_accounts, ZG Mode of Payment Account): only
+// Allowed Accounts (custom_zg_accounts, ZatGo Mode of Payment Account): only
 // ledger accounts of the row's company that can actually hold money. The
 // server re-validates (services/payment_allocation.validate_mode_of_payment).
 

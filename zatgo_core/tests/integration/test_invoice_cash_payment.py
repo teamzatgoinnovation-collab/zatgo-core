@@ -45,7 +45,7 @@ class TestInvoiceCashPayment(IntegrationTestCase):
     @classmethod
     def _make_bank_account(cls) -> str:
         name = frappe.db.get_value(
-            "Account", {"company": cls.company, "account_name": "ZG Test Bank", "is_group": 0}, "name"
+            "Account", {"company": cls.company, "account_name": "ZatGo Test Bank", "is_group": 0}, "name"
         )
         if name:
             return name
@@ -55,7 +55,7 @@ class TestInvoiceCashPayment(IntegrationTestCase):
         return frappe.get_doc(
             {
                 "doctype": "Account",
-                "account_name": "ZG Test Bank",
+                "account_name": "ZatGo Test Bank",
                 "company": cls.company,
                 "parent_account": parent,
                 "account_type": "Bank",
@@ -65,7 +65,7 @@ class TestInvoiceCashPayment(IntegrationTestCase):
 
     @classmethod
     def _make_bank_mode_of_payment(cls) -> str:
-        name = "ZG Test Bank Transfer"
+        name = "ZatGo Test Bank Transfer"
         if not frappe.db.exists("Mode of Payment", name):
             frappe.get_doc(
                 {
@@ -282,7 +282,7 @@ class TestInvoiceCashPayment(IntegrationTestCase):
         untyped = frappe.get_doc(
             {
                 "doctype": "Account",
-                "account_name": f"ZG Untyped Bank {random_string(4)}",
+                "account_name": f"ZatGo Untyped Bank {random_string(4)}",
                 "company": self.company,
                 "parent_account": group,
                 "account_currency": "SAR",

@@ -1,4 +1,4 @@
-"""Validation for ZG Security Settings."""
+"""Validation for ZatGo Security Settings."""
 
 from __future__ import annotations
 

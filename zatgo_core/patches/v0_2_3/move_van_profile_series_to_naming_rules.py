@@ -1,4 +1,4 @@
-"""Move per-driver series off ZG Van Sale Profile into ZG Sales Invoice Naming Settings.
+"""Move per-driver series off Van Sale Profile into Sales Invoice Naming Settings.
 
 The profile's sales_invoice_naming_series / sales_return_naming_series only
 ever applied to invoices the VanSale API created; the desk ignored them. They
@@ -21,12 +21,12 @@ from zatgo_core.services.sales_invoice_naming import SETTINGS_DOCTYPE, validate_
 
 
 def execute() -> None:
-    if not frappe.db.has_column("ZG Van Sale Profile", "sales_invoice_naming_series"):
+    if not frappe.db.has_column("Van Sale Profile", "sales_invoice_naming_series"):
         return
     profiles = frappe.db.sql(
         """
         select user, warehouse, sales_invoice_naming_series, sales_return_naming_series
-        from `tabZG Van Sale Profile`
+        from `tabVan Sale Profile`
         where ifnull(sales_invoice_naming_series, '') != ''
            or ifnull(sales_return_naming_series, '') != ''
         """,
@@ -48,7 +48,7 @@ def execute() -> None:
             normal and resolve_series_for_return_state(normal, options, True)
         )
         if not (company and normal and ret) or (p.user, company) in existing:
-            print(f"ZG Van Sale Profile {p.user}: series not migrated (company={company}, {normal} / {ret})")
+            print(f"Van Sale Profile {p.user}: series not migrated (company={company}, {normal} / {ret})")
             continue
 
         row = settings.append(
@@ -59,7 +59,7 @@ def execute() -> None:
             validate_rules(settings.rules)
         except frappe.ValidationError as e:
             settings.remove(row)
-            print(f"ZG Van Sale Profile {p.user}: series not migrated ({e})")
+            print(f"Van Sale Profile {p.user}: series not migrated ({e})")
             continue
         existing.add((p.user, company))
 

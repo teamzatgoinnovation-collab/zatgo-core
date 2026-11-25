@@ -1,5 +1,5 @@
 """Setup for ZatGo Space (formerly the zatgo_space app) — run by
-services/bundled_apps.py where ZG System Settings -> Enable ZatGo Space is on."""
+services/bundled_apps.py where ZatGo System Settings -> Enable ZatGo Space is on."""
 
 from __future__ import annotations
 

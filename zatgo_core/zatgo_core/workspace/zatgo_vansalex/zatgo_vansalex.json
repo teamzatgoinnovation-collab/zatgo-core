@@ -36,9 +36,9 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
-   "label": "ZG Van Sale Profile",
+   "label": "Van Sale Profile",
    "link_count": 0,
-   "link_to": "ZG Van Sale Profile",
+   "link_to": "Van Sale Profile",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -49,7 +49,7 @@
    "is_query_report": 0,
    "label": "User-wise Sales Invoice Naming",
    "link_count": 0,
-   "link_to": "ZG Sales Invoice Naming Settings",
+   "link_to": "Sales Invoice Naming Settings",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -58,9 +58,9 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
-   "label": "ZG Company Settings",
+   "label": "Company Settings",
    "link_count": 0,
-   "link_to": "ZG Company Settings",
+   "link_to": "Company Settings",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -162,9 +162,9 @@
    "dependencies": "",
    "hidden": 0,
    "is_query_report": 0,
-   "label": "ZG Trip",
+   "label": "Trip",
    "link_count": 0,
-   "link_to": "ZG Trip",
+   "link_to": "Trip",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
@@ -242,7 +242,7 @@
    "color": "Green",
    "doc_view": "List",
    "label": "Van Sale Profiles",
-   "link_to": "ZG Van Sale Profile",
+   "link_to": "Van Sale Profile",
    "type": "DocType"
   },
   {

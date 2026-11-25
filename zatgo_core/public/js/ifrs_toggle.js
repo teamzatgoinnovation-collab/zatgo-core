@@ -1,4 +1,4 @@
-// IFRS Report Templates switch (ZG System Settings > Enable IFRS Report Templates; services/report_templates.py).
+// IFRS Report Templates switch (ZatGo System Settings > Enable IFRS Report Templates; services/report_templates.py).
 // Off: the Report Template filter is hidden on Balance Sheet / Profit and Loss Statement / Cash Flow, so the
 // classic report is the only one a user can pick. The server drops the filter too.
 (function () {

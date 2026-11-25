@@ -29,7 +29,7 @@ def site_id(create: bool = False) -> str | None:
     frappe.local.conf[CONF_KEY] = value
     from zatgo_core.licensing import audit
 
-    audit.log("site_identity_created", "ZG Licence Config", "site_id", {"site_id": value, "site": site_name()})
+    audit.log("site_identity_created", "Licence Config", "site_id", {"site_id": value, "site": site_name()})
     return value
 
 

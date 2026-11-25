@@ -1,0 +1,206 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:licence_number",
+ "creation": "2026-11-24 12:00:00.000000",
+ "description": "Every licence this issuer site signed (docs/licensing.md). Written only by the issuing service.",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "licence_number",
+  "customer_name",
+  "edition_id",
+  "licence_type",
+  "column_break_1",
+  "licence_id",
+  "licence_version",
+  "customer_id",
+  "edition_version",
+  "dates_section",
+  "issue_date",
+  "start_date",
+  "expiry_date",
+  "column_break_2",
+  "site_ids",
+  "site_names",
+  "issue_section",
+  "issued_by",
+  "issued_on",
+  "key_id",
+  "payload_hash",
+  "column_break_3",
+  "revoked_on",
+  "licence_file"
+ ],
+ "fields": [
+  {
+   "fieldname": "licence_number",
+   "fieldtype": "Data",
+   "label": "Licence Number",
+   "read_only": 1,
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "edition_id",
+   "fieldtype": "Data",
+   "label": "Edition",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "licence_type",
+   "fieldtype": "Data",
+   "label": "Licence Type",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "licence_id",
+   "fieldtype": "Data",
+   "label": "Licence ID",
+   "read_only": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "licence_version",
+   "fieldtype": "Int",
+   "label": "Licence Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_id",
+   "fieldtype": "Data",
+   "label": "Customer ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "edition_version",
+   "fieldtype": "Int",
+   "label": "Edition Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dates_section",
+   "fieldtype": "Section Break",
+   "label": "Validity"
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "site_ids",
+   "fieldtype": "Small Text",
+   "label": "Site IDs",
+   "read_only": 1
+  },
+  {
+   "fieldname": "site_names",
+   "fieldtype": "Small Text",
+   "label": "Site Names",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issue_section",
+   "fieldtype": "Section Break",
+   "label": "Issuance"
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "read_only": 1,
+   "options": "User"
+  },
+  {
+   "fieldname": "issued_on",
+   "fieldtype": "Datetime",
+   "label": "Issued On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "key_id",
+   "fieldtype": "Data",
+   "label": "Signing Key ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payload_hash",
+   "fieldtype": "Data",
+   "label": "Payload Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "revoked_on",
+   "fieldtype": "Datetime",
+   "label": "Revoked On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "licence_file",
+   "fieldtype": "Long Text",
+   "label": "Signed Licence File",
+   "read_only": 1,
+   "description": "The file sent to the customer. Not secret: it carries the signature, never the signing key."
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-24 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ZatGo Core",
+ "name": "Licence History",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "read": 1,
+   "report": 1,
+   "export": 1,
+   "print": 1,
+   "role": "System Manager"
+  }
+ ],
+ "read_only": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "licence_number",
+ "track_changes": 0
+}

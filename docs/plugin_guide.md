@@ -1,7 +1,7 @@
 # Plugin Author Guide — ZatGo Core
 
 ZatGo Core never hardcodes product menus. Applications register a **manifest**;
-Core persists it as `ZG Registered Application` + `ZG Setting Section` rows.
+Core persists it as `Registered Application` + `Setting Section` rows.
 Clients and future domain Desk UIs consume these via `zatgo_core.api.v1.config.*`.
 
 ## The app contract (apps shipped inside zatgo_core)
@@ -73,7 +73,7 @@ MANIFEST = {
     "menu_order": 50,
     "enabled": 1,
     "visible": 1,
-    "roles": "System Manager,ZG Application Admin",  # empty = all
+    "roles": "System Manager,ZatGo Application Admin",  # empty = all
     "depends_on": "zatgo_pos",    # optional comma-separated app_keys
     "description": "…",
     "settings_route": "",         # optional; domain app Desk route if any
@@ -82,7 +82,7 @@ MANIFEST = {
             "section_key": "general",
             "label": "General",
             "sort_order": 10,
-            "link_doctype": "ZG System Settings",  # OR
+            "link_doctype": "ZatGo System Settings",  # OR
             # "component": "module_preferences" | "about" | "pending",
             # "defaults_json": {...},
             # "roles": "…",  # optional override
@@ -119,7 +119,7 @@ zatgo_core.api.v1.config.register_application
 ## Visibility
 
 Users only see applications/sections whose `roles` intersect their roles.
-System Manager and ZG Application Admin see everything.
+System Manager and ZatGo Application Admin see everything.
 
 ## Bundled Phase-1 samples
 

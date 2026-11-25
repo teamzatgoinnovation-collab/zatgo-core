@@ -112,8 +112,8 @@ FEATURES = [
     ),
     feature(
         "service.field_tickets", "Field service tickets",
-        description="ZatGo's own field service tickets (ZG Service Ticket) and their API.",
-        doctypes=[dt("ZG Service Ticket", MASTER)],
+        description="ZatGo's own field service tickets (Service Ticket) and their API.",
+        doctypes=[dt("Service Ticket", MASTER)],
         api_prefixes=["zatgo_core.api.v1.service."],
         source_app="zatgo_core",
         platforms=["desk", "mobile"],

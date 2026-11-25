@@ -61,7 +61,7 @@ FEATURES = [
     ),
     feature(
         "print.printers", "ZatGo printer settings",
-        doctypes=[dt("ZG Printer Settings", SETTINGS)],
+        doctypes=[dt("Printer Settings", SETTINGS)],
         source_app="zatgo_core",
     ),
 ]

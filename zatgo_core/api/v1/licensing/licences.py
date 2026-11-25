@@ -3,7 +3,7 @@
 Paths: zatgo_core.api.v1.licensing.licences.<method>
 
 Customer site: a System Manager reads the site identity (to request a licence), imports a licence or a
-revocation list, and re-verifies the licence in force; readers of ZG Licence see the summary.
+revocation list, and re-verifies the licence in force; readers of Licence see the summary.
 Issuer site (site_config `zg_licence_issuer`, System Manager): issue, list, revoke. Writes are POST only.
 """
 
@@ -112,7 +112,7 @@ def revoke_licences(licence_ids: Any) -> dict[str, Any]:
 
 @frappe.whitelist()
 def get_page() -> dict[str, Any]:
-    """Everything the Licence page shows. Readers of ZG Licence see it; actions are for a System Manager."""
+    """Everything the Licence page shows. Readers of Licence see it; actions are for a System Manager."""
     if not frappe.has_permission(licences.DOCTYPE, "read"):
         frappe.throw(_("Not permitted to read the licence."), frappe.PermissionError)
     from zatgo_core.licensing import editions, issuer, licence_overview
