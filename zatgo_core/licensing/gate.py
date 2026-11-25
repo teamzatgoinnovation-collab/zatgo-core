@@ -39,6 +39,20 @@ from zatgo_core.licensing import registry
 
 ENFORCED = frozenset({"create", "write", "delete", "submit", "amend", "import"})
 
+# Records ERPNext creates inside another record's OWN save. The licence allows creating a Company
+# (foundation.setup); Company.on_update then creates its chart of accounts, warehouses, cost centers, departments
+# and tax templates, which no edition lists for itself. While such a parent is being saved, the records named
+# here are exempt -- nothing else is (a Stock Entry in the same request is still refused). The exemption ends in
+# `end_cascade` (the parent's on_update hook, which Frappe runs after the controller's own on_update).
+CASCADES: dict[str, frozenset[str]] = {
+    "Company": frozenset({
+        "Account", "Warehouse", "Warehouse Type", "Cost Center", "Department", "Mode of Payment",
+        "Sales Taxes and Charges Template", "Purchase Taxes and Charges Template", "Item Tax Template",
+        "Tax Category", "Tax Rule",
+    }),
+}
+_CASCADE_FLAG = "zg_licence_cascade"
+
 
 # -- the rule -----------------------------------------------------------------------------------------------------
 
@@ -141,8 +155,13 @@ def enforce_doc_write(doc: Any, method: str | None = None, *args: Any, **kwargs:
     entitlement = ent.active()
     if entitlement is None or _system_context():
         return
+    parent = frappe.flags.get(_CASCADE_FLAG)
+    if parent and doc.doctype in CASCADES.get(parent, ()):
+        return
     if doc.doctype in ("User", "Company") and method == "validate":
         check_limits(doc)
+    if doc.doctype in CASCADES and method == "validate":
+        _enter_cascade(doc, entitlement)
     if doc.doctype not in registry.doctype_index():
         return
     if method == "on_trash":
@@ -160,6 +179,17 @@ def enforce_doc_write(doc: Any, method: str | None = None, *args: Any, **kwargs:
         _check(doc, "write", entitlement)
     if action == "submit" or cint(doc.get("docstatus")) == 1 and doc.is_new():
         _check(doc, "submit", entitlement)
+
+
+def _enter_cascade(doc: Any, entitlement: ent.Entitlement) -> None:
+    """A parent the licence lets this user save opens its cascade (the parent's own check still runs below)."""
+    if decide(doc.doctype, "create" if doc.is_new() else "write", doc, entitlement)["allowed"]:
+        frappe.flags[_CASCADE_FLAG] = doc.doctype
+
+
+def end_cascade(doc: Any = None, method: str | None = None, *args: Any, **kwargs: Any) -> None:
+    """doc_events on the parent's on_update: the exemption lasts for that one save."""
+    frappe.flags.pop(_CASCADE_FLAG, None)
 
 
 # -- registries that license by key ------------------------------------------------------------------------------

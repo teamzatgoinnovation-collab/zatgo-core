@@ -71,6 +71,7 @@ class TestLicensingEnforcement(IntegrationTestCase):
             ignore_permissions=True)
 
     def tearDown(self) -> None:
+        frappe.flags.pop("zg_licence_cascade", None)
         entitlement.use(None)
         frappe.local.conf.pop(entitlement.CONF_KEY, None)
         frappe.set_user("Administrator")
@@ -266,3 +267,20 @@ class TestLicensingEnforcement(IntegrationTestCase):
         self.assertEqual([i["label"] for i in b.desktop_icons], ["Selling", "My Own"])
         self.assertEqual(list(b.page_info), ["permission-manager"])
         self.assertIn("Stock", b.zatgo_licence["hidden_workspaces"])
+
+    # -- records ERPNext creates inside another record's own save ---------------------------------------------
+
+    def test_creating_a_company_still_creates_its_chart_and_warehouses(self) -> None:
+        """Company.on_update creates Accounts, Warehouses, Cost Centers, Departments and tax templates. The
+        licence allows creating a Company (foundation.setup), so it must allow what that creation does."""
+        frappe.set_user(self.user)
+        name = f"Licence Cascade {random_string(5)}"
+        with licensed(SALES):
+            company = frappe.get_doc({"doctype": "Company", "company_name": name, "abbr": random_string(4).upper(),
+                                      "default_currency": "SAR", "country": "Saudi Arabia"}).insert(
+                ignore_permissions=True)
+            for doctype in ("Account", "Warehouse", "Cost Center"):
+                self.assertTrue(frappe.db.exists(doctype, {"company": company.name}), doctype)
+            # ...and the cascade is over: the same request cannot create unlicensed documents afterwards.
+            with self.assertRaises(frappe.PermissionError):
+                self._receipt().insert(ignore_permissions=True)

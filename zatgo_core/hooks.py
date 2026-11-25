@@ -80,7 +80,8 @@ doc_events = {
     },
     "Company": {
         "after_insert": "zatgo_core.events.company.on_company_update",
-        "on_update": "zatgo_core.events.company.on_company_update",
+        # The second handler ends the licence gate's cascade for the records Company.on_update creates.
+        "on_update": ["zatgo_core.events.company.on_company_update", "zatgo_core.licensing.gate.end_cascade"],
     },
     "Sales Invoice": {
         "before_insert": [

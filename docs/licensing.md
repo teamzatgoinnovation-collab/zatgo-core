@@ -1,8 +1,9 @@
 # Editions and licensing
 
-Status: **Phase 9 of 10 — audit, coverage, hardening, money-path tests.** A site enforces its licence only
-when its `site_config` has `zg_licence_enforcement`; no production site has it, and no production signing key
-exists until one is generated (see *Keys* below). Audit and decisions: `licensing_audit_2026-11-17.md`.
+Status: **Phase 10 of 10 — rollout prepared, not executed.** The code is complete and tested; going live needs
+the real signing key, a push and your approval of each deploy step: see `licensing_rollout.md`. A site enforces
+its licence only when its `site_config` has `zg_licence_enforcement` and a licence is imported; no production site
+is known to have either. Audit and decisions: `licensing_audit_2026-11-17.md`.
 
 ## Decisions (product owner, 2026-11-17 — the audit's recommended defaults)
 
@@ -366,6 +367,15 @@ Manager role — the permission check comes before the request is read (a test c
 | 29 | multi-company | company limit in `test_licensing_policy`; the licence is site-wide (no per-company grant) |
 | 30 | migration safety | every phase migrated the local test site; new DocTypes only, no data patches |
 
-## Next phases
-10 rollout: real signing key + `public_keys.json`, deploy (migrate), issue and import licences on testerp first,
-then switch enforcement on site by site.
+## Phase 10 additions
+
+- **Records ERPNext creates inside another record's own save.** Creating a Company (allowed by the foundation)
+  makes ERPNext create its chart of accounts, warehouses, cost centers, departments and tax templates in the same
+  save. Found by test: under a Sales licence that creation was refused ("does not include create for Account").
+  `gate.CASCADES` now exempts exactly those DocTypes while a permitted Company is being saved, and the exemption
+  ends in the Company's `on_update` hook (`gate.end_cascade`), so a Stock Entry in the same request is still
+  refused. Add a parent here if another ERPNext flow turns out to create masters as a side effect.
+- **Usage audit** (`licensing/usage_audit.py`): read-only report of what a site created in the last N days that an
+  edition would refuse; the tool for choosing an edition before enforcing. `bench --site X execute
+  zatgo_core.licensing.usage_audit.report --kwargs '{"edition_id": "sales"}'`.
+- **Runbook**: `licensing_rollout.md`.
