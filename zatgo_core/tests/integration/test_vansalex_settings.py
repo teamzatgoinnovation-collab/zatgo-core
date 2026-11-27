@@ -17,12 +17,15 @@ mutating the VanSaleX Settings single, so nothing global needs restoring.
 
 from __future__ import annotations
 
+from unittest import mock
+
 import frappe
 from frappe.tests.classes.integration_test_case import IntegrationTestCase
 from frappe.utils import flt, random_string
 
 from zatgo_core.services.vansalex_service import create_collection, create_order
 from zatgo_core.services.vansalex_settings import (
+    _global_settings,
     allowed_warehouse,
     resolve,
     selectable_payment_accounts,
@@ -354,6 +357,28 @@ class TestVansalexSettings(IntegrationTestCase):
         user = self._make_van_user(None)
         frappe.defaults.set_user_default("company", self.company, user)
         self.assertEqual(resolve(user)["warehouse"], company_wh)
+
+    def test_vansalex_settings_default_warehouse_is_used_when_profile_has_none(self) -> None:
+        """VanSaleX Settings → Default Warehouse sits between the user's
+        profile and the company defaults; a driver picking it is no longer
+        "another warehouse" (the PermissionError on Invoice & Print)."""
+        user = self._make_van_user(None)
+        frappe.defaults.set_user_default("company", self.company, user)
+        glob = _global_settings()
+        with mock.patch(
+            "zatgo_core.services.vansalex_settings._global_settings",
+            return_value={**glob, "default_warehouse": self.warehouse},
+        ):
+            eff = resolve(user)
+            self.assertEqual(eff["warehouse"], self.warehouse)
+            self.assertEqual(allowed_warehouse(self.warehouse, eff=eff, admin=False), self.warehouse)
+        # An unusable choice (a group warehouse) is ignored, never used.
+        group = frappe.db.get_value("Warehouse", {"company": self.company, "is_group": 1}, "name")
+        with mock.patch(
+            "zatgo_core.services.vansalex_settings._global_settings",
+            return_value={**glob, "default_warehouse": group},
+        ):
+            self.assertNotEqual(resolve(user)["warehouse"], group)
 
     # -- collections route rule --------------------------------------------
 

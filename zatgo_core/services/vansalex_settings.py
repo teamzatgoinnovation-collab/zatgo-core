@@ -5,7 +5,8 @@ Company-wide defaults live in the `VanSaleX Settings` single; a user's
 default). Account and warehouse defaults come from ERPNext's own records
 first and zatgo_core's second:
 
-- warehouse:    Profile.warehouse → Company Settings.default_warehouse
+- warehouse:    Profile.warehouse → VanSaleX Settings.default_warehouse
+                → Company Settings.default_warehouse
                 → ERPNext Stock Settings.default_warehouse
 - cash account: Profile.cash_account → VanSaleX Settings
                 .default_cash_account (if it is the company's) → ERPNext
@@ -51,6 +52,7 @@ _DEFAULTS: dict[str, Any] = {
     "allow_bank_payment": 0,
     "default_cash_account": "",
     "default_bank_account": "",
+    "default_warehouse": "",
     "show_payment_type_on_invoice": 1,
     "show_warehouse_on_invoice": 1,
     "allow_warehouse_change": 0,
@@ -113,8 +115,14 @@ def _user_company(user: str, profile_warehouse: str | None) -> str | None:
 
 
 def default_warehouse(company: str | None) -> str | None:
-    """Company-level default warehouse: zatgo_core's per-company setting,
-    then ERPNext Stock Settings (only if it belongs to that company)."""
+    """Site-level default warehouse: the VanSaleX Settings choice (if usable
+    and of that company), then zatgo_core's per-company setting, then ERPNext
+    Stock Settings (only if it belongs to that company)."""
+    wh = _global_settings().get("default_warehouse")
+    if wh:
+        row = frappe.db.get_value("Warehouse", wh, ["company", "disabled", "is_group"], as_dict=True)
+        if row and not row.disabled and not row.is_group and (not company or row.company == company):
+            return wh
     wh = _zg_company_setting(company, "default_warehouse")
     if wh:
         return wh
