@@ -8,6 +8,8 @@ first and zatgo_core's second:
 - warehouse:    Profile.warehouse → VanSaleX Settings.default_warehouse
                 → Company Settings.default_warehouse
                 → ERPNext Stock Settings.default_warehouse
+                (a user limited by Warehouse User Permissions gets the site
+                default only if allowed it, else their own permitted warehouse)
 - cash account: Profile.cash_account → VanSaleX Settings
                 .default_cash_account (if it is the company's) → ERPNext
                 Mode of Payment "Cash" default account for the company →
@@ -130,6 +132,37 @@ def default_warehouse(company: str | None) -> str | None:
     if wh and (not company or frappe.db.get_value("Warehouse", wh, "company") == company):
         return wh
     return None
+
+
+def permitted_warehouses(user: str) -> tuple[list[str], str | None]:
+    """Warehouses [user]'s User Permissions limit them to ([] = unrestricted)
+    and the one marked default. Frappe enforces these on every document that
+    links a warehouse, so a van that ignores them fails at "Invoice & Print"."""
+    from frappe.permissions import get_user_permissions
+
+    rows = (get_user_permissions(user) or {}).get("Warehouse") or []
+    rows = [r for r in rows if r.get("doc") and (r.get("applicable_for") or "Sales Invoice") == "Sales Invoice"]
+    names = sorted({r["doc"] for r in rows})
+    default = next((r["doc"] for r in rows if r.get("is_default")), None)
+    return names, default
+
+
+def _usable_warehouse(name: str, company: str | None) -> bool:
+    row = frappe.db.get_value("Warehouse", name, ["company", "disabled", "is_group"], as_dict=True)
+    return bool(row and not row.disabled and not row.is_group and (not company or row.company == company))
+
+
+def _default_for_user(user: str, company: str | None) -> str | None:
+    """The warehouse a user sells from when their profile names none: the
+    site default if they may use it, else their own permitted one."""
+    site = default_warehouse(company)
+    names, default = permitted_warehouses(user)
+    if not names or site in names:
+        return site
+    if default in names and _usable_warehouse(default, company):
+        return default
+    usable = [n for n in names if _usable_warehouse(n, company)]
+    return usable[0] if usable else None
 
 
 def check_account(
@@ -284,7 +317,7 @@ def resolve(user: str | None = None) -> dict[str, Any]:
     profile = _profile_row(uid)
 
     company = _user_company(uid, profile.get("warehouse"))
-    warehouse = profile.get("warehouse") or default_warehouse(company)
+    warehouse = profile.get("warehouse") or _default_for_user(uid, company)
     if warehouse and not company:
         company = frappe.db.get_value("Warehouse", warehouse, "company")
 
@@ -346,6 +379,9 @@ def allowed_warehouse(
         )
     if not frappe.db.exists("Warehouse", wh):
         frappe.throw(f"Warehouse not found: {wh}")
+    permitted, _default = permitted_warehouses(frappe.session.user)
+    if permitted and wh not in permitted:
+        frappe.throw(f"You don't have permission to use warehouse {wh}.", frappe.PermissionError)
     if wh != eff["warehouse"] and not admin:
         if not eff["allow_warehouse_change"]:
             frappe.throw(
@@ -385,6 +421,9 @@ def selectable_warehouses() -> list[dict[str, Any]]:
             names = flagged
             if eff["warehouse"] and eff["warehouse"] not in names:
                 names.insert(0, eff["warehouse"])
+    permitted, _default = permitted_warehouses(frappe.session.user)
+    if permitted:
+        names = [n for n in names if n in permitted]
     return [
         {"name": n, "is_default": int(n == eff["warehouse"])}
         for n in names
