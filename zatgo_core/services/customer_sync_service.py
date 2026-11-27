@@ -120,12 +120,11 @@ def _validate_payload(customer: dict[str, Any]) -> None:
     name = require_str(customer.get("customer_name") or customer.get("name_en"), "customer_name")
     customer["customer_name"] = name
 
+    # Mobile is optional; when given it must still be a valid number.
     mobile = cstr(customer.get("mobile_no") or customer.get("mobile") or "").strip()
-    if not mobile:
-        frappe.throw("Mobile Number is required")
-    if not _PHONE_RE.match(mobile):
+    if mobile and not _PHONE_RE.match(mobile):
         frappe.throw("Invalid mobile / phone format")
-    customer["mobile_no"] = mobile
+    customer["mobile_no"] = mobile or None
 
     phone = cstr(customer.get("phone") or "").strip()
     if phone and not _PHONE_RE.match(phone):
@@ -146,12 +145,12 @@ def _validate_payload(customer: dict[str, Any]) -> None:
     address_line1 = cstr(customer.get("address_line1") or "").strip()
     city = cstr(customer.get("city") or "").strip()
     country = cstr(customer.get("country") or "").strip()
-    if not address_line1:
-        frappe.throw("Address Line 1 is required")
-    if not city:
-        frappe.throw("City is required")
-    if not country:
-        frappe.throw("Country is required")
+    # The whole address is optional. An Address record needs line 1 + city,
+    # so a partly filled one is refused instead of silently dropped.
+    if (address_line1 or city) and not address_line1:
+        frappe.throw("Address Line 1 is required when a city is given")
+    if (address_line1 or city) and not city:
+        frappe.throw("City is required when an address is given")
     customer["address_line1"] = address_line1
     customer["city"] = city
     customer["country"] = country
@@ -403,10 +402,10 @@ def sync_customer_bundle(
         contact_name = contact_doc.name
         customer_doc.db_set("customer_primary_contact", contact_name, update_modified=False)
 
-    # Address
+    # Address (only when one was supplied)
     address_client_id = f"{cid}:address"
     address_name = _find_by_client_id("Address", address_client_id)
-    if not address_name:
+    if not address_name and cust.get("address_line1"):
         frappe.has_permission("Address", "create", throw=True)
         address_doc = frappe.get_doc(
             {
@@ -417,7 +416,7 @@ def sync_customer_bundle(
                 "address_line2": cstr(cust.get("address_line2") or "").strip() or None,
                 "city": cust["city"],
                 "state": cstr(cust.get("state") or "").strip() or None,
-                "country": cust["country"],
+                "country": cust["country"] or None,
                 "pincode": cstr(cust.get("pincode") or cust.get("postal_code") or "").strip() or None,
                 "phone": cust.get("mobile_no"),
                 "email_id": cust.get("email_id"),

@@ -16,6 +16,7 @@
   "default_bank_account",
   "sales_warehouse_tab",
   "warehouse_section",
+  "default_warehouse",
   "show_warehouse_on_invoice",
   "allow_warehouse_change",
   "sales_section",
@@ -99,6 +100,13 @@
    "fieldname": "warehouse_section",
    "fieldtype": "Section Break",
    "label": "Warehouse"
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse",
+   "description": "The warehouse drivers sell from when their VanSale Profile names none. Falls back to the company's Company Settings, then ERPNext Stock Settings."
   },
   {
    "fieldname": "show_warehouse_on_invoice",
@@ -189,7 +197,7 @@
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-10-24 13:30:00.000000",
+ "modified": "2026-11-27 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "VanSaleX Settings",

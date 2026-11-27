@@ -20,8 +20,22 @@ class VanSaleXSettings(Document):
             frappe.throw("Default Payment Type can't be Credit while credit sales are not allowed.")
         if self.default_payment_type == "Bank" and not self.allow_bank_payment:
             frappe.throw("Default Payment Type can't be Bank while bank payment is not allowed.")
+        self._validate_warehouse()
         self._validate_accounts()
         self._validate_access()
+
+    def _validate_warehouse(self) -> None:
+        """Default Warehouse: an enabled leaf warehouse. Checked when set or
+        changed, so an old value can't block saving."""
+        if not self.default_warehouse or not self.has_value_changed("default_warehouse"):
+            return
+        row = frappe.db.get_value("Warehouse", self.default_warehouse, ["disabled", "is_group"], as_dict=True)
+        if not row:
+            frappe.throw(f"Default Warehouse not found: {self.default_warehouse}")
+        if row.is_group:
+            frappe.throw("Default Warehouse can't be a group warehouse.")
+        if row.disabled:
+            frappe.throw("Default Warehouse is disabled.")
 
     def _validate_accounts(self) -> None:
         """Default Cash / Bank Account: an enabled ledger account of that
