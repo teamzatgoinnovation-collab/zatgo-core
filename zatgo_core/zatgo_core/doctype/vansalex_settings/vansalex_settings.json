@@ -21,6 +21,7 @@
   "allow_warehouse_change",
   "sales_section",
   "allow_orders",
+  "allow_zero_cost_items",
   "max_discount_percent",
   "collection_section",
   "restrict_collections_to_route",
@@ -134,6 +135,13 @@
    "description": "Offer the Order option (a Sales Order converted to a tax invoice later) besides Invoice."
   },
   {
+   "fieldname": "allow_zero_cost_items",
+   "fieldtype": "Check",
+   "label": "Allow Zero-Cost Items",
+   "default": "0",
+   "description": "Lets drivers sell items that have no cost on record (no valuation rate and no stock history). Each such sale posts at zero cost; leave off if every item should carry a cost."
+  },
+  {
    "fieldname": "max_discount_percent",
    "fieldtype": "Percent",
    "label": "Max Discount %",
@@ -197,7 +205,7 @@
  "issingle": 1,
  "istable": 0,
  "links": [],
- "modified": "2026-11-27 14:00:00.000000",
+ "modified": "2026-11-27 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "ZatGo Core",
  "name": "VanSaleX Settings",
