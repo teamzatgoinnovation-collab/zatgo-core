@@ -16,6 +16,7 @@ from zatgo_core.services.idempotency import insert_idempotent as _insert_idempot
 from zatgo_core.services.idempotency import submit_or_rollback
 from zatgo_core.services.van_sale_access import get_profile, is_vansale_admin, require_own_warehouse
 from zatgo_core.services.vansalex_access import mark_api_validated
+from zatgo_core.services.vansalex_settings import mark_zero_cost_ok
 
 
 _STATUS_MAP = {
@@ -329,6 +330,7 @@ def _build_direct_invoice(
                 if rate is not None:
                     row["rate"] = flt(rate)
     _apply_line_discounts(rows, line_discounts)
+    mark_zero_cost_ok(rows)
 
     # No naming_series here: the Sales Invoice before_insert hook picks it from
     # the caller's rule in Sales Invoice Naming Settings (or ERPNext's default).
@@ -721,6 +723,7 @@ def confirm_order(
     # every line to the van's own warehouse explicitly.
     for item in doc.items or []:
         item.warehouse = wh
+    mark_zero_cost_ok(doc.items)
     _apply_payment_type(doc, sale)
     _apply_payment_details(doc, payment_details)
     doc.zatgo_client_id = cid

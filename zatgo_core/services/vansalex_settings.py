@@ -55,6 +55,9 @@ _DEFAULTS: dict[str, Any] = {
     "default_cash_account": "",
     "default_bank_account": "",
     "default_warehouse": "",
+    # Off until an admin turns it on: lets items with no cost on record be
+    # sold (ERPNext's per-line "Allow Zero Valuation Rate").
+    "allow_zero_cost_items": 0,
     "show_payment_type_on_invoice": 1,
     "show_warehouse_on_invoice": 1,
     "allow_warehouse_change": 0,
@@ -132,6 +135,25 @@ def default_warehouse(company: str | None) -> str | None:
     if wh and (not company or frappe.db.get_value("Warehouse", wh, "company") == company):
         return wh
     return None
+
+
+def allow_zero_cost_items() -> bool:
+    """VanSaleX Settings → "Allow Zero-Cost Items"."""
+    return bool(cint(_global_settings().get("allow_zero_cost_items")))
+
+
+def mark_zero_cost_ok(rows) -> None:
+    """When the site allows zero-cost items, set ERPNext's own per-line
+    "Allow Zero Valuation Rate" on invoice [rows] (dicts or row documents).
+    It only matters for a line whose cost resolves to zero: lines with a real
+    valuation rate keep posting that cost."""
+    if not allow_zero_cost_items():
+        return
+    for row in rows or []:
+        if isinstance(row, dict):
+            row["allow_zero_valuation_rate"] = 1
+        else:
+            row.allow_zero_valuation_rate = 1
 
 
 def permitted_warehouses(user: str) -> tuple[list[str], str | None]:
