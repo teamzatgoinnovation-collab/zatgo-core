@@ -100,7 +100,7 @@ Built only from ERPNext's standard roles: no Custom DocPerm is added, because a 
 | ZatGo Stock User | Stock User | Company, Warehouse |
 | ZatGo Restricted Stock User | Stock User | Item Group and Warehouse (for example: only frozen items, only the cold store) |
 | ZatGo Accountant | Accounts User (sales and purchase invoices, payments, journals) | Company |
-| ZatGo Administrator | System Manager, ZatGo Application Admin | — |
+| ZatGo Administrator | System Manager, ZatGo Application Admin and every ERPNext manager role: all Desk apps, like the Administrator user, not only ZatGo ERP | — |
 
 Record limits in one call (System Manager only):
 

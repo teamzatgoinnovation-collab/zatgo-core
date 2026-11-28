@@ -23,7 +23,14 @@ PROFILES: dict[str, tuple[str, ...]] = {
     "ZatGo Stock User": ("Stock User",),
     "ZatGo Restricted Stock User": ("Stock User",),  # + Item Group / Warehouse User Permissions (restrict_user)
     "ZatGo Accountant": ("Accounts User",),
-    "ZatGo Administrator": ("System Manager", "ZatGo Application Admin"),
+    # Like the Administrator user: every Desk app (Framework, Accounting, Buying, Selling, Stock, Manufacturing,
+    # Projects, Quality, Assets, ...), not only ZatGo ERP. Roles missing on a site are skipped.
+    "ZatGo Administrator": (
+        "System Manager", "ZatGo Application Admin", "Accounts Manager", "Accounts User", "Sales Manager",
+        "Sales User", "Purchase Manager", "Purchase User", "Stock Manager", "Stock User", "Item Manager",
+        "Manufacturing Manager", "Projects Manager", "Quality Manager", "Maintenance Manager", "HR Manager",
+        "Fleet Manager", "Website Manager", "Report Manager",
+    ),
 }
 
 

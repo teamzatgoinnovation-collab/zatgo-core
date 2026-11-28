@@ -108,6 +108,11 @@ class TestPersonas(IntegrationTestCase):
         self.assertTrue(self.can("admin", "Module Settings", "write"))
         self.assertTrue(self.can("admin", "ZatGo System Settings", "write"))
 
+    def test_administrator_persona_has_every_desk_app_not_only_zatgo_erp(self) -> None:
+        for doctype in ("Journal Entry", "Purchase Order", "Sales Invoice", "Stock Entry", "Work Order", "Project"):
+            if frappe.db.exists("DocType", doctype):
+                self.assertTrue(self.can("admin", doctype, "create"), doctype)
+
     def test_the_zatgo_api_refuses_what_the_role_may_not_do(self) -> None:
         from zatgo_core.api.v1.accounting import invoices
 
