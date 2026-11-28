@@ -1,6 +1,39 @@
 # Changelog — ZatGo Core
 
-## Unreleased
+## 1.0.0 — 2026-11-28
+
+The re-engineering programme (Phases 0–15, see `IMPLEMENTATION_PLAN.md`). **Needs `bench migrate` and
+`clear-cache` on each site.** Release checklist: `RELEASE.md`.
+
+### Breaking
+- **129 data-changing endpoints accept POST only** (S-03). Every ZatGo client already POSTs; a third-party script
+  calling a write with GET now gets HTTP 403.
+- **Accounting API invoices carry the company's tax template** (T-01): an invoice created through
+  `api.v1.accounting.invoices.create` / `purchase_invoices.create` on a VAT company now includes VAT, as Desk does.
+- DocType names without the `ZG` prefix (patch `v0_6_0`, ADR-005; live since 11-25).
+
+### Added
+- Core layer (`services/core`): availability resolver, one Audit Log writer, every ERPNext-internal call behind
+  `erpnext_api` (Phase 3).
+- DocType catalog, database architecture, read-only data-integrity report (Phase 4).
+- **Module Settings**: switch ZatGo modules on/off with dependency rules; off = hidden + API 404 + DocType refusal,
+  data kept (Phase 5). Module workspaces (Sales, Purchase, Stock, Accounting, ...) shown by Module Settings and role
+  (Phase 6). **ZatGo Settings** landing page, native settings first (Phase 7).
+- **Personas** as Role Profiles and `restrict_user` for record limits; ZatGo Administrator has every Desk app
+  (Phase 8). Install refuses DocType name collisions with other apps (Phase 14).
+
+### Fixed
+- POS stock and customer lists honour User Permissions; delivery stops limited to their courier on Desk and REST too.
+- A quotation is invoiced once (S-01); van-sale replays refuse cancelled, unfinished or different documents (S-02).
+- Payment Method Summary checks Company / Account permission (raw SQL skipped it).
+- Unused settings (Security, Payment, Printer, Sync, Storage) labelled and removed from navigation; copies of Frappe
+  settings hidden; settings saves set only editable fields; Company/Branch Settings reads are company-scoped.
+
+### Not done in 1.0.0
+- `client_id` required on accounting money endpoints (S-01 part 2): web-accounting does not send it yet, and its
+  invoice / bill / payment / journal pages have uncommitted work by someone else. Change the client first.
+
+## Before 1.0.0 (was "Unreleased")
 
 ### Added — Duplicate Prevention & Smart Record Lookup
 

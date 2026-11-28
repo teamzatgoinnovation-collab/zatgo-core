@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="zatgo_core",
-    version="0.4.0",
+    version="1.0.0",
     description="ZatGo Core — platform hub: apps, settings, VanSaleX, industries and the client RPC",
     author="ZatGo Innovation",
     packages=find_packages(),
