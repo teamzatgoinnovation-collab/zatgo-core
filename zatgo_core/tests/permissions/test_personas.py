@@ -24,7 +24,7 @@ class TestPersonas(IntegrationTestCase):
                              ("cold", "ZatGo Restricted Stock User"), ("admin", "ZatGo Administrator")):
             email = f"zg-persona-{key}-{cls.tag.lower()}@example.test"
             frappe.get_doc({"doctype": "User", "email": email, "first_name": key, "send_welcome_email": 0,
-                            "role_profile_name": profile}).insert(ignore_permissions=True)
+                            "role_profiles": [{"role_profile": profile}]}).insert(ignore_permissions=True)
             cls.users[key] = email
         leaf = frappe.db.get_value("Item Group", {"is_group": 0}, "name")
         cls.frozen_group = frappe.get_doc({"doctype": "Item Group", "item_group_name": f"Frozen {cls.tag}",

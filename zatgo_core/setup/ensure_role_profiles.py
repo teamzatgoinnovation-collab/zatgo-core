@@ -1,7 +1,7 @@
 """ZatGo access personas as native Role Profiles (Phase 8), made from ERPNext's standard roles.
 
 Created once when missing, then the site's: an administrator may change a profile in Desk (Role Profile) and it is
-never reset. A user on a profile gets exactly its roles (Frappe re-applies them on every save of the user).
+never reset. A user on a profile (User → Role Profiles) gets exactly its roles; Frappe re-applies them on every save of the user.
 
 Record-level limits are User Permissions, not profiles. `restrict_user` sets them in one call, for example the
 "restricted stock" persona: Stock User profile + Item Group + Warehouse permissions.
