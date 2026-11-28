@@ -50,6 +50,10 @@ def _r(label: str, report: str | None = None) -> tuple[str, str, str]:
     return ("Report", label, report or label)
 
 
+def _p(label: str, page: str) -> tuple[str, str, str]:
+    return ("Page", label, page)
+
+
 SPECS: tuple[Spec, ...] = (
     Spec("zatgo_sales", "sales", "ZatGo Sales", "sell", ("Sales User", "Sales Manager", "Accounts User"), (
         ("Transactions", "file", (_d("Quotation"), _d("Sales Order"), _d("Delivery Note"), _d("Sales Invoice"))),
@@ -111,6 +115,28 @@ SPECS: tuple[Spec, ...] = (
         ("Attendance and Leave", "calendar", (_d("Attendance"), _d("Leave Application"), _d("Leave Allocation"))),
         ("Payroll", "accounting", (_d("Salary Structure"), _d("Salary Slip"), _d("Payroll Entry"))),
     ), quick=(("Employees", "Employee", "List"),)),
+    # Phase 7: the settings landing page. ERPNext's own settings come first; ZatGo's only where ZatGo adds something.
+    Spec("zatgo_settings", "foundation", "ZatGo Settings", "setting", ("ZatGo Application Admin", "ZatGo Company Admin"), (
+        ("General", "setting", (_d("System Settings"), _d("Global Defaults"), _d("Company"), _d("Currency"),
+                                _d("ZatGo System Settings"))),
+        ("Modules", "grid", (_d("Modules", "Module Settings"), _p("ZatGo Apps", "zg-app-hub"), _p("Licence", "zg-licence"))),
+        ("Sales", "sell", (_d("Selling Settings"), _d("Sales Invoice Naming Settings"), _d("VanSaleX Settings"),
+                           _d("ZatGo POS Settings"), _d("Price List"))),
+        ("Purchase", "buying", (_d("Buying Settings"), _d("Supplier Group"))),
+        ("Inventory", "stock", (_d("Stock Settings"), _d("Warehouse"), _d("UOM"), _d("Item Group"))),
+        ("Accounting", "accounting", (_d("Accounts Settings"), _d("Company Settings"), _d("Mode of Payment"),
+                                      _d("Fiscal Year"), _d("Currency Exchange Settings"))),
+        ("Print", "printer", (_d("Print Settings"), _d("Print Format"), _d("Letter Head"),
+                              _d("Print Format per User (A4 / 80mm)", "Sales Invoice Naming Settings"))),
+        ("Tax and Compliance", "tax", (_d("Sales Taxes and Charges Template"), _d("Purchase Taxes and Charges Template"),
+                                       _d("Item Tax Template"), _d("Tax Category"))),
+        ("Users and Access", "users", (_d("User"), _d("Role"), _p("Role Permissions", "permission-manager"),
+                                       _d("User Permission"), _d("Role Profile"), _d("Van Sale Profile"))),
+        ("Advanced", "tool", (_d("Integration Settings"), _d("ZatGo Notification Settings"), _d("Application Settings"),
+                              _d("Duplicate Prevention Settings"), _d("Audit Log"), _d("Error Log"),
+                              _d("Scheduled Job Log"))),
+    ), quick=(("Modules", "Module Settings", "List"), ("System Settings", "System Settings", "List"),
+              ("Users", "User", "List"))),
     Spec("zatgo_reports", "reports", "ZatGo Reports", "table", ("Accounts Manager", "Sales Manager", "Purchase Manager",
                                                                 "Stock Manager"), (
         ("ZatGo", "star", (_r("Business Summary Report"), _r("Payment Method Summary"))),
@@ -153,6 +179,8 @@ def _links(spec: Spec) -> list[tuple[str, str, list[dict]]]:
         for kind, item_label, target in items:
             if kind == "DocType" and frappe.db.exists("DocType", target):
                 rows.append({"link_type": "DocType", "label": item_label, "link_to": target})
+            elif kind == "Page" and frappe.db.exists("Page", target):
+                rows.append({"link_type": "Page", "label": item_label, "link_to": target})
             elif kind == "Report" and frappe.db.exists("Report", target):
                 ref = frappe.db.get_value("Report", target, ["ref_doctype", "report_type"], as_dict=True)
                 rows.append({"link_type": "Report", "label": item_label, "link_to": target, "report_ref_doctype": ref.ref_doctype,

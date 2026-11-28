@@ -35,6 +35,10 @@ class SettingsService:
         assert_can_read_settings("company")
         if not company:
             frappe.throw(frappe._("Company is required"))
+        name = frappe.db.exists(DOCTYPES["COMPANY_SETTINGS"], {"company": company})
+        if name:
+            # The role matrix allows the category; the document check applies the user's Company User Permissions.
+            frappe.has_permission(DOCTYPES["COMPANY_SETTINGS"], "read", doc=name, throw=True)
         key = CACHE_KEYS["COMPANY"].format(company=company)
 
         def _load() -> dict[str, Any] | None:
@@ -50,6 +54,8 @@ class SettingsService:
         assert_can_read_settings("branch")
         if not branch:
             frappe.throw(frappe._("Branch is required"))
+        if frappe.db.exists(DOCTYPES["BRANCH_SETTINGS"], branch):
+            frappe.has_permission(DOCTYPES["BRANCH_SETTINGS"], "read", doc=branch, throw=True)
         key = CACHE_KEYS["BRANCH"].format(branch=branch)
 
         def _load() -> dict[str, Any] | None:

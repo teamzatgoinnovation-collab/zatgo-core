@@ -90,8 +90,11 @@ class TestCoreSidebar(IntegrationTestCase):
         rows = _general()
         self.assertTrue(any(r["link_type"] == "Page" and r["link_to"] == core_sidebar.HUB_PAGE for r in rows))
         linked = {r["link_to"] for r in rows}
-        for doctype in ("ZatGo System Settings", "Company Settings", "ZatGo Security Settings", "Audit Log"):
+        for doctype in ("ZatGo System Settings", "Company Settings", "Audit Log"):
             self.assertIn(doctype, linked)
+        # Settings that nothing reads are not offered (docs/SETTINGS.md); their DocTypes stay.
+        for doctype in ("ZatGo Security Settings", "Payment Settings", "Storage Settings", "Sync Settings", "Printer Settings"):
+            self.assertNotIn(doctype, linked)
 
     def test_sync_is_idempotent(self) -> None:
         core_sidebar.sync_core_sidebar()

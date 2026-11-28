@@ -16,12 +16,9 @@ APPS = (
             ("ZatGo System Settings", "System Settings"),
             ("Application Settings", "Application Settings"),
             ("Integration Settings", "Integrations"),
-            ("Storage Settings", "Storage"),
-            ("ZatGo Security Settings", "Security"),
-            ("Payment Settings", "Payments"),
-            ("Printer Settings", "Printers"),
+            # Storage, Security, Payment, Printer and Sync Settings are not listed: nothing reads them yet
+            # (docs/SETTINGS.md). Their DocTypes and stored values stay; their forms say so.
             ("ZatGo Notification Settings", "Notifications"),
-            ("Sync Settings", "Sync"),
             ("Number Series Settings", "Number Series"),
             ("Sales Invoice Naming Settings", "Sales Invoice Naming"),
             ("Duplicate Prevention Settings", "Duplicate Prevention"),

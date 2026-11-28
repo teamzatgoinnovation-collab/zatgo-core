@@ -11,6 +11,23 @@ from zatgo_core.constants.settings import DOCTYPES, SINGLE_SETTINGS
 from zatgo_core.services import app_catalog
 
 
+_STANDARD = frozenset({"name", "owner", "creation", "modified", "modified_by", "docstatus", "idx", "doctype",
+                       "parent", "parentfield", "parenttype"})
+
+
+def writable_values(doctype: str, values: dict[str, Any]) -> dict[str, Any]:
+    """Only the DocType's own editable fields: unknown keys, standard fields and read-only fields are dropped (and
+    logged), so a settings save can never set a field the form does not let a user set."""
+    meta = frappe.get_meta(doctype)
+    allowed = {df.fieldname for df in meta.fields if not df.read_only and df.fieldtype not in
+               ("Section Break", "Column Break", "Tab Break", "HTML", "Button", "Heading", "Fold")}
+    kept = {k: v for k, v in (values or {}).items() if k in allowed and k not in _STANDARD}
+    dropped = sorted(set(values or {}) - set(kept))
+    if dropped:
+        frappe.logger("zatgo_core.security").info("settings save on %s ignored fields %s", doctype, dropped)
+    return kept
+
+
 class SettingsRepository:
     """Persistence boundary for settings DocTypes."""
 
@@ -55,7 +72,7 @@ class SettingsRepository:
     @staticmethod
     def save_single(doctype: str, values: dict[str, Any]) -> Document:
         doc = SettingsRepository.get_single(doctype)
-        doc.update(values)
+        doc.update(writable_values(doctype, values))
         doc.save(ignore_permissions=False)
         return doc
 
@@ -63,10 +80,10 @@ class SettingsRepository:
     def save_doc(doctype: str, name: str | None, values: dict[str, Any]) -> Document:
         if name and frappe.db.exists(doctype, name):
             doc = frappe.get_doc(doctype, name)
-            doc.update(values)
+            doc.update(writable_values(doctype, values))
             doc.save()
             return doc
-        values = {**values, "doctype": doctype}
+        values = {**writable_values(doctype, values), "doctype": doctype}
         doc = frappe.get_doc(values)
         doc.insert()
         return doc
