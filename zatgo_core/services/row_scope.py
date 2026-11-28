@@ -17,17 +17,34 @@ from typing import Any
 import frappe
 
 
-def permitted_companies(user: str | None = None) -> list[str] | None:
-	"""Companies the user is restricted to by User Permissions; None when they are not restricted."""
+def permitted_values(allow: str, for_doctype: str | None = None, user: str | None = None) -> list[str] | None:
+	"""Values of `allow` (Company, Warehouse, Item Group, ...) the user is restricted to by User Permissions, as
+	they apply when reading `for_doctype` (a permission limited to other DocTypes with "Applicable For" does not
+	count). None when they are not restricted: Administrator, or no such User Permission."""
 	user = user or frappe.session.user
 	if user == "Administrator":
 		return None
 	from frappe.permissions import get_user_permissions
 
-	rows = (get_user_permissions(user) or {}).get("Company")
+	rows = (get_user_permissions(user) or {}).get(allow)
 	if not rows:
 		return None
+	if for_doctype:
+		rows = [r for r in rows if not r.get("applicable_for") or r.get("applicable_for") == for_doctype]
+		if not rows:
+			return None
 	return sorted({r.get("doc") for r in rows if r.get("doc")})
+
+
+def permitted_companies(user: str | None = None) -> list[str] | None:
+	"""Companies the user is restricted to by User Permissions; None when they are not restricted."""
+	return permitted_values("Company", user=user)
+
+
+def narrow(values: list[str], allow: str, for_doctype: str | None = None) -> list[str]:
+	"""`values` cut down to what the user's User Permissions on `allow` permit (unchanged when unrestricted)."""
+	permitted = permitted_values(allow, for_doctype)
+	return list(values) if permitted is None else [v for v in values if v in set(permitted)]
 
 
 def company_clause(column: str, params: dict[str, Any]) -> str:

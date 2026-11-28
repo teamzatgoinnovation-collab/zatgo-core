@@ -258,9 +258,13 @@ def find_by_barcode(code: str) -> dict[str, Any]:
 
 
 def _stock_rows(company: str, warehouse: str | None) -> list[dict[str, Any]]:
+    from zatgo_core.services import row_scope
+
     wh_filter = [warehouse] if warehouse else frappe.get_all(
         "Warehouse", filters={"company": company, "disabled": 0, "is_group": 0}, pluck="name"
     )
+    # A user restricted to some warehouses / item groups / items (User Permissions) sees only those.
+    wh_filter = row_scope.narrow(wh_filter, "Warehouse", "Bin")
     if not wh_filter:
         return []
     on_hand: dict[str, float] = {}
@@ -268,9 +272,16 @@ def _stock_rows(company: str, warehouse: str | None) -> list[dict[str, Any]]:
         "Bin", filters={"warehouse": ("in", wh_filter)}, fields=["item_code", "actual_qty"]
     ):
         on_hand[b.item_code] = on_hand.get(b.item_code, 0.0) + flt(b.actual_qty)
+    item_filters: dict[str, Any] = {"disabled": 0, "is_stock_item": 1}
+    groups = row_scope.permitted_values("Item Group", "Item")
+    if groups is not None:
+        item_filters["item_group"] = ("in", groups or [""])
+    only = row_scope.permitted_values("Item", "Item")
+    if only is not None:
+        item_filters["name"] = ("in", only or [""])
     items = frappe.get_all(
         "Item",
-        filters={"disabled": 0, "is_stock_item": 1},
+        filters=item_filters,
         fields=["name", "item_name", "stock_uom", "item_group"],
         order_by="item_name asc",
     )
@@ -474,8 +485,9 @@ def list_customers(
     or_filters = (
         [["customer_name", "like", f"%{q}%"], ["mobile_no", "like", f"%{q}%"]] if q else None
     )
-    total = len(frappe.get_all("Customer", filters=filters, or_filters=or_filters, pluck="name"))
-    rows = frappe.get_all(
+    # get_list, not get_all: a user restricted to some customers / groups / territories sees only those.
+    total = len(frappe.get_list("Customer", filters=filters, or_filters=or_filters, pluck="name"))
+    rows = frappe.get_list(
         "Customer",
         filters=filters,
         or_filters=or_filters,

@@ -55,6 +55,12 @@ def _run_steps(hook: str, steps) -> list[str]:
     return failed
 
 
+def _ensure_role_profiles() -> None:
+    from zatgo_core.setup.ensure_role_profiles import ensure_role_profiles
+
+    ensure_role_profiles()
+
+
 def _ensure_module_workspaces() -> None:
     from zatgo_core.services.module_workspaces import ensure
 
@@ -104,6 +110,8 @@ _SHARED_STEPS = (
     ("module workspaces", _ensure_module_workspaces),
     ("module settings", _sync_module_settings),
     ("module navigation", _apply_module_navigation),
+    # Access personas as Role Profiles of ERPNext roles (created once, then the site's).
+    ("role profiles", _ensure_role_profiles),
     # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
     ("preset edition seed", seed_presets),
 )

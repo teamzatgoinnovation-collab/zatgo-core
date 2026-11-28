@@ -65,10 +65,22 @@ class TestDeliveryStopAccess(IntegrationTestCase):
         return frappe.db.get_value("ZatGo Delivery Stop", self.stop, field)
 
     def test_test_users_pass_the_doctype_check(self) -> None:
-        """Guards the tests below: a refusal must come from the ownership check."""
+        """Guards the tests below: every test user holds DocType write; refusals come from the ownership rules."""
         for user in (self.own_user, self.other_user, self.desk_user, self.manager):
             frappe.set_user(user)
-            self.assertTrue(frappe.has_permission("ZatGo Delivery Stop", "write", doc=self.stop), user)
+            self.assertTrue(frappe.has_permission("ZatGo Delivery Stop", "write"), user)
+
+    def test_a_courier_sees_and_writes_only_their_own_stops_on_every_route(self) -> None:
+        """Not just the API: the document permission and list query (Desk, REST, reports, exports) too."""
+        frappe.set_user(self.own_user)
+        self.assertTrue(frappe.has_permission("ZatGo Delivery Stop", "write", doc=self.stop))
+        self.assertIn(self.stop, frappe.get_list("ZatGo Delivery Stop", pluck="name"))
+        frappe.set_user(self.other_user)
+        self.assertFalse(frappe.has_permission("ZatGo Delivery Stop", "write", doc=self.stop))
+        self.assertFalse(frappe.has_permission("ZatGo Delivery Stop", "read", doc=self.stop))
+        self.assertNotIn(self.stop, frappe.get_list("ZatGo Delivery Stop", pluck="name"))
+        frappe.set_user(self.desk_user)  # a dispatcher (not a courier): role permissions decide
+        self.assertIn(self.stop, frappe.get_list("ZatGo Delivery Stop", pluck="name"))
 
     def test_another_courier_cannot_complete_the_stop(self) -> None:
         frappe.set_user(self.other_user)

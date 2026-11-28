@@ -220,6 +220,7 @@ scheduler_events = {
 }
 
 permission_query_conditions = {
+    "ZatGo Delivery Stop": "zatgo_core.permissions.delivery_scope.stop_query",
     "Company Settings": "zatgo_core.permissions.company_scope.company_permission_query",
     # Push tokens and preferences belong to their user (permissions/owner_scope.py).
     "Device Token": "zatgo_core.permissions.owner_scope.device_token_query",
@@ -251,6 +252,7 @@ permission_query_conditions = {
 # Tracker (bundled module): no objection (True) where it is switched off --
 # never None, which Frappe reads as a denial.
 has_permission = {
+    "ZatGo Delivery Stop": "zatgo_core.permissions.delivery_scope.stop_has_permission",
     "Device Token": "zatgo_core.permissions.owner_scope.device_token_has_permission",
     "User Preferences": "zatgo_core.permissions.owner_scope.user_preferences_has_permission",
     "Project": "zatgo_core.services.bundled_apps.tracker_project_has_permission",

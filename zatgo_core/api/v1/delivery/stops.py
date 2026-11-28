@@ -13,7 +13,7 @@ from zatgo_core.constants.roles import ROLES
 from zatgo_core.services.erpnext_reads import get_zg, list_zg
 
 # May act on any stop. Everyone else (Desk User and Delivery hold DocType write) only on a stop assigned to their own login.
-_STOP_MANAGER_ROLES = {ROLES["SYSTEM_MANAGER"], ROLES["COMPANY_ADMIN"], ROLES["BRANCH_ADMIN"]}
+from zatgo_core.permissions.delivery_scope import MANAGER_ROLES as _STOP_MANAGER_ROLES  # noqa: E402  (one list)
 
 _VALID_STATUS = {
     "Assigned",
