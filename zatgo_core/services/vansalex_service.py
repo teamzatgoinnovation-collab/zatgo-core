@@ -78,33 +78,10 @@ def _resolve_customer(customer: str) -> str:
 
 
 def _apply_sales_taxes(doc: Any, company: str) -> None:
-    from zatgo_core.services.vansalex_settings import sales_tax_template
+    """The company's sales tax template on `doc` (see services/invoice_taxes.py, the one rule for every path)."""
+    from zatgo_core.services.invoice_taxes import apply_sales_taxes
 
-    template, inclusive = sales_tax_template(company)
-    if not template:
-        return
-    doc.taxes_and_charges = template
-    try:
-        from zatgo_core.services.core.erpnext_api import get_taxes_and_charges
-        doc.set("taxes", [])
-        for tax in get_taxes_and_charges("Sales Taxes and Charges Template", template):
-            row = dict(tax)
-            # When company prices are tax-inclusive, force included_in_print_rate
-            # so ERPNext does not add VAT on top of already-inclusive rates.
-            if inclusive:
-                row["included_in_print_rate"] = 1
-            doc.append("taxes", row)
-    except Exception:
-        # Older / alternate API
-        try:
-            doc.append_taxes_from_master()
-            if inclusive:
-                for tax in doc.taxes or []:
-                    tax.included_in_print_rate = 1
-        except Exception:
-            # Never post without the tax the company's template asks for.
-            frappe.log_error(title="VanSale tax template apply failed", message=frappe.get_traceback())
-            frappe.throw(f"Could not apply the tax template {template}. Nothing was recorded -- fix the template and retry.")
+    apply_sales_taxes(doc, company)
 
 
 def _ack_sales_invoice(doc: Any, cid: str, *, idempotent: bool, created: bool) -> dict[str, Any]:
@@ -129,6 +106,22 @@ def _ack_sales_invoice(doc: Any, cid: str, *, idempotent: bool, created: bool) -
             "source": "Sales Invoice",
         },
     )
+
+
+def _replayable(doc: Any, *, allow_draft: bool = False) -> Any:
+    """S-02: a repeated client_id acknowledges only a document that still stands. A cancelled one is refused (the
+    client must not believe the sale, return, collection or stock move exists); a draft left by an earlier attempt
+    is refused unless the caller can finish it."""
+    status = int(doc.docstatus or 0)
+    if status == 2:
+        frappe.throw(f"{doc.doctype} {doc.name} for this client_id was cancelled. Use a new client_id.")
+    if status == 0 and not allow_draft:
+        frappe.throw(f"{doc.doctype} {doc.name} for this client_id was never submitted. Open it, or use a new client_id.")
+    return doc
+
+
+def _replay_mismatch(what: str) -> None:
+    frappe.throw(f"This client_id was already used for a different {what}; use a new one.")
 
 
 def _ensure_submitted_sales_invoice(
@@ -544,7 +537,7 @@ def create_sales_order(
 
     existing = _find_by_client_id("Sales Order", cid)
     if existing:
-        doc = frappe.get_doc("Sales Order", existing)
+        doc = _replayable(frappe.get_doc("Sales Order", existing), allow_draft=True)
         if int(doc.docstatus or 0) == 0:
             doc.submit()
             frappe.db.commit()
@@ -862,7 +855,9 @@ def create_sales_return(
 
     existing = _find_by_client_id("Sales Invoice", cid)
     if existing:
-        doc = frappe.get_doc("Sales Invoice", existing)
+        doc = _replayable(frappe.get_doc("Sales Invoice", existing))
+        if not int(doc.is_return or 0) or doc.return_against != (return_against or "").strip():
+            _replay_mismatch("document (not a return of this invoice)")
         try:
             generate_and_store_zatca_qr(doc)
             frappe.db.commit()
@@ -973,7 +968,9 @@ def create_collection(
     cid = require_str(client_id, "client_id")
     existing = _find_by_client_id("Payment Entry", cid)
     if existing:
-        pe = frappe.get_doc("Payment Entry", existing)
+        pe = _replayable(frappe.get_doc("Payment Entry", existing))
+        if abs(flt(pe.paid_amount) - flt(amount)) > 0.005:
+            _replay_mismatch(f"amount ({pe.paid_amount} was recorded)")
         return ok(
             {**_collection_payload(pe), "client_id": cid, "erp_name": pe.name},
             meta={"stub": False, "idempotent": True, "source": "Payment Entry"},
@@ -1193,7 +1190,9 @@ def adjust_stock(
     cid = require_str(client_id, "client_id")
     existing = _find_by_client_id("Stock Entry", cid)
     if existing:
-        se = frappe.get_doc("Stock Entry", existing)
+        se = _replayable(frappe.get_doc("Stock Entry", existing))
+        if item_code not in {row.item_code for row in se.items}:
+            _replay_mismatch("item")
         return ok(
             {
                 "name": se.name,
@@ -1278,7 +1277,9 @@ def transfer_stock(
     cid = require_str(client_id, "client_id")
     existing = _find_by_client_id("Stock Entry", cid)
     if existing:
-        se = frappe.get_doc("Stock Entry", existing)
+        se = _replayable(frappe.get_doc("Stock Entry", existing))
+        if item_code not in {row.item_code for row in se.items}:
+            _replay_mismatch("item")
         return ok(
             {
                 "name": se.name,

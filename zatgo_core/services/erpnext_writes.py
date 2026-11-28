@@ -754,6 +754,10 @@ def create_sales_invoice(
             "zatgo_client_id": cid,
         }
     )
+    # T-01: the company's tax template, as Desk applies it to a new invoice; ERPNext computes the tax.
+    from zatgo_core.services.invoice_taxes import apply_if_unset
+
+    apply_if_unset(doc, doc.company)
     if cid:
         doc, created = insert_idempotent(doc, doctype="Sales Invoice", client_id=cid)
     else:
@@ -893,12 +897,29 @@ def create_sales_invoice_from_quotation(name: str) -> dict[str, Any]:
     source = frappe.get_doc("Quotation", name)
     if int(source.docstatus or 0) != 1:
         frappe.throw("Quotation must be submitted before converting to an invoice")
-    invoice = make_sales_invoice(name)
-    invoice.insert()
-    frappe.db.commit()
+    # One invoice per quotation (S-01). ERPNext keeps no link from the invoice back to the quotation, so the
+    # invoice carries a client id derived from it; the unique index refuses a second one, even under a race.
+    from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
+
+    cid = f"quotation:{name}"
+    existing = find_by_client_id("Sales Invoice", cid)
+    if not existing:
+        invoice = make_sales_invoice(name)
+        invoice.zatgo_client_id = cid
+        invoice, created = insert_idempotent(invoice, doctype="Sales Invoice", client_id=cid)
+        if created:
+            frappe.db.commit()
+            return ok(
+                map_sales_invoice_doc(invoice),
+                meta={"stub": False, "created": True, "source": "Sales Invoice", "from_quotation": name},
+            )
+        existing = invoice.name
+    invoice = frappe.get_doc("Sales Invoice", existing)
+    if int(invoice.docstatus or 0) == 2:
+        frappe.throw(f"Quotation {name} was invoiced as {existing}, which is cancelled. Amend that invoice instead.")
     return ok(
         map_sales_invoice_doc(invoice),
-        meta={"stub": False, "created": True, "source": "Sales Invoice", "from_quotation": name},
+        meta={"stub": False, "created": False, "idempotent": True, "source": "Sales Invoice", "from_quotation": name},
     )
 
 
@@ -1092,6 +1113,10 @@ def create_purchase_invoice(
             "zatgo_client_id": cid,
         }
     )
+    # T-01: the company's tax template, as Desk applies it to a new invoice; ERPNext computes the tax.
+    from zatgo_core.services.invoice_taxes import apply_if_unset
+
+    apply_if_unset(doc, doc.company)
     if cid:
         doc, created = insert_idempotent(doc, doctype="Purchase Invoice", client_id=cid)
     else:
