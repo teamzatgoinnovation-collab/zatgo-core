@@ -191,7 +191,7 @@ def get(name: str) -> dict[str, Any]:
     return get_zg("Delivery Boy", name, map_doc=lambda d: _map(d))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     full_name: str,
     username: str,

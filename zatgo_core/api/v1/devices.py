@@ -22,7 +22,7 @@ DOCTYPE = "Device Token"
 SETTINGS = "ZatGo Notification Settings"
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def register_token(token: str, platform: str | None = None, app_id: str | None = None) -> dict[str, Any]:
 	token = require_str(token, "token")
 	user = frappe.session.user
@@ -75,7 +75,7 @@ def unregister_token(token: str) -> dict[str, Any]:
 	return ok({"removed": True, "name": name})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def send_to_user(
 	user: str,
 	title: str,

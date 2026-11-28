@@ -24,6 +24,6 @@ def seat(table_id: str, covers: int | str = 1, client_id: str | None = None) -> 
     return svc.seat_table(table_id, covers=covers, client_id=client_id)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_status(table_id: str, status: str) -> dict[str, Any]:
     return svc.set_table_status(table_id, status)

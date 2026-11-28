@@ -38,7 +38,7 @@ def warehouses() -> dict[str, Any]:
     return ok(selectable_warehouses(), meta={"source": "Warehouse"})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def adjust(
     client_id: str,
     item_code: str,
@@ -69,7 +69,7 @@ def adjust(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def transfer(
     client_id: str,
     item_code: str,

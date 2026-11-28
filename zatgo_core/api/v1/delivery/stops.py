@@ -398,7 +398,7 @@ def get(name: str) -> dict[str, Any]:
     return get_zg("ZatGo Delivery Stop", name, map_doc=lambda d: _map(d))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     title: str | None = None,
     order_number: str | None = None,
@@ -500,7 +500,7 @@ def create(
     return ok(_map(doc), meta={"stub": False, "created": True, "source": "ZatGo Delivery Stop"})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def assign(name: str, delivery_boy: str) -> dict[str, Any]:
     """Assign (or reassign) a delivery boy on an existing stop."""
     require_login()
@@ -532,7 +532,7 @@ def assign(name: str, delivery_boy: str) -> dict[str, Any]:
     return ok(_map(doc), meta={"stub": False, "assigned": True, "source": "ZatGo Delivery Stop"})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     status: str | None = None,
@@ -558,12 +558,12 @@ def update(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def accept(name: str) -> dict[str, Any]:
     return _apply_status(name, status="Accepted")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def reject(name: str, pod_note: str | None = None) -> dict[str, Any]:
     return _apply_status(name, status="Rejected", pod_note=pod_note)
 
@@ -578,12 +578,12 @@ def pickup(name: str) -> dict[str, Any]:
     return _apply_status(name, status="Picked Up")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def start_delivery(name: str) -> dict[str, Any]:
     return _apply_status(name, status="Out For Delivery")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def complete_delivery(
     name: str,
     pod_method: str | None = None,

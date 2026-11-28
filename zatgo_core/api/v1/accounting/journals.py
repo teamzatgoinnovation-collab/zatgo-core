@@ -41,7 +41,7 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     return get_document_pdf("Journal Entry", name, print_format=print_format)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     accounts: str | list | None = None,
     company: str | None = None,
@@ -64,7 +64,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_split_receive_entry(
     party: str,
     lines: str | list | None = None,
@@ -90,7 +90,7 @@ def create_split_receive_entry(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_split_pay_entry(
     party: str,
     lines: str | list | None = None,
@@ -115,7 +115,7 @@ def create_split_pay_entry(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     accounts: str | list | None = None,
@@ -136,22 +136,22 @@ def update(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_journal_entry(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit(name: str) -> dict[str, Any]:
     return submit_journal_entry(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel(name: str) -> dict[str, Any]:
     return cancel_journal_entry(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def amend(name: str) -> dict[str, Any]:
     return _amend_doc("Journal Entry", name, map_journal_entry_doc)
 

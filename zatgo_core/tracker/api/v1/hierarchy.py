@@ -74,7 +74,7 @@ def org_tree():
 	return ok({"company": company, "employees": rows})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_top_member(
 	email: str,
 	full_name: str,
@@ -108,7 +108,7 @@ def create_top_member(
 	return ok(result)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def assign_org_member(
 	email: str,
 	full_name: str,
@@ -184,7 +184,7 @@ def assign_org_member(
 	return ok(result)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_employee_org(
 	employee: str,
 	tracker_org_role: str | None = None,
@@ -242,13 +242,13 @@ def update_employee_org(
 	return ok(frappe.get_doc("Employee", employee).as_dict())
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def seed_demo(company: str | None = None):
 	"""Org tree only (Top / Sub / Worker)."""
 	return ok(seed_demo_org(company=company))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def seed_demo_work(company: str | None = None):
 	"""Full demo: org + project/tasks/tickets + timesheets + live sessions."""
 	return ok(seed_demo_data(company=company))
@@ -259,7 +259,7 @@ def can_assign(assignee: str):
 	return ok({"assignee": assignee, "allowed": can_assign_to(frappe.session.user, assignee)})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def assign(doctype: str, name: str, users: str | None = None, user: str | None = None):
 	assert_can_manage_work()
 	targets = parse_users(users) or parse_users(user)

@@ -171,7 +171,7 @@ def chat_connectors_test(doctype=None, name=None):
 	return fail("unknown doctype")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel_turn(session=None):
 	_ensure_user()
 	if not session:

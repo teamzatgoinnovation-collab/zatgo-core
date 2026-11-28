@@ -44,7 +44,7 @@ def get_project(name: str):
 	return ok(doc.as_dict())
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_project(project_name: str, company: str | None = None, notes: str | None = None):
 	assert_can_manage_work()
 	if not project_name:
@@ -70,7 +70,7 @@ def create_project(project_name: str, company: str | None = None, notes: str | N
 	return ok(doc.as_dict())
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def add_member(project: str, user: str | None = None, users: str | None = None):
 	targets = parse_users(users) or parse_users(user)
 	if not project or not targets:
@@ -80,7 +80,7 @@ def add_member(project: str, user: str | None = None, users: str | None = None):
 	return ok({"project": project, "users": targets})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def close_project(name: str):
 	assert_is_top()
 	if not name:

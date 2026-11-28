@@ -15,7 +15,7 @@ def list(page: int | str = 1, page_size: int | str = 100) -> dict[str, Any]:
     return list_item_groups(page=page, page_size=page_size)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     item_group_name: str,
     parent_item_group: str | None = None,

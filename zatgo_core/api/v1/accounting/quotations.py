@@ -33,7 +33,7 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     return get_document_pdf("Quotation", name, print_format=print_format or "ZatGo Quotation")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     customer: str,
     items: str | list | None = None,
@@ -58,7 +58,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     customer: str | None = None,
@@ -81,26 +81,26 @@ def update(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_quotation(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit(name: str) -> dict[str, Any]:
     return submit_quotation(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel(name: str) -> dict[str, Any]:
     return cancel_quotation(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def amend(name: str) -> dict[str, Any]:
     return _amend_doc("Quotation", name, map_quotation_doc)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def convert_to_invoice(name: str) -> dict[str, Any]:
     return create_sales_invoice_from_quotation(name)

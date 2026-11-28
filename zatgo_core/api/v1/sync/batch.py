@@ -13,7 +13,7 @@ from zatgo_core.services.customer_sync_ops import sync_customer_op
 from zatgo_core.services.item_sync_ops import sync_item_op
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def batch(operations: str | list | None = None) -> dict[str, Any]:
     """
     Process a list of sync operations.

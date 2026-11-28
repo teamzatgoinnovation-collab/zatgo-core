@@ -20,7 +20,7 @@ def get(name: str) -> dict[str, Any]:
     return get_supplier(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     supplier_name: str,
     supplier_type: str | None = None,
@@ -41,11 +41,11 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_supplier(name, values)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_supplier(name)

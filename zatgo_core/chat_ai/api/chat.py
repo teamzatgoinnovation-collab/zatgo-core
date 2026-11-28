@@ -20,7 +20,7 @@ def _ensure_user():
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def send(
 	session=None,
 	message=None,
@@ -85,7 +85,7 @@ def send(
 		return fail(_("The assistant ran into a problem. Please try again."), code="internal", retryable=True)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel(session=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -138,7 +138,7 @@ def list_sessions(status="Active"):
 	return ok(rows)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def clear(session=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -147,7 +147,7 @@ def clear(session=None):
 	return ok({"cleared": True})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def rename(session=None, title=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -157,7 +157,7 @@ def rename(session=None, title=None):
 	return ok({"name": doc.name, "title": doc.title})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_mode(session=None, assistant_mode=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -167,7 +167,7 @@ def set_mode(session=None, assistant_mode=None):
 	return ok({"name": doc.name, "assistant_mode": doc.assistant_mode})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def archive(session=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -177,7 +177,7 @@ def archive(session=None):
 	return ok({"name": doc.name, "status": doc.status})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def pin(session=None, pinned=1):
 	_ensure_user()
 	_assert_session_access(session)
@@ -187,7 +187,7 @@ def pin(session=None, pinned=1):
 	return ok({"name": doc.name, "is_pinned": doc.is_pinned})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_session(session=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -301,7 +301,7 @@ def new_session(title=None, assistant_mode=None, language=None):
 	return ok({"name": name})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_language(session=None, language=None):
 	_ensure_user()
 	if not session:
@@ -418,7 +418,7 @@ def regenerate(session=None, model=None, web=None):
 	return send(session=session, message=last[0].content, attachments=attachments, model=model, web=web, regenerate=1)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def edit_message(session=None, message=None, content=None, model=None, web=None):
 	"""Replace a user message and re-run from there; later messages are discarded."""
 	_ensure_user()
@@ -433,7 +433,7 @@ def edit_message(session=None, message=None, content=None, model=None, web=None)
 	return send(session=session, message=content, attachments=attachments, model=model, web=web)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_message(session=None, message=None):
 	_ensure_user()
 	_assert_session_access(session)
@@ -465,7 +465,7 @@ def _uploaded_file():
 	return (getattr(request, "files", None) or {}).get("file")
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def upload(session=None):
 	"""Multipart upload (field `file`) into a conversation; creates the conversation if none is given."""
 	_ensure_user()
@@ -491,7 +491,7 @@ def upload(session=None):
 		return fail(str(exc), code=exc.code)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_attachment(attachment=None):
 	_ensure_user()
 	from zatgo_core.chat_ai.erpnext import attachments as attachments_svc

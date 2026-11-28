@@ -47,7 +47,7 @@ def is_client_enabled(app_key: str) -> dict[str, Any]:
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def seed_default_client_apps(replace: int | str | bool = 0) -> dict[str, Any]:
     """Seed default Electron/Flutter/Web clients for this site."""
     log_api("seed_default_client_apps", user=frappe.session.user, replace=replace)
@@ -55,7 +55,7 @@ def seed_default_client_apps(replace: int | str | bool = 0) -> dict[str, Any]:
     return ok(AppRegistryService.seed_default_client_apps(replace=replace_flag))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync_application_registry() -> dict[str, Any]:
     """Deprecated name — seeds client apps (does not scan Frappe apps)."""
     log_api("sync_application_registry", user=frappe.session.user)

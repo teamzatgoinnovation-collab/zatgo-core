@@ -21,7 +21,7 @@ def balance(account: str, date: str | None = None) -> dict[str, Any]:
     return get_account_balance(account, date=date)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     account_name: str,
     parent_account: str,
@@ -42,11 +42,11 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_account(name, values)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_account(name)

@@ -40,7 +40,7 @@ def get(name: str) -> dict[str, Any]:
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     warehouse_name: str,
     company: str | None = None,
@@ -55,6 +55,6 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_warehouse(name, values)

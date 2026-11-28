@@ -79,7 +79,7 @@ def list_team_drafts(from_date: str | None = None, to_date: str | None = None):
 	return ok(rows)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit_team(
 	names: str | None = None,
 	from_date: str | None = None,

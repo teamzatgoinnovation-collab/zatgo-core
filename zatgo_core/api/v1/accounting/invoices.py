@@ -39,7 +39,7 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     return get_document_pdf("Sales Invoice", name, print_format=print_format)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     customer: str,
     items: str | list | None = None,
@@ -64,7 +64,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     customer: str | None = None,
@@ -87,27 +87,27 @@ def update(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_sales_invoice(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit(name: str) -> dict[str, Any]:
     return submit_sales_invoice(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel(name: str) -> dict[str, Any]:
     return cancel_sales_invoice(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def amend(name: str) -> dict[str, Any]:
     return _amend_doc("Sales Invoice", name, map_sales_invoice_doc)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_return(
     return_against: str,
     items: str | list | None = None,

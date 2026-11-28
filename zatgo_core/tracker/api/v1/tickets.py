@@ -76,7 +76,7 @@ def get_ticket(name: str):
 	return ok(doc.as_dict())
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_ticket(
 	subject: str,
 	project: str | None = None,
@@ -124,7 +124,7 @@ def create_ticket(
 	return ok(frappe.get_doc("Issue", doc.name).as_dict())
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def assign(name: str, users: str | None = None, user: str | None = None):
 	from zatgo_core.tracker.services.notify import notify_assigned
 

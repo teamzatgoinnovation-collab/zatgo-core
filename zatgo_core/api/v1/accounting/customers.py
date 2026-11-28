@@ -28,7 +28,7 @@ def defaults() -> dict[str, Any]:
     return get_customer_defaults()
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     customer_name: str | None = None,
     customer_type: str | None = None,
@@ -70,7 +70,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync(
     client_id: str,
     customer: str | dict | None = None,
@@ -94,11 +94,11 @@ def sync(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_customer(name, values)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_customer(name)

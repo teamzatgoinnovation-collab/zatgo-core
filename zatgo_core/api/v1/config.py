@@ -33,7 +33,7 @@ def get_application(app_key: str) -> dict[str, Any]:
     return ok(data)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def register_application(manifest: Any) -> dict[str, Any]:
     """Upsert an application manifest into the plugin registry."""
     payload = parse_json_dict(manifest, "manifest")
@@ -45,7 +45,7 @@ def register_application(manifest: Any) -> dict[str, Any]:
     return ok(PluginRegistryService.register_application(payload))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def seed_bundled_manifests() -> dict[str, Any]:
     """Re-register the bundled manifests and the app catalog (System Manager / Application Admin)."""
     if not can_manage_registry():
@@ -68,7 +68,7 @@ def get_settings(app_key: str, section_key: str) -> dict[str, Any]:
     return ok(ConfigLoaderService.get_settings(app_key, section_key))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_settings(app_key: str, section_key: str, values: Any) -> dict[str, Any]:
     """Persist settings for a section."""
     app_key = require_str(app_key, "app_key")
@@ -83,7 +83,7 @@ def update_settings(app_key: str, section_key: str, values: Any) -> dict[str, An
     return ok(ConfigLoaderService.update_settings(app_key, section_key, payload))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def reset_settings(app_key: str, section_key: str) -> dict[str, Any]:
     """Reset a section to its manifest defaults."""
     app_key = require_str(app_key, "app_key")
@@ -104,7 +104,7 @@ def export_settings(profile_name: str | None = None) -> dict[str, Any]:
     return ok(ConfigLoaderService.export_settings(profile_name))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def import_settings(payload: Any) -> dict[str, Any]:
     """Import settings JSON previously exported from Core."""
     data = parse_json_dict(payload, "payload")

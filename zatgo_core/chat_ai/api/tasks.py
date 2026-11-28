@@ -8,7 +8,7 @@ from frappe import _
 from zatgo_core.chat_ai.api.response import fail, ok
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def run_now(name=None):
 	"""Queue one run of the task now. Owner or manager only (checked by the document permission)."""
 	if frappe.session.user == "Guest":

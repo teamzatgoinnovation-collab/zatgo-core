@@ -36,7 +36,7 @@ def suppliers(search: str | None = None, limit: int | str = 50) -> dict[str, Any
     return ok(svc.list_suppliers(search, limit), meta={"source": "Supplier"})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_invoice(
     client_id: str,
     supplier: str,
@@ -68,7 +68,7 @@ def create_invoice(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_order(client_id: str, supplier: str, items: str | list | None = None) -> dict[str, Any]:
     """Purchase Order — submitted, nothing received yet (see ``confirm``)."""
     require_login()
@@ -76,7 +76,7 @@ def create_order(client_id: str, supplier: str, items: str | list | None = None)
     return svc.create_order(client_id=client_id, supplier=supplier, items=items)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def confirm(
     client_id: str,
     purchase_order: str,
@@ -129,7 +129,7 @@ def returnable(purchase_invoice: str) -> dict[str, Any]:
     return ok(svc.get_returnable(purchase_invoice), meta={"source": "vansalex.purchases.returnable"})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_return(
     client_id: str,
     return_against: str,

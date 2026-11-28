@@ -43,7 +43,7 @@ def get_supported_languages() -> list[dict]:
     return languages
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_language(language: str) -> dict:
     """Set the current Desk user's own language preference. Never touches another user."""
     _require_login()

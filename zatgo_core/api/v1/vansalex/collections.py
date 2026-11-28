@@ -41,7 +41,7 @@ def modes(company: str | None = None) -> dict[str, Any]:
     return ok({"modes": [r.name for r in rows], "company": company, "methods": methods})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     client_id: str,
     customer: str,

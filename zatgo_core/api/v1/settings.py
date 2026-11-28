@@ -91,7 +91,7 @@ def get_user_preferences(user: str | None = None) -> dict[str, Any]:
     return ok(SettingsService.get_user_preferences(user))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def save_settings(
     doctype: str,
     values: Any,
@@ -129,7 +129,7 @@ def reload_settings(doctype: str | None = None) -> dict[str, Any]:
     return ok(SettingsService.reload_settings(doctype))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def clear_cache() -> dict[str, Any]:
     """Clear all ZatGo Core caches."""
     log_api("clear_cache", user=frappe.session.user)

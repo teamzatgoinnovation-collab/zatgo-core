@@ -49,7 +49,7 @@ def pdf(name: str, print_format: str | None = None) -> dict[str, Any]:
     return get_document_pdf("Payment Entry", name, print_format=print_format)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_receive(
     sales_invoice: str,
     amount: float | str | None = None,
@@ -74,7 +74,7 @@ def create_receive(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_pay(
     purchase_invoice: str,
     amount: float | str | None = None,
@@ -99,7 +99,7 @@ def create_pay(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_receive_advance(
     party: str,
     amount: float | str,
@@ -128,7 +128,7 @@ def create_receive_advance(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_pay_advance(
     party: str,
     amount: float | str,
@@ -157,7 +157,7 @@ def create_pay_advance(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     mode_of_payment: str | None = None,
@@ -179,16 +179,16 @@ def update(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete(name: str) -> dict[str, Any]:
     return delete_payment_entry(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit(name: str) -> dict[str, Any]:
     return submit_payment_entry(name)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def cancel(name: str) -> dict[str, Any]:
     return cancel_payment_entry(name)

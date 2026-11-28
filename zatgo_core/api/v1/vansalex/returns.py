@@ -16,7 +16,7 @@ from zatgo_core.services.vansalex_service import create_sales_return, get_return
 from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     client_id: str,
     return_against: str,

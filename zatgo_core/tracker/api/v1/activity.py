@@ -45,7 +45,7 @@ def activity_types():
 	return ok({"items": out, "default": default})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def start(task: str | None = None, project: str | None = None, activity_type: str | None = None):
 	if not task and not project:
 		return fail("bad_request", "task or project required")
@@ -61,7 +61,7 @@ def pause(name: str | None = None):
 	return ok(activity_service.pause_session(name))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def stop(name: str | None = None):
 	return ok(activity_service.stop_session(name, flush=True))
 

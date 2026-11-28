@@ -20,7 +20,7 @@ from zatgo_core.services.vansalex_service import (
 from zatgo_core.services.van_sale_access import is_vansale_admin
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     client_id: str,
     customer: str,
@@ -97,7 +97,7 @@ def preview_totals(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_order_draft(
     client_id: str,
     customer: str,
@@ -122,7 +122,7 @@ def create_order_draft(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def confirm(
     client_id: str,
     sales_order: str,

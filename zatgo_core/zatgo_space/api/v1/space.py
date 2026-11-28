@@ -501,7 +501,7 @@ def get_order(name: str | None = None, job_id: str | None = None):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_order_status(
 	name: str,
 	status: str,
@@ -547,7 +547,7 @@ def update_order_status(
 	return ok({"name": doc.name, "status": doc.status})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_order_usage(
 	name: str,
 	ram_used_mb: int | float | None = None,

@@ -61,7 +61,7 @@ def get_presets():
 	return ok({"last": data.get("last"), "presets": data.get("presets") or []})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_last(scope: str = "mine", project: str | None = None, status: str | None = None):
 	filt = _normalize_filter(scope=scope, project=project, status=status)
 	if not filt:
@@ -72,7 +72,7 @@ def set_last(scope: str = "mine", project: str | None = None, status: str | None
 	return ok({"last": filt, "presets": data["presets"]})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def save_preset(
 	name: str,
 	scope: str = "mine",
@@ -95,7 +95,7 @@ def save_preset(
 	return ok({"last": filt, "presets": presets})
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def delete_preset(id: str | None = None, name: str | None = None):
 	if not id and not name:
 		return fail("bad_request", "id or name required")

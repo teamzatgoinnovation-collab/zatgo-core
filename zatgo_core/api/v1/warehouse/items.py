@@ -32,7 +32,7 @@ def defaults() -> dict[str, Any]:
     return get_item_defaults()
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     item_code: str | None = None,
     item_name: str | None = None,
@@ -70,7 +70,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def sync(
     client_id: str,
     item: str | dict | None = None,
@@ -90,6 +90,6 @@ def sync(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(name: str, values: str | dict | None = None) -> dict[str, Any]:
     return update_item(name, values)

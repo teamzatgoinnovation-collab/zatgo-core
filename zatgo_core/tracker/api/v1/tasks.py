@@ -131,7 +131,7 @@ def get_task(name: str):
 	return ok(data)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create_task(
 	subject: str,
 	project: str | None = None,
@@ -169,7 +169,7 @@ def create_task(
 	return ok(enrich_task_row(frappe.get_doc("Task", doc.name).as_dict()))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update_status(name: str, status: str):
 	"""Deprecated raw status write — route through lifecycle methods."""
 	if not name or not status:
@@ -191,7 +191,7 @@ def update_status(name: str, status: str):
 	)
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def set_progress(name: str):
 	"""Open/Assigned → Working."""
 	if not name:
@@ -199,14 +199,14 @@ def set_progress(name: str):
 	return ok(set_in_progress(name))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def submit_for_review(name: str, note: str | None = None):
 	if not name:
 		return fail("bad_request", "name required")
 	return ok(review_submit_for_review(name, note=note))
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def approve(name: str, note: str | None = None):
 	if not name:
 		return fail("bad_request", "name required")

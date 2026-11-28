@@ -168,7 +168,7 @@ def get(name: str) -> dict[str, Any]:
     return doc_res
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def create(
     client_id: str,
     customer: str,
@@ -196,7 +196,7 @@ def create(
     )
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     name: str,
     planned_at: str | None = None,

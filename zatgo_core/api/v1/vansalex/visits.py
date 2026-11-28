@@ -11,7 +11,7 @@ from zatgo_core.api.validators import require_login
 from zatgo_core.services.vansalex_service import update_visit
 
 
-@frappe.whitelist()
+@frappe.whitelist(methods=["POST"])
 def update(
     client_id: str,
     stop_id: str,
