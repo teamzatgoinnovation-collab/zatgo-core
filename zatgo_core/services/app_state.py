@@ -69,7 +69,7 @@ def switches() -> dict[str, bool]:
         for a in defaults:
             raw = stored.get(a["switch_field"])
             state[a["key"]] = True if raw is None else bool(cint(raw))  # nothing stored: the default
-    return {key: on and _licensed(key) for key, on in state.items()}
+    return {key: on and _licensed(key) and _module_allows(key) for key, on in state.items()}
 
 
 def _licensed(key: str) -> bool:
@@ -84,7 +84,15 @@ def is_on(key: str) -> bool:
     """One app. Unknown keys are off; an app without a switch is on."""
     if app_catalog.get(key) is None:
         return False
-    return _licensed(key) and switch_on(key)
+    return _licensed(key) and _module_allows(key) and switch_on(key)
+
+
+def _module_allows(key: str) -> bool:
+    """An app counts as off when every module that covers it is switched off in Module Settings (always True while
+    every module is on, which is the default)."""
+    from zatgo_core.services.module_settings import app_allowed
+
+    return app_allowed(key)
 
 
 def switch_on(key: str) -> bool:

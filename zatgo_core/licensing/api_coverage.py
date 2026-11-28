@@ -18,6 +18,7 @@ API_ROOT = "zatgo_core.api.v1."
 NOT_LICENSED: dict[str, str] = {
     # platform: must work on every site whatever its licence
     "zatgo_core.api.v1.health.": "platform health check (no data)",
+    "zatgo_core.api.v1.modules.": "module state for clients (read-only, no business data)",
     "zatgo_core.api.v1.accounting.health.": "platform health check (no data)",
     "zatgo_core.api.v1.admin.health.": "platform health check (no data)",
     "zatgo_core.api.v1.crm.health.": "platform health check (no data)",

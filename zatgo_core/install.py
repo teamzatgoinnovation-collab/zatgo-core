@@ -55,6 +55,12 @@ def _run_steps(hook: str, steps) -> list[str]:
     return failed
 
 
+def _sync_module_settings() -> None:
+    from zatgo_core.services.module_settings import sync_rows
+
+    sync_rows()
+
+
 def _seed_duplicate_rules() -> None:
     from zatgo_core.services.duplicate.defaults import seed_defaults
 
@@ -81,6 +87,8 @@ _SHARED_STEPS = (
     ("ZatGo Desk entry", ensure_core_desk),
     # Edition / licensing vocabulary (licensing/registry.py) -> read-only Module / Feature rows.
     ("licensing registry sync", sync_registry),
+    # After the registry sync: one Module Settings row per registry module (added enabled, admin choices kept).
+    ("module settings", _sync_module_settings),
     # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
     ("preset edition seed", seed_presets),
 )

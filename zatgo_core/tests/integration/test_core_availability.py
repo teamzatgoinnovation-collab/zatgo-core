@@ -64,4 +64,4 @@ class TestAvailability(IntegrationTestCase):
         for key in registry.INDUSTRIES:
             self.assertIn(key, summary)
         self.assertEqual(set(summary["vansalex"]), {"key", "kind", "known", "installed", "enabled", "licensed",
-                                                     "missing_requirements", "available", "reason"})
+                                                     "module_enabled", "missing_requirements", "available", "reason"})

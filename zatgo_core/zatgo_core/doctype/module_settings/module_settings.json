@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "istable": 0,
+ "module": "ZatGo Core",
+ "name": "Module Settings",
+ "owner": "Administrator",
+ "modified": "2026-11-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "track_changes": 1,
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "description": "Which ZatGo modules this site uses. Switching one off hides it and refuses its ZatGo functions; it never deletes data, and ERPNext's own screens keep working as ERPNext permissions allow.",
+ "fields": [
+  {
+   "fieldname": "modules_tab",
+   "fieldtype": "Tab Break",
+   "label": "Modules"
+  },
+  {
+   "fieldname": "intro",
+   "fieldtype": "HTML",
+   "options": "<p class=\"text-muted\">Untick a module to switch it off for this site. A module that another enabled module needs cannot be switched off, and one whose requirements are off cannot be switched on. Nothing is deleted: switching a module back on brings everything back.</p>"
+  },
+  {
+   "fieldname": "modules",
+   "fieldtype": "Table",
+   "label": "Modules",
+   "options": "Module Setting"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "print": 1,
+   "email": 1,
+   "share": 1
+  },
+  {
+   "role": "ZatGo Application Admin",
+   "read": 1
+  }
+ ],
+ "field_order": [
+  "modules_tab",
+  "intro",
+  "modules"
+ ]
+}

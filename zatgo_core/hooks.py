@@ -274,6 +274,7 @@ has_permission = {
         "zatgo_core.services.subscription_gate.doc_has_permission",
         # True unless the site's licence does not include this write (licensing/gate.py; inert until licensed).
         "zatgo_core.licensing.gate.doc_has_permission",
+        "zatgo_core.services.module_settings.doc_has_permission",
         "zatgo_core.services.bundled_apps.module_doc_has_permission",
         # Industries' own DocTypes: nobody's where the industry is off.
         "zatgo_core.industries.gate.industry_doc_has_permission",

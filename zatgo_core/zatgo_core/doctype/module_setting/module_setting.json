@@ -1,0 +1,130 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-11-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "istable": 1,
+ "editable_grid": 1,
+ "module": "ZatGo Core",
+ "name": "Module Setting",
+ "owner": "Administrator",
+ "modified": "2026-11-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "ASC",
+ "states": [],
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "module",
+   "fieldtype": "Link",
+   "label": "Module",
+   "options": "Module",
+   "reqd": 1,
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "module_label",
+   "fieldtype": "Data",
+   "label": "Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "depends_on",
+   "fieldtype": "Small Text",
+   "label": "Depends On",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 3,
+   "description": "Modules this one needs (from the ZatGo registry)."
+  },
+  {
+   "fieldname": "installed",
+   "fieldtype": "Check",
+   "label": "Installed",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Its app is installed on this site. A module whose app is missing cannot be switched on."
+  },
+  {
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "Display Order",
+   "columns": 1
+  },
+  {
+   "fieldname": "section_nav",
+   "fieldtype": "Section Break",
+   "label": "Navigation"
+  },
+  {
+   "fieldname": "icon",
+   "fieldtype": "Data",
+   "label": "Icon"
+  },
+  {
+   "fieldname": "workspace",
+   "fieldtype": "Link",
+   "label": "Workspace",
+   "options": "Workspace"
+  },
+  {
+   "fieldname": "column_break_cfg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "settings_doctype",
+   "fieldtype": "Link",
+   "label": "Configuration",
+   "options": "DocType",
+   "description": "The settings DocType where this module is configured."
+  },
+  {
+   "fieldname": "section_info",
+   "fieldtype": "Section Break",
+   "label": "About"
+  },
+  {
+   "fieldname": "source_app",
+   "fieldtype": "Data",
+   "label": "App",
+   "read_only": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "enabled",
+  "module",
+  "module_label",
+  "depends_on",
+  "installed",
+  "display_order",
+  "section_nav",
+  "icon",
+  "workspace",
+  "column_break_cfg",
+  "settings_doctype",
+  "section_info",
+  "source_app",
+  "description"
+ ]
+}

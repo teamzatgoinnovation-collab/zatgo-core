@@ -30,6 +30,7 @@
   - Today's `enable_*` app switches map onto rows through a migration patch that reads the existing values, so nothing changes for a site. `app_state` reads the new rows, with a fallback to the old fields during one release.
   - Disabling hides and gates; it never deletes.
 - **Decision.** Option A, chosen by the product owner. Name per ADR-005: `Module Settings`, or `ZatGo Module Settings` if Frappe, ERPNext or an installed app already has the plain name (check at implementation). Rows link to the existing `Module` DocType, the registry projection formerly called `ZG Module`.
+- **As built (Phase 5, 2026-11-28).** App switches and licensing modules do not map one to one: `zatgo_apps` covers seven apps, `vansalex` two. So the per-app `enable_*` switches stay as the finer layer under the modules, and **nothing is migrated**. Every module row is created enabled, so a site behaves exactly as before. A module switched off makes every app and industry *only* it covers count as off (`app_state`, `industries.gate`). It also answers 404 for its ZatGo API prefixes and refuses writes to ZatGo DocTypes only it covers. ERPNext DocTypes are never gated. Code: `services/module_settings.py`; DocTypes `Module Settings` / `Module Setting`.
 - **Option B (rejected).** Keep the switches as they are and add a module settings DocType only for ERPNext-area modules (Sales, Stock, …). This is simpler but leaves two enablement screens.
 - **Option C.** A new registry independent of licensing. Rejected: a fourth system.
 

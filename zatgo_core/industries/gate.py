@@ -39,7 +39,10 @@ def switched_on_keys() -> set[str]:
 
 def enabled_keys() -> set[str]:
     """Industries switched on for this site: ticked, implemented and licensed."""
-    return {key for key in switched_on_keys() if registry.INDUSTRIES[key].implemented and _licensed(key)}
+    from zatgo_core.services.module_settings import industry_allowed
+
+    return {key for key in switched_on_keys()
+            if registry.INDUSTRIES[key].implemented and _licensed(key) and industry_allowed(key)}
 
 
 def _licensed(key: str) -> bool:

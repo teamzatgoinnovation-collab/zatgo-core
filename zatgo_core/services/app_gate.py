@@ -42,6 +42,9 @@ def gate_api() -> None:
     method = requested_method()
     if not method:
         return
+    from zatgo_core.services import module_settings
+
+    module_settings.gate_api(method)  # a method of a switched-off module (Module Settings)
     for key, prefixes in app_catalog.api_prefixes().items():
         if method.startswith(prefixes) and not app_state.is_on(key):
             raise frappe.DoesNotExistError(f"{method} is not available on this site")
