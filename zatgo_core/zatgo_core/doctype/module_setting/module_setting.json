@@ -9,7 +9,7 @@
  "module": "ZatGo Core",
  "name": "Module Setting",
  "owner": "Administrator",
- "modified": "2026-11-28 00:00:00.000000",
+ "modified": "2026-11-28 06:00:00.000000",
  "modified_by": "Administrator",
  "permissions": [],
  "sort_field": "modified",
@@ -59,6 +59,15 @@
    "in_list_view": 1,
    "columns": 1,
    "description": "Its app is installed on this site. A module whose app is missing cannot be switched on."
+  },
+  {
+   "fieldname": "show_in_navigation",
+   "fieldtype": "Check",
+   "label": "Show in Navigation",
+   "default": "1",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Show this module's workspace on the Apps screen. Untick to hide it without switching the module off (its documents and API keep working)."
   },
   {
    "fieldname": "display_order",
@@ -117,6 +126,7 @@
   "module_label",
   "depends_on",
   "installed",
+  "show_in_navigation",
   "display_order",
   "section_nav",
   "icon",

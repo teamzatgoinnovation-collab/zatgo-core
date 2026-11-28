@@ -55,6 +55,18 @@ def _run_steps(hook: str, steps) -> list[str]:
     return failed
 
 
+def _ensure_module_workspaces() -> None:
+    from zatgo_core.services.module_workspaces import ensure
+
+    ensure()
+
+
+def _apply_module_navigation() -> None:
+    from zatgo_core.services.module_workspaces import sync_visibility
+
+    sync_visibility()
+
+
 def _sync_module_settings() -> None:
     from zatgo_core.services.module_settings import sync_rows
 
@@ -87,8 +99,11 @@ _SHARED_STEPS = (
     ("ZatGo Desk entry", ensure_core_desk),
     # Edition / licensing vocabulary (licensing/registry.py) -> read-only Module / Feature rows.
     ("licensing registry sync", sync_registry),
-    # After the registry sync: one Module Settings row per registry module (added enabled, admin choices kept).
+    # After the registry sync: one workspace per module (created once), then one Module Settings row per registry module
+    # (added enabled, admin choices kept), then each module workspace shown or hidden from those rows.
+    ("module workspaces", _ensure_module_workspaces),
     ("module settings", _sync_module_settings),
+    ("module navigation", _apply_module_navigation),
     # Licence issuer site only (site_config zg_licence_issuer): create missing preset editions.
     ("preset edition seed", seed_presets),
 )

@@ -14,4 +14,4 @@ class ModuleSettings(AuditableMixin, Document):
 
     def on_update(self) -> None:
         super().on_update()
-        module_settings.after_change()
+        module_settings.apply_navigation()

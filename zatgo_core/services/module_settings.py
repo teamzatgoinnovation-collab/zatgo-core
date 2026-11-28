@@ -97,6 +97,15 @@ def is_enabled(module_id: str) -> bool:
     return module_id not in disabled_modules()
 
 
+def shows_in_navigation(module_id: str) -> bool:
+    """Its row's "Show in navigation" (no row: shown). Navigation only: an enabled module whose workspace is hidden
+    still works through its documents and API."""
+    cache = _cache()
+    if "hidden_nav" not in cache:
+        cache["hidden_nav"] = frozenset(r.module for r in _rows() if not int(r.get("show_in_navigation") if r.get("show_in_navigation") is not None else 1))
+    return module_id not in cache["hidden_nav"]
+
+
 def is_installed(module_id: str) -> bool:
     module = _registry().get_module(module_id)
     return bool(module) and (module.source_app in frappe.get_installed_apps())
@@ -105,6 +114,15 @@ def is_installed(module_id: str) -> bool:
 def after_change() -> None:
     """After a save: forget the request cache so every gate sees the new state at once."""
     setattr(frappe.local, _LOCAL, None)
+
+
+def apply_navigation() -> None:
+    """After a Module Settings save: show / hide the module workspaces, their sidebars and icons."""
+    from zatgo_core.services import module_workspaces
+
+    after_change()
+    module_workspaces.sync_visibility()
+    frappe.clear_cache()
 
 
 def _covering(attribute: str, value: str) -> set[str]:
@@ -193,6 +211,11 @@ def _labels(module_ids: set[str]) -> str:
 
 
 def _default_workspace(module_id: str) -> str | None:
+    from zatgo_core.services import module_workspaces
+
+    own = module_workspaces.name_for_module(module_id)
+    if own and frappe.db.exists("Workspace", own):
+        return own
     for feature in _live_features(module_id):
         for name in feature.workspaces:
             if frappe.db.exists("Workspace", name):
@@ -213,7 +236,7 @@ def sync_rows() -> bool:
     for module in sorted(_registry().modules(), key=lambda m: (m.order, m.id)):
         row = by_module.get(module.id)
         if row is None:
-            row = doc.append("modules", {"module": module.id, "enabled": 1, "display_order": module.order,
+            row = doc.append("modules", {"module": module.id, "enabled": 1, "show_in_navigation": 1, "display_order": module.order,
                                           "icon": module.icon, "workspace": _default_workspace(module.id)})
             changed = True
         wanted = {
@@ -225,6 +248,8 @@ def sync_rows() -> bool:
         }
         if module.id in ALWAYS_ON and not row.enabled:
             wanted["enabled"] = 1
+        if not row.workspace and _default_workspace(module.id):
+            wanted["workspace"] = _default_workspace(module.id)
         for key, value in wanted.items():
             current = row.get(key)
             same = int(current or 0) == int(value) if key in ("installed", "enabled") else (current or "") == (value or "")
@@ -296,5 +321,6 @@ def status() -> list[dict[str, Any]]:
             "display_order": (row.display_order if row else None) or module.order,
             "icon": (row.icon if row else None) or module.icon,
             "workspace": row.workspace if row else None,
+            "show_in_navigation": shows_in_navigation(module.id),
         })
     return out

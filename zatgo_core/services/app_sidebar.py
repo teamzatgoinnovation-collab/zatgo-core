@@ -189,8 +189,13 @@ def sync_app_sidebars() -> bool:
     return changed
 
 
+def sync_module_sidebar(app: dict, visible: bool) -> bool:
+    """A module workspace's sidebar (services/module_workspaces.py): built like an app's, empty while hidden."""
+    return _sync_one(app, visible)
+
+
 def sync_for_workspace(name: str) -> bool:
-    """Re-sync the one sidebar built from the Workspace [name] (a catalog app's, or ZatGo ERP's). True if it changed.
+    """Re-sync the one sidebar built from the Workspace [name] (a catalog app's, a module's, or ZatGo ERP's). True if it changed.
 
     Called when a Workspace is saved (events: hooks.py doc_events), so a DocType / Page / Report added in the Desk editor
     is in the sidebar straight away."""
@@ -198,6 +203,11 @@ def sync_for_workspace(name: str) -> bool:
 
     if name == erp_workspace.NAME:
         return _sync_one(erp_workspace.app_dict(), True)
+    from zatgo_core.services import module_workspaces
+
+    spec = module_workspaces.get(name)
+    if spec is not None and spec.name == name:
+        return _sync_one(module_workspaces.app_dict(spec), module_workspaces._visible(spec))
     for app in app_page.apps():
         if name in app["workspaces"]:
             return _sync_one(app, app_page.is_enabled(app))
