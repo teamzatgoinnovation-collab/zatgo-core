@@ -6,7 +6,7 @@
 |---|---|---|
 | 001 | ERPNext is the system of record; zatgo_core never writes GL or stock ledger rows and posts through ERPNext controllers | Accepted (`.claude/rules/accounting.md`) |
 | 002 | Evolve the existing structure; no `modules/<area>/` tree; a `services/core/` foundation only where duplication is proven | Proposed |
-| 003 | Module availability: one resolver over installed apps, enabled modules, licence and user; a module settings Single holds enablement | **Open** |
+| 003 | Module availability: one resolver over installed apps, enabled modules, licence and user; `Module Settings` (one row per licensing module) holds enablement | **Accepted 2026-11-28** (product owner, Option A) |
 | 004 | Workspaces: native Workspace + Workspace Sidebar records shipped as files and generated sidebars; per-customer navigation from modules and roles, never manual edits | Proposed (extends today's practice) |
 | 005 | DocType naming: **no `ZG` prefix** (the `rename-zatgo` convention); `ZatGo <Name>` only where the plain name exists in Frappe/ERPNext | **Accepted 2026-11-28** (product owner) |
 | 006 | Settings: ERPNext settings first; one ZatGo Single per area with Tab Breaks; no JSON blob; settings never rewrite existing documents | Proposed |
@@ -21,7 +21,7 @@
 - **Consequences.** No DocType `module` changes or import churn; client paths stay. The layout is less "textbook" than the brief.
 - **Rejected.** A full move to `modules/`: it touches every DocType JSON, every import and client path, for no runtime benefit.
 
-## ADR-003: module availability (Open)
+## ADR-003: module availability (Accepted 2026-11-28: Option A)
 - **Context.** There are already three "is it on" systems: app switches, industries and licensing modules. Phase 5 asks for a module settings DocType with code, enabled, depends-on, order, icon, workspace and configuration.
 - **Option A (recommended).** `Module Settings` (or `ZatGo Module Settings` if the plain name is taken) is a Single with one row per **licensing module id** (19 today, from the registry).
   - It stores `enabled`, `display_order`, `icon` and `workspace`.
@@ -29,7 +29,8 @@
   - The controller refuses to disable a module others depend on, and refuses to enable one whose dependencies are off.
   - Today's `enable_*` app switches map onto rows through a migration patch that reads the existing values, so nothing changes for a site. `app_state` reads the new rows, with a fallback to the old fields during one release.
   - Disabling hides and gates; it never deletes.
-- **Option B.** Keep the switches as they are and add a module settings DocType only for ERPNext-area modules (Sales, Stock, …). This is simpler but leaves two enablement screens.
+- **Decision.** Option A, chosen by the product owner. Name per ADR-005: `Module Settings`, or `ZatGo Module Settings` if Frappe, ERPNext or an installed app already has the plain name (check at implementation). Rows link to the existing `Module` DocType, the registry projection formerly called `ZG Module`.
+- **Option B (rejected).** Keep the switches as they are and add a module settings DocType only for ERPNext-area modules (Sales, Stock, …). This is simpler but leaves two enablement screens.
 - **Option C.** A new registry independent of licensing. Rejected: a fourth system.
 
 ## ADR-005: naming (Accepted 2026-11-28: no `ZG` prefix)

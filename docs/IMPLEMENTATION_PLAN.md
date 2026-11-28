@@ -7,8 +7,8 @@
 |---|---|---|
 | G-1 | Each session commits or drops its uncommitted work (T-04) | 40 files overlap DocTypes, patches and workspaces we will touch |
 | G-2 | ~~Decide the DocType naming direction~~ **Done 2026-11-28: no `ZG` prefix (ADR-005).** Still to do: make the rename line (`licensing-phase10-on-rename`) the base for all work, move the uncommitted work and these documents onto it, and rehearse `v0_6_0` on copies of the four client databases | Phase 4 and every later phase depend on it |
-| G-3 | Decide module availability (ADR-003: extend switches + licensing, or a new store) | Phases 5–8 depend on it |
-| G-4 | Approve pushing `main` (6 licensing commits are local only) | A clean base for branches and CI |
+| G-3 | ~~Decide module availability~~ **Done 2026-11-28: Option A (ADR-003)**, `Module Settings` with one row per licensing module; `enable_*` switches migrated by patch | Phases 5–8 depend on it |
+| G-4 | ~~Approve pushing `main`~~ **Done 2026-11-28**: `main` is the no-`ZG` rename line, pushed (`b9e3fde`); the old line is `main-zg-legacy` | A clean base for branches and CI |
 | G-5 | Review role holders on kasibasia and democompanysa (T-12) | Live rights changed on 11-06 |
 
 ## Priority 1: fixes worth doing before the redesign
