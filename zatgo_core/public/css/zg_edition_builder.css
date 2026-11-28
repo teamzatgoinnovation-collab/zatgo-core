@@ -67,8 +67,8 @@
 	min-height: 28px;
 }
 .zg-eb__chip[aria-pressed="true"] {
-	background: var(--primary, #2490ef);
-	border-color: var(--primary, #2490ef);
+	background: var(--primary, #2952E3);
+	border-color: var(--primary, #2952E3);
 	color: var(--neutral, #fff);
 }
 .zg-eb__items {
@@ -91,8 +91,8 @@
 	padding: var(--padding-sm, 8px) var(--padding-md, 12px);
 }
 .zg-eb__item[aria-current="true"] {
-	border-color: var(--primary, #2490ef);
-	box-shadow: 0 0 0 1px var(--primary, #2490ef);
+	border-color: var(--primary, #2952E3);
+	box-shadow: 0 0 0 1px var(--primary, #2952E3);
 }
 .zg-eb__item-name {
 	font-weight: 600;

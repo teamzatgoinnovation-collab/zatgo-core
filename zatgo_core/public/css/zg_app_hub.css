@@ -173,7 +173,7 @@
 	opacity: 0.6;
 }
 .zg-switch:focus-visible {
-	outline: 2px solid var(--primary, #2490ef);
+	outline: 2px solid var(--primary, #2952E3);
 	outline-offset: 2px;
 	border-radius: var(--border-radius, 6px);
 }
