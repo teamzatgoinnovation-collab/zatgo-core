@@ -35,7 +35,7 @@ ERPNext stays the accounting and stock engine: zatgo_core posts through ERPNext'
 ## Where things stand
 - **Production** (Hetzner `2.29.17.8`): `1a0e621` deployed 2026-11-06 to accounting, democompanysa, kasibasia and testerp. Later deploys by other sessions are recorded in the workspace notes (11-16 print/mobile cards on all sites). **The exact commit now on each site was not checked for this document.**
 - **`main`** is 6 commits ahead of `origin/main` (licensing phases 5 to 10, local only).
-- **Branch `rename-zatgo`** (pushed) drops the `ZG` prefix from DocTypes. It runs live on `signxdemo`. It is 4 commits ahead of and 1 behind `main`. This conflicts with a `ZG` naming standard; see `COMPATIBILITY_AUDIT.md`.
+- **Branch `rename-zatgo`** (pushed) drops the `ZG` prefix from DocTypes, with migration patch `v0_6_0`. It runs live on `signxdemo`. **This is the chosen naming (ADR-005, 2026-11-28).** `licensing-phase10-on-rename` carries the same licensing work as `main`, so the rename line is the current code. Names in these documents are `main`'s (`ZG …`); each maps to its new name by dropping `ZG` (or `ZatGo <Name>` where ERPNext has the name, see ADR-005).
 - **40 files are modified and 4 paths untracked** in the working tree. That is other sessions' unfinished work (Duplicate Prevention `v0_5_1`, Chat AI tool hints, VanSaleX settings, POS and delivery, theme tokens). None of it is part of this phase.
 
 ## Documents

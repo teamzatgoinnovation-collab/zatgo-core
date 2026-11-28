@@ -33,7 +33,7 @@ Known layering exceptions: business logic inside `api/v1/delivery/stops.py` and 
 | Industries | 5 verticals | ZG System Settings → Enabled Industries | industry API 404 and `"*"` permission hooks |
 | Licensing registry | 19 modules, 115 features, 148 DocTypes, `requires` between features | code (`licensing/catalog`), projected to ZG Module / ZG Feature; signed licence | document actions (create/write/submit/...) when enforcement is on |
 
-A ZatGo **module** today means a licensing module. A ZatGo **app** means a catalog entry with a switch. Phase 5 asks for "ZG Module Settings"; `MODULE_DEPENDENCIES.md` proposes building it on these instead of adding a fourth system.
+A ZatGo **module** today means a licensing module. A ZatGo **app** means a catalog entry with a switch. Phase 5 asks for a module settings DocType; `MODULE_DEPENDENCIES.md` proposes building it on these instead of adding a fourth system.
 
 ## Licensing modules and their cross-module requirements
 | Module | Requires features from |

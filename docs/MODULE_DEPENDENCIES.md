@@ -47,4 +47,4 @@ flowchart LR
 | Not installed (`hrms`, a vertical app) | module shown as unavailable | pretend it can be enabled |
 | Not licensed (when enforcement is on) | read-only per D6 | disable existing users |
 
-**Installed** (Frappe app), **enabled** (ZG Module Settings), **licensed** (signed licence), **authorized** (roles and User Permissions) and **visible** (workspace) are five separate states. `core.availability.explain()` reports each one.
+**Installed** (Frappe app), **enabled** (Module Settings), **licensed** (signed licence), **authorized** (roles and User Permissions) and **visible** (workspace) are five separate states. `core.availability.explain()` reports each one.

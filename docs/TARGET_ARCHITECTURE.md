@@ -56,7 +56,7 @@ flowchart TB
 ## 4. Availability (one resolver, four layers)
 ```mermaid
 flowchart LR
-  I[Installed apps<br/>frappe.get_installed_apps] --> E[Enabled modules<br/>ZG Module Settings]
+  I[Installed apps<br/>frappe.get_installed_apps] --> E[Enabled modules<br/>Module Settings]
   E --> L[Licensed features<br/>signed licence, if enforced]
   L --> U[User-authorized<br/>roles + User Permissions]
   U --> V[Visible<br/>workspace / sidebar]
