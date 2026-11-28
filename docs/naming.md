@@ -8,9 +8,9 @@ every client and hook. Users should not meet "zatgo_core" in Desk — see *Brand
 |---|---|---|
 | User-facing product / app title | `ZatGo` | Desk app title, page titles, messages |
 | Backend package | `zatgo_core` (never renamed) | `bench --site X install-app zatgo_core` |
-| **New DocTypes** | `ZG <Name>` — prefix, never suffix | `ZatGo System Settings`, `Metal Rate` |
+| **New DocTypes** | plain `<Name>`; `ZatGo <Name>` only when Frappe, ERPNext or another installed app already has the plain name | `Metal Rate`, `ZatGo System Settings` |
 | Custom fields on ERPNext DocTypes | `zg_<name>` | `zg_vansalex_selectable` |
-| Roles ZatGo creates | `ZG <Role>` | `ZatGo Company Admin` |
+| Roles ZatGo creates | `ZatGo <Role>` | `ZatGo Company Admin` |
 | Desk workspace / rail icon of an app | `ZatGo <App>` | `ZatGo VanSaleX`, `ZatGo AI`, `ZatGo Tracker` |
 | Whitelisted API methods | `zatgo_core.api.v1.<product>.<module>.<fn>` | `zatgo_core.api.v1.vansalex.me.context` |
 | App switch (ZatGo System Settings Check field) | `enable_<app key>` | `enable_vansalex` |
@@ -19,9 +19,11 @@ every client and hook. Users should not meet "zatgo_core" in Desk — see *Brand
 
 ## DocTypes
 
-- **A new DocType is `ZG <Name>`.** `tests/unit/test_naming_standard.py` fails on any DocType the package ships
-  that does not start with `ZG ` — and on any name containing "ZatGo" (the retired convention was
-  `<Name> ZatGo`; none are left).
+- **A new DocType has a plain name** (decided 2026-11-28, ADR-005; patch `v0_6_0/rename_zg_to_zatgo` renamed the 59
+  `ZG <Name>` DocTypes and keeps their data). When Frappe, ERPNext or another app on the bench already has that name,
+  it is `ZatGo <Name>` instead. `tests/unit/test_naming_standard.py` fails on any shipped DocType that starts with
+  `ZG `, and on a `ZatGo <Name>` DocType that is not in its `ZATGO_PREFIXED` list. Generic names (`Order`, `Table`,
+  `Trip`, `Module`, `Feature`) can still collide with an app installed later: check the bench before adding one.
 - **Legacy names are kept.** 25 DocTypes predate the standard — the modules merged in on 2026-10-08 came with
   their own names, and `VanSaleX Settings` is older than the prefix:
   `VanSaleX Settings`, `VanSaleX Access`; `Chat AI Settings` and the 15 `AI …`; `Tracker Settings`,
