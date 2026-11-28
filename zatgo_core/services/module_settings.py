@@ -248,8 +248,12 @@ def sync_rows() -> bool:
         }
         if module.id in ALWAYS_ON and not row.enabled:
             wanted["enabled"] = 1
-        if not row.workspace and _default_workspace(module.id):
-            wanted["workspace"] = _default_workspace(module.id)
+        default = _default_workspace(module.id)
+        # Empty, or still the automatic choice from before the module had its own workspace (a registry
+        # feature workspace such as "Selling"): point it at the module workspace. A site admin's other choice stays.
+        automatic = {name for f in _live_features(module.id) for name in f.workspaces}
+        if default and (not row.workspace or (row.workspace in automatic and row.workspace != default)):
+            wanted["workspace"] = default
         for key, value in wanted.items():
             current = row.get(key)
             same = int(current or 0) == int(value) if key in ("installed", "enabled") else (current or "") == (value or "")
