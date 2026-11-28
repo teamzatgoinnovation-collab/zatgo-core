@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import frappe
-from frappe.utils import getdate, now_datetime, nowtime
+from frappe.utils import getdate, now_datetime
 
 from zatgo_core.constants.settings import DOCTYPES
+from zatgo_core.services.core import audit
 
 
 class AuditableMixin:
@@ -24,15 +24,8 @@ class AuditableMixin:
             pass
 
     def _write_audit_entries(self) -> None:
-        meta = self.meta
-        request = getattr(frappe.local, "request", None)
-        ip_address = getattr(request, "remote_addr", None) if request else None
-        user_agent = (
-            request.headers.get("User-Agent") if request and request.headers else None
-        )
         now = now_datetime()
-
-        for df in meta.fields:
+        for df in self.meta.fields:
             if df.fieldtype in (
                 "Section Break",
                 "Column Break",
@@ -53,49 +46,9 @@ class AuditableMixin:
             if df.fieldtype == "Password":
                 old_value = "***" if old_value else None
                 new_value = "***" if new_value else None
-            self._insert_audit_row(
-                fieldname=fieldname,
-                old_value=old_value,
-                new_value=new_value,
-                ip_address=ip_address,
-                browser=(user_agent or "")[:140],
-                when=now,
-            )
+            self._insert_audit_row(fieldname=fieldname, old_value=old_value, new_value=new_value, when=now)
 
-    def _insert_audit_row(
-        self,
-        *,
-        fieldname: str,
-        old_value: Any,
-        new_value: Any,
-        ip_address: str | None,
-        browser: str,
-        when,
-    ) -> None:
-        if not frappe.db.exists("DocType", DOCTYPES["AUDIT_LOG"]):
-            return
-        try:
-            frappe.get_doc(
-                {
-                    "doctype": DOCTYPES["AUDIT_LOG"],
-                    "doctype_name": self.doctype,
-                    "document_name": self.name,
-                    "fieldname": fieldname,
-                    "old_value": self._stringify(old_value),
-                    "new_value": self._stringify(new_value),
-                    "changed_by": frappe.session.user,
-                    "change_date": getdate(when),
-                    "change_time": nowtime(),
-                    "ip_address": ip_address,
-                    "browser": browser,
-                    "app_name": "zatgo_core",
-                }
-            ).insert(ignore_permissions=True)
-        except Exception:
-            frappe.logger("zatgo_core").exception("Failed to write audit log")
-
-    @staticmethod
-    def _stringify(value: Any) -> str | None:
-        if value is None:
-            return None
-        return str(value)
+    def _insert_audit_row(self, *, fieldname: str, old_value: Any, new_value: Any, when=None, **_ignored: Any) -> None:
+        """One row through services/core/audit.py, which adds the user, time, IP address and browser of the request.
+        `ip_address` / `browser` are still accepted from older callers and ignored."""
+        audit.record(self.doctype, self.name, fieldname, old_value, new_value, date=getdate(when) if when else None)

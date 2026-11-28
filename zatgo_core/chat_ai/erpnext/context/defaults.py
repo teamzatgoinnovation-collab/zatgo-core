@@ -143,8 +143,7 @@ def _resolve_fiscal_year(company: str | None) -> str | None:
 	if not company or not frappe.db.exists("DocType", "Fiscal Year"):
 		return None
 	try:
-		from erpnext.accounts.utils import get_fiscal_year
-
+		from zatgo_core.services.core.erpnext_api import get_fiscal_year
 		fy = get_fiscal_year(frappe.utils.today(), company=company)
 		if fy and fy[0]:
 			return fy[0]

@@ -117,8 +117,7 @@ def _apply_purchase_taxes(doc: Any, company: str) -> None:
     )
     if not template:
         return
-    from erpnext.controllers.accounts_controller import get_taxes_and_charges
-
+    from zatgo_core.services.core.erpnext_api import get_taxes_and_charges
     doc.taxes_and_charges = template
     doc.set("taxes", [])
     for tax in get_taxes_and_charges("Purchase Taxes and Charges Template", template):
@@ -326,8 +325,7 @@ def confirm_order(
     """Receive a submitted Purchase Order: its Purchase Invoice (stock in,
     Cash / Bank / Credit as for `create_invoice`). `client_id` keys the
     resulting invoice."""
-    from erpnext.buying.doctype.purchase_order.purchase_order import get_mapped_purchase_invoice
-
+    from zatgo_core.services.core.erpnext_api import get_mapped_purchase_invoice
     from zatgo_core.services.vansalex_settings import resolve_sale
 
     require_purchase_user()
@@ -556,8 +554,7 @@ def create_return(
     the returned quantities leave the stock they were received into, and the
     amount is taken off what is owed to the supplier. Capped at what is left
     to return. Any refund the supplier pays is not recorded here."""
-    from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
+    from zatgo_core.services.core.erpnext_api import make_return_doc
     require_purchase_user()
     cid = require_str(client_id, "client_id")
     failure = "Could not create and submit the Purchase Return. Check the stock, then retry."

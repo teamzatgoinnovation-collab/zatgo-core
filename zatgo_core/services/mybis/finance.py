@@ -116,8 +116,7 @@ def as_of(scope: Scope) -> date:
 
 
 def _fiscal_start(company: str, on: date) -> date:
-    from erpnext.accounts.utils import get_fiscal_year
-
+    from zatgo_core.services.core.erpnext_api import get_fiscal_year
     return getdate(get_fiscal_year(on, company=company)[1])
 
 

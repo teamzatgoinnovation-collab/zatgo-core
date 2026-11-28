@@ -882,8 +882,7 @@ def delete_quotation(name: str) -> dict[str, Any]:
 def create_sales_invoice_from_quotation(name: str) -> dict[str, Any]:
     """Convert a submitted (Ordered) Quotation into a Sales Invoice via
     ERPNext's own mapper — never re-derive item/tax mapping ourselves."""
-    from erpnext.selling.doctype.quotation.quotation import make_sales_invoice
-
+    from zatgo_core.services.core.erpnext_api import make_sales_invoice_from_quotation as make_sales_invoice
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
 
     require_login()
@@ -978,8 +977,7 @@ def create_sales_return(
     client_id: str | None = None,
 ) -> dict[str, Any]:
     """Partial/full Sales Return (credit note) against a submitted Sales Invoice."""
-    from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
+    from zatgo_core.services.core.erpnext_api import make_return_doc
     from zatgo_core.services.erpnext_reads import map_sales_invoice_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
 
@@ -1167,8 +1165,7 @@ def create_purchase_return(
     client_id: str | None = None,
 ) -> dict[str, Any]:
     """Partial/full Purchase Return (debit note) against a submitted Purchase Invoice."""
-    from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
+    from zatgo_core.services.core.erpnext_api import make_return_doc
     from zatgo_core.services.erpnext_reads import map_purchase_invoice_doc
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
 
@@ -1288,8 +1285,7 @@ def _create_invoice_payment(
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry
     pe = get_payment_entry(invoice_doctype, inv_name, party_amount=paid)
     pe.posting_date = getdate(posting_date) if posting_date else getdate(nowdate())
     if mode_of_payment:
@@ -1425,12 +1421,11 @@ def _create_advance_payment(
     company_name = _default_company(company)
     date = getdate(posting_date) if posting_date else getdate(nowdate())
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import (
-        get_bank_cash_account,
+    from zatgo_core.services.core.erpnext_api import (
         get_party_details,
         get_reference_details,
     )
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry_bank_cash_account as get_bank_cash_account
     party_details = get_party_details(company_name, party_type, party, date)
     party_account = party_details["party_account"]
     # get_bank_cash_account returns a dict ({account, account_currency, account_type[, balance]}),
@@ -1879,8 +1874,7 @@ def _create_split_entry(
     company_name = _default_company(company)
     date = getdate(posting_date) if posting_date else getdate(nowdate())
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_party_details
-
+    from zatgo_core.services.core.erpnext_api import get_party_details
     party_details = get_party_details(company_name, party_type, party, date)
     party_account = party_details["party_account"]
 

@@ -184,13 +184,11 @@ def import_config(payload: Any, overwrite: bool = False) -> dict[str, Any]:
 
 
 def _log_import(preview: Mapping[str, Any], file_hash: str) -> None:
-    frappe.get_doc({
-        "doctype": "Audit Log", "doctype_name": DOCTYPE, "document_name": preview["edition_id"],
-        "fieldname": "import", "old_value": None,
-        "new_value": json.dumps({"action": preview["action"], "file_hash": file_hash}),
-        "changed_by": frappe.session.user, "change_date": frappe.utils.today(), "change_time": frappe.utils.nowtime(),
-        "reason": _("Edition configuration imported"), "app_name": "zatgo_core",
-    }).insert(ignore_permissions=True)
+    from zatgo_core.services.core import audit
+
+    audit.record(DOCTYPE, preview["edition_id"], "import", None,
+                 json.dumps({"action": preview["action"], "file_hash": file_hash}),
+                 reason=_("Edition configuration imported"), strict=True)
 
 
 def import_history(limit: int = 50) -> list[dict[str, Any]]:

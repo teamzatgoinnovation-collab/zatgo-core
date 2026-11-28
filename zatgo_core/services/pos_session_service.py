@@ -295,8 +295,7 @@ def close_session(
     if opening_entry and entry.name != opening_entry:
         frappe.throw(f"Session {opening_entry} is not the open one ({entry.name}).")
 
-    from erpnext.accounts.doctype.pos_closing_entry.pos_closing_entry import make_closing_entry_from_opening
-
+    from zatgo_core.services.core.erpnext_api import make_closing_entry_from_opening
     closing = make_closing_entry_from_opening(entry)  # native: also picks up any is_pos invoices on this profile
     totals = _sales_since(user, comp, entry.period_start_date)
     native = {r.mode_of_payment: flt(r.get("expected_amount")) for r in closing.get("payment_reconciliation")}

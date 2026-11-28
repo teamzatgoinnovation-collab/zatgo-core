@@ -85,8 +85,7 @@ def _apply_sales_taxes(doc: Any, company: str) -> None:
         return
     doc.taxes_and_charges = template
     try:
-        from erpnext.controllers.accounts_controller import get_taxes_and_charges
-
+        from zatgo_core.services.core.erpnext_api import get_taxes_and_charges
         doc.set("taxes", [])
         for tax in get_taxes_and_charges("Sales Taxes and Charges Template", template):
             row = dict(tax)
@@ -669,8 +668,7 @@ def confirm_order(
     Uses ERPNext's own `make_sales_invoice()`, which already links
     `Sales Invoice Item.sales_order` back to the source order — no custom
     field needed for that traceability."""
-    from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice
-
+    from zatgo_core.services.core.erpnext_api import make_sales_invoice_from_sales_order as make_sales_invoice
     from zatgo_core.services.vansalex_settings import resolve_sale
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
@@ -856,8 +854,7 @@ def create_sales_return(
     reason: str | None = None,
 ) -> dict[str, Any]:
     """Partial/full Sales Return (credit-note Sales Invoice) against a submitted sale."""
-    from erpnext.controllers.sales_and_purchase_return import make_return_doc
-
+    from zatgo_core.services.core.erpnext_api import make_return_doc
     from zatgo_core.services.zatca_qr import generate_and_store_zatca_qr
 
     require_login()
@@ -1018,8 +1015,7 @@ def create_collection(
     if paid <= 0:
         frappe.throw("Payment amount must be greater than zero")
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry
     si_name = (sales_invoice or "").strip()
     if si_name:
         # Caller explicitly targeted one invoice — single-reference payment

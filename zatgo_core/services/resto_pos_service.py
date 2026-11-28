@@ -689,8 +689,7 @@ def pay(
     is_cod = doc.channel == "Delivery" and method_key == "cash"
     pe = None
     if not is_cod:
-        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+        from zatgo_core.services.core.erpnext_api import get_payment_entry
         pay_cid = f"{cid}:pay"
         existing_pe = find_by_client_id("Payment Entry", pay_cid)
         if existing_pe:

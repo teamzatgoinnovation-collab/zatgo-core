@@ -274,8 +274,7 @@ def create_sale(
     `payments=[{method, amount, reference?}]` (instead of `method`) pays one invoice with several modes of payment: the
     amounts must add up to the invoice total, one Payment Entry is posted per row (idempotent, `<client_id>:pay`,
     `:pay:2` ...), more than one row needs ZatGo POS Settings -> Allow Split Payment and a connection."""
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent, submit_or_rollback
     require_login()
     cid = require_str(client_id, "client_id")
@@ -527,8 +526,7 @@ def _net_owing(invoices: list[str]) -> dict[str, float]:
 def collect_payment(invoice: str, method: str, client_id: str, amount: Any = None, company: str | None = None) -> dict[str, Any]:
     """Take a (part) payment against a posted retail POS invoice that is still owing. Idempotent on `client_id`
     (the Payment Entry's `zatgo_client_id`), so a retried request returns the same payment."""
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry
     from zatgo_core.services.idempotency import find_by_client_id, insert_idempotent
     require_login()
     cid = require_str(client_id, "client_id")
@@ -610,8 +608,7 @@ def unpaid_invoices(customer: str | None = None, page: int | str = 1, page_size:
 def customer_balance(customer: str, company: str | None = None) -> dict[str, Any]:
     """What a customer owes (ERPNext's outstanding, open orders included) against their credit limit, so the till can show
     it before a credit sale. `creditLimit` 0 means no limit is set (ERPNext then lets the sale through)."""
-    from erpnext.selling.doctype.customer.customer import get_credit_limit, get_customer_outstanding
-
+    from zatgo_core.services.core.erpnext_api import get_credit_limit, get_customer_outstanding
     require_login()
     cust = require_str(customer, "customer")
     frappe.has_permission("Customer", "read", doc=cust, throw=True)
@@ -631,8 +628,7 @@ def customer_balance(customer: str, company: str | None = None) -> dict[str, Any
 
 def _set_paid_to(pe: Any, mop: str, company: str) -> None:
     """Debit the Mode of Payment's own account (card/wallet/bank), not the company's default cash."""
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_bank_cash_account
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry_bank_cash_account as get_bank_cash_account
     # Payment Entry's helper takes the document ((doc, bank_account)), like services/erpnext_writes.py passes it;
     # it returns {} when the mode has no account.
     acct = get_bank_cash_account(frappe._dict(company=company, mode_of_payment=mop), None) or {}

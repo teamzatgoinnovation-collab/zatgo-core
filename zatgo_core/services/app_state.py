@@ -82,10 +82,16 @@ def _licensed(key: str) -> bool:
 
 def is_on(key: str) -> bool:
     """One app. Unknown keys are off; an app without a switch is on."""
+    if app_catalog.get(key) is None:
+        return False
+    return _licensed(key) and switch_on(key)
+
+
+def switch_on(key: str) -> bool:
+    """Its switch alone, licence aside (services/core/availability.py reports the two separately). Unknown keys
+    are off; an app without a switch is on."""
     app = app_catalog.get(key)
     if app is None:
-        return False
-    if not _licensed(key):
         return False
     if app["switch_field"] and app["default_on"]:
         raw = _stored([app["switch_field"]]).get(app["switch_field"])

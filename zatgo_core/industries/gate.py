@@ -28,18 +28,18 @@ SETTINGS = "ZatGo System Settings"
 TABLE_FIELD = "enabled_industries"
 
 
-def enabled_keys() -> set[str]:
-    """Industries switched on for this site."""
+def switched_on_keys() -> set[str]:
+    """Industries whose row in ZatGo System Settings is ticked, implemented or not, licensed or not."""
     try:
         doc = frappe.get_cached_doc(SETTINGS)
     except Exception:
         return set()
-    return {
-        row.industry
-        for row in (doc.get(TABLE_FIELD) or [])
-        if row.enabled and row.industry in registry.INDUSTRIES and registry.INDUSTRIES[row.industry].implemented
-        and _licensed(row.industry)
-    }
+    return {row.industry for row in (doc.get(TABLE_FIELD) or []) if row.enabled and row.industry in registry.INDUSTRIES}
+
+
+def enabled_keys() -> set[str]:
+    """Industries switched on for this site: ticked, implemented and licensed."""
+    return {key for key in switched_on_keys() if registry.INDUSTRIES[key].implemented and _licensed(key)}
 
 
 def _licensed(key: str) -> bool:

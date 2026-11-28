@@ -59,7 +59,6 @@ def portal_parties(doctype: str, party_field: str) -> list[str] | None:
 	user = frappe.session.user
 	if frappe.get_cached_value("User", user, "user_type") != "Website User":
 		return None
-	from erpnext.controllers.website_list_for_contact import get_customers_suppliers
-
+	from zatgo_core.services.core.erpnext_api import get_customers_suppliers
 	customers, suppliers = get_customers_suppliers(doctype, user)
 	return list((customers if party_field == "customer" else suppliers) or [])

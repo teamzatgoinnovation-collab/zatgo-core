@@ -22,8 +22,7 @@ class ZatGoSalesInvoice:
     # (frm.call) whenever a payment row's Mode of Payment changes.
     @frappe.whitelist()
     def set_account_for_mode_of_payment(self):
-        from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_bank_cash_account
-
+        from zatgo_core.services.core.erpnext_api import get_sales_invoice_bank_cash_account as get_bank_cash_account
         for payment in self.payments:
             if not payment.mode_of_payment:
                 continue

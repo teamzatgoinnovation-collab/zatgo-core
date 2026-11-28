@@ -136,8 +136,7 @@ def create_cash_payment_entry(invoice: Document) -> None:
         )
     _validate_payment_account(account, invoice.company, field_label, account_type)
 
-    from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-
+    from zatgo_core.services.core.erpnext_api import get_payment_entry
     driver = frappe.session.user
     with _reader_for(invoice):
         payment_entry = get_payment_entry(invoice.doctype, invoice.name, bank_account=account)

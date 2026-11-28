@@ -1046,8 +1046,7 @@ def get_account_balance(account: str, date: str | None = None) -> dict[str, Any]
     frappe.has_permission("Account", "read", doc=account, throw=True)
     if not frappe.db.exists("Account", account):
         frappe.throw(f"Account {account} not found")
-    from erpnext.accounts.utils import get_balance_on
-
+    from zatgo_core.services.core.erpnext_api import get_balance_on
     balance = flt(get_balance_on(account, date=getdate(date) if date else None))
     doc = frappe.get_doc("Account", account)
     debit = balance if balance > 0 else 0.0
@@ -1084,8 +1083,7 @@ def get_party_balance(party_type: str, party: str, company: str | None = None) -
     company = _default_company(company)
     if not frappe.db.exists("Company", company):
         frappe.throw(f"Company {company} not found")
-    from erpnext.accounts.utils import get_balance_on
-
+    from zatgo_core.services.core.erpnext_api import get_balance_on
     balance = flt(get_balance_on(party_type=party_type, party=party, company=company))
     display_amount = balance if party_type == "Customer" else -balance
     currency = frappe.db.get_value("Company", company, "default_currency")
