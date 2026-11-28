@@ -42,12 +42,12 @@ class TestCoreAudit(IntegrationTestCase):
         self.assertEqual((row.old_value, row.new_value), ("5", None))
 
     def test_a_failed_write_is_logged_not_raised(self) -> None:
-        with patch.object(frappe, "get_doc", side_effect=frappe.ValidationError("boom")):
+        with patch("frappe.model.document.Document.insert", side_effect=frappe.ValidationError("boom")):
             audit.record("Theme Settings", self.name, "x", 1, 2)  # does not raise
         self.assertEqual(_rows(self.name), [])
 
     def test_strict_lets_the_failure_raise(self) -> None:
-        with patch.object(frappe, "get_doc", side_effect=frappe.ValidationError("boom")):
+        with patch("frappe.model.document.Document.insert", side_effect=frappe.ValidationError("boom")):
             with self.assertRaises(frappe.ValidationError):
                 audit.record("Theme Settings", self.name, "x", 1, 2, strict=True)
 
