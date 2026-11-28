@@ -32,6 +32,10 @@ def execute(filters=None):
     filters = frappe._dict(filters or {})
     if not (filters.company and filters.from_date and filters.to_date):
         return get_columns(filters), []
+    # The queries below are raw SQL, which skips User Permissions: check the company here (Phase 10).
+    frappe.has_permission("Company", "read", doc=filters.company, throw=True)
+    if filters.account:
+        frappe.has_permission("Account", "read", doc=filters.account, throw=True)
     if getdate(filters.from_date) > getdate(filters.to_date):
         frappe.throw(_("From Date cannot be after To Date."))
 
