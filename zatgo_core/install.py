@@ -130,7 +130,49 @@ def before_install() -> None:
             frappe.throw(
                 f"ZatGo Core supports {name} {SUPPORTED_MAJOR}.x only; this bench has {name} {version}."
             )
+    _refuse_doctype_name_collisions()
     _ensure_default_activity_type()
+
+
+def our_doctype_names() -> list[str]:
+    """Every DocType this app ships, read from its JSON files (no database needed)."""
+    import json
+    import os
+
+    root = frappe.get_app_path("zatgo_core")
+    names = []
+    for folder, _dirs, files in os.walk(root):
+        if os.path.basename(os.path.dirname(folder)) != "doctype":
+            continue
+        own = os.path.basename(folder) + ".json"
+        if own in files:
+            with open(os.path.join(folder, own)) as fh:
+                data = json.load(fh)
+            if data.get("doctype") == "DocType" and data.get("name"):
+                names.append(data["name"])
+    return sorted(names)
+
+
+def doctype_name_collisions() -> list[tuple[str, str]]:
+    """(DocType, app) for each of our DocType names that another installed app already owns."""
+    clashes = []
+    for name in our_doctype_names():
+        module = frappe.db.get_value("DocType", name, "module")
+        if not module:
+            continue
+        app = frappe.db.get_value("Module Def", module, "app_name")
+        if app and app != "zatgo_core":
+            clashes.append((name, app))
+    return clashes
+
+
+def _refuse_doctype_name_collisions() -> None:
+    """ZatGo DocTypes use plain names (ADR-005), so another app may already own one. Installing over it would
+    replace that app's DocType; refuse instead and name each clash."""
+    clashes = doctype_name_collisions()
+    if clashes:
+        listed = ", ".join(f"{name} (owned by {app})" for name, app in clashes)
+        frappe.throw(f"ZatGo Core cannot be installed: these DocType names already belong to another app: {listed}.")
 
 
 def _ensure_default_activity_type() -> None:

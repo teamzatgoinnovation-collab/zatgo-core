@@ -24,16 +24,30 @@ bench build --app zatgo_core
 bench --site <site> clear-cache
 ```
 
+## What install refuses
+- A Frappe or ERPNext major version other than 16.
+- A site where another app already owns one of ZatGo's DocType names (they are plain names, ADR-005). The error names
+  each clash (`install.doctype_name_collisions`).
+
 ## Post-install checklist
+Install creates, once: the ZatGo roles and Role Profiles (personas), the module workspaces, Module Settings rows
+and the ZatGo Settings landing page. A re-run or migrate never overwrites what an administrator changed.
 
-ZatGo Core has **no Desk module**. Use AwesomeBar / List, or client APIs:
+1. **Module Settings**: switch off the ZatGo modules this site does not use (data is kept; the API answers 404).
+2. **ZatGo Apps** (Desk → ZatGo → Apps): switch on the apps and industries this site needs (System Manager only).
+3. **ZatGo Settings** workspace: ERPNext's own settings first (System Settings, Global Defaults, Company, Selling,
+   Stock, Accounts), then ZatGo's (Company Settings, Sales Invoice Naming, VanSaleX, POS). See `SETTINGS.md`.
+4. Tax: mark one **Sales Taxes and Charges Template** per company as default (or choose it in Company Settings),
+   and one Purchase template if purchases carry VAT. Invoices from every ZatGo path use it.
+5. Users: give each a Role Profile (User → Role Profiles) and, where needed, User Permissions
+   (`restrict_user`, see `permissions.md`).
+6. Confirm `bench --site <site> list-apps` includes `zatgo_core`.
 
-1. Switch on the apps and industries this site needs in **ZatGo -> Apps (on / off)** (they are fields of ZatGo System Settings). Brand, logo and theme are in **Theme Settings**. The default company, timezone, country, currency and fiscal year are ERPNext's own: **Global Defaults** and **System Settings** (the same-named fields of ZatGo System Settings, where they still exist, are not read; see `duplication_audit.md`)
-2. Open **Application Settings** → Seed Default Clients (or call apps API)
-3. Review **Feature Flag** defaults
-4. Set the password and session policy in Frappe's **System Settings**. **ZatGo Security Settings** is only validated, nothing applies it yet
-5. Assign roles: ZatGo Company Admin / Branch Admin / Application Admin / Read Only
-6. Confirm `bench --site <site> list-apps` includes `zatgo_core`; hard-refresh Desk if an old Core icon remains
+## Uninstall
+`bench --site <site> uninstall-app zatgo_core` drops every ZatGo DocType **and its data** (orders, trips, audit
+log, settings). ERPNext's own documents stay. Take a backup first (`bench --site <site> backup --with-files`);
+never use `--no-backup` on a site with real data. To stop using ZatGo features without losing data, switch the
+modules off in Module Settings instead.
 
 ## Install order for dependent apps
 
