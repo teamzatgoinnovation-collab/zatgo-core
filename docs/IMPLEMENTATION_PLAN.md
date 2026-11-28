@@ -6,7 +6,7 @@
 | # | Item | Why |
 |---|---|---|
 | G-1 | Each session commits or drops its uncommitted work (T-04) | 40 files overlap DocTypes, patches and workspaces we will touch |
-| G-2 | Decide the DocType naming direction (ADR-005: `ZG` prefix vs `rename-zatgo`) | Phase 4 and every later phase depend on it |
+| G-2 | ~~Decide the DocType naming direction~~ **Done 2026-11-28: keep `ZG` (ADR-005).** Still to do: port `rename-zatgo`'s 3 VanSaleX commits to `main`; plan `signxdemo`'s migration | Phase 4 and every later phase depend on it |
 | G-3 | Decide module availability (ADR-003: extend switches + licensing, or a new store) | Phases 5–8 depend on it |
 | G-4 | Approve pushing `main` (6 licensing commits are local only) | A clean base for branches and CI |
 | G-5 | Review role holders on kasibasia and democompanysa (T-12) | Live rights changed on 11-06 |

@@ -8,7 +8,7 @@
 | 002 | Evolve the existing structure; no `modules/<area>/` tree; a `services/core/` foundation only where duplication is proven | Proposed |
 | 003 | Module availability: one resolver over installed apps, enabled modules, licence and user; `ZG Module Settings` holds enablement | **Open** |
 | 004 | Workspaces: native Workspace + Workspace Sidebar records shipped as files and generated sidebars; per-customer navigation from modules and roles, never manual edits | Proposed (extends today's practice) |
-| 005 | DocType naming: `ZG` prefix (`main`) vs no prefix (`rename-zatgo`) | **Open** |
+| 005 | DocType naming: keep the `ZG` prefix (`main`); retire `rename-zatgo` | **Accepted 2026-11-28** (product owner) |
 | 006 | Settings: ERPNext settings first; one ZatGo Single per area with Tab Breaks; no JSON blob; settings never rewrite existing documents | Proposed |
 | 007 | Permissions: native roles, DocPerms, User Permissions and hooks; visibility separate from security; copy standard rows before any Custom DocPerm | Accepted (11-06 fix) |
 | 008 | Releases: SemVer tags, one version source, full-tree deploy from a tag after an md5 check, CI on a clean bench | Proposed |
@@ -32,13 +32,14 @@
 - **Option B.** Keep the switches as they are and add `ZG Module Settings` only for ERPNext-area modules (Sales, Stock, …). This is simpler but leaves two enablement screens.
 - **Option C.** A new registry independent of licensing. Rejected: a fourth system.
 
-## ADR-005: naming (Open)
+## ADR-005: naming (Accepted 2026-11-28: Option A)
 - **Facts.**
   - `main` has 59 `ZG ` DocTypes plus 25 legacy names, enforced by a test.
   - The production client sites (accounting, democompanysa, kasibasia, testerp) run `main`'s names.
   - `rename-zatgo` removes the prefix ("ZatGo" only where ERPNext has the name) and runs on `signxdemo` only.
 - **Option A (recommended).** Keep `ZG` on `main`. Retire `rename-zatgo`. Migrate `signxdemo` with a rename patch, rehearsed on a copy of its database. Optionally rename the 25 legacy names (VanSaleX Settings, AI *, Space *, Tracker *) later, with `rename_doc` patches. That makes your Phase 4 examples (ZG Settings, ZG Audit Log) consistent.
-- **Option B.** Adopt `rename-zatgo`. That means renaming 59 DocTypes on four client sites: high risk for a cosmetic gain, and it contradicts the brief.
+- **Decision.** Option A. The product owner chose to keep the `ZG` prefix. `rename-zatgo` and `licensing-phase10-on-rename` are not merged into `main`. Its 3 VanSaleX feature commits are ported to `main` on their own. `signxdemo` gets a rehearsed rename migration in Phase 4.
+- **Option B (rejected).** Adopt `rename-zatgo`. That means renaming 59 DocTypes on four client sites: high risk for a cosmetic gain, and it contradicts the brief.
 
 ## ADR-008: releases
 - Today, deploys are delta tars and the server drifts from git (T-03).
