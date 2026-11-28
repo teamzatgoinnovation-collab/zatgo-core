@@ -109,9 +109,17 @@ class TestPersonas(IntegrationTestCase):
         self.assertTrue(self.can("admin", "ZatGo System Settings", "write"))
 
     def test_administrator_persona_has_every_desk_app_not_only_zatgo_erp(self) -> None:
-        for doctype in ("Journal Entry", "Purchase Order", "Sales Invoice", "Stock Entry", "Work Order", "Project"):
-            if frappe.db.exists("DocType", doctype):
-                self.assertTrue(self.can("admin", doctype, "create"), doctype)
+        # Check the definition, not the site's copy: a profile is created once and a site may have changed it.
+        email = f"zg-persona-fulladmin-{self.tag.lower()}@example.test"
+        roles = [r for r in personas.PROFILES["ZatGo Administrator"] if frappe.db.exists("Role", r)]
+        frappe.get_doc({"doctype": "User", "email": email, "first_name": "fa", "send_welcome_email": 0,
+                        "roles": [{"role": r} for r in roles]}).insert(ignore_permissions=True)
+        try:
+            for doctype in ("Journal Entry", "Purchase Order", "Sales Invoice", "Stock Entry", "Work Order", "Project"):
+                if frappe.db.exists("DocType", doctype):
+                    self.assertTrue(frappe.has_permission(doctype, "create", user=email), doctype)
+        finally:
+            frappe.delete_doc("User", email, force=True, ignore_permissions=True)
 
     def test_the_zatgo_api_refuses_what_the_role_may_not_do(self) -> None:
         from zatgo_core.api.v1.accounting import invoices
