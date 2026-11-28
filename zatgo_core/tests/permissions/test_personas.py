@@ -68,9 +68,11 @@ class TestPersonas(IntegrationTestCase):
         self.assertEqual(personas.ensure_role_profiles(), [])
 
     def test_sales_user(self) -> None:
-        for doctype, ptype in (("Sales Invoice", "create"), ("Sales Order", "create"), ("Customer", "read"), ("Item", "read")):
+        # ERPNext's model: a Sales User orders and quotes; invoicing belongs to Accounts User (ZatGo Accountant).
+        for doctype, ptype in (("Sales Order", "create"), ("Quotation", "create"), ("Customer", "read"), ("Item", "read")):
             self.assertTrue(self.can("sales", doctype, ptype), f"{doctype} {ptype}")
-        for doctype, ptype in (("Stock Entry", "create"), ("Journal Entry", "create"), ("Purchase Invoice", "create")):
+        for doctype, ptype in (("Sales Invoice", "create"), ("Stock Entry", "create"), ("Journal Entry", "create"),
+                               ("Purchase Invoice", "create")):
             self.assertFalse(self.can("sales", doctype, ptype), f"{doctype} {ptype} must be refused")
 
     def test_stock_user(self) -> None:

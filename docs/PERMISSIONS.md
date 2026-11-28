@@ -16,16 +16,16 @@ ZatGo uses Frappe's own model and adds nothing parallel to it:
 | A bundle of roles | Role Profile | the personas below |
 
 ## Personas (Role Profiles)
-Created once by `setup/ensure_role_profiles.py` on install/migrate. After that they belong to the site: an administrator may change them in Desk and they are never reset.
+Built only from ERPNext's standard roles: no Custom DocPerm is added, because a custom row makes Frappe ignore the standard ones. Created once by `setup/ensure_role_profiles.py` on install/migrate. After that they belong to the site: an administrator may change them in Desk and they are never reset.
 
 | Profile | Roles | Typical limits (User Permissions) |
 |---|---|---|
-| ZatGo Sales User | Sales User | Company, Customer |
+| ZatGo Sales User | Sales User (quotations, sales orders; ERPNext gives invoicing to Accounts User) | Company, Customer |
 | ZatGo Sales Manager | Sales Manager, Sales User | Company |
 | ZatGo Purchase User | Purchase User | Company |
 | ZatGo Stock User | Stock User | Company, Warehouse |
 | ZatGo Restricted Stock User | Stock User | Item Group and Warehouse (for example: only frozen items, only the cold store) |
-| ZatGo Accountant | Accounts User | Company |
+| ZatGo Accountant | Accounts User (sales and purchase invoices, payments, journals) | Company |
 | ZatGo Administrator | System Manager, ZatGo Application Admin | — |
 
 Record limits in one call (System Manager only):
